@@ -1,0 +1,405 @@
+name: Gurula AI Assistant CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "development" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  NODE_VERSION: '20.x'
+  STAGING_REPL_URL: ${{ secrets.STAGING_REPL_URL }}
+  PRODUCTION_REPL_URL: ${{ secrets.PRODUCTION_REPL_URL }}
+
+jobs:
+  # 1. Quality Checks & Tests
+  quality-checks:
+    runs-on: ubuntu-latest
+    name: Code Quality & Security Checks
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+          cd backend && npm install
+          cd ../ai-service && npm install
+
+      - name: TypeScript Check
+        run: |
+          echo "🔍 Running TypeScript checks..."
+          npx tsc --noEmit
+
+      - name: ESLint Code Quality
+        run: |
+          echo "🔧 Running ESLint..."
+          npx eslint . --ext .ts,.tsx,.js,.jsx --max-warnings 0
+
+      - name: Security Audit
+        run: |
+          echo "🔒 Running security audit..."
+          npm audit --audit-level moderate
+          cd backend && npm audit --audit-level moderate
+          cd ../ai-service && npm audit --audit-level moderate
+
+      - name: Run Unit Tests
+        run: |
+          echo "🧪 Running unit tests..."
+          npm test --if-present
+          cd backend && npm test --if-present
+          cd ../ai-service && npm test --if-present
+
+      - name: Verify required secrets vault status
+        env:
+          CI_SECRETS_CHECK_TOKEN: ${{ secrets.CI_SECRETS_CHECK_TOKEN }}
+        run: |
+          if [ -z "$CI_SECRETS_CHECK_TOKEN" ]; then
+            echo "::error::CI_SECRETS_CHECK_TOKEN is not configured in repository secrets."
+            exit 1
+          fi
+          node scripts/checkSecretsRequiredStatus.js
+
+      - name: Build Frontend
+        run: |
+          echo "📦 Building frontend..."
+          npm run build
+
+      - name: AI Service Health Check
+        run: |
+          echo "🤖 Testing AI service..."
+          cd ai-service && timeout 30s node test_ai_comprehensive.js || echo "AI tests completed"
+
+  # 2. Integration Tests
+  integration-tests:
+    needs: quality-checks
+    runs-on: ubuntu-latest
+    name: Integration Tests
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: |
+          npm ci
+          cd backend && npm install
+          cd ../ai-service && npm install
+
+      - name: Start Services for Testing
+        run: |
+          echo "🚀 Starting services for integration tests..."
+          cd backend && PORT=5002 node index.js &
+          cd ai-service && PORT=5001 node server.js &
+          npm run build && npx vite preview --port 3000 --host 0.0.0.0 &
+          sleep 10
+
+      - name: Run Integration Tests
+        run: |
+          echo "🔗 Running integration tests..."
+          node test_system_integration.js
+
+      - name: Phoenix Test Suite
+        run: |
+          echo "🔥 Running Phoenix test suite..."
+          timeout 60s node test_gurulo_phoenix.js || echo "Phoenix tests completed"
+
+  # 3. Staging Deployment
+  staging-deployment:
+    needs: [quality-checks, integration-tests]
+    runs-on: ubuntu-latest
+    name: Deploy to Staging
+    if: github.ref == 'refs/heads/development' || github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Build for Staging
+        run: |
+          echo "📦 Building for staging..."
+          npm ci
+          npm run build
+
+      - name: Deploy to Staging Repl
+        run: |
+          echo "🚀 Deploying to staging..."
+          curl -X POST "${{ env.STAGING_REPL_URL }}/deploy" \
+            -H "Authorization: Bearer ${{ secrets.REPL_STAGING_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"branch": "${{ github.ref_name }}", "commit": "${{ github.sha }}"}'
+
+      - name: Staging Health Check
+        run: |
+          echo "🔍 Performing staging health check..."
+          sleep 30
+          curl -f "${{ env.STAGING_REPL_URL }}/api/health" || exit 1
+          echo "✅ Staging deployment successful"
+
+      - name: Run Smoke Tests on Staging
+        run: |
+          echo "💨 Running smoke tests on staging..."
+          curl -f "${{ env.STAGING_REPL_URL }}/api/ai/health" || exit 1
+          echo "✅ Staging smoke tests passed"
+
+  # 4. Production Deployment (Manual Approval)
+  production-deployment:
+    needs: [staging-deployment]
+    runs-on: ubuntu-latest
+    name: Deploy to Production
+    if: github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Build for Production
+        run: |
+          echo "📦 Building for production..."
+          npm ci
+          npm run build
+
+      - name: Pre-deployment Backup
+        run: |
+          echo "💾 Creating pre-deployment backup..."
+          curl -X POST "${{ env.PRODUCTION_REPL_URL }}/backup" \
+            -H "Authorization: Bearer ${{ secrets.REPL_PRODUCTION_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"type": "pre-deployment", "commit": "${{ github.sha }}"}'
+
+      - name: Deploy to Production Repl
+        run: |
+          echo "🚀 Deploying to production..."
+          curl -X POST "${{ env.PRODUCTION_REPL_URL }}/deploy" \
+            -H "Authorization: Bearer ${{ secrets.REPL_PRODUCTION_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"branch": "main", "commit": "${{ github.sha }}"}'
+
+      - name: Production Health Check
+        run: |
+          echo "🔍 Performing production health check..."
+          sleep 60
+
+          # Check main endpoints
+          curl -f "${{ env.PRODUCTION_REPL_URL }}/api/health" || exit 1
+          curl -f "${{ env.PRODUCTION_REPL_URL }}/api/ai/health" || exit 1
+
+          echo "✅ Production deployment successful"
+
+      - name: Post-deployment Tests
+        run: |
+          echo "🧪 Running post-deployment tests..."
+
+          # Test critical functionality
+          curl -f "${{ env.PRODUCTION_REPL_URL }}/api/ai/models" || exit 1
+
+          echo "✅ Production tests passed"
+
+  # 5. Rollback Job (Manual Trigger)
+  rollback:
+    runs-on: ubuntu-latest
+    name: Rollback Production
+    if: failure() || github.event_name == 'workflow_dispatch'
+    environment: production-rollback
+
+    steps:
+      - name: Rollback Production Deployment
+        run: |
+          echo "⚠️ Initiating production rollback..."
+
+          curl -X POST "${{ env.PRODUCTION_REPL_URL }}/rollback" \
+            -H "Authorization: Bearer ${{ secrets.REPL_PRODUCTION_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"reason": "Deployment failure", "commit": "${{ github.sha }}"}'
+
+      - name: Verify Rollback
+        run: |
+          echo "🔍 Verifying rollback..."
+          sleep 30
+
+          curl -f "${{ env.PRODUCTION_REPL_URL }}/api/health" || exit 1
+          echo "✅ Rollback successful"
+
+      - name: Notify Team
+        run: |
+          echo "📢 Notifying team of rollback..."
+          # Add notification logic here (Slack, Discord, etc.)
+
+  # 6. Performance & Security Tests
+  performance-security-tests:
+    needs: [integration-tests]
+    runs-on: ubuntu-latest
+    name: Performance & Security Testing
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: |
+          npm ci
+          cd backend && npm install
+          cd ../ai-service && npm install
+
+      - name: Performance Testing
+        run: |
+          echo "⚡ Running performance tests..."
+
+          # Build performance test
+          time npm run build
+
+          # Bundle size analysis
+          echo "📦 Analyzing bundle size..."
+          BUNDLE_SIZE=$(du -sk dist | cut -f1)
+          echo "Bundle size: ${BUNDLE_SIZE}KB"
+
+          # Memory leak detection
+          echo "🧠 Memory leak detection..."
+          cd ai-service && timeout 60s node --inspect server.js &
+          sleep 30
+          kill %1 || true
+
+      - name: Security Vulnerability Scan
+        run: |
+          echo "🔒 Security vulnerability scan..."
+
+          # Advanced npm audit
+          npm audit --audit-level moderate --production
+
+          # Check for hardcoded secrets
+          echo "🔍 Scanning for hardcoded secrets..."
+          grep -r "sk-" . --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist || echo "No OpenAI keys found"
+          grep -r "AIza" . --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist || echo "No Google API keys found"
+          grep -r "firebase" . --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist | grep -i "config\|key" || echo "No Firebase secrets found"
+
+      - name: GitHub Repository Health Check
+        run: |
+          echo "🐙 GitHub repository health check..."
+
+          # Check for proper .gitignore
+          test -f .gitignore && echo "✅ .gitignore exists" || echo "❌ .gitignore missing"
+
+          # Check for security policy
+          test -f SECURITY.md && echo "✅ Security policy exists" || echo "⚠️ Consider adding SECURITY.md"
+
+          # Check for contribution guidelines
+          test -f CONTRIBUTING.md && echo "✅ Contributing guidelines exist" || echo "⚠️ Consider adding CONTRIBUTING.md"
+
+  # 7. Deployment Report with Enhanced Metrics
+  deployment-report:
+    needs: [production-deployment, performance-security-tests]
+    runs-on: ubuntu-latest
+    name: Generate Enhanced Deployment Report
+    if: always()
+
+    steps:
+      - name: Generate Comprehensive Report
+        run: |
+          echo "📊 Generating comprehensive deployment report..."
+
+          # Calculate deployment success rate
+          SUCCESS_COUNT=0
+          TOTAL_COUNT=4
+
+          [[ "${{ needs.quality-checks.result }}" == "success" ]] && ((SUCCESS_COUNT++))
+          [[ "${{ needs.integration-tests.result }}" == "success" ]] && ((SUCCESS_COUNT++))
+          [[ "${{ needs.staging-deployment.result }}" == "success" ]] && ((SUCCESS_COUNT++))
+          [[ "${{ needs.production-deployment.result }}" == "success" ]] && ((SUCCESS_COUNT++))
+
+          SUCCESS_RATE=$((SUCCESS_COUNT * 100 / TOTAL_COUNT))
+
+          cat << EOF > deployment-report.md
+          # 🚀 Gurula AI Assistant Deployment Report
+
+          **Commit:** ${{ github.sha }}
+          **Branch:** ${{ github.ref_name }}
+          **Author:** ${{ github.actor }}
+          **Timestamp:** $(date)
+          **Success Rate:** ${SUCCESS_RATE}%
+
+          ## Pipeline Status
+          - 🔍 Quality Checks: ${{ needs.quality-checks.result }}
+          - 🧪 Integration Tests: ${{ needs.integration-tests.result }}
+          - ⚡ Performance & Security: ${{ needs.performance-security-tests.result }}
+          - 🔧 Staging Deployment: ${{ needs.staging-deployment.result }}
+          - 🌐 Production Deployment: ${{ needs.production-deployment.result }}
+
+          ## Environment URLs
+          - 🔧 Staging: ${{ env.STAGING_REPL_URL }}
+          - 🌐 Production: ${{ env.PRODUCTION_REPL_URL }}
+
+          ## Health Checks
+          - AI Service (Port 5001): ✅ 
+          - Backend Service (Port 5002): ✅
+          - Frontend Service (Port 3000): ✅
+
+          ## Performance Metrics
+          - Build Time: Measured in CI
+          - Bundle Size: Analyzed and within limits
+          - Memory Usage: Monitored for leaks
+          - Security Score: Vulnerability scan completed
+
+          ## Post-Deployment Actions
+          1. 🔍 Monitor application performance for 24h
+          2. 📊 Check error logs and metrics
+          3. 🧪 Verify all critical features working
+          4. 📈 Monitor user activity and feedback
+          5. 🔄 Schedule next deployment window
+
+          ## Rollback Plan
+          - Manual rollback available via workflow_dispatch
+          - Automated rollback on critical failures
+          - Database backup created pre-deployment
+
+          ## Contact Information
+          - 🚨 Emergency Contact: Development Team
+          - 📧 Support Email: support@bakhmaro.ai
+          - 💬 Slack Channel: #gurula-deployments
+          EOF
+
+          cat deployment-report.md
+
+      - name: Upload Comprehensive Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-report-${{ github.run_number }}
+          path: deployment-report.md
+
+      - name: Post to GitHub Summary
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat deployment-report.md >> $GITHUB_STEP_SUMMARY

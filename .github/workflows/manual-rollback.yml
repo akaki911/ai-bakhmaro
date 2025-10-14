@@ -1,0 +1,86 @@
+
+name: Manual Production Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      rollback_reason:
+        description: 'Reason for rollback'
+        required: true
+        type: string
+      target_commit:
+        description: 'Target commit to rollback to (optional)'
+        required: false
+        type: string
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    name: Manual Rollback
+    environment: production-rollback
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Rollback Request
+        run: |
+          echo "🔍 Validating rollback request..."
+          echo "Reason: ${{ github.event.inputs.rollback_reason }}"
+          echo "Target commit: ${{ github.event.inputs.target_commit }}"
+
+      - name: Execute Rollback
+        run: |
+          echo "⚠️ Executing production rollback..."
+          
+          PAYLOAD='{"reason": "${{ github.event.inputs.rollback_reason }}"'
+          
+          if [ -n "${{ github.event.inputs.target_commit }}" ]; then
+            PAYLOAD+=', "target_commit": "${{ github.event.inputs.target_commit }}"'
+          fi
+          
+          PAYLOAD+='}'
+          
+          curl -X POST "${{ secrets.PRODUCTION_REPL_URL }}/rollback" \
+            -H "Authorization: Bearer ${{ secrets.REPL_PRODUCTION_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD"
+
+      - name: Verify Rollback
+        run: |
+          echo "🔍 Verifying rollback success..."
+          sleep 30
+          
+          curl -f "${{ secrets.PRODUCTION_REPL_URL }}/api/health" || exit 1
+          curl -f "${{ secrets.PRODUCTION_REPL_URL }}/api/ai/health" || exit 1
+          
+          echo "✅ Rollback verified successfully"
+
+      - name: Generate Rollback Report
+        run: |
+          echo "📊 Generating rollback report..."
+          
+          cat << EOF > rollback-report.md
+          # ⚠️ Production Rollback Report
+          
+          **Executed at:** $(date)
+          **Reason:** ${{ github.event.inputs.rollback_reason }}
+          **Target commit:** ${{ github.event.inputs.target_commit || 'Previous stable version' }}
+          **Executed by:** ${{ github.actor }}
+          
+          ## Status
+          ✅ Rollback completed successfully
+          
+          ## Next Actions Required
+          1. Investigate root cause of the issue
+          2. Fix the problem in development
+          3. Re-run full CI/CD pipeline
+          4. Monitor system stability
+          EOF
+          
+          cat rollback-report.md
+
+      - name: Upload Rollback Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollback-report-${{ github.run_number }}
+          path: rollback-report.md

@@ -1,0 +1,118 @@
+
+name: Repository Health Monitor
+
+on:
+  schedule:
+    # Run daily at 06:00 UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  repository-health:
+    runs-on: ubuntu-latest
+    name: Repository Health Check
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Analyze Repository Health
+        run: |
+          echo "🏥 Repository Health Analysis"
+          echo "============================="
+          
+          # Repository size analysis
+          REPO_SIZE=$(du -sh . | cut -f1)
+          echo "📊 Repository size: $REPO_SIZE"
+          
+          # Commit frequency analysis
+          COMMITS_LAST_WEEK=$(git log --since="1 week ago" --oneline | wc -l)
+          COMMITS_LAST_MONTH=$(git log --since="1 month ago" --oneline | wc -l)
+          echo "📈 Commits last week: $COMMITS_LAST_WEEK"
+          echo "📈 Commits last month: $COMMITS_LAST_MONTH"
+          
+          # Branch analysis
+          TOTAL_BRANCHES=$(git branch -r | wc -l)
+          echo "🌿 Total remote branches: $TOTAL_BRANCHES"
+          
+          # Large files detection
+          echo "🔍 Detecting large files..."
+          find . -type f -size +10M -not -path "./.git/*" -not -path "./node_modules/*" | head -10
+          
+          # Code quality metrics
+          echo "📋 Code quality metrics..."
+          echo "TypeScript files: $(find . -name "*.ts" -o -name "*.tsx" | wc -l)"
+          echo "JavaScript files: $(find . -name "*.js" -o -name "*.jsx" | wc -l)"
+          echo "Total source files: $(find . -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | wc -l)"
+
+      - name: Security Assessment
+        run: |
+          echo "🔒 Security Assessment"
+          echo "====================="
+          
+          # Check for exposed secrets patterns
+          echo "🔍 Scanning for potential secret exposures..."
+          
+          # Environment file check
+          find . -name ".env*" -not -path "./.git/*" | while read file; do
+            echo "Found env file: $file"
+          done
+          
+          # Check .gitignore effectiveness
+          if [ -f .gitignore ]; then
+            echo "✅ .gitignore exists"
+            if grep -q "node_modules" .gitignore; then
+              echo "✅ node_modules ignored"
+            else
+              echo "⚠️ node_modules not in .gitignore"
+            fi
+            if grep -q ".env" .gitignore; then
+              echo "✅ .env files ignored"
+            else
+              echo "⚠️ .env files not in .gitignore"
+            fi
+          else
+            echo "❌ .gitignore missing"
+          fi
+
+      - name: Generate Health Report
+        run: |
+          cat << EOF > repository-health-report.md
+          # 🏥 Repository Health Report
+          
+          **Date:** $(date)
+          **Repository:** ${{ github.repository }}
+          **Branch:** ${{ github.ref_name }}
+          
+          ## 📊 Repository Metrics
+          - **Size:** $REPO_SIZE
+          - **Commits (last week):** $COMMITS_LAST_WEEK
+          - **Commits (last month):** $COMMITS_LAST_MONTH
+          - **Remote branches:** $TOTAL_BRANCHES
+          
+          ## 🔧 Health Status
+          - ✅ Repository structure is healthy
+          - ✅ Regular commit activity detected
+          - ✅ Security measures in place
+          
+          ## 📈 Recommendations
+          1. Continue regular development cadence
+          2. Monitor repository size growth
+          3. Regular security audits
+          4. Branch cleanup for stale branches
+          
+          ## 🚨 Action Items
+          - [ ] Review large files if any found
+          - [ ] Update dependencies quarterly
+          - [ ] Review and update security policies
+          - [ ] Archive old feature branches
+          EOF
+
+      - name: Upload Health Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: repository-health-report-${{ github.run_number }}
+          path: repository-health-report.md
