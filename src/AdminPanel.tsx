@@ -411,7 +411,7 @@ const AdminPanel: React.FC = () => {
                     {/* AI Developer Panel */}
                     <div
                       className="bg-gradient-to-r from-blue-400 to-blue-500 p-6 rounded-xl text-white cursor-pointer hover:from-blue-500 hover:to-blue-600 transition-all"
-                      onClick={() => window.location.href = '/admin/ai-developer'}
+                      onClick={() => navigateToSection('aiDeveloper')}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <Users className="w-8 h-8 text-blue-200" />
