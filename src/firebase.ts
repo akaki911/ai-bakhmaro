@@ -34,14 +34,14 @@ const missingVars = Object.entries(requiredEnvVars).filter(([key, value]) => !va
 if (missingVars.length > 0) {
   console.error("❌ Missing required Firebase environment variables:", missingVars);
   console.error("❌ Available environment variables:", Object.keys(import.meta.env));
-  console.error("❌ Please ensure these are set in your Replit Secrets:");
+  console.error("❌ Please ensure these are set in your GitHub Repository Secrets:");
   missingVars.forEach(varName => console.error(`   - ${varName}`));
   
   // Provide helpful debugging information
   console.error("💡 Debug info:");
   console.error("   - Check if variables are prefixed with VITE_");
-  console.error("   - Verify they are added to Replit Secrets tab");
-  console.error("   - Restart the development server after adding secrets");
+  console.error("   - Verify they are added under https://github.com/akaki911/ai-bakhmaro/settings/secrets/actions");
+  console.error("   - Restart the development server after updating secrets");
   
   throw new Error(`Missing Firebase configuration: ${missingVars.join(', ')}`);
 }

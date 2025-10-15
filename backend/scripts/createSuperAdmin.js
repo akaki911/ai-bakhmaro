@@ -5,7 +5,7 @@ const admin = require('firebase-admin');
 function getServiceAccount() {
   const raw = process.env.FIREBASE_ADMIN_KEY;
   if (!raw) {
-    console.error('❌ FIREBASE_ADMIN_KEY is missing. Add your Service Account JSON to Replit Secrets.');
+    console.error('❌ FIREBASE_ADMIN_KEY is missing. Add your Service Account JSON to GitHub Repository Secrets (https://github.com/akaki911/ai-bakhmaro/settings/secrets/actions).');
     process.exit(1);
   }
   let sa;

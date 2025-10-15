@@ -3,6 +3,8 @@
 ## Overview
 This project is "ბახმაროს ქირავება" (Bakhmaro Rental), a Georgian cottage/accommodation rental platform. It aims to provide a comprehensive solution for property rentals, integrating a modern frontend, a robust backend, and an advanced AI service with RAG capabilities for enhanced data persistence, session management, and codebase understanding. The platform prioritizes security, performance, and a seamless user experience, including full Georgian language support.
 
+> ℹ️ **Note:** ისტორიულად პროექტი Replit-ზე იყო გამართული, თუმცა ახლა სრულად GitHub Actions/Firebase ინფრასტრუქტურაზეა გადაყვანილი.
+
 ## User Preferences
 - Project uses Georgian language as primary interface
 - Clean, modern UI design with Tailwind CSS

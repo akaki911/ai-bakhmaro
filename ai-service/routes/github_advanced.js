@@ -375,7 +375,7 @@ router.post('/webhook/github', async (req, res) => {
     // Verify webhook signature
     const secret = process.env.GITHUB_WEBHOOK_SECRET;
     if (!secret) {
-      console.error('❌ GITHUB_WEBHOOK_SECRET not configured in Replit Secrets');
+      console.error('❌ GITHUB_WEBHOOK_SECRET not configured in GitHub Repository Secrets (https://github.com/akaki911/ai-bakhmaro/settings/secrets/actions)');
       return res.status(500).json({ error: 'Webhook secret not configured' });
     }
 

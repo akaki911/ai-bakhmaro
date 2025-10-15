@@ -282,7 +282,7 @@ NODE_ENV=production
     }
 
     if (!process.env.GROQ_API_KEY) {
-      report.recommendations.push('🔑 Set GROQ_API_KEY in Replit Secrets');
+      report.recommendations.push('🔑 Set GROQ_API_KEY in GitHub Repository Secrets (https://github.com/akaki911/ai-bakhmaro/settings/secrets/actions)');
     }
 
     report.recommendations.push('📚 Check Groq API documentation: https://console.groq.com/docs');

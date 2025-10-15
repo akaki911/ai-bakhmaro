@@ -1,13 +1,16 @@
 
-# Replit Secrets Setup for Firebase
+# GitHub Secrets Setup for Firebase & Production Deployments
 
-Follow these steps to configure Firebase environment variables in Replit:
+Replit-სთან კავშირი აღარ გვაქვს. Production და CI secrets ინახება GitHub Repository Secrets-ში ამ მისამართზე:
 
-## 1. Open Replit Secrets Tab
-- Click on the "Secrets" tab in your Replit workspace (lock icon in sidebar)
+👉 https://github.com/akaki911/ai-bakhmaro/settings/secrets/actions
 
-## 2. Add Firebase Configuration Variables
-Add each of these secrets with their respective values:
+## 1. გახსენით GitHub Secrets გვერდი
+- გადადით ზემოთ მოცემულ ბმულზე (Actions secrets)
+- დააჭირეთ **"New repository secret"** ღილაკს თითოეული მნიშვნელობისთვის
+
+## 2. დაამატეთ Firebase-ის კონფიგურაციის ცვლადები
+დაამატეთ თითოეული სეკრეტი ქვედა სახელებითა და მნიშვნელობებით:
 
 ```
 VITE_FIREBASE_API_KEY=AIzaSyBH0-yeuoUIWOiO1ZXGDcuJ7_vP6BkugBw
@@ -19,15 +22,15 @@ VITE_FIREBASE_APP_ID=1:815060315119:web:a1f33d920bcd52e536a41a
 VITE_FIREBASE_MEASUREMENT_ID=G-NT97B9E4YL
 ```
 
-## 3. Restart Development Server
-After adding secrets, restart your development server:
-- Stop current processes (Ctrl+C)
-- Click the "Run" button again
+## 3. განაახლეთ GitHub Actions გარემო ცვლადები
+- თუ უკვე გაშვებულია workflow-ები, ხელახლა გაუშვით მათი secrets განახლების შემდეგ, რომ ახალი მნიშვნელობები ჩაიტვირთოს
+- საჭიროების შემთხვევაში გამოიყენეთ `node check-secrets.js` ადგილობრივად მნიშვნელობების დასადასტურებლად
 
-## 4. Verification
-Check browser console for: "✅ Firebase initialized successfully"
+## 4. ვერიფიკაცია
+- Frontend build-ისას კონსოლში უნდა გამოჩნდეს: "✅ Firebase initialized successfully"
+- `node scripts/github-verification.js` დაადასტურებს GitHub Token-სა და webhook secret-ს
 
 ## Troubleshooting
-- Ensure all variable names start with `VITE_`
-- No spaces around the `=` sign
-- Restart if variables don't appear immediately
+- დარწმუნდით, რომ ყველა ცვლადი იწყება `VITE_` პრეფიქსით (frontend-სთვის)
+- `FIREBASE_SERVICE_ACCOUNT_KEY` ჩაწერეთ როგორც სრული JSON (ერთ ხაზზე ან მრავალ ხაზად)
+- GitHub Secrets გვერდზე whitespace ავტომატურად იჭრება; ცარიელი მნიშვნელობის შეტანა გამოიწვევს შეცდომას
