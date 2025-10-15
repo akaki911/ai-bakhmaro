@@ -2,7 +2,7 @@
 
 This repository hosts the **Bakhmaro AI** workspace. It contains a React/Vite frontend, an Express-based backend gateway, and supporting automation scripts used to manage the AI assistant, memory synchronisation, and observability pipelines.
 
-The project is optimised for iterative development inside Replit, but all scripts are standard `npm` commands so the stack can run locally with Node.js 18+ as well.
+The project is now maintained directly from GitHub (no Replit integration). All scripts remain standard `npm` commands so the stack can run locally with Node.js 18+ as well.
 
 ## Prerequisites
 

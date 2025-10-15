@@ -100,9 +100,9 @@ function checkSecrets() {
       console.log(`  ${category}: ${key} - ${description}`);
     });
     console.log('\n💡 როგორ დაამატოთ:');
-    console.log('1. Replit-ში გახსენით "Secrets" ფანჯარა');
-    console.log('2. დააჭირეთ "+ New Secret" ღილაკს');
-    console.log('3. შეიყვანეთ Key-ისა და Value-ს\n');
+    console.log('1. გადადით GitHub Repository Secrets-ზე: https://github.com/akaki911/ai-bakhmaro/settings/secrets/actions');
+    console.log('2. დააჭირეთ "New repository secret" ღილაკს');
+    console.log('3. შეიყვანეთ Key და Value და დაადასტურეთ\n');
   }
   
   if (issues.length > 0) {
