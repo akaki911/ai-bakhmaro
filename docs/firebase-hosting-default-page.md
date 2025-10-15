@@ -2,7 +2,7 @@
 
 ## Why the Firebase welcome page appears
 
-Firebase Hosting is configured to serve static files from `frontend/dist` according to [`firebase.json`](../firebase.json). When the content in that directory has not been built and deployed, Hosting falls back to the default `index.html` that ships with the Firebase setup wizard. As a result, visiting the production domain shows the "Firebase Hosting Setup Complete" welcome card instead of the real application UI.
+Firebase Hosting is configured to serve static files from the Vite build output directory (`dist`) according to [`firebase.json`](../firebase.json). When the content in that directory has not been built and deployed, Hosting falls back to the default `index.html` that ships with the Firebase setup wizard. As a result, visiting the production domain shows the "Firebase Hosting Setup Complete" welcome card instead of the real application UI.
 
 ## Why your React/Vite front-end is not loading
 
@@ -14,4 +14,4 @@ This project uses Vite with the entry point defined in [`index.html`](../index.h
 2. Generate the production bundle: `npm run build`.
 3. Deploy the new assets to Firebase Hosting: `firebase deploy --only hosting` (make sure you are authenticated with the correct Firebase project).
 
-After redeploying with the built assets present in `frontend/dist`, Firebase will serve the actual front-end instead of the setup placeholder.
+After redeploying with the built assets present in `dist`, Firebase will serve the actual front-end instead of the setup placeholder.
