@@ -437,19 +437,19 @@ const RepositoryAutomationTab: React.FC = () => {
             <strong>GITHUB_REPO_NAME:</strong> Repository name (default: gurula-ai)
           </div>
           <div>
-            <strong>REPLIT_URL:</strong> Your Replit app URL for webhook configuration
+            <strong>REPLIT_URL:</strong> Production webhook base URL (legacy env name; გამოიყენეთ თქვენი აქტიური დომენი)
           </div>
         </div>
 
         <div className="mt-4">
           <a
-            href="/admin/javshnissia"
+            href="https://github.com/akaki911/ai-bakhmaro/settings/secrets/actions"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
           >
             <ExternalLink size={16} />
-            Replit Secrets მართვა
+            GitHub Secrets მართვა
           </a>
         </div>
       </div>
