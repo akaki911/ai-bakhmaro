@@ -16,6 +16,12 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
+      - name: Clean npm proxy
+        run: |
+          npm config delete proxy || true
+          npm config delete https-proxy || true
+          npm config delete http-proxy || true
+          echo "registry=https://registry.npmjs.org/" >> ~/.npmrc
       - name: Install deps
         run: npm ci
       - name: Build
