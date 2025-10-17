@@ -270,6 +270,7 @@ export const useRealTimeErrors = (options: UseRealTimeErrorsOptions = {}) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(testError),
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -288,7 +289,9 @@ export const useRealTimeErrors = (options: UseRealTimeErrorsOptions = {}) => {
 
     const fetchRecentErrors = async () => {
       try {
-        const response = await fetch('/api/memory/errors');
+        const response = await fetch('/api/memory/errors', {
+          credentials: 'include',
+        });
         if (!response.ok) {
           throw new Error(`Failed to fetch recent errors: ${response.status}`);
         }

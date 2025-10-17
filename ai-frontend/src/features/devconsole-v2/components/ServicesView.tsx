@@ -134,7 +134,9 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
 
       // 📋 Frontend Routes Discovery (from App.tsx)
       try {
-        const appResponse = await fetch(`${API_BASE}/api/files/content/src/App.tsx`);
+        const appResponse = await fetch(`${API_BASE}/api/files/content/src/App.tsx`, {
+          credentials: 'include',
+        });
         if (appResponse.ok) {
           const appContent = await appResponse.text();
 
@@ -163,7 +165,9 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
 
       // 🔧 Backend Routes Discovery
       try {
-        const backendResponse = await fetch(`${API_BASE}/api/files/content/backend/index.js`);
+        const backendResponse = await fetch(`${API_BASE}/api/files/content/backend/index.js`, {
+          credentials: 'include',
+        });
         if (backendResponse.ok) {
           const backendContent = await backendResponse.text();
 
@@ -188,7 +192,9 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
 
       // 🤖 AI Service Routes Discovery
       try {
-        const aiResponse = await fetch(`${API_BASE}/api/files/content/ai-service/server.js`);
+        const aiResponse = await fetch(`${API_BASE}/api/files/content/ai-service/server.js`, {
+          credentials: 'include',
+        });
         if (aiResponse.ok) {
           const aiContent = await aiResponse.text();
 
@@ -213,7 +219,9 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
 
       // 📊 Use code index for additional route discovery
       try {
-        const codeIndexResponse = await fetch(`${API_BASE}/api/files/content/ai-service/code_index.json`);
+        const codeIndexResponse = await fetch(`${API_BASE}/api/files/content/ai-service/code_index.json`, {
+          credentials: 'include',
+        });
         if (codeIndexResponse.ok) {
           const codeIndexText = await codeIndexResponse.text();
           const codeIndex = JSON.parse(codeIndexText);
@@ -284,7 +292,8 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
         headers: {
           'Accept': 'application/json',
           'Cache-Control': 'no-cache'
-        }
+        },
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -345,7 +354,10 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
   const killPortProcess = async (port: number): Promise<boolean> => {
     try {
       console.log(`🔧 Killing process on port ${port} via: ${API_BASE}/api/port-kill/${port}`);
-      const response = await fetch(`${API_BASE}/api/port-kill/${port}`, { method: 'POST' });
+      const response = await fetch(`${API_BASE}/api/port-kill/${port}`, {
+        method: 'POST',
+        credentials: 'include',
+      });
 
       if (response.ok) {
         const result = await response.json();
@@ -422,7 +434,9 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
 
     // Get real process information
     try {
-      const processResponse = await fetch(`${API_BASE}/api/process-list`);
+      const processResponse = await fetch(`${API_BASE}/api/process-list`, {
+        credentials: 'include',
+      });
       if (processResponse.ok) {
         const processData = await processResponse.json();
 
@@ -796,7 +810,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
 
             <button
               onClick={() => {
-                fetch(`${API_BASE}/api/port-cleanup`, { method: 'POST' })
+                fetch(`${API_BASE}/api/port-cleanup`, { method: 'POST', credentials: 'include' })
                   .then(() => console.log('🧹 Port cleanup initiated'))
                   .catch(error => console.error('❌ Cleanup failed:', error));
               }}
