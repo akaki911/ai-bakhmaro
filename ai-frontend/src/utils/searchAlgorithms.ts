@@ -274,7 +274,7 @@ export const filterAndSortResults = (
     limit = 50
   } = options;
 
-  let filtered = results.filter(result => {
+  const filtered = results.filter(result => {
     // File type filter
     if (fileTypes.length > 0) {
       const extension = result.path.split('.').pop()?.toLowerCase();

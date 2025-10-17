@@ -117,7 +117,7 @@ export class EnhancedSearchService {
     } = options;
 
     try {
-      let endpoint = '/api/search/search';
+      const endpoint = '/api/search/search';
       let searchType = 'name';
 
       // Determine search type

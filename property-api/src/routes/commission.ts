@@ -30,6 +30,7 @@ const requireAdmin = async (req: any, res: any, next: any) => {
     req.user = { uid: decodedToken.uid, ...userDoc.data() };
     return next();
   } catch (error) {
+    console.error('Admin authentication failed:', error);
     return res.status(401).json({ error: 'Invalid token' });
   }
 };
