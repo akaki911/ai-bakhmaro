@@ -1,10 +1,10 @@
-const defaultTheme = require('tailwindcss/defaultTheme');
+import type { Config } from 'tailwindcss';
+import defaultTheme from 'tailwindcss/defaultTheme';
 
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+const config: Config = {
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    './index.html',
+    './src/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {
@@ -28,4 +28,6 @@ module.exports = {
     },
   },
   plugins: [],
-}
+};
+
+export default config;
