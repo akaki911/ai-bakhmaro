@@ -1,21 +1,27 @@
+import type { NextFunction, Request, Response } from 'express';
 import express from 'express';
 import { getEnv } from '../env';
 import { admin } from '../firebase';
+import { extractForwardedBearer } from '../middleware/serviceAuth';
 import commissionService, { type PaymentDetails } from '../services/commissionService';
 
 const env = getEnv();
 
 const router = express.Router();
 
-const requireAdmin = async (req: any, res: any, next: any) => {
+const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const internalToken = req.headers['x-internal-token'] ?? req.headers['x-ai-internal-token'];
     if (env.INTERNAL_SERVICE_TOKEN && typeof internalToken === 'string' && internalToken === env.INTERNAL_SERVICE_TOKEN) {
-      req.user = { role: 'service' };
+      (req as Request & { user?: unknown }).user = { role: 'service' };
       return next();
     }
 
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!res.locals.serviceToken) {
+      return res.status(401).json({ error: 'Missing gateway service credentials' });
+    }
+
+    const token = extractForwardedBearer(req);
     if (!token) {
       return res.status(401).json({ error: 'No authorization token' });
     }
@@ -27,7 +33,7 @@ const requireAdmin = async (req: any, res: any, next: any) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    req.user = { uid: decodedToken.uid, ...userDoc.data() };
+    (req as Request & { user?: unknown }).user = { uid: decodedToken.uid, ...userDoc.data() };
     return next();
   } catch (error) {
     console.error('Admin authentication failed:', error);
@@ -35,7 +41,7 @@ const requireAdmin = async (req: any, res: any, next: any) => {
   }
 };
 
-router.post('/generate-invoices', requireAdmin, async (req: any, res: any) => {
+router.post('/generate-invoices', requireAdmin, async (req: Request, res: Response) => {
   try {
     const { periodStart, periodEnd } = req.body as { periodStart?: string; periodEnd?: string };
 
@@ -51,7 +57,7 @@ router.post('/generate-invoices', requireAdmin, async (req: any, res: any) => {
   }
 });
 
-router.post('/calculate', requireAdmin, async (req: any, res: any) => {
+router.post('/calculate', requireAdmin, async (req: Request, res: Response) => {
   try {
     const { providerId, totalPrice, listingType } = req.body as { providerId?: string; totalPrice?: number; listingType?: string };
 
@@ -73,7 +79,7 @@ router.post('/calculate', requireAdmin, async (req: any, res: any) => {
   }
 });
 
-router.get('/invoices', requireAdmin, async (req: any, res: any) => {
+router.get('/invoices', requireAdmin, async (req: Request, res: Response) => {
   try {
     const { providerId, status, limit = '50', offset = '0' } = req.query as Record<string, string>;
 
@@ -115,7 +121,7 @@ router.get('/invoices', requireAdmin, async (req: any, res: any) => {
   }
 });
 
-router.get('/invoices/:invoiceId', requireAdmin, async (req: any, res: any) => {
+router.get('/invoices/:invoiceId', requireAdmin, async (req: Request, res: Response) => {
   try {
     const { invoiceId } = req.params;
     const invoiceDoc = await admin.firestore().collection('invoices').doc(invoiceId).get();
@@ -140,7 +146,7 @@ router.get('/invoices/:invoiceId', requireAdmin, async (req: any, res: any) => {
   }
 });
 
-router.post('/invoices/:invoiceId/mark-paid', requireAdmin, async (req: any, res: any) => {
+router.post('/invoices/:invoiceId/mark-paid', requireAdmin, async (req: Request, res: Response) => {
   try {
     const { invoiceId } = req.params;
     const { method, reference } = req.body as PaymentDetails;
@@ -153,10 +159,10 @@ router.post('/invoices/:invoiceId/mark-paid', requireAdmin, async (req: any, res
   }
 });
 
-router.get('/provider/:providerId/summary', async (req: any, res: any) => {
+router.get('/provider/:providerId/summary', async (req: Request, res: Response) => {
   try {
     const { providerId } = req.params;
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    const token = extractForwardedBearer(req);
 
     if (!token) {
       return res.status(401).json({ error: 'No authorization token' });
@@ -177,10 +183,10 @@ router.get('/provider/:providerId/summary', async (req: any, res: any) => {
   }
 });
 
-router.get('/provider/:providerId/invoices', async (req: any, res: any) => {
+router.get('/provider/:providerId/invoices', async (req: Request, res: Response) => {
   try {
     const { providerId } = req.params;
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    const token = extractForwardedBearer(req);
 
     if (!token) {
       return res.status(401).json({ error: 'No authorization token' });
