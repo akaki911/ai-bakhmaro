@@ -9,8 +9,38 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// Import commission service logic
-const commissionService = require('../backend/services/commissionService');
+// Property API integration
+const fetch = (...args) => import('node-fetch').then(({ default: fetchFn }) => fetchFn(...args));
+
+const PROPERTY_API_URL = process.env.PROPERTY_API_URL || 'http://127.0.0.1:5100';
+const PROPERTY_API_TOKEN = process.env.INTERNAL_SERVICE_TOKEN || process.env.PROPERTY_INTERNAL_TOKEN || process.env.AI_INTERNAL_TOKEN;
+
+async function propertyApiRequest(path, options = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+
+  if (PROPERTY_API_TOKEN) {
+    headers['X-Internal-Token'] = PROPERTY_API_TOKEN;
+  }
+
+  const response = await fetch(`${PROPERTY_API_URL}${path}`, { ...options, headers });
+  if (!response.ok) {
+    const payload = await response.text();
+    throw new Error(`Property API ${path} failed (${response.status}): ${payload}`);
+  }
+
+  if (response.status === 204) {
+    return null;
+  }
+
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
 
 // Scheduled function to generate invoices (runs on 1st and 15th of each month)
 exports.generateInvoicesScheduled = functions.pubsub
@@ -37,8 +67,11 @@ exports.generateInvoicesScheduled = functions.pubsub
         periodEnd = new Date(now.getFullYear(), now.getMonth(), 15).toISOString().split('T')[0];
       }
 
-      const invoices = await commissionService.generateInvoices(periodStart, periodEnd);
-      console.log(`✅ Generated ${invoices.length} invoices for period ${periodStart} to ${periodEnd}`);
+      const result = await propertyApiRequest('/commission/generate-invoices', {
+        method: 'POST',
+        body: JSON.stringify({ periodStart, periodEnd }),
+      });
+      console.log(`✅ Generated ${result?.count ?? 0} invoices for period ${periodStart} to ${periodEnd}`);
       
       return null;
     } catch (error) {
@@ -55,7 +88,7 @@ exports.sendPaymentRemindersScheduled = functions.pubsub
     try {
       console.log('📧 Starting scheduled payment reminders...');
       
-      await commissionService.sendPaymentReminders();
+      await propertyApiRequest('/commission/send-reminders', { method: 'POST' });
       console.log('✅ Payment reminders sent successfully');
       
       return null;
@@ -73,7 +106,7 @@ exports.enforcePaymentsScheduled = functions.pubsub
     try {
       console.log('⚖️ Starting scheduled payment enforcement...');
       
-      await commissionService.enforcePayments();
+      await propertyApiRequest('/commission/enforce-payments', { method: 'POST' });
       console.log('✅ Payment enforcement completed successfully');
       
       return null;
@@ -95,20 +128,28 @@ exports.onBookingCompleted = functions.firestore
       if (newValue.status === 'completed' && previousValue.status !== 'completed') {
         console.log(`📋 Booking ${context.params.bookingId} completed, calculating commission...`);
         
-        const commission = await commissionService.calculateCommission({
-          providerId: newValue.providerId,
-          totalPrice: newValue.totalPrice,
-          listingType: newValue.listingType || 'hotel'
+        const result = await propertyApiRequest('/commission/calculate', {
+          method: 'POST',
+          body: JSON.stringify({
+            providerId: newValue.providerId,
+            totalPrice: newValue.totalPrice,
+            listingType: newValue.listingType || 'hotel',
+          }),
         });
-        
-        // Update booking with commission info
-        await change.after.ref.update({
-          commissionRate: commission.rate,
-          commissionAmount: commission.amount,
-          completedDate: new Date().toISOString().split('T')[0]
-        });
-        
-        console.log(`✅ Commission calculated for booking ${context.params.bookingId}: ₾${commission.amount}`);
+
+        const commission = result?.commission;
+
+        if (commission) {
+          await change.after.ref.update({
+            commissionRate: commission.rate,
+            commissionAmount: commission.amount,
+            completedDate: new Date().toISOString().split('T')[0]
+          });
+
+          console.log(`✅ Commission calculated for booking ${context.params.bookingId}: ₾${commission.amount}`);
+        } else {
+          console.warn(`⚠️ Commission calculation returned no result for booking ${context.params.bookingId}`);
+        }
       }
       
       return null;
@@ -133,9 +174,12 @@ exports.handleInvoicePayment = functions.https.onRequest(async (req, res) => {
     
     console.log(`💳 Processing payment for invoice ${invoiceId}`);
     
-    await commissionService.markInvoicePaid(invoiceId, {
-      method: paymentMethod || 'webhook',
-      reference: reference
+    await propertyApiRequest(`/commission/invoices/${invoiceId}/mark-paid`, {
+      method: 'POST',
+      body: JSON.stringify({
+        method: paymentMethod || 'webhook',
+        reference,
+      }),
     });
     
     console.log(`✅ Payment processed for invoice ${invoiceId}`);

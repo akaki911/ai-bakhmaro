@@ -9,8 +9,8 @@
     }
   ],
   "exclude": [
-    "backup_before_restore",
-    "attached_assets",
+    "../backup_before_restore",
+    "../attached_assets",
     "**/*.bak.*",
     // TODO(SOL-626): Re-enable GitHubManagement sources once TypeScript violations are resolved.
     "src/components/GitHubManagement/**"

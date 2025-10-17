@@ -936,7 +936,6 @@ app.use('/api/github', require('./routes/github'));
 app.use('/api/backup_system', require('./routes/backup_fallback'));
 
 // Other specific routes
-app.use('/api/commission', require('./routes/commission'));
 app.use('/api/jwt', require('./routes/jwt_auth'));
 app.use('/api', require('./routes/health')); // Moved health to root API path
 
