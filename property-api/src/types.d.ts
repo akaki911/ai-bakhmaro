@@ -1,8 +1,11 @@
-declare module 'express';
-declare module 'helmet';
-declare module 'cors';
-declare module 'morgan';
-declare module 'firebase-admin';
-declare module 'firebase-admin/firestore';
-declare const process: any;
-declare const console: any;
+import type { VerifiedServiceToken } from './middleware/serviceAuth';
+
+declare global {
+  namespace Express {
+    interface Locals {
+      serviceToken?: VerifiedServiceToken;
+    }
+  }
+}
+
+export {};
