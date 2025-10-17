@@ -8,12 +8,12 @@ export default tseslint.config(
   {
     ignores: [
       'dist',
-      'backup_before_restore/**',
-      'ai-service/**',
-      'functions/**',
-      'scripts/**',
-      'run_*.js',
-      'test_*.js',
+      '../backup_before_restore/**',
+      '../ai-service/**',
+      '../functions/**',
+      '../scripts/**',
+      '../run_*.js',
+      '../test_*.js',
     ],
   },
   {
@@ -38,33 +38,6 @@ export default tseslint.config(
       'no-prototype-builtins': 'off',
       'no-useless-escape': 'off',
       'no-misleading-character-class': 'off',
-      'no-extra-boolean-cast': 'off',
-      'prefer-const': 'off',
-      '@typescript-eslint/ban-ts-comment': 'off',
-      'react-hooks/rules-of-hooks': 'off',
-      'react-hooks/exhaustive-deps': 'off',
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
     },
   },
-  {
-    files: ['backend/**/*.js'],
-    languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: 'script',
-      parserOptions: {
-        allowHashBang: true,
-      },
-      globals: {
-        ...globals.node,
-      },
-    },
-    rules: {
-      'no-undef': 'off',
-      'no-unused-vars': 'off',
-      'no-console': 'off',
-    },
-  }
 );

@@ -10,7 +10,7 @@ const { createServer } = await import(pathToFileURL(viteNodeEntryPath).href);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const projectRoot = path.resolve(__dirname, '..');
+const projectRoot = path.resolve(__dirname, '..', 'ai-frontend');
 
 const port = Number(process.env.PORT || process.env.FRONTEND_PORT || 5000);
 const host = process.env.HOST || process.env.FRONTEND_HOST || '0.0.0.0';
