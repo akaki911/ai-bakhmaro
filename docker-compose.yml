@@ -42,6 +42,7 @@ services:
       AI_DOMAIN: ${AI_DOMAIN:-http://localhost:5173}
       ROOT_DOMAIN: ${ROOT_DOMAIN:-localhost}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      CORS_ALLOWED_ORIGIN: ${AI_DOMAIN:-http://localhost:5173}
     depends_on:
       property-api:
         condition: service_healthy
@@ -63,6 +64,11 @@ services:
       - .env
     environment:
       PORT: 5100
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      SERVICE_JWT_ISSUER: ai-gateway
+      SERVICE_JWT_SUBJECT: gateway-service
+      SERVICE_JWT_AUDIENCE: property-api
+      ALLOWED_ORIGIN: ${AI_DOMAIN:-http://localhost:5173}
     networks:
       - ai-stack
     healthcheck:

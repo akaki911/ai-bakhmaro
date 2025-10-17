@@ -6,6 +6,17 @@ import App from './App';
 import './index.css';
 import './i18n/config';
 
+const originalFetch = window.fetch.bind(window);
+
+window.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const nextInit: RequestInit = {
+    ...init,
+    credentials: init?.credentials ?? 'include',
+  };
+
+  return originalFetch(input, nextInit);
+};
+
 const ensureSWRConfig: (parent?: SWRConfiguration) => SWRConfiguration = (parentConfig) => ({
   ...parentConfig,
   isPaused: parentConfig?.isPaused ?? (() => false),

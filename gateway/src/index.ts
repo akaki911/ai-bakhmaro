@@ -1,6 +1,6 @@
 import compression from 'compression';
 import cors from 'cors';
-import express, { type NextFunction, type Request, type Response } from 'express';
+import express, { type NextFunction, type Request, type RequestHandler, type Response } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import path from 'node:path';
@@ -20,6 +20,7 @@ app.set('trust proxy', true);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const staticRoot = path.resolve(__dirname, env.STATIC_ROOT);
 const logLevel = env.NODE_ENV === 'production' ? 'warn' : 'debug';
+const allowedOrigins = new Set(env.CORS_ALLOWED_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean));
 
 type ServiceAudience = 'property-api' | 'remote-site';
 
@@ -127,10 +128,24 @@ app.use((req, res, next) => {
 
 app.use(helmet());
 app.use(compression());
-app.use(cors({
-  origin: env.CORS_ALLOWED_ORIGIN ? [env.CORS_ALLOWED_ORIGIN] : true,
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      if (allowedOrigins.has(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`Origin ${origin} is not allowed by CORS policy`));
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
@@ -157,18 +172,40 @@ app.use('/api', createProxy(env.REMOTE_SITE_BASE, 'remote-site'));
 
 app.use(express.static(staticRoot, { index: false, maxAge: env.NODE_ENV === 'production' ? '1h' : 0 }));
 
-app.get('/', (req, res, next) => {
+const ensureAuth: RequestHandler = (req, res, next) => {
   if (!isAuthenticatedRequest(req)) {
     res.redirect(302, env.LOGIN_PATH);
     return;
   }
 
+  next();
+};
+
+app.get(env.LOGIN_PATH, (req, res, next) => {
+  sendIndexHtml(res, next);
+});
+
+app.get('/', ensureAuth, (req, res, next) => {
+  sendIndexHtml(res, next);
+});
+
+app.get('/index.html', ensureAuth, (req, res, next) => {
   sendIndexHtml(res, next);
 });
 
 app.get('*', (req, res, next) => {
   if (req.method.toUpperCase() !== 'GET') {
     next();
+    return;
+  }
+
+  if (req.path === env.LOGIN_PATH) {
+    sendIndexHtml(res, next);
+    return;
+  }
+
+  if (!isAuthenticatedRequest(req)) {
+    res.redirect(302, env.LOGIN_PATH);
     return;
   }
 
