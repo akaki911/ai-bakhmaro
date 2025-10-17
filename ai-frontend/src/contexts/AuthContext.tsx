@@ -731,7 +731,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Logout - synchronized across all services
   const logout = async () => {
-    let currentUserRole = user?.role; // Store current role before clearing state
+    const currentUserRole = user?.role; // Store current role before clearing state
     
     try {
       console.log('🚪 [AUTH] Starting synchronized logout...');
