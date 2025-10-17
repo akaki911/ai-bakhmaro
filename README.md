@@ -43,6 +43,32 @@ npm run dev:backend
 npm run dev:frontend
 ```
 
+### Run with Docker Compose
+
+Use Docker Compose to bring up the frontend, gateway, and property API with a single command:
+
+1. Copy the sample environment file if you do not already have one:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Update `.env` with values for `AI_DOMAIN`, `ROOT_DOMAIN`, `REMOTE_SITE_BASE`, and `JWT_SECRET` (plus any other secrets required by the services).
+
+3. Build and start the stack:
+
+   ```bash
+   docker compose up --build
+   ```
+
+The compose file provisions three containers on a shared network:
+
+- `ai-frontend` exposes the Vite dev server on [http://localhost:5173](http://localhost:5173) and proxies API calls to the gateway.
+- `gateway` runs on [http://localhost:8080](http://localhost:8080) with health checks against `/health` and forwards service JWT configuration from the `.env` file.
+- `property-api` listens on [http://localhost:5100](http://localhost:5100) and is automatically wired into the gateway via the internal service URL.
+
+Stop the stack with `Ctrl+C` and, if needed, clean up resources using `docker compose down`.
+
 ### Build and type-check
 
 ```bash
