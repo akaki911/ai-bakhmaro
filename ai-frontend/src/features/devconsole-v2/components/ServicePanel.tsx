@@ -108,10 +108,11 @@ export const ServicePanel: React.FC = () => {
       const response = await fetch('/api/dev/commands/restart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           service: serviceName.toLowerCase().replace(' ', '-'),
-          action 
-        })
+          action
+        }),
+        credentials: 'include',
       });
 
       if (response.ok) {

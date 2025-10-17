@@ -222,7 +222,9 @@ const ReplitInterface: React.FC = () => {
       // Load file content
       try {
         console.log(`📁 Loading file content: ${path}`);
-        const response = await fetch(`/api/developer/file-content?path=${encodeURIComponent(path)}`);
+        const response = await fetch(`/api/developer/file-content?path=${encodeURIComponent(path)}`, {
+          credentials: 'include',
+        });
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
@@ -315,7 +317,8 @@ const ReplitInterface: React.FC = () => {
         body: JSON.stringify({
           path: path,
           content: file.content
-        })
+        }),
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -615,7 +618,8 @@ const ReplitInterface: React.FC = () => {
             currentFile: selectedFile,
             fileStructure: fileStructure
           } : { fileStructure: fileStructure }
-        })
+        }),
+        credentials: 'include',
       });
 
       const data = await response.json();
