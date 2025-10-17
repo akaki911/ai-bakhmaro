@@ -46,7 +46,8 @@ export const useTerminalStore = (): TerminalState => {
         body: JSON.stringify({
           name: name || `Terminal ${tabs.length + 1}`,
           workingDirectory: workingDirectory || '/home/runner/workspace'
-        })
+        }),
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -283,7 +284,8 @@ export const useTerminalStore = (): TerminalState => {
       method: 'DELETE',
       headers: {
         'X-User-Id': 'dev-user'
-      }
+      },
+      credentials: 'include',
     }).catch(error => {
       console.warn(`⚠️ Failed to destroy session ${tab.sessionId}:`, error);
     });
@@ -311,10 +313,11 @@ export const useTerminalStore = (): TerminalState => {
           'Content-Type': 'application/json',
           'X-User-Id': 'dev-user'
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           command,
           safetyConfirmed: options.safetyConfirmed || false
-        })
+        }),
+        credentials: 'include',
       });
 
       const result = await response.json();
@@ -354,7 +357,8 @@ export const useTerminalStore = (): TerminalState => {
           'Content-Type': 'application/json',
           'X-User-Id': 'dev-user'
         },
-        body: JSON.stringify({ name: newName })
+        body: JSON.stringify({ name: newName }),
+        credentials: 'include',
       }).catch(error => {
         console.warn(`⚠️ Failed to rename session ${tab.sessionId}:`, error);
       });
@@ -396,7 +400,8 @@ export const useTerminalStore = (): TerminalState => {
         const response = await fetch(`${currentApiBase}/api/terminal/sessions`, {
           headers: {
             'X-User-Id': 'dev-user'
-          }
+          },
+          credentials: 'include',
         });
 
         if (response.ok) {

@@ -341,6 +341,7 @@ const MemoryPage: React.FC = () => {
           method: 'POST',
           headers,
           body,
+          credentials: 'include',
         });
         if (res.ok) {
           viewResponse = await res.json();
@@ -351,7 +352,9 @@ const MemoryPage: React.FC = () => {
 
       let baseResponse: any = null;
       try {
-        const res = await fetch(`/api/memory/${encodeURIComponent(targetUserId)}`);
+        const res = await fetch(`/api/memory/${encodeURIComponent(targetUserId)}`, {
+          credentials: 'include',
+        });
         if (res.ok) {
           baseResponse = await res.json();
         }
@@ -390,6 +393,7 @@ const MemoryPage: React.FC = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(payload),
+          credentials: 'include',
         });
 
         if (!res.ok) {
