@@ -58,7 +58,7 @@ export function connectAutoImproveStream(
   let closed = false;
   let paused = false;
   let lastEventId: string | null = null;
-  let sinceOverride: string | null | undefined = options.since;
+  const sinceOverride: string | null | undefined = options.since;
   const headers = options.headers ?? {};
   const eventQueue: Array<{ name: AutoImproveStreamEventName; event: MessageEvent<string> }> = [];
   let drainTimer: ReturnType<typeof setInterval> | null = null;

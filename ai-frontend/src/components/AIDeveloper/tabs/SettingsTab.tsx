@@ -7,7 +7,6 @@ import { useAssistantMode } from '../../../contexts/useAssistantMode';
 import { useAuth } from '../../../contexts/useAuth';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { setFeatureFlagOverride } from '@/lib/featureFlags';
-import agentsGuidelines from '../../../../AGENTS.md?raw';
 
 interface AgentRule {
   id: string;
@@ -85,8 +84,36 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
   const { isReadOnly, setMode, lastUpdatedAt, lastUpdatedBy, isSyncing, syncError } = useAssistantMode();
   const isPlanMode = isReadOnly;
   const isGitHubEnabled = useFeatureFlag('GITHUB');
+  const [agentsGuidelines, setAgentsGuidelines] = useState<string>(
+    '## Agent Guidelines\nNo default guidelines were found. Administrators can update them from the Admin UI.',
+  );
   const defaultAgentRules = useMemo(() => parseAgentsMarkdown(agentsGuidelines), [agentsGuidelines]);
   const [agentRules, setAgentRules] = useState<AgentRule[]>(defaultAgentRules);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadGuidelines = async () => {
+      try {
+        const response = await fetch('/AGENTS.md', { credentials: 'include' });
+        if (!response.ok) {
+          throw new Error(`Failed to load AGENTS.md with status ${response.status}`);
+        }
+        const text = await response.text();
+        if (isMounted) {
+          setAgentsGuidelines(text);
+        }
+      } catch (error) {
+        console.warn('Unable to load AGENTS.md guidelines, continuing with fallback copy.', error);
+      }
+    };
+
+    loadGuidelines();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') {

@@ -128,7 +128,7 @@ export const TestsPanel: React.FC = () => {
     switch (testId) {
       case 'backend-ping':
         try {
-          const response = await fetch('/api/health');
+          const response = await fetch('/api/health', { credentials: 'include' });
           return response.ok;
         } catch {
           return false;
@@ -136,7 +136,7 @@ export const TestsPanel: React.FC = () => {
       
       case 'ai-service-ping':
         try {
-          const response = await fetch('/api/health');  // AI health endpoint would be here
+          const response = await fetch('/api/health', { credentials: 'include' });  // AI health endpoint would be here
           return response.ok;
         } catch {
           return false;
