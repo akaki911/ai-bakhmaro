@@ -403,7 +403,6 @@ try {
   app.use('/api/notifications', require('./routes/notifications'));
 
   // Other specific routes
-  app.use('/api/commission', require('./routes/commission'));
   app.use('/api/auth', require('./routes/fallback_auth'));
   app.use('/api/jwt', require('./routes/jwt_auth'));
   app.use('/api', require('./routes/health')); // Moved health to root API path
