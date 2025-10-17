@@ -1,104 +1,42 @@
-## Overview
+# Bakhmaro AI Stack
 
-This repository hosts the **Bakhmaro AI** workspace. It contains a React/Vite frontend, an Express-based backend gateway, and supporting automation scripts used to manage the AI assistant, memory synchronisation, and observability pipelines.
+## TypeScript service map
+| Service | Directory | Default port | Description |
+| --- | --- | --- | --- |
+| Gateway API | `gateway/` | 8080 | Express proxy that fronts all browser traffic, handles login redirects, and issues service JWTs before forwarding requests to downstream APIs. |
+| Property API | `property-api/` | 5100 | Express microservice that serves property commission data and health information consumed by the gateway. |
+| AI Frontend | `ai-frontend/` | 5173 | Vite-powered React UI bundled for both local development and static hosting behind the gateway. |
 
-The project is now maintained directly from GitHub (no Replit integration). All scripts remain standard `npm` commands so the stack can run locally with Node.js 18+ as well.
+The compose file maps each container port to the same host port so the services are reachable at `http://localhost:<port>` when started with Docker Compose.
 
-## Prerequisites
+## Authentication request sequence
+1. A browser request to `/` lands on the gateway.
+2. If no auth headers or session cookies are present, the gateway responds with `302 /login`.
+3. Authenticated traffic (or any other `GET`) is served the compiled `index.html`, which bootstraps the Vite frontend.
 
-Before running the project make sure you have:
+This flow is implemented in the gateway entrypoint: unauthenticated requests on `/` are redirected to `env.LOGIN_PATH` (default `/login`), while a shared `sendIndexHtml` helper responds with the SPA shell for authenticated or subsequent routes.
 
-- Node.js `>=18 <=22` (matches the engines requirement in `package.json`).
-- `npm` (ships with Node.js) for installing dependencies and running scripts.
-- Optional: Docker and Prometheus/Jaeger if you want to forward telemetry externally.
+## Configuration matrix
+| Variable | Consumed by | Defaults & source | Purpose | Switching notes |
+| --- | --- | --- | --- | --- |
+| `AI_DOMAIN` | Frontend & gateway containers | Defaults to `http://localhost:5173` when unset in Compose. | Used by client code and reverse proxy logic to describe the public-facing AI hostname. | Set this to your live AI domain (e.g., `https://ai.bakhmaro.co`) when deploying beyond localhost. |
+| `ROOT_DOMAIN` | Frontend & gateway containers | Defaults to `localhost` in Compose. | Controls cookie / redirect handling that depends on the parent domain. | Replace with `bakhmaro.co` (or your root) so redirects like `bakhmaro.co → ai.bakhmaro.co` resolve correctly. |
+| `REMOTE_SITE_BASE` | Gateway | Resolved to `http://ai-frontend:5173` in Compose, or falls back to `UPSTREAM_API_URL` → `http://127.0.0.1:5002` in code. | Target for `/api` proxy traffic that ultimately serves the public site. | Point this at the desired upstream: keep a Replit URL during development, then switch to `https://bakhmaro.co` for production. |
+| `JWT_SECRET` | Gateway | Required; Compose enforces presence. | Signs the short-lived service tokens injected on proxied requests. | Rotate per environment. Must be at least 16 characters to satisfy validation. |
 
-Clone the repository and install dependencies once:
+## Docker Compose workflow
+1. Copy and edit `.env` with the matrix values above.
+2. Build and start the stack with `docker compose up --build`.
+3. The containers expose:
+   - Frontend on `5173` with an HTTP health probe that fetches `/`.
+   - Gateway on `8080` with a `GET /health` probe.
+   - Property API on `5100` with a `GET /health` probe.
+4. Stop with `Ctrl+C` and tear down resources via `docker compose down` when finished.
 
-```bash
-npm install
+## Gateway proxy topology
 ```
-
-## Quick start
-
-The workspace exposes scripts for running the frontend and backend either together or independently.
-
-### Start the full stack
-
-```bash
-npm run dev
+Browser ↔ Gateway (8080)
+  ↳ /api/property → Property API (5100)
+  ↳ /api/*        → Remote site (REMOTE_SITE_BASE)
 ```
-
-This command:
-
-1. Runs `scripts/port-cleanup.sh` to free the core development ports (`3000`, `5000`, `5001`, `5002`).
-2. Launches the backend on port `5002` and the Vite dev server on port `3000` using `concurrently`.
-
-### Run services individually
-
-```bash
-# Backend only (Express API + proxy)
-npm run dev:backend
-
-# Frontend only (Vite dev server)
-npm run dev:frontend
-```
-
-### Run with Docker Compose
-
-Use Docker Compose to bring up the frontend, gateway, and property API with a single command:
-
-1. Copy the sample environment file if you do not already have one:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-2. Update `.env` with values for `AI_DOMAIN`, `ROOT_DOMAIN`, `REMOTE_SITE_BASE`, and `JWT_SECRET` (plus any other secrets required by the services).
-
-3. Build and start the stack:
-
-   ```bash
-   docker compose up --build
-   ```
-
-The compose file provisions three containers on a shared network:
-
-- `ai-frontend` exposes the Vite dev server on [http://localhost:5173](http://localhost:5173) and proxies API calls to the gateway.
-- `gateway` runs on [http://localhost:8080](http://localhost:8080) with health checks against `/health` and forwards service JWT configuration from the `.env` file.
-- `property-api` listens on [http://localhost:5100](http://localhost:5100) and is automatically wired into the gateway via the internal service URL.
-
-Stop the stack with `Ctrl+C` and, if needed, clean up resources using `docker compose down`.
-
-### Build and type-check
-
-```bash
-npm run lint
-npm run type-check
-npm run build
-```
-
-The `build` command performs a TypeScript project build followed by a production Vite bundle.
-
-## Logging & observability
-
-The backend ships with an OpenTelemetry-powered middleware located at `backend/middleware/telemetry_middleware.js`. A structured logger is attached to each request and now supports both JSON and human-friendly output formats.
-
-- Set `LOG_FORMAT=json` to emit strict JSON (useful for log shippers).
-- The default `pretty` mode prints entries as single-line messages while still masking sensitive fields such as tokens, secrets, and session identifiers.
-- Sensitive keys are automatically masked, so application code no longer needs to emit manual `[redacted]` placeholders.
-
-Prometheus metrics are exposed on port `9092` by default, and traces are exported to Jaeger using the endpoint from `JAEGER_ENDPOINT`.
-
-## Port diagnostics & recovery
-
-Use the dedicated helper to inspect local development ports and gracefully stop conflicting processes before starting the dev stack:
-
-```bash
-npm run diagnose:ports
-```
-
-The script checks ports `3000`, `5000`, `5001`, and `5002` using Linux `/proc` socket metadata, reports conflicting PIDs/commands, and attempts a graceful shutdown (SIGTERM/SIGKILL) before revalidating that the ports are free.
-
-## Troubleshooting Git workflows
-
-If `git pull` stops with the message `You have divergent branches and need to specify how to reconcile them`, follow [docs/git-pull-divergent-branches.md](docs/git-pull-divergent-branches.md) for resolution steps tailored to this repository.
+The gateway issues service JWTs before forwarding each proxied call, and surfaces `/health` to report which upstream base URLs are currently active.
