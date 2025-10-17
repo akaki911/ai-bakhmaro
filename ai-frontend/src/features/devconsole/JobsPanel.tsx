@@ -40,7 +40,8 @@ export const JobsPanel: React.FC = () => {
       const response = await fetch('/api/dev/commands/restart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target: target || 'backend' })
+        body: JSON.stringify({ target: target || 'backend' }),
+        credentials: 'include',
       });
 
       const result = await response.json();
