@@ -2,6 +2,7 @@ import React from 'react';
 import { Server, Globe, Clock, CheckCircle, AlertCircle, XCircle, ArrowRight, FileText, Code, X, Terminal } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
+import { getApiBase } from '../../../lib/apiBase';
 
 interface ServiceInfo {
   name: string;
@@ -42,18 +43,9 @@ interface ServicesViewProps {
   onBackToLogs: () => void;
 }
 
-// Smart API Base Detection - Fixed HTTPS Protocol
+// Smart API Base Detection aligned with terminal store logic
 const detectAPIBase = () => {
-  const env = import.meta.env.VITE_API_BASE;
-  if (env) return env;
-
-  // Fallback detection with HTTPS protocol
-  const currentHost = window.location.host;
-  if (currentHost.includes('replit.dev')) {
-    const backendHost = currentHost.replace(':5000', ':5002').replace(':3000', ':5002');
-    return `https://${backendHost}`;
-  }
-  return 'http://localhost:5002';
+  return getApiBase();
 };
 
 const API_BASE = detectAPIBase();
@@ -134,7 +126,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
 
       // 📋 Frontend Routes Discovery (from App.tsx)
       try {
-        const appResponse = await fetch(`${API_BASE}/api/files/content/src/App.tsx`, {
+        const appResponse = await fetch(`${API_BASE}/files/content/src/App.tsx`, {
           credentials: 'include',
         });
         if (appResponse.ok) {
@@ -165,7 +157,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
 
       // 🔧 Backend Routes Discovery
       try {
-        const backendResponse = await fetch(`${API_BASE}/api/files/content/backend/index.js`, {
+        const backendResponse = await fetch(`${API_BASE}/files/content/backend/index.js`, {
           credentials: 'include',
         });
         if (backendResponse.ok) {
@@ -192,7 +184,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
 
       // 🤖 AI Service Routes Discovery
       try {
-        const aiResponse = await fetch(`${API_BASE}/api/files/content/ai-service/server.js`, {
+        const aiResponse = await fetch(`${API_BASE}/files/content/ai-service/server.js`, {
           credentials: 'include',
         });
         if (aiResponse.ok) {

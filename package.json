@@ -12,7 +12,7 @@
     "dev:frontend": "npm run dev -w ai-frontend",
     "dev:property-api": "npm run dev -w property-api",
     "dev:gateway": "npm run dev -w gateway",
-    "build": "npm run build -ws --if-present",
+    "build": "node scripts/run-workspace-build.mjs",
     "lint": "npm run lint -ws --if-present",
     "test": "npm run test -ws --if-present",
     "type-check": "npm run type-check -w ai-frontend --if-present"
