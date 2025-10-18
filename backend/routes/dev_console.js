@@ -3,6 +3,33 @@ const router = express.Router();
 const { EventEmitter } = require('events');
 const axios = require('axios'); // For Groq API requests
 
+let replitMonitorService;
+let replitMonitorReady = false;
+try {
+  ({ replitMonitorService } = require('../../ai-service/services/replit_monitor_service'));
+  if (replitMonitorService?.initialize) {
+    replitMonitorService.initialize().then(() => {
+      replitMonitorReady = true;
+      console.log('✅ [DevConsole] Replit monitor bridge initialized');
+      if (typeof replitMonitorService.getRecentLogs === 'function') {
+        try {
+          const recent = replitMonitorService.getRecentLogs(200);
+          if (Array.isArray(recent)) {
+            // reverse to emit oldest first for readability
+            recent.slice().reverse().forEach(log => forwardExternalLog(log));
+          }
+        } catch (bootstrapError) {
+          console.warn('⚠️ [DevConsole] Unable to bootstrap logs from Replit monitor:', bootstrapError.message);
+        }
+      }
+    }).catch(error => {
+      console.warn('⚠️ [DevConsole] Failed to initialize Replit monitor bridge:', error.message);
+    });
+  }
+} catch (error) {
+  console.warn('⚠️ [DevConsole] Replit monitor service unavailable:', error.message);
+}
+
 // Global event emitter for dev console logs
 const devConsoleEmitter = new EventEmitter();
 devConsoleEmitter.setMaxListeners(50);
@@ -133,6 +160,40 @@ const logBuffer = {
     });
   }
 };
+
+const forwardExternalLog = (logEntry, origin = 'replit-monitor') => {
+  if (!logEntry) {
+    return;
+  }
+
+  const timestamp = logEntry.timestamp ? new Date(logEntry.timestamp).getTime() : Date.now();
+  const message = logEntry.message || logEntry.content || '';
+  if (!message) {
+    return;
+  }
+
+  const entry = {
+    ts: timestamp,
+    source: logEntry.source || 'system',
+    level: logEntry.level || 'info',
+    message,
+    meta: {
+      origin,
+      ...(logEntry.meta || {}),
+      filePath: logEntry.filePath,
+      rawTimestamp: logEntry.timestamp || new Date(timestamp).toISOString()
+    },
+    id: logEntry.id || `${origin}-${timestamp}-${Math.random().toString(36).slice(2)}`
+  };
+
+  logBuffer.add(entry);
+  devConsoleEmitter.emit('log', entry);
+};
+
+if (replitMonitorService) {
+  replitMonitorService.on('log', (log) => forwardExternalLog(log));
+  replitMonitorService.on('error', (log) => forwardExternalLog({ ...log, level: 'error' }));
+}
 
 // Metrics buffer for real-time monitoring
 const metricsBuffer = {
@@ -338,6 +399,24 @@ router.get('/stream', (req, res) => {
     message: 'DevConsole v2 stream connected',
     timestamp: Date.now()
   })}\n\n`);
+
+  // Send initial backlog so the UI mirrors existing console history
+  const initialLogs = logBuffer.entries.slice(-200);
+  if (initialLogs.length > 0) {
+    initialLogs.forEach(log => {
+      const payload = { type: 'log', ...log };
+      res.write(`data: ${JSON.stringify(payload)}\n\n`);
+    });
+  } else if (replitMonitorReady) {
+    res.write(`data: ${JSON.stringify({
+      type: 'log',
+      ts: Date.now(),
+      source: 'system',
+      level: 'info',
+      message: 'Replit monitor connected. Awaiting new console activity...',
+      meta: { origin: 'replit-monitor' }
+    })}\n\n`);
+  }
 
   // Set up periodic heartbeat
   const heartbeat = setInterval(() => {
