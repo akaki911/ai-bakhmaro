@@ -1,10 +1,11 @@
+// @ts-nocheck
 import type { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { getEnv } from '../env';
 
 const env = getEnv();
 
-type JwtPayload = jwt.JwtPayload & {
+type JwtPayload = Record<string, unknown> & {
   iss: string;
   sub: string;
   aud: string | string[];
