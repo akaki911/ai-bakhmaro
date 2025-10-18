@@ -4,29 +4,21 @@ import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { getEnv } from './env';
+import { buildAllowedOriginsSet, createCorsOriginValidator } from './cors';
 import { requireServiceToken } from './middleware/serviceAuth';
 import commissionRouter from './routes/commission';
 
 const env = getEnv();
 const app = express();
-const allowedOrigins = new Set(env.ALLOWED_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean));
+const allowedOrigins = buildAllowedOriginsSet(env.ALLOWED_ORIGIN);
+const validateOrigin = createCorsOriginValidator(allowedOrigins, {
+  errorMessage: (origin) => `Origin ${origin} is not permitted`,
+});
 
 app.use(helmet());
 app.use(
   cors({
-    origin(origin, callback) {
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-
-      if (allowedOrigins.has(origin)) {
-        callback(null, true);
-        return;
-      }
-
-      callback(new Error(`Origin ${origin} is not permitted`));
-    },
+    origin: validateOrigin,
     credentials: true,
   }),
 );

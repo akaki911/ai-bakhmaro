@@ -81,3 +81,15 @@ All three calls should succeed; failures indicate a misconfigured `REMOTE_SITE_B
 With these steps the repository operates exclusively in AI mode while retaining a controlled bridge to the legacy property platform through the gateway proxy.
 
 For an operational, minute-by-minute runbook that covers the production switch from the legacy static host to the AI gateway, follow [`docs/prod-deployment-checklist.md`](docs/prod-deployment-checklist.md).
+
+### Development overrides for CORS
+
+Both the gateway and the property API now default to allowing requests only from `https://ai.bakhmaro.co`. When you need to test from other origins (for example, `http://localhost:5173` during local UI development), explicitly opt in by setting the relevant environment variables before starting the services:
+
+```dotenv
+# .env
+CORS_ALLOWED_ORIGIN=https://ai.bakhmaro.co,http://localhost:5173
+ALLOWED_ORIGIN=https://ai.bakhmaro.co,http://localhost:5173
+```
+
+Each variable accepts a comma-separated list. The middleware rejects any origin that is not listed, so unconfigured sites receive a CORS error by default. The new unit tests in both workspaces exercise this behaviour to guard against regressions.

@@ -13,6 +13,7 @@ import jwt from 'jsonwebtoken';
 import { createProxyMiddleware, type Options } from 'http-proxy-middleware';
 import type { ClientRequest } from 'http';
 import { getEnv } from './env';
+import { buildAllowedOriginsSet, createCorsOriginValidator } from './cors';
 
 const env = getEnv();
 const app = express();
@@ -27,7 +28,10 @@ const logLevel = env.NODE_ENV === 'production' ? 'warn' : 'debug';
 if (!fs.existsSync(staticRoot)) {
   console.warn(`⚠️ Static root ${staticRoot} does not exist; SPA responses may fail until the frontend is built.`);
 }
-const allowedOrigins = new Set(env.CORS_ALLOWED_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean));
+const allowedOrigins = buildAllowedOriginsSet(env.CORS_ALLOWED_ORIGIN);
+const validateOrigin = createCorsOriginValidator(allowedOrigins, {
+  errorMessage: (origin) => `Origin ${origin} is not allowed by CORS policy`,
+});
 const cookieDomain = env.COOKIE_DOMAIN;
 const cookieSecure = env.COOKIE_SECURE;
 
@@ -196,19 +200,7 @@ app.use(helmet());
 app.use(compression());
 app.use(
   cors({
-    origin(origin, callback) {
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-
-      if (allowedOrigins.has(origin)) {
-        callback(null, true);
-        return;
-      }
-
-      callback(new Error(`Origin ${origin} is not allowed by CORS policy`));
-    },
+    origin: validateOrigin,
     credentials: true,
   }),
 );
