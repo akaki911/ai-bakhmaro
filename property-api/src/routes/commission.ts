@@ -83,7 +83,9 @@ router.get('/invoices', requireAdmin, async (req: Request, res: Response) => {
   try {
     const { providerId, status, limit = '50', offset = '0' } = req.query as Record<string, string>;
 
-    let query = admin.firestore().collection('invoices');
+    let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = admin
+      .firestore()
+      .collection('invoices');
 
     if (providerId) {
       query = query.where('providerId', '==', providerId);
@@ -257,7 +259,9 @@ router.get('/stats', requireAdmin, async (req: any, res: any) => {
   try {
     const { startDate, endDate } = req.query as Record<string, string | undefined>;
 
-    let query = admin.firestore().collection('invoices');
+    let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = admin
+      .firestore()
+      .collection('invoices');
 
     if (startDate) {
       query = query.where('issueDate', '>=', startDate);
