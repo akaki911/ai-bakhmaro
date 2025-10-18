@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview --port 5000 --host 0.0.0.0",
-    "test": "echo \"No automated tests for ai-frontend\"",
+    "test": "node --test tests",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
