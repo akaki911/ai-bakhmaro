@@ -1,9 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { getApiBase } from '../../../lib/apiBase';
 import { TerminalTab, TerminalSession, TerminalEventMessage, TerminalState } from '../types/terminal';
-
-// Define API_BASE outside the hook to avoid redefining it on every render
-// This will be overridden by the specific API_BASE logic within the functions if needed.
-const API_BASE = '/api/terminal';
 
 export const useTerminalStore = (): TerminalState => {
   const [tabs, setTabs] = useState<TerminalTab[]>([]);
@@ -16,10 +13,7 @@ export const useTerminalStore = (): TerminalState => {
 
   // Helper function to get the correct API base URL
   const getApiBaseUrl = useCallback(() => {
-    return import.meta.env.VITE_API_BASE || 
-      (window.location.host.includes('replit.dev') 
-        ? `https://${window.location.host.replace(':5000', ':5002').replace(':3000', ':5002')}`
-        : 'http://localhost:5002');
+    return getApiBase();
   }, []);
 
   // Cleanup connections on unmount
@@ -37,7 +31,7 @@ export const useTerminalStore = (): TerminalState => {
       console.log(`🔄 Creating new terminal session: ${name || 'Terminal'}`);
       const currentApiBase = getApiBaseUrl();
 
-      const response = await fetch(`${currentApiBase}/api/terminal/sessions`, {
+      const response = await fetch(`${currentApiBase}/terminal/sessions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -103,7 +97,7 @@ export const useTerminalStore = (): TerminalState => {
       console.log(`🔌 Connecting to terminal session stream: ${sessionId}`);
       const currentApiBase = getApiBaseUrl();
 
-      const eventSource = new EventSource(`${currentApiBase}/api/terminal/sessions/${sessionId}/stream`);
+      const eventSource = new EventSource(`${currentApiBase}/terminal/sessions/${sessionId}/stream`);
 
       eventSource.onopen = () => {
         console.log(`✅ Terminal stream connected: ${sessionId}`);
@@ -280,7 +274,7 @@ export const useTerminalStore = (): TerminalState => {
     });
 
     // Destroy session on backend
-    fetch(`${currentApiBase}/api/terminal/sessions/${tab.sessionId}`, {
+    fetch(`${currentApiBase}/terminal/sessions/${tab.sessionId}`, {
       method: 'DELETE',
       headers: {
         'X-User-Id': 'dev-user'
@@ -307,7 +301,7 @@ export const useTerminalStore = (): TerminalState => {
       console.log(`⚡ Executing command in session ${sessionId}: ${command}`);
       const currentApiBase = getApiBaseUrl();
 
-      const response = await fetch(`${currentApiBase}/api/terminal/sessions/${sessionId}/execute`, {
+      const response = await fetch(`${currentApiBase}/terminal/sessions/${sessionId}/execute`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -351,7 +345,7 @@ export const useTerminalStore = (): TerminalState => {
     // Update session name on backend
     const tab = tabs.find(t => t.id === tabId);
     if (tab) {
-      fetch(`${currentApiBase}/api/terminal/sessions/${tab.sessionId}`, {
+      fetch(`${currentApiBase}/terminal/sessions/${tab.sessionId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -397,7 +391,7 @@ export const useTerminalStore = (): TerminalState => {
     const loadExistingSessions = async () => {
       try {
         const currentApiBase = getApiBaseUrl();
-        const response = await fetch(`${currentApiBase}/api/terminal/sessions`, {
+        const response = await fetch(`${currentApiBase}/terminal/sessions`, {
           headers: {
             'X-User-Id': 'dev-user'
           },
