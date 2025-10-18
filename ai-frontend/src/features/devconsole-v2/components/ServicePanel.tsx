@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Play, Square, AlertCircle, Activity, Cpu, HardDrive, ExternalLink, Server, CheckCircle, AlertTriangle, XCircle, MemoryStick } from 'lucide-react';
+import { buildServiceOrigin } from '../utils/serviceUrls.js';
 
 interface ServiceStatus {
   name: string;
@@ -37,12 +38,12 @@ interface ServiceStatus {
 // }
 
 export const ServicePanel: React.FC = () => {
-  const [services, setServices] = useState<ServiceStatus[]>([
+  const [services, setServices] = useState<ServiceStatus[]>(() => [
     {
       name: 'AI Service',
       status: 'running',
       port: 5001,
-      url: 'https://bakhmaro.replit.dev:5001',
+      url: buildServiceOrigin(5001),
       pid: 1234,
       cpu: 25,
       memory: 180,
@@ -54,7 +55,7 @@ export const ServicePanel: React.FC = () => {
       name: 'Backend',
       status: 'running',
       port: 5002,
-      url: 'https://bakhmaro.replit.dev:5002',
+      url: buildServiceOrigin(5002),
       pid: 1235,
       cpu: 15,
       memory: 120,
@@ -66,7 +67,7 @@ export const ServicePanel: React.FC = () => {
       name: 'Frontend',
       status: 'running',
       port: 3000,
-      url: 'https://bakhmaro.replit.dev:3000',
+      url: buildServiceOrigin(3000),
       pid: 1236,
       cpu: 10,
       memory: 95,

@@ -3,6 +3,7 @@ import { Server, Globe, Clock, CheckCircle, AlertCircle, XCircle, ArrowRight, Fi
 import { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import { getApiBase } from '../../../lib/apiBase';
+import { buildServiceOrigin } from '../utils/serviceUrls.js';
 
 interface ServiceInfo {
   name: string;
@@ -64,7 +65,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
       port: portStatus.port,
       status: mapPortStatusToServiceStatus(portStatus.status),
       uptime: calculateUptime(portStatus.details?.startTime),
-      url: `https://bakhmaro.replit.dev:${portStatus.port}`,
+      url: buildServiceOrigin(portStatus.port),
       pid: portStatus.pid,
       cpu: parseFloat(portStatus.details?.cpuUsage?.replace('%', '') || '0'),
       memory: parseFloat(portStatus.details?.memoryUsage?.replace('%', '') || '0')
