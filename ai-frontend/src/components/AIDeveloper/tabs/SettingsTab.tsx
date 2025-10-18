@@ -18,6 +18,8 @@ interface AgentRule {
 }
 
 const AGENT_RULES_STORAGE_KEY = 'admin.agentsRules';
+const AGENTS_GUIDELINES_STUB =
+  '## Agent Guidelines\nNo default guidelines were found. Administrators can update them from the Admin UI.';
 
 const parseAgentsMarkdown = (markdown: string): AgentRule[] => {
   if (!markdown) {
@@ -84,9 +86,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
   const { isReadOnly, setMode, lastUpdatedAt, lastUpdatedBy, isSyncing, syncError } = useAssistantMode();
   const isPlanMode = isReadOnly;
   const isGitHubEnabled = useFeatureFlag('GITHUB');
-  const [agentsGuidelines, setAgentsGuidelines] = useState<string>(
-    '## Agent Guidelines\nNo default guidelines were found. Administrators can update them from the Admin UI.',
-  );
+  const [agentsGuidelines, setAgentsGuidelines] = useState<string>(AGENTS_GUIDELINES_STUB);
   const defaultAgentRules = useMemo(() => parseAgentsMarkdown(agentsGuidelines), [agentsGuidelines]);
   const [agentRules, setAgentRules] = useState<AgentRule[]>(defaultAgentRules);
 
