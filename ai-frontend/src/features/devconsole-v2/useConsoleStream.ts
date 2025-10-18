@@ -42,20 +42,24 @@ export const useConsoleStream = (filters?: any) => {
 
   // ✅ Single connection guard for StrictMode
   const connectedRef = useRef(false);
+  const shouldStayConnectedRef = useRef(true);
 
   // Note: Debouncing available via useDebounce utility if needed
 
   // ✅ Disconnect function - defined first to avoid TDZ
-  const disconnect = useCallback(() => {
+  const disconnect = useCallback((stayConnected = false) => {
+    shouldStayConnectedRef.current = stayConnected;
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
     connectedRef.current = false;
     setConnectionStatus('disconnected');
-  }, []);
+  }, [setConnectionStatus]);
 
   const connect = useCallback((forceRefresh = false) => {
+    shouldStayConnectedRef.current = true;
+
     // ✅ Single connection guard - prevent StrictMode double connection
     if (connectedRef.current || eventSourceRef.current) {
       return;
@@ -186,7 +190,7 @@ export const useConsoleStream = (filters?: any) => {
 
         // Attempt reconnection after delay
         setTimeout(() => {
-          if (connectedRef.current) { // Check if connection is still intended to be active
+          if (shouldStayConnectedRef.current) {
             console.log('🔄 Attempting DevConsole reconnection...');
             // Use connect with forceRefresh=true to ensure a fresh connection attempt
             connect(true);
@@ -209,7 +213,7 @@ export const useConsoleStream = (filters?: any) => {
   const forceReload = useCallback(() => {
     console.log('🔄 Force reloading logs from server...');
     storage.clearCache('LOGS');
-    disconnect();
+    disconnect(true);
     connect(true);
   }, [connect, disconnect]);
 
@@ -383,7 +387,7 @@ export const useConsoleStream = (filters?: any) => {
     connect();
 
     return () => {
-      disconnect();
+      disconnect(false);
     };
   }, [connect, disconnect]);
 
