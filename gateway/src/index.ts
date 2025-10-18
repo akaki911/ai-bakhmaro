@@ -12,7 +12,8 @@ import fs from 'node:fs';
 import jwt from 'jsonwebtoken';
 import { createProxyMiddleware, type Options } from 'http-proxy-middleware';
 import type { ClientRequest } from 'http';
-import { getEnv } from './env';
+import { getEnv } from './env.js';
+import { createCookieNormaliser, createSessionCookieChecker } from './cookies.js';
 
 const env = getEnv();
 const app = express();
@@ -30,10 +31,10 @@ if (!fs.existsSync(staticRoot)) {
 const allowedOrigins = new Set(env.CORS_ALLOWED_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean));
 const cookieDomain = env.COOKIE_DOMAIN;
 const cookieSecure = env.COOKIE_SECURE;
+const sessionCookieNameSet = new Set(env.SESSION_COOKIE_NAMES);
+const isSessionCookieName = createSessionCookieChecker(sessionCookieNameSet);
 
 type ServiceAudience = 'property-api' | 'remote-site';
-
-const AUTH_COOKIE_NAMES = new Set(['bk_admin.sid', 'connect.sid', '__Secure-bk_admin.sid', 'bk_customer.sid']);
 
 const headerHasValue = (value: string | string[] | undefined): boolean => {
   if (Array.isArray(value)) {
@@ -63,7 +64,7 @@ const isAuthenticatedRequest = (req: Request): boolean => {
     .map((part) => part.split('=')[0]?.trim())
     .filter((name): name is string => Boolean(name && name.length > 0));
 
-  return cookieNames.some((name) => AUTH_COOKIE_NAMES.has(name) || name.endsWith('.sid'));
+  return cookieNames.some((name) => isSessionCookieName(name));
 };
 
 const createServiceJwt = (audience: ServiceAudience, req: Request): string => {
@@ -98,47 +99,11 @@ const applyServiceAuth = (audience: ServiceAudience) => (proxyReq: ClientRequest
   }
 };
 
-const normaliseCookie = (cookie: string): string => {
-  const parts = cookie.split(';').map((part) => part.trim()).filter(Boolean);
-  if (parts.length === 0) {
-    return cookie;
-  }
-
-  const [nameValue, ...attributeParts] = parts;
-  let domainAttr: string | null = null;
-  const preserved: string[] = [];
-
-  attributeParts.forEach((attr) => {
-    const lower = attr.toLowerCase();
-    if (lower.startsWith('domain=')) {
-      domainAttr = attr;
-      return;
-    }
-    if (lower.startsWith('samesite=')) {
-      return;
-    }
-    if (lower === 'secure') {
-      return;
-    }
-    preserved.push(attr);
-  });
-
-  const attributes: string[] = [...preserved];
-
-  if (cookieDomain) {
-    attributes.push(`Domain=${cookieDomain}`);
-  } else if (domainAttr) {
-    attributes.push(domainAttr);
-  }
-
-  attributes.push('SameSite=None');
-
-  if (cookieSecure) {
-    attributes.push('Secure');
-  }
-
-  return [nameValue, ...attributes].join('; ');
-};
+export const normaliseCookie = createCookieNormaliser({
+  cookieDomain,
+  cookieSecure,
+  hardenedCookieNames: sessionCookieNameSet,
+});
 
 const createProxy = (target: string, audience: ServiceAudience, extra: Options = {}) => {
   const { onProxyRes: upstreamOnProxyRes, ...rest } = extra;
