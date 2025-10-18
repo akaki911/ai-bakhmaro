@@ -17,6 +17,15 @@ const baseSchema = z.object({
   LOGIN_PATH: z.string().default('/login'),
   ROOT_DOMAIN: z.string().default('localhost'),
   COOKIE_SECURE: z.coerce.boolean().default(false),
+  SESSION_COOKIE_NAMES: z
+    .string()
+    .default('bk_admin.sid,connect.sid,__Secure-bk_admin.sid,bk_customer.sid')
+    .transform((value) =>
+      value
+        .split(',')
+        .map((name) => name.trim())
+        .filter((name) => name.length > 0),
+    ),
 });
 
 type ParsedEnv = z.infer<typeof baseSchema>;
@@ -24,6 +33,7 @@ type ParsedEnv = z.infer<typeof baseSchema>;
 export type GatewayEnv = ParsedEnv & {
   REMOTE_SITE_BASE: string;
   COOKIE_DOMAIN: string | null;
+  SESSION_COOKIE_NAMES: string[];
 };
 
 let cachedEnv: GatewayEnv | null = null;
@@ -50,6 +60,7 @@ export const getEnv = (): GatewayEnv => {
     ...data,
     REMOTE_SITE_BASE: remoteBase,
     COOKIE_DOMAIN: cookieDomain,
+    SESSION_COOKIE_NAMES: data.SESSION_COOKIE_NAMES,
   };
 
   return cachedEnv;
