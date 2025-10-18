@@ -20,9 +20,11 @@ Additional hardening details:
 
 - Gateway enforces `bakhmaro.co → https://ai.bakhmaro.co` with an HTTP 301 that preserves the original request URI.
 - CORS is constrained to the AI domain with `Access-Control-Allow-Credentials: true` so secure cookies survive cross-origin hops.
+- Service-to-service calls automatically receive a short-lived JWT signed by the gateway (`aud` = `property-api` or `remote-site`).
+- Upstream `Set-Cookie` headers are normalised to `SameSite=None` and `Domain=.${ROOT_DOMAIN}` so AI-only tooling works across subdomains while remaining configurable via `COOKIE_SECURE`.
 - Every `fetch` call from the frontend defaults to `credentials: 'include'`; session cookies are issued with `SameSite=None; Secure; HttpOnly` when delivered by the authentication backend.
 
-This flow is implemented in the gateway entrypoint: unauthenticated requests on `/` are redirected to `env.LOGIN_PATH` (default `/login`), while a shared `sendIndexHtml` helper responds with the SPA shell for authenticated or subsequent routes.
+This flow is implemented in the gateway entrypoint: unauthenticated requests on `/` are redirected to `env.LOGIN_PATH` (default `/login`), while a shared `sendIndexHtml` helper responds with the SPA shell for authenticated or subsequent routes. The SPA bundle is read from `STATIC_ROOT`, which defaults to the compiled output in `ai-frontend/dist`.
 
 ## Configuration matrix
 | Variable | Consumed by | Defaults & source | Purpose | Switching notes |
@@ -37,12 +39,14 @@ This flow is implemented in the gateway entrypoint: unauthenticated requests on 
 
 ## Docker Compose workflow
 1. Copy and edit `.env` with the matrix values above.
-2. Build and start the stack with `docker compose up --build`.
-3. The containers expose:
+2. Compile the frontend once (the bundle is mounted into the gateway container): `npm run build -w ai-frontend`.
+3. Build and start the stack with `docker compose up --build`.
+4. Visit `http://localhost:8080/login` to confirm the SPA renders.
+5. The containers expose:
    - Frontend on `5173` with an HTTP health probe that fetches `/`.
    - Gateway on `8080` with a `GET /health` probe.
    - Property API on `5100` with a `GET /health` probe.
-4. Stop with `Ctrl+C` and tear down resources via `docker compose down` when finished.
+6. Stop with `Ctrl+C` and tear down resources via `docker compose down` when finished.
 
 ## Gateway proxy topology
 ```
