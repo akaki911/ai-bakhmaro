@@ -65,3 +65,5 @@ Set `REMOTE_SITE_BASE` to the current upstream once and the gateway will forward
 5. Visit `https://bakhmaro.co` and confirm it 301-redirects to `https://ai.bakhmaro.co/login` and that the AI dashboard renders after signing in.
 
 With these steps the repository operates exclusively in AI mode while retaining a controlled bridge to the legacy property platform through the gateway proxy.
+
+For an operational, minute-by-minute runbook that covers the production switch from the legacy static host to the AI gateway, follow [`docs/prod-deployment-checklist.md`](docs/prod-deployment-checklist.md).
