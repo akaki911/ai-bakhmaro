@@ -1,25 +1,19 @@
 // @ts-nocheck
-import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/useAuth";
-import { systemCleanerService } from "../services/SystemCleanerService";
 import {
   Activity,
-  Beaker,
   Brain,
   Clock,
-  Database,
-  FileText,
   FolderOpen,
-  GitBranch,
   HardDrive,
   KeyRound,
   LayoutDashboard,
   Megaphone,
   MessageSquare,
   RefreshCcw,
-  Settings,
   Sparkles,
   Terminal,
 } from "lucide-react";
@@ -27,38 +21,18 @@ import type { LucideIcon } from "lucide-react";
 import ChatTab from "./AIDeveloper/tabs/ChatTab";
 import ConsoleTab from "./AIDeveloper/tabs/ConsoleTab";
 import ExplorerTab from "./AIDeveloper/tabs/ExplorerTab";
-import LogsTab from "./AIDeveloper/tabs/LogsTab";
-import MemoryTab from "./AIDeveloper/tabs/MemoryTab";
-import SettingsTab from "./AIDeveloper/tabs/SettingsTab";
-import GitHubTab from "./AIDeveloper/tabs/GitHubTab";
-import AutoImproveTab from "./AIDeveloper/tabs/AutoImproveTab";
-import TestsPage from "./AIDeveloper/tabs/Tests/TestsPage";
-import BackupTab from "./AIDeveloper/tabs/BackupTab";
 import { DevConsoleProvider } from "../contexts/DevConsoleContext";
 import { useAIServiceState } from "@/hooks/useAIServiceState";
 import { useFileOperations } from "../hooks/useFileOperations";
-import { useUIState } from "../hooks/useUIState";
 import { useSystemState } from "../hooks/useSystemState";
 import { useMemoryManagement } from "../hooks/useMemoryManagement";
-import { useFeatureFlag } from "@/hooks/useFeatureFlag";
-import { SecretsAdminPanel } from "@/features/secrets/SecretsAdminPanel";
 import { fetchSecretsTelemetry } from "@/services/secretsAdminApi";
-
-const LazyGitHubStub = React.lazy(() => import("@/pages/GitHubStub"));
 
 type TabKey =
   | "dashboard"
   | "chat"
   | "console"
-  | "explorer"
-  | "logs"
-  | "memory"
-  | "settings"
-  | "github"
-  | "backup"
-  | "autoImprove"
-  | "secrets"
-  | "tests";
+  | "explorer";
 
 type AccentTone = "violet" | "blue" | "green" | "pink" | "gold";
 
@@ -93,29 +67,13 @@ type StatCard = {
   status: "good" | "warning" | "critical" | "neutral";
 };
 
-const CORE_TABS: TabKey[] = [
-  "dashboard",
-  "chat",
-  "console",
-  "explorer",
-  "logs",
-  "memory",
-  "settings",
-  "backup",
-  "secrets",
-  "autoImprove",
-  "tests",
-];
+const CORE_TABS: TabKey[] = ["dashboard", "chat", "console", "explorer"];
 
 const DEFAULT_AI_SERVICE_HEALTH = { status: "ok", port: 5001, lastCheck: Date.now() };
 
 const normalizeTabKey = (value: string | null, validTabs: readonly TabKey[]): TabKey | null => {
   if (!value) {
     return null;
-  }
-
-  if (value === "auto-improve") {
-    return "autoImprove";
   }
 
   return (validTabs as readonly string[]).includes(value) ? (value as TabKey) : null;
@@ -125,7 +83,6 @@ const AIDeveloperPanel: React.FC = () => {
   const { user: authUser, isAuthenticated, authInitialized, userRole } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const isGitHubFeatureEnabled = useFeatureFlag("GITHUB");
   const { t } = useTranslation();
   const allowedSuperAdminIds = useMemo(() => ["01019062020"], []);
 
@@ -140,12 +97,9 @@ const AIDeveloperPanel: React.FC = () => {
     );
   }, [allowedSuperAdminIds, authUser]);
 
-  const coreTabs = useMemo<TabKey[]>(
-    () => (isSuperAdminUser ? CORE_TABS : CORE_TABS.filter((tab) => tab !== "secrets")),
-    [isSuperAdminUser],
-  );
+  const coreTabs = useMemo<TabKey[]>(() => CORE_TABS, []);
 
-  const validTabs = useMemo<readonly TabKey[]>(() => [...coreTabs, "github"], [coreTabs]);
+  const validTabs = useMemo<readonly TabKey[]>(() => coreTabs, [coreTabs]);
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
   const [isInitializing, setIsInitializing] = useState(true);
   const initBarrierRef = useRef(false);
@@ -192,10 +146,8 @@ const AIDeveloperPanel: React.FC = () => {
     refreshHealth,
     loadModels,
     modelControls,
-    setModelControls,
     availableModels,
     selectedModel,
-    setSelectedModel,
   } = useAIServiceState(isAuthenticated, authUser);
   const aiServiceHealth = providedHealth ?? DEFAULT_AI_SERVICE_HEALTH;
 
@@ -204,15 +156,10 @@ const AIDeveloperPanel: React.FC = () => {
     authUser,
   );
 
-  const { isDarkMode, setIsDarkMode } = useUIState();
-
   const {
     cleanerEnabled,
-    setCleanerEnabled,
     isCleaningNow,
-    setIsCleaningNow,
     lastCleanup,
-    setLastCleanup,
     telemetryData,
     setTelemetryData,
   } = useSystemState();
@@ -548,23 +495,19 @@ const AIDeveloperPanel: React.FC = () => {
 
   const handleTabChange = useCallback(
     (tab: TabKey) => {
-      if (tab === "secrets" && !isSuperAdminUser) {
-        console.warn("🔒 Secrets tab is restricted to SUPER_ADMIN users.");
-        return;
-      }
       setActiveTab(tab);
       const params = new URLSearchParams(location.search);
 
       if (tab === "dashboard") {
         params.delete("tab");
       } else {
-        params.set("tab", tab === "autoImprove" ? "auto-improve" : tab);
+        params.set("tab", tab);
       }
 
       navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
       console.log(`🔄 Switched to tab: ${tab}`);
     },
-    [isSuperAdminUser, location.pathname, location.search, navigate],
+    [location.pathname, location.search, navigate],
   );
 
   const handleRefreshHealth = useCallback(async () => {
@@ -590,13 +533,6 @@ const AIDeveloperPanel: React.FC = () => {
       setIsRefreshingModels(false);
     }
   }, [loadModels]);
-
-  useEffect(() => {
-    if (!isSuperAdminUser && activeTab === "secrets") {
-      setActiveTab("dashboard");
-      navigate({ pathname: location.pathname, search: "" }, { replace: true });
-    }
-  }, [activeTab, isSuperAdminUser, navigate, location.pathname]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -721,49 +657,6 @@ const AIDeveloperPanel: React.FC = () => {
     };
   }, [isSuperAdminUser, setTelemetryData]);
 
-  const handleManualCleanup = async () => {
-    setIsCleaningNow(true);
-    try {
-      const stats = await systemCleanerService.performManualCleanup();
-      setLastCleanup(new Date().toISOString());
-      console.log("🧹 Manual cleanup completed:", stats);
-      alert(`✅ გაწმენდა დასრულდა!\n${stats.cachesCleared} cache წაიშალა\n${stats.filesDeleted} ფაილი წაიშალა`);
-    } catch (error) {
-      console.error("🧹 Manual cleanup failed:", error);
-      alert("❌ გაწმენდა ვერ მოხერხდა");
-    } finally {
-      setIsCleaningNow(false);
-    }
-  };
-
-  const handleToggleCleaner = () => {
-    const newState = !cleanerEnabled;
-    setCleanerEnabled(newState);
-    systemCleanerService.setCleaningEnabled(newState);
-  };
-
-  const openFileFromActivity = useCallback(
-    async (path: string) => {
-      if (!path) {
-        return;
-      }
-
-      try {
-        const file = await loadFile(path);
-        setCurrentFile({
-          path,
-          content: file.content ?? "",
-          lastModified: new Date().toISOString(),
-        });
-        handleTabChange("explorer");
-      } catch (error) {
-        console.error("❌ [AI_DEV_PANEL] Failed to open file from activity log", error);
-        alert("ფაილის გახსნა ვერ მოხერხდა - იხილეთ კონსოლი დეტალებისთვის");
-      }
-    },
-    [handleTabChange, loadFile, setCurrentFile],
-  );
-
   type SidebarItem =
     | {
         key: string;
@@ -785,34 +678,13 @@ const AIDeveloperPanel: React.FC = () => {
       };
 
   const sidebarItems: SidebarItem[] = useMemo(() => {
-    const items: SidebarItem[] = [
+    return [
       { key: "dashboard", action: "tab", tabKey: "dashboard", icon: LayoutDashboard, label: "დეშბორდი" },
       { key: "chat", action: "tab", tabKey: "chat", icon: MessageSquare, label: "გურულო" },
       { key: "console", action: "tab", tabKey: "console", icon: Terminal, label: "კონსოლი" },
       { key: "explorer", action: "tab", tabKey: "explorer", icon: FolderOpen, label: "ფაილები" },
-      { key: "memory", action: "tab", tabKey: "memory", icon: Database, label: "მეხსიერება" },
-      { key: "logs", action: "tab", tabKey: "logs", icon: FileText, label: "ლოგები" },
-      { key: "settings", action: "tab", tabKey: "settings", icon: Settings, label: "პარამეტრები" },
-      {
-        key: "github",
-        action: "tab",
-        tabKey: "github",
-        icon: GitBranch,
-        label: "GitHub",
-        badge: isGitHubFeatureEnabled ? undefined : "OFF",
-        title: isGitHubFeatureEnabled
-          ? "GitHub ინტეგრაცია"
-          : "GitHub ინტეგრაცია გამორთულია - ჩართე VITE_GITHUB_ENABLED",
-        isOff: !isGitHubFeatureEnabled,
-      },
-      { key: "backup", action: "tab", tabKey: "backup", icon: HardDrive, label: "ბექაპი" },
-      { key: "autoImprove", action: "tab", tabKey: "autoImprove", icon: Brain, label: "ტვინი" },
-      { key: "secrets", action: "tab", tabKey: "secrets", icon: KeyRound, label: "საიდუმლოები" },
-      { key: "tests", action: "tab", tabKey: "tests", icon: Beaker, label: "Tests" },
     ];
-
-    return isSuperAdminUser ? items : items.filter((item) => item.key !== "secrets");
-  }, [isGitHubFeatureEnabled, isSuperAdminUser]);
+  }, []);
 
   const dashboardUpdates = useMemo<DashboardUpdate[]>(() => {
     const healthOk = Boolean(aiServiceHealth?.ok);
@@ -840,62 +712,49 @@ const AIDeveloperPanel: React.FC = () => {
         tag: healthOk ? "აქტიური" : "გაფრთხილება",
       },
       {
-        id: "github-integration",
-        title: "GitHub ინტეგრაცია",
-        description: isGitHubFeatureEnabled
-          ? "პულ რექვესთების მართვა და სინქი ხელმისაწვდომია პირდაპირ პანელიდან."
-          : "ინტეგრაციის გასააქტიურებლად ჩართე VITE_GITHUB_ENABLED გარემოს ცვლადი.",
-        timestamp: "2024-12-28T08:00:00Z",
-        icon: GitBranch,
-        accent: isGitHubFeatureEnabled ? "blue" : "pink",
-        tag: isGitHubFeatureEnabled ? "GA" : "დაგეგმილი",
+        id: "explorer-refresh",
+        title: "ფაილების მენეჯერი დახვეწილია",
+        description: "Explorer ტაბი სწრაფი ნავიგაციისთვის და ცვლილებების კონტროლისთვის ოპტიმიზებულია.",
+        timestamp: "2025-01-12T10:00:00Z",
+        icon: FolderOpen,
+        accent: "blue",
+        tag: "განახლება",
       },
     ];
-  }, [aiServiceHealth?.lastChecked, aiServiceHealth?.ok, isGitHubFeatureEnabled]);
+  }, [aiServiceHealth?.lastChecked, aiServiceHealth?.ok]);
 
   const quickActions = useMemo<QuickAction[]>(
     () => [
+      {
+        key: "dashboard",
+        label: "საწვრთნელი პანელი",
+        description: "სტატუსები და ბოლო აქტიურობა ერთ ადგილზე",
+        icon: LayoutDashboard,
+        accent: "violet",
+      },
       {
         key: "chat",
         label: "გურულო ჩატი",
         description: "რეალური დროის დიალოგი Gurulo-სთან",
         icon: MessageSquare,
-        accent: "violet",
+        accent: "blue",
       },
       {
         key: "console",
         label: "დევკონსოლი",
-        description: "სისტემის პროცესი, ლოგები და სტატუსები",
+        description: "სისტემის პროცესის მონიტორინგი და ბრძანებები",
         icon: Terminal,
-        accent: "blue",
+        accent: "green",
       },
       {
         key: "explorer",
         label: "ფაილების მენეჯერი",
         description: "რედაქტირება და ფაილების მონიტორინგი",
         icon: FolderOpen,
-        accent: "green",
-      },
-      {
-        key: "autoImprove",
-        label: "Auto-Improve",
-        description: "AI ინიციატივები კოდის გასაუმჯობესებლად",
-        icon: Brain,
         accent: "gold",
       },
-      {
-        key: "github",
-        label: "GitHub ინტეგრაცია",
-        description: isGitHubFeatureEnabled
-          ? "რეპოზიტორიის სინქი და პულ რექვესთები"
-          : "ჩართე VITE_GITHUB_ENABLED რათა გააქტიურდეს",
-        icon: GitBranch,
-        accent: "pink",
-        disabled: !isGitHubFeatureEnabled,
-        badge: isGitHubFeatureEnabled ? undefined : "OFF",
-      },
     ],
-    [isGitHubFeatureEnabled],
+    [],
   );
 
   if (isInitializing) {
@@ -1151,70 +1010,6 @@ const AIDeveloperPanel: React.FC = () => {
                         aiFetch={aiFetch}
                         loadFile={loadFile}
                         saveFile={saveFile}
-                      />
-                    )}
-
-                    {activeTab === "memory" && <MemoryTab isAuthenticated={isAuthenticated} />}
-
-                    {activeTab === "logs" && <LogsTab hasDevConsoleAccess={hasDevConsoleAccess} />}
-
-                    {activeTab === "settings" && (
-                      <SettingsTab
-                        isDarkMode={isDarkMode}
-                        setIsDarkMode={setIsDarkMode}
-                        cleanerEnabled={cleanerEnabled}
-                        isCleaningNow={isCleaningNow}
-                        lastCleanup={lastCleanup}
-                        onToggleCleaner={handleToggleCleaner}
-                        onManualCleanup={handleManualCleanup}
-                        modelControls={modelControls}
-                        setModelControls={setModelControls}
-                        availableModels={availableModels}
-                        selectedModel={selectedModel}
-                        setSelectedModel={setSelectedModel}
-                        telemetryData={telemetryData}
-                      />
-                    )}
-
-                    {activeTab === "github" && (
-                      isGitHubFeatureEnabled ? (
-                        <GitHubTab
-                          hasDevConsoleAccess={hasDevConsoleAccess}
-                          onOpenSettings={() => handleTabChange("settings")}
-                        />
-                      ) : (
-                        <Suspense
-                          fallback={
-                            <div className="ai-dev-tab-panel__placeholder">
-                              <div className="ai-dev-tab-panel__placeholder-text">
-                                <div>GitHub პანელი იტვირთება…</div>
-                                <p>გთხოვ მოითმინო სანამ ინტეგრაციის გვერდი ჩაიტვირთება.</p>
-                              </div>
-                            </div>
-                          }
-                        >
-                          <LazyGitHubStub
-                            mode="panel"
-                            onOpenSettings={() => handleTabChange("settings")}
-                          />
-                        </Suspense>
-                      )
-                    )}
-
-                    {activeTab === "backup" && (
-                      <BackupTab hasDevConsoleAccess={hasDevConsoleAccess} />
-                    )}
-
-                    {activeTab === "secrets" && isSuperAdminUser && <SecretsAdminPanel variant="panel" />}
-
-                    {activeTab === "tests" && <TestsPage />}
-
-                    {activeTab === "autoImprove" && (
-                      <AutoImproveTab
-                        hasDevConsoleAccess={hasDevConsoleAccess}
-                        isAuthenticated={isAuthenticated}
-                        userRole={userRole}
-                        openFileFromActivity={openFileFromActivity}
                       />
                     )}
                   </div>

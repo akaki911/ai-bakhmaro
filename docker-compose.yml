@@ -43,7 +43,7 @@ services:
       AI_DOMAIN: ${AI_DOMAIN:-http://localhost:5173}
       ROOT_DOMAIN: ${ROOT_DOMAIN:-localhost}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
-      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:5173,http://ai-frontend:5173}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-https://ai.bakhmaro.co}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       LOGIN_PATH: ${LOGIN_PATH:-/login}
     depends_on:
@@ -74,7 +74,7 @@ services:
       SERVICE_JWT_SUBJECT: gateway-service
       SERVICE_JWT_AUDIENCE: property-api
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-demo-bakhmaro}
-      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-http://localhost:5173}
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-https://ai.bakhmaro.co}
     networks:
       - ai-stack
     healthcheck:

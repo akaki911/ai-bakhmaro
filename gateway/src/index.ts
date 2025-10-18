@@ -28,7 +28,10 @@ const logLevel = env.NODE_ENV === 'production' ? 'warn' : 'debug';
 if (!fs.existsSync(staticRoot)) {
   console.warn(`⚠️ Static root ${staticRoot} does not exist; SPA responses may fail until the frontend is built.`);
 }
-const allowedOrigins = new Set(env.CORS_ALLOWED_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean));
+const allowedOrigins = buildAllowedOriginsSet(env.CORS_ALLOWED_ORIGIN);
+const validateOrigin = createCorsOriginValidator(allowedOrigins, {
+  errorMessage: (origin) => `Origin ${origin} is not allowed by CORS policy`,
+});
 const cookieDomain = env.COOKIE_DOMAIN;
 const cookieSecure = env.COOKIE_SECURE;
 const sessionCookieNameSet = new Set(env.SESSION_COOKIE_NAMES);
@@ -161,19 +164,7 @@ app.use(helmet());
 app.use(compression());
 app.use(
   cors({
-    origin(origin, callback) {
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-
-      if (allowedOrigins.has(origin)) {
-        callback(null, true);
-        return;
-      }
-
-      callback(new Error(`Origin ${origin} is not allowed by CORS policy`));
-    },
+    origin: validateOrigin,
     credentials: true,
   }),
 );
@@ -187,7 +178,7 @@ app.get('/health', (_req, res) => {
 
 app.use(
   '/api/property',
-  createProxy(env.PROPERTY_API_URL, 'property-api', {
+  createProxy(env.REMOTE_SITE_BASE, 'remote-site', {
     pathRewrite: { '^/api/property': '' },
   }),
 );
