@@ -222,7 +222,7 @@ app.get('/health', (_req, res) => {
 
 app.use(
   '/api/property',
-  createProxy(env.PROPERTY_API_URL, 'property-api', {
+  createProxy(env.REMOTE_SITE_BASE, 'remote-site', {
     pathRewrite: { '^/api/property': '' },
   }),
 );
