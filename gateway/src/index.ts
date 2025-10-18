@@ -1,7 +1,8 @@
 // @ts-nocheck
 import compression from 'compression';
 import cors from 'cors';
-import express, { type NextFunction, type Request, type RequestHandler, type Response } from 'express';
+import express from 'express';
+import type { NextFunction, Request, RequestHandler, Response } from 'express-serve-static-core';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import path from 'node:path';
