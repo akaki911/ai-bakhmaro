@@ -19,10 +19,7 @@ import { useAuth } from './contexts/useAuth';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './Login';
-import { DevConsolePage } from './features/devconsole/DevConsolePage';
 import AIDeveloperPanel from './components/AIDeveloperPanel';
-import MemoryPage from './pages/memory';
-import ReplitInterface from './components/ReplitInterface';
 import FilePreview from './components/FilePreview';
 import './index.css';
 
@@ -68,12 +65,9 @@ function RootRedirect() {
   return <Navigate to={isAuthenticated ? '/index.html' : '/login'} replace />;
 }
 
-function BrainRedirect() {
-  return <Navigate to="/index.html?tab=autoImprove" replace />;
-}
-
-function ConsoleRedirect() {
-  return <Navigate to="/index.html?tab=console" replace />;
+function TabRedirect({ tab }: { tab: 'dashboard' | 'chat' | 'console' | 'explorer' }) {
+  const target = tab === 'dashboard' ? '/index.html' : `/index.html?tab=${tab}`;
+  return <Navigate to={target} replace />;
 }
 
 function AppRouter() {
@@ -94,38 +88,34 @@ function AppRouter() {
       />
 
       <Route
+        path="/ai/dashboard"
+        element={(
+          <ProtectedRoute>
+            <TabRedirect tab="dashboard" />
+          </ProtectedRoute>
+        )}
+      />
+      <Route
+        path="/ai/chat"
+        element={(
+          <ProtectedRoute>
+            <TabRedirect tab="chat" />
+          </ProtectedRoute>
+        )}
+      />
+      <Route
         path="/ai/console"
         element={(
           <ProtectedRoute>
-            <DevConsolePage />
+            <TabRedirect tab="console" />
           </ProtectedRoute>
         )}
       />
       <Route
-        path="/ai/brain"
+        path="/ai/explorer"
         element={(
           <ProtectedRoute>
-            <BrainRedirect />
-          </ProtectedRoute>
-        )}
-      />
-      <Route
-        path="/ai/memory"
-        element={(
-          <ProtectedRoute>
-            <Suspense fallback={<div className="p-6 text-gray-400">Loading AI Memory…</div>}>
-              <MemoryPage />
-            </Suspense>
-          </ProtectedRoute>
-        )}
-      />
-      <Route
-        path="/ai/deploy"
-        element={(
-          <ProtectedRoute>
-            <Suspense fallback={<div className="p-6 text-gray-400">Loading Deploy tools…</div>}>
-              <ReplitInterface />
-            </Suspense>
+            <TabRedirect tab="explorer" />
           </ProtectedRoute>
         )}
       />
@@ -134,7 +124,7 @@ function AppRouter() {
         path="/ai"
         element={(
           <ProtectedRoute>
-            <ConsoleRedirect />
+            <TabRedirect tab="console" />
           </ProtectedRoute>
         )}
       />
