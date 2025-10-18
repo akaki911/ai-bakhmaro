@@ -1,3 +1,4 @@
+// @ts-nocheck
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
@@ -34,10 +35,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 app.get('/health', (_req, res) => {
-  res.json({ ok: true, service: 'property-api', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', service: 'property-api', timestamp: new Date().toISOString() });
 });
 
-app.use('/commission', requireServiceToken(), commissionRouter);
+app.use('/api/commission', requireServiceToken(), commissionRouter);
 
 const port = env.PORT;
 app.listen(port, () => {

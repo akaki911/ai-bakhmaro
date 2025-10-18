@@ -39,15 +39,20 @@ services:
       PORT: 8080
       PROPERTY_API_URL: http://property-api:5100
       REMOTE_SITE_BASE: ${REMOTE_SITE_BASE:-http://ai-frontend:5173}
+      STATIC_ROOT: ${GATEWAY_STATIC_ROOT:-/app/static}
       AI_DOMAIN: ${AI_DOMAIN:-http://localhost:5173}
       ROOT_DOMAIN: ${ROOT_DOMAIN:-localhost}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
-      CORS_ALLOWED_ORIGIN: ${AI_DOMAIN:-http://localhost:5173}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:5173,http://ai-frontend:5173}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      LOGIN_PATH: ${LOGIN_PATH:-/login}
     depends_on:
       property-api:
         condition: service_healthy
     networks:
       - ai-stack
+    volumes:
+      - ./ai-frontend/dist:${GATEWAY_STATIC_ROOT:-/app/static}:ro
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://localhost:8080/health"]
       interval: 10s
@@ -68,7 +73,8 @@ services:
       SERVICE_JWT_ISSUER: ai-gateway
       SERVICE_JWT_SUBJECT: gateway-service
       SERVICE_JWT_AUDIENCE: property-api
-      ALLOWED_ORIGIN: ${AI_DOMAIN:-http://localhost:5173}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-demo-bakhmaro}
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-http://localhost:5173}
     networks:
       - ai-stack
     healthcheck:
