@@ -4,7 +4,7 @@
 | Service | Directory | Default port | Description |
 | --- | --- | --- | --- |
 | Gateway API | `gateway/` | 8080 | Express proxy that fronts all browser traffic, handles login redirects, and issues service JWTs before forwarding requests to downstream APIs. |
-| Property API | `property-api/` | 5100 | Express microservice that serves property commission data and health information consumed by the gateway. |
+| Property API | `property-api/` | 5100 | Express microservice (optional) that serves property commission data and health information if you want to run the legacy stack locally. The gateway now proxies property traffic to `REMOTE_SITE_BASE` by default. |
 | AI Frontend | `ai-frontend/` | 5173 | Vite-powered React UI bundled for both local development and static hosting behind the gateway. |
 
 The compose file maps each container port to the same host port so the services are reachable at `http://localhost:<port>` when started with Docker Compose.
@@ -51,14 +51,24 @@ This flow is implemented in the gateway entrypoint: unauthenticated requests on 
 ## Gateway proxy topology
 ```
 Browser ↔ Gateway (8080)
-  ↳ /api/property → Property API (5100)
+  ↳ /api/property → Remote site (REMOTE_SITE_BASE)
   ↳ /api/*        → Remote site (REMOTE_SITE_BASE)
 ```
 The gateway issues service JWTs before forwarding each proxied call, and surfaces `/health` to report which upstream base URLs are currently active.
 
 ### Remote control switch
 
-Set `REMOTE_SITE_BASE` to the current upstream once and the gateway will forward all `/api` requests there without further code changes. Today this can point at the Replit staging API; when production is ready flip the value to `https://bakhmaro.co` and restart the stack. No frontend rebuild is required because the proxy mapping lives entirely in the gateway.
+Set `REMOTE_SITE_BASE` to the current upstream once and the gateway will forward all `/api` requests (including `/api/property`) there without further code changes. Today this can point at the Replit staging API; when production is ready flip the value to `https://bakhmaro.co` and restart the stack. No frontend rebuild is required because the proxy mapping lives entirely in the gateway.
+
+### Switch validation checks
+
+After changing `REMOTE_SITE_BASE`, run these quick probes to confirm the gateway is wired to the expected upstream:
+
+1. `curl -i http://localhost:8080/api/property/health` → should return the remote site's health payload.
+2. `curl -i http://localhost:8080/api/health` → confirms the general `/api` proxy path still responds.
+3. `curl -i http://localhost:8080/health` → gateway self-check.
+
+All three calls should succeed; failures indicate a misconfigured `REMOTE_SITE_BASE` or an offline upstream.
 
 ### Deployment checklist
 
