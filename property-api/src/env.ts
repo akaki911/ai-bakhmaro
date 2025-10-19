@@ -4,11 +4,11 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(5100),
 
-  FIREBASE_PROJECT_ID: z.string().min(1, 'FIREBASE_PROJECT_ID is required'),
+  FIREBASE_PROJECT_ID: z.string().min(1, 'ai-bakhmaro'),
   FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
   GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
 
-  // Comma-separated list (e.g. "https://ai.bakhmaro.co")
+  // Comma-separated origins. Example: "https://ai.bakhmaro.co"
   ALLOWED_ORIGIN: z.string().default('https://ai.bakhmaro.co'),
 
   INTERNAL_SERVICE_TOKEN: z.string().optional(),
@@ -28,6 +28,7 @@ export const getEnv = (): PropertyApiEnv => {
   const parsed = envSchema.safeParse(process.env);
   if (!parsed.success) {
     const formatted = parsed.error.format();
+    // eslint-disable-next-line no-console
     console.error('❌ property-api environment validation failed:', formatted);
     throw new Error('Invalid environment configuration for property-api');
   }
