@@ -8,11 +8,55 @@ import './i18n/config';
 
 const originalFetch = window.fetch.bind(window);
 
+const extractRequestUrl = (input: RequestInfo | URL): string | undefined => {
+  if (typeof input === 'string') {
+    return input;
+  }
+
+  if (input instanceof URL) {
+    return input.href;
+  }
+
+  if (input instanceof Request) {
+    return input.url;
+  }
+
+  try {
+    return String(input);
+  } catch {
+    return undefined;
+  }
+};
+
+const isSameOriginRequest = (requestUrl?: string): boolean => {
+  if (!requestUrl) {
+    return true;
+  }
+
+  // Relative URLs (e.g. /api/...) are always same-origin
+  if (requestUrl.startsWith('/') && !requestUrl.startsWith('//')) {
+    return true;
+  }
+
+  try {
+    const parsedUrl = new URL(requestUrl, window.location.origin);
+    return parsedUrl.origin === window.location.origin;
+  } catch {
+    // If the URL can't be parsed (rare), fallback to default browser behaviour
+    return false;
+  }
+};
+
 window.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-  const nextInit: RequestInit = {
-    ...init,
-    credentials: init?.credentials ?? 'include',
-  };
+  const nextInit: RequestInit = { ...init };
+  const existingCredentials = init?.credentials ?? (input instanceof Request ? input.credentials : undefined);
+  const requestUrl = extractRequestUrl(input);
+
+  if (!existingCredentials && isSameOriginRequest(requestUrl)) {
+    nextInit.credentials = 'include';
+  } else if (existingCredentials) {
+    nextInit.credentials = existingCredentials;
+  }
 
   return originalFetch(input, nextInit);
 };
