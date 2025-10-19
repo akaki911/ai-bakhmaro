@@ -1,10 +1,10 @@
 // @ts-nocheck
 import type { NextFunction, Request, Response } from 'express';
 import express from 'express';
-import { getEnv } from '../env';
-import { admin } from '../firebase';
-import { extractForwardedBearer } from '../middleware/serviceAuth';
-import commissionService, { type PaymentDetails } from '../services/commissionService';
+import { getEnv } from '../env.js';
+import { admin } from '../firebase.js';
+import { extractForwardedBearer } from '../middleware/serviceAuth.js';
+import commissionService, { type PaymentDetails } from '../services/commissionService.js';
 
 const env = getEnv();
 
