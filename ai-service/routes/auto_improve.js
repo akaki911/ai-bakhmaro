@@ -5,6 +5,7 @@ const router = express.Router();
 // Import RBAC middleware
 const { protectAutoImprove, requireSuperAdmin } = require('../middleware/rbac_middleware');
 const { loadSimilarOutcomes } = require('../services/proposal_memory_provider');
+const codexAgent = require('../agents/codex_agent');
 
 const MEMORY_ENABLED = process.env.AI_MEMORY_ENABLED !== 'false';
 
@@ -44,6 +45,69 @@ router.get('/health', protectAutoImprove, (req, res) => {
     rbac: 'SUPER_ADMIN_PROTECTED',
     timestamp: new Date().toISOString()
   });
+});
+
+router.post('/codex/auto-improve', protectAutoImprove, requireSuperAdmin, async (req, res) => {
+  try {
+    if (!codexAgent?.isEnabled?.()) {
+      return res.status(503).json({
+        success: false,
+        error: 'CODEX_DISABLED',
+        message: 'Codex integration is disabled. Provide OPENAI_API_KEY to enable auto-improve.',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const {
+      filePath,
+      content,
+      instructions,
+      issueSummary,
+      metadata = {},
+      userId,
+    } = req.body || {};
+
+    if (!filePath || !content) {
+      return res.status(400).json({
+        success: false,
+        error: 'INVALID_REQUEST',
+        message: 'filePath and content are required.',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const codexResult = await codexAgent.autoImproveFile({
+      filePath,
+      originalContent: content,
+      instructions,
+      issueSummary,
+      language: metadata.language,
+      metadata: {
+        ...metadata,
+        origin: metadata.origin || 'auto-improve-endpoint',
+        notifySlack: metadata.notifySlack === true,
+      },
+      userId,
+    });
+
+    return res.json({
+      success: true,
+      improvedContent: codexResult.improvedContent,
+      reasoning: codexResult.reasoning,
+      patch: codexResult.patchPreview,
+      usage: codexResult.usage || null,
+      prompt: codexResult.prompt,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('❌ [AI AUTO-IMPROVE] Codex error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'CODEX_AUTO_IMPROVE_FAILED',
+      message: error?.message || 'Failed to auto-improve file with Codex.',
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // Generate improvement proposals - SUPER_ADMIN only
