@@ -1,37 +1,44 @@
-// property-api/src/index.ts
 import express from 'express';
-import cors from 'cors';
+import cors, { type CorsOptions } from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
-import { getEnv } from './env.js';              // ← აქ გამოვიყენეთ getEnv()
-import commissionRouter from './routes/commission.js';
+import { getEnv } from './env';                 // ← გაფართოება არ უნდა ეწეროს TS კოდში
+import commissionRouter from './routes/commission';
 
 // --- Load env once ---
 const env = getEnv();
 
-// --- CORS allowlist (comma-separated in CORS_ORIGIN) ---
-const allowed = (env.CORS_ORIGIN ?? '')
+// --- CORS allowlist (comma-separated in ALLOWED_ORIGIN) ---
+const rawAllowed = (env.ALLOWED_ORIGIN ?? '').trim();
+
+// Support: empty → dev allow, "*" → wildcard, otherwise comma list
+const allowedList = rawAllowed
   .split(',')
   .map(s => s.trim())
   .filter(Boolean);
 
-const corsOptions =
-  allowed.length > 0
-    ? {
-        credentials: true,
-        origin(origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) {
-          // no Origin (curl / same-origin) -> allow
-          if (!origin) return cb(null, true);
-          if (allowed.includes(origin)) return cb(null, true);
-          return cb(new Error(`Origin ${origin} is not permitted`));
-        },
-      }
-    : {
-        // dev fallback: allow all
-        credentials: true,
-        origin: true as const,
-      };
+const useWildcard = rawAllowed === '*';
+
+const corsOptions: CorsOptions = useWildcard
+  ? {
+      credentials: true,
+      origin: true, // allow all origins
+    }
+  : allowedList.length > 0
+  ? {
+      credentials: true,
+      origin(origin, cb) {
+        if (!origin) return cb(null, true); // curl/same-origin
+        if (allowedList.includes(origin)) return cb(null, true);
+        return cb(new Error(`Origin ${origin} is not permitted`));
+      },
+    }
+  : {
+      // dev fallback: allow all
+      credentials: true,
+      origin: true,
+    };
 
 // --- App bootstrap ---
 const app = express();
@@ -56,8 +63,8 @@ app.use('/api/commission', commissionRouter);
 
 // Listen
 const port = Number(env.PORT ?? 5100);
-app.listen(port, () => {
-  console.log(`🏡 Property API listening on port ${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`🏡 Property API listening on 0.0.0.0:${port}`);
 });
 
 export default app;
