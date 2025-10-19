@@ -39,8 +39,12 @@ async function closeServer(server) {
 async function main() {
   const token = process.env.CI_SECRETS_CHECK_TOKEN;
   if (!token) {
-    console.error('❌ CI required secrets check aborted: CI_SECRETS_CHECK_TOKEN is not configured.');
-    return 4;
+    console.warn(
+      '⚠️  CI required secrets check skipped: CI_SECRETS_CHECK_TOKEN is not configured. ' +
+        'This is expected on pull request workflows where repository secrets are unavailable. '
+    );
+    console.warn('    Configure CI_SECRETS_CHECK_TOKEN to enable this check in trusted environments.');
+    return 0;
   }
 
   let server;
