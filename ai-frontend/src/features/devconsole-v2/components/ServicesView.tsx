@@ -247,20 +247,51 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
       }
 
       // Remove duplicates and sort
-      const uniqueRoutes = routes.filter((route, index, self) => 
+      const uniqueRoutes = routes.filter((route, index, self) =>
         index === self.findIndex(r => r.route === route.route && r.type === route.type)
       );
 
-      setRouteMappings(uniqueRoutes);
+      const sanitizedRoutes = uniqueRoutes.map((route) => {
+        if (route.route === '/' || route.route === '/index.html') {
+          return {
+            ...route,
+            route: '/admin?tab=dashboard',
+            file: 'src/components/AIDeveloperPanel.tsx',
+            type: 'frontend'
+          } as RouteMapping;
+        }
+
+        if (route.route === '/admin' && /MainDashboard/i.test(route.file)) {
+          return {
+            ...route,
+            file: 'src/components/AIDeveloperPanel.tsx',
+            type: 'frontend'
+          } as RouteMapping;
+        }
+
+        if (/MainPage\.tsx$/i.test(route.file)) {
+          return {
+            ...route,
+            route: '/admin?tab=dashboard',
+            file: 'src/components/AIDeveloperPanel.tsx',
+            type: 'frontend'
+          } as RouteMapping;
+        }
+
+        return route;
+      });
+
+      setRouteMappings(sanitizedRoutes);
       console.log(`🎯 Final route discovery complete: ${uniqueRoutes.length} unique routes`);
 
     } catch (error) {
       console.error('❌ Route discovery failed:', error);
-      // Fallback to static routes
+      // Admin-first fallback: surface AI Developer entry points instead of legacy marketing pages
       setRouteMappings([
-        { route: '/', file: 'src/MainPage.tsx', type: 'frontend' },
-        { route: '/admin', file: 'src/MainDashboard.tsx', type: 'frontend' },
-        { route: '/api/health', file: 'backend/routes/health.js', method: 'GET', type: 'backend' }
+        { route: '/login', file: 'src/Login.tsx', type: 'frontend' },
+        { route: '/admin', file: 'src/components/AIDeveloperPanel.tsx', type: 'frontend' },
+        { route: '/admin?tab=dashboard', file: 'src/components/AIDeveloperPanel.tsx', type: 'frontend' },
+        { route: '/api/ai/version-control/diff', file: 'backend/routes/ai_proxy.js', method: 'POST', type: 'backend' }
       ]);
     } finally {
       setIsLoadingRoutes(false);

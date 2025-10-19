@@ -8,7 +8,7 @@ const formInput =
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { authInitialized, isAuthenticated, login, deviceRecognition } = useAuth();
+  const { authInitialized, isAuthenticated, login, deviceRecognition, getAutoRouteTarget } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [trustDevice, setTrustDevice] = useState(false);
@@ -30,9 +30,10 @@ const Login: React.FC = () => {
     }
 
     if (isAuthenticated) {
-      navigate('/index.html', { replace: true });
+      const target = getAutoRouteTarget?.() ?? '/admin?tab=dashboard';
+      navigate(target, { replace: true });
     }
-  }, [authInitialized, isAuthenticated, navigate]);
+  }, [authInitialized, getAutoRouteTarget, isAuthenticated, navigate]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -41,7 +42,8 @@ const Login: React.FC = () => {
 
     try {
       await login(email.trim(), password, trustDevice);
-      navigate('/index.html', { replace: true });
+      const target = getAutoRouteTarget?.() ?? '/admin?tab=dashboard';
+      navigate(target, { replace: true });
     } catch (cause) {
       console.error('❌ AI login failed', cause);
       const message =
