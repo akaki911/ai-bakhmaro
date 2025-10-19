@@ -20,7 +20,7 @@ const allowedList = rawAllowed
 
 const useWildcard = rawAllowed === '*';
 
-const corsOptions: cors.CorsOptions = useWildcard
+const corsOptions: CorsOptions = useWildcard
   ? {
       credentials: true,
       origin: true, // allow all origins
