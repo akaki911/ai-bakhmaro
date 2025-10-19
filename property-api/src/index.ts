@@ -1,8 +1,9 @@
+// property-api/src/index.ts
 import express from 'express';
 import cors from 'cors';
+import type { CorsOptions } from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-
 import { getEnv } from './env';
 import commissionRouter from './routes/commission';
 
