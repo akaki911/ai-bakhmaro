@@ -1,11 +1,13 @@
-// property-api/src/index.ts
 import express from 'express';
 import cors from 'cors';
-import type { CorsOptions } from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+
 import { getEnv } from './env';
 import commissionRouter from './routes/commission';
+
+// Derive CORS options type from cors() (no @types/cors needed)
+type CorsOptions = Parameters<typeof cors>[0];
 
 // --- Load env once ---
 const env = getEnv();
@@ -15,31 +17,23 @@ const rawAllowed = (env.ALLOWED_ORIGIN ?? '').trim();
 
 // Support: empty → dev allow, "*" → wildcard, otherwise comma list
 const allowedList = rawAllowed
-  .split(',')
-  .map(s => s.trim())
-  .filter(Boolean);
+  ? rawAllowed.split(',').map(s => s.trim()).filter(Boolean)
+  : [];
 
 const useWildcard = rawAllowed === '*';
 
 const corsOptions: CorsOptions = useWildcard
-  ? {
-      credentials: true,
-      origin: true, // allow all origins
-    }
+  ? { credentials: true, origin: true }
   : allowedList.length > 0
   ? {
       credentials: true,
       origin(origin, cb) {
-        if (!origin) return cb(null, true); // curl/same-origin
+        if (!origin) return cb(null, true);              // curl/same-origin
         if (allowedList.includes(origin)) return cb(null, true);
         return cb(new Error(`Origin ${origin} is not permitted`));
       },
     }
-  : {
-      // dev fallback: allow all
-      credentials: true,
-      origin: true,
-    };
+  : { credentials: true, origin: true };                 // dev fallback
 
 // --- App bootstrap ---
 const app = express();
@@ -65,6 +59,7 @@ app.use('/api/commission', commissionRouter);
 // Listen
 const port = Number(env.PORT ?? 5100);
 app.listen(port, '0.0.0.0', () => {
+  // eslint-disable-next-line no-console
   console.log(`🏡 Property API listening on 0.0.0.0:${port}`);
 });
 
