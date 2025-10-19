@@ -1208,24 +1208,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // SOL-431: Auto-routing method
   const getAutoRouteTarget = () => {
     try {
-      // Feature flag checking for browser environment
       const isRoleAwareEnabled = localStorage.getItem('ROLE_AWARE_ENTRY') !== 'false';
 
       if (!isRoleAwareEnabled) {
         console.log('🚫 [ROUTE] Auto-routing disabled by feature flag');
-        return '/login/select-role';
+        return '/login';
       }
 
-      // Special handling for SUPER_ADMIN - always go to admin
       if (user?.role === 'SUPER_ADMIN' || routeAdvice.role === 'SUPER_ADMIN') {
-        console.log('🔧 [ROUTE] SUPER_ADMIN detected, redirecting to admin');
-        return '/admin';
+        console.log('🔧 [ROUTE] SUPER_ADMIN detected, redirecting to admin-first console');
+        return '/admin?tab=dashboard';
       }
 
-      return routeAdvice.target;
+      if (!user) {
+        return '/login';
+      }
+
+      return routeAdvice.target || '/login';
     } catch (error) {
       console.warn('⚠️ [ROUTE] Error checking feature flags, using default target');
-      return routeAdvice.target || '/login/customer';
+      return '/login';
     }
   };
 
