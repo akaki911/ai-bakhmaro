@@ -4,6 +4,7 @@ const { z } = require('zod');
 const router = express.Router();
 
 const { detectIntent } = require('../services/gurulo_intent_router');
+const codexAgent = require('../agents/codex_agent');
 const {
   buildGreetingResponse,
   buildSmalltalkResponse,
@@ -148,12 +149,56 @@ const handleChatRequest = async (req, res) => {
         : 'admin_dev';
   const builderOptions = { audience };
 
+  const codexEnabled = typeof codexAgent?.isEnabled === 'function' && codexAgent.isEnabled();
+  const useCodex = codexEnabled && (
+    body.useCodex === true ||
+    metadata?.useCodex === true ||
+    body.selectedModel === 'codex' ||
+    body.modelOverride === 'codex'
+  );
+
   try {
     console.log('🤖 AI Chat endpoint hit', {
       hasHistory: historyLength > 0,
       personalId,
       messageLength: message.length,
     });
+
+    if (useCodex) {
+      const conversationForCodex = normalizedHistory.map((entry) => `${entry.role}: ${entry.content}`);
+      const slashMatch = message.trim().match(/^\/(improve|refactor|explain)\b/i);
+      const codexCommand = (metadata?.codexCommand || slashMatch?.[1]?.toLowerCase() || 'chat').replace('-', '_');
+      const strippedMessage = slashMatch ? message.replace(/^\/[a-zA-Z_-]+\s*/, '') : message;
+
+      try {
+        const codexResult = await codexAgent.generate({
+          command: codexCommand,
+          message: strippedMessage,
+          instructions: metadata?.instructions,
+          filePath: metadata?.filePath || metadata?.targetFile,
+          conversation: conversationForCodex,
+          metadata: {
+            ...metadata,
+            origin: metadata?.origin || 'chat-endpoint',
+            useCodex: true,
+          },
+          userId: personalId,
+        });
+
+        return res.status(200).json({
+          success: true,
+          response: codexResult.text,
+          metadata: {
+            model: 'codex',
+            usage: codexResult.usage || null,
+            command: codexCommand,
+          },
+          conversationHistoryLength: historyLength,
+        });
+      } catch (codexError) {
+        console.error('⚠️ Codex chat fallback error:', codexError?.message || codexError);
+      }
+    }
 
     const intent = detectIntent(message, { metadata });
 
