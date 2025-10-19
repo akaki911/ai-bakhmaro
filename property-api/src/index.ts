@@ -1,9 +1,9 @@
 import express from 'express';
-import cors, { type CorsOptions } from 'cors';
+import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
-import { getEnv } from './env';                 // ← გაფართოება არ უნდა ეწეროს TS კოდში
+import { getEnv } from './env';
 import commissionRouter from './routes/commission';
 
 // --- Load env once ---
@@ -20,7 +20,7 @@ const allowedList = rawAllowed
 
 const useWildcard = rawAllowed === '*';
 
-const corsOptions: CorsOptions = useWildcard
+const corsOptions: cors.CorsOptions = useWildcard
   ? {
       credentials: true,
       origin: true, // allow all origins
