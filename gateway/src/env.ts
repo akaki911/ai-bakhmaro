@@ -30,7 +30,7 @@ const baseSchema = z.object({
 
 type ParsedEnv = z.infer<typeof baseSchema>;
 
-export type GatewayEnv = ParsedEnv & {
+export type GatewayEnv = Omit<ParsedEnv, 'SITE_MAPPING_GITHUB'> & {
   REMOTE_SITE_BASE: string;
   COOKIE_DOMAIN: string | null;
   SESSION_COOKIE_NAMES: string[];
