@@ -8,6 +8,7 @@ import commissionRouter from './routes/commission.js';
 
 // Derive CORS options type from cors() (no @types/cors needed)
 type CorsOptions = Parameters<typeof cors>[0];
+type CorsOriginCallback = (err: Error | null, allow?: boolean) => void;
 
 // --- Load env once ---
 const env = getEnv();
@@ -27,7 +28,7 @@ const corsOptions: CorsOptions = useWildcard
   : allowedList.length > 0
   ? {
       credentials: true,
-      origin(origin, cb) {
+      origin(origin: string | undefined, cb: CorsOriginCallback) {
         if (!origin) return cb(null, true);              // curl/same-origin
         if (allowedList.includes(origin)) return cb(null, true);
         return cb(new Error(`Origin ${origin} is not permitted`));
@@ -59,7 +60,6 @@ app.use('/api/commission', commissionRouter);
 // Listen
 const port = Number(env.PORT ?? 5100);
 app.listen(port, '0.0.0.0', () => {
-  // eslint-disable-next-line no-console
   console.log(`🏡 Property API listening on 0.0.0.0:${port}`);
 });
 

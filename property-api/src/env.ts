@@ -28,7 +28,6 @@ export const getEnv = (): PropertyApiEnv => {
   const parsed = envSchema.safeParse(process.env);
   if (!parsed.success) {
     const formatted = parsed.error.format();
-    // eslint-disable-next-line no-console
     console.error('❌ property-api environment validation failed:', formatted);
     throw new Error('Invalid environment configuration for property-api');
   }

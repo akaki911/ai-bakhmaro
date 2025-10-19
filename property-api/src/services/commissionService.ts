@@ -1,6 +1,14 @@
-import { admin, firestore } from '../firebase';
+import { admin, firestore } from '../firebase.js';
+import type { firestore as FirestoreNS } from 'firebase-admin';
+
+type Firestore = FirestoreNS.Firestore;
+type DocumentData = FirestoreNS.DocumentData;
+type QueryDocumentSnapshot<T extends DocumentData = DocumentData> = FirestoreNS.QueryDocumentSnapshot<T>;
+type Transaction = FirestoreNS.Transaction;
 
 type ListingType = 'cottage' | 'hotel' | 'vehicle' | 'horse' | 'snowmobile' | 'equipment';
+
+type InvoiceSnapshot = { id: string } & Partial<InvoiceRecord> & Record<string, unknown>;
 
 export interface CommissionBooking {
   id: string;
@@ -38,7 +46,7 @@ export interface InvoiceRecord {
 }
 
 export class CommissionService {
-  private readonly db: any;
+  private readonly db: Firestore;
 
   private readonly defaultRates: Record<ListingType, number> = {
     hotel: 0.15,
@@ -49,11 +57,11 @@ export class CommissionService {
     cottage: 0.15,
   };
 
-  constructor(db: any) {
+  constructor(db: Firestore) {
     this.db = db;
   }
 
-  async calculateCommission(booking: CommissionBooking) {
+  async calculateCommission(booking: CommissionBooking): Promise<{ rate: number; amount: number; totalPrice: number }> {
     const provider = await this.db.collection('providers').doc(booking.providerId).get();
     if (!provider.exists) {
       throw new Error('Provider not found');
@@ -102,8 +110,8 @@ export class CommissionService {
     }
 
     const bookingsByProvider = new Map<string, CommissionBooking[]>();
-    bookingsQuery.docs.forEach((doc) => {
-      const data = doc.data() as Record<string, any>;
+    bookingsQuery.docs.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+      const data = doc.data() as Record<string, unknown>;
       const providerId = data.providerId as string | undefined;
       if (!providerId) {
         return;
@@ -126,7 +134,7 @@ export class CommissionService {
     const batch = this.db.batch();
 
     for (const [providerId, bookings] of bookingsByProvider.entries()) {
-      const totalAmount = bookings.reduce((sum, booking) => sum + (booking.commissionAmount ?? 0), 0);
+      const totalAmount = bookings.reduce((sum: number, booking: CommissionBooking) => sum + (booking.commissionAmount ?? 0), 0);
       if (totalAmount <= 0) {
         continue;
       }
@@ -147,7 +155,7 @@ export class CommissionService {
 
       batch.set(invoiceRef, invoice);
 
-      bookings.forEach((booking) => {
+      bookings.forEach((booking: CommissionBooking) => {
         const bookingRef = this.db.collection('bookings').doc(booking.id);
         batch.update(bookingRef, { invoiceId: invoiceRef.id });
       });
@@ -164,18 +172,18 @@ export class CommissionService {
     return invoices;
   }
 
-  private calculateDueDate(issueDate: Date) {
+  private calculateDueDate(issueDate: Date): string {
     const due = new Date(issueDate);
     due.setDate(due.getDate() + 5);
     return due.toISOString().split('T')[0];
   }
 
-  private async generateInvoiceNumber() {
+  private async generateInvoiceNumber(): Promise<string> {
     const year = new Date().getFullYear();
     const counterRef = this.db.collection('counters').doc('invoices');
 
     try {
-      const result = await this.db.runTransaction(async (transaction) => {
+      const result = await this.db.runTransaction(async (transaction: Transaction) => {
         const snapshot = await transaction.get(counterRef);
         let newCount = 1;
 
@@ -197,7 +205,7 @@ export class CommissionService {
     }
   }
 
-  async enforcePayments() {
+  async enforcePayments(): Promise<void> {
     const today = new Date().toISOString().split('T')[0];
     const overdueQuery = await this.db.collection('invoices')
       .where('status', '==', 'unpaid')
@@ -211,7 +219,7 @@ export class CommissionService {
     const batch = this.db.batch();
     const suspendedProviders = new Set<string>();
 
-    overdueQuery.docs.forEach((doc) => {
+    overdueQuery.docs.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
       const invoice = doc.data() as { providerId?: string };
       if (invoice.providerId) {
         suspendedProviders.add(invoice.providerId);
@@ -227,7 +235,7 @@ export class CommissionService {
         .where('providerId', '==', providerId)
         .get();
 
-      listingsQuery.docs.forEach((listing) => {
+      listingsQuery.docs.forEach((listing: QueryDocumentSnapshot<DocumentData>) => {
         batch.update(listing.ref, { status: 'suspended' });
       });
     }
@@ -235,7 +243,7 @@ export class CommissionService {
     await batch.commit();
   }
 
-  async sendPaymentReminders() {
+  async sendPaymentReminders(): Promise<void> {
     const reminderDate = new Date();
     reminderDate.setDate(reminderDate.getDate() + 2);
     const reminderDateStr = reminderDate.toISOString().split('T')[0];
@@ -249,7 +257,7 @@ export class CommissionService {
       return;
     }
 
-    await Promise.all(reminders.docs.map(async (doc) => {
+    await Promise.all(reminders.docs.map(async (doc: QueryDocumentSnapshot<DocumentData>) => {
       const invoice = doc.data() as { providerId?: string; invoiceNumber?: string; totalAmount?: number; dueDate?: string };
       if (!invoice.providerId) {
         return;
@@ -270,7 +278,7 @@ export class CommissionService {
     }));
   }
 
-  async markInvoicePaid(invoiceId: string, paymentDetails: PaymentDetails = {}) {
+  async markInvoicePaid(invoiceId: string, paymentDetails: PaymentDetails = {}): Promise<void> {
     const batch = this.db.batch();
     const invoiceRef = this.db.collection('invoices').doc(invoiceId);
     const invoiceDoc = await invoiceRef.get();
@@ -298,14 +306,14 @@ export class CommissionService {
       .where('status', 'in', ['unpaid', 'overdue'])
       .get();
 
-    if (unpaid.docs.filter((doc) => doc.id !== invoiceId).length === 0) {
+    if (unpaid.docs.filter((doc: QueryDocumentSnapshot<DocumentData>) => doc.id !== invoiceId).length === 0) {
       batch.update(providerRef, { isBlocked: false, blockedDate: null });
 
       const listingsQuery = await this.db.collection('listings')
         .where('providerId', '==', invoice.providerId)
         .get();
 
-      listingsQuery.docs.forEach((listing) => {
+      listingsQuery.docs.forEach((listing: QueryDocumentSnapshot<DocumentData>) => {
         batch.update(listing.ref, { status: 'active' });
       });
     }
@@ -320,14 +328,27 @@ export class CommissionService {
       this.db.collection('bookings').where('providerId', '==', providerId).where('status', '==', 'completed').get(),
     ]);
 
-    const invoices = invoicesQuery.docs.map((doc) => ({ id: doc.id, ...(doc.data() as Record<string, any>) }));
-    const totalEarnings = bookingsQuery.docs.reduce((sum, doc) => sum + Number((doc.data() as Record<string, any>).totalPrice ?? 0), 0);
-    const totalCommissions = invoices.reduce((sum, invoice) => sum + Number(invoice.totalAmount ?? 0), 0);
-    const unpaidAmount = invoices.filter((invoice) => invoice.status !== 'paid').reduce((sum, invoice) => sum + Number(invoice.totalAmount ?? 0), 0);
+    const invoices = invoicesQuery.docs.map(
+      (doc: QueryDocumentSnapshot<DocumentData>): InvoiceSnapshot => ({ id: doc.id, ...(doc.data() as Partial<InvoiceRecord> & Record<string, unknown>) }),
+    );
+    const totalEarnings = bookingsQuery.docs.reduce(
+      (sum: number, doc: QueryDocumentSnapshot<DocumentData>) => sum + Number((doc.data() as Record<string, unknown>).totalPrice ?? 0),
+      0,
+    );
+    const totalCommissions = invoices.reduce(
+      (sum: number, invoice: InvoiceSnapshot) => sum + Number(invoice.totalAmount ?? 0),
+      0,
+    );
+    const unpaidAmount = invoices
+      .filter((invoice: InvoiceSnapshot) => invoice.status !== 'paid')
+      .reduce((sum: number, invoice: InvoiceSnapshot) => sum + Number(invoice.totalAmount ?? 0), 0);
 
     const lastPaid = invoices
-      .filter((invoice) => invoice.status === 'paid' && invoice.paidDate)
-      .sort((a, b) => new Date(b.paidDate).getTime() - new Date(a.paidDate).getTime())[0]?.paidDate ?? null;
+      .filter((invoice: InvoiceSnapshot) => invoice.status === 'paid' && invoice.paidDate)
+      .sort(
+        (a: InvoiceSnapshot, b: InvoiceSnapshot) =>
+          new Date(String(b.paidDate)).getTime() - new Date(String(a.paidDate)).getTime(),
+      )[0]?.paidDate ?? null;
 
     return {
       totalEarnings: Math.round(totalEarnings * 100) / 100,

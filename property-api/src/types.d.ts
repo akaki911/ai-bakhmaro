@@ -1,4 +1,4 @@
-import type { VerifiedServiceToken } from './middleware/serviceAuth';
+import type { VerifiedServiceToken } from './middleware/serviceAuth.js';
 
 declare global {
   namespace Express {
