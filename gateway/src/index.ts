@@ -12,7 +12,7 @@ import fs from 'node:fs';
 import jwt from 'jsonwebtoken';
 import { createProxyMiddleware, type Options } from 'http-proxy-middleware';
 import type { ClientRequest } from 'http';
-import { getEnv } from './env.js';
+import { env } from './env.js';
 import { createCookieNormaliser, createSessionCookieChecker } from './cookies.js';
 
 const env = getEnv();
