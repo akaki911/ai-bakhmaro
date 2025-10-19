@@ -1,7 +1,7 @@
 // @ts-nocheck
 import type { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { getEnv } from '../env';
+import { getEnv } from '../env.js';
 
 const env = getEnv();
 
