@@ -23,7 +23,10 @@ import {
   IconChevronUp,
   IconChevronDown,
   IconLoader2,
-  IconAlertCircle
+  IconAlertCircle,
+  IconBrandGithub,
+  IconGitCompare,
+  IconHistory
 } from '@tabler/icons-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -52,6 +55,10 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
   const [showCopySuccess, setShowCopySuccess] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [githubMessage, setGithubMessage] = useState<string | null>(null);
+  const [githubError, setGithubError] = useState<string | null>(null);
+  const [githubDiff, setGithubDiff] = useState<string | null>(null);
+  const [githubBusy, setGithubBusy] = useState(false);
 
   const contentRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -176,6 +183,66 @@ const FilePreview: React.FC<FilePreviewProps> = ({
     setSearchTerm('');
     setSearchResults([]);
     setCurrentSearchIndex(0);
+  };
+
+  const handleGithubDiff = async () => {
+    if (!previewData?.path) {
+      setGithubError('Select a file to compare with GitHub.');
+      return;
+    }
+    try {
+      setGithubBusy(true);
+      setGithubError(null);
+      setGithubMessage(`Fetching GitHub diff for ${previewData.path}…`);
+      const response = await fetch('/api/ai/version-control/github-diff', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filePath: previewData.path, from: 'HEAD~1', to: 'HEAD' }),
+      });
+      const payload = await response.json();
+      if (!response.ok || payload?.error) {
+        throw new Error(payload?.error || 'Unable to fetch GitHub diff');
+      }
+      const diff = payload?.diff ?? payload?.data?.diff ?? '';
+      setGithubDiff(diff.length > 0 ? diff : 'No changes detected between revisions.');
+      setGithubMessage('GitHub diff ready. Review before applying changes.');
+    } catch (error) {
+      console.error('GitHub diff failed', error);
+      setGithubError((error as Error)?.message ?? 'GitHub diff failed');
+      setGithubDiff(null);
+    } finally {
+      setGithubBusy(false);
+    }
+  };
+
+  const handleGithubRestore = async () => {
+    if (!previewData?.path) {
+      setGithubError('Select a file to restore from GitHub.');
+      return;
+    }
+    try {
+      setGithubBusy(true);
+      setGithubError(null);
+      setGithubMessage(`Restoring ${previewData.path} from GitHub repository…`);
+      const response = await fetch('/api/ai/version-control/github-restore', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filePath: previewData.path, version: 'HEAD' }),
+      });
+      const payload = await response.json();
+      if (!response.ok || payload?.error) {
+        throw new Error(payload?.error || 'Unable to restore file from GitHub');
+      }
+      setGithubMessage(payload?.message ?? 'File restored from GitHub snapshot.');
+      setGithubDiff(null);
+    } catch (error) {
+      console.error('GitHub restore failed', error);
+      setGithubError((error as Error)?.message ?? 'GitHub restore failed');
+    } finally {
+      setGithubBusy(false);
+    }
   };
 
   if (!isPreviewOpen || !currentPreview) {
@@ -338,6 +405,27 @@ const FilePreview: React.FC<FilePreviewProps> = ({
                           <span>Open</span>
                         </button>
                       )}
+
+                      {previewData?.path && (
+                        <>
+                          <button
+                            onClick={handleGithubDiff}
+                            className="flex items-center space-x-1 px-2 py-1 bg-gray-700 text-gray-200 text-xs rounded hover:bg-gray-600 transition-colors disabled:opacity-60"
+                            disabled={githubBusy}
+                          >
+                            <IconGitCompare size={14} />
+                            <span>{githubBusy ? 'Working…' : 'Git Diff'}</span>
+                          </button>
+                          <button
+                            onClick={handleGithubRestore}
+                            className="flex items-center space-x-1 px-2 py-1 bg-gray-700 text-gray-200 text-xs rounded hover:bg-gray-600 transition-colors disabled:opacity-60"
+                            disabled={githubBusy}
+                          >
+                            <IconBrandGithub size={14} />
+                            <span>Restore</span>
+                          </button>
+                        </>
+                      )}
                     </div>
                     
                     <button
@@ -348,6 +436,36 @@ const FilePreview: React.FC<FilePreviewProps> = ({
                       <IconMaximize size={14} />
                     </button>
                   </div>
+
+                  {(githubMessage || githubError) && (
+                    <div
+                      className={`flex items-center gap-2 px-3 py-2 text-xs ${
+                        githubError
+                          ? 'bg-red-900/60 text-red-200'
+                          : 'bg-blue-900/50 text-blue-100'
+                      }`}
+                    >
+                      <IconHistory size={14} />
+                      <span>{githubError ?? githubMessage}</span>
+                    </div>
+                  )}
+
+                  {githubDiff && (
+                    <div className="max-h-48 overflow-auto border-b border-gray-800 bg-gray-900/80 px-3 py-2 font-mono text-xs text-gray-200">
+                      {githubDiff.split('\n').map((line, index) => {
+                        const tone = line.startsWith('+')
+                          ? 'text-emerald-400'
+                          : line.startsWith('-')
+                          ? 'text-rose-400'
+                          : 'text-gray-200';
+                        return (
+                          <div key={index} className={`whitespace-pre ${tone}`}>
+                            {line || ' '}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   {/* Code Content */}
                   <div className="flex-1 overflow-auto" ref={contentRef}>
