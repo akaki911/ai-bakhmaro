@@ -57,12 +57,32 @@ const respondSafe = (res, operation) => (promise) =>
       });
     });
 
-const requireToken = (req, _res, next) => {
-  if (!process.env.GITHUB_TOKEN) {
-    const error = new Error('GITHUB_TOKEN env variable is required for AI GitHub operations');
-    error.status = 500;
-    throw error;
+const resolveGithubToken = (req) => {
+  const inlineToken = typeof req.body?.token === 'string' ? req.body.token.trim() : '';
+  if (inlineToken) {
+    return inlineToken;
   }
+  const sessionToken = typeof req.session?.githubPat === 'string' ? req.session.githubPat.trim() : '';
+  if (sessionToken) {
+    return sessionToken;
+  }
+  const envToken = typeof process.env.GITHUB_TOKEN === 'string' ? process.env.GITHUB_TOKEN.trim() : '';
+  if (envToken) {
+    return envToken;
+  }
+  return null;
+};
+
+const requireGithubToken = (req, res, next) => {
+  const token = resolveGithubToken(req);
+  if (!token) {
+    res.status(401).json({ success: false, error: 'GitHub token not configured' });
+    return;
+  }
+  if (req.session) {
+    req.session.githubPat = token;
+  }
+  req.githubToken = token;
   next();
 };
 
@@ -137,18 +157,19 @@ router.get('/dashboard', async (req, res) => {
   }
 });
 
-router.post('/github/init', async (req, res) => {
+router.post('/github/init', requireGithubToken, async (req, res) => {
   const sessionKey = resolveSessionKey(req);
   const repoUrl = req.body?.repoUrl || process.env.GITHUB_REPO_URL;
+  const token = req.githubToken;
   respondSafe(res, 'init')(
-    githubIntegration.connect({ repoUrl, sessionKey, token: process.env.GITHUB_TOKEN }).then((payload) => ({
+    githubIntegration.connect({ repoUrl, sessionKey, token }).then((payload) => ({
       message: 'Repository initialization completed.',
       data: payload
     }))
   );
 });
 
-router.post('/github/sync', async (req, res) => {
+router.post('/github/sync', requireGithubToken, async (req, res) => {
   const sessionKey = resolveSessionKey(req);
   respondSafe(res, 'sync')(
     githubAiService.refreshSnapshot(sessionKey).then(async () => {
@@ -161,7 +182,7 @@ router.post('/github/sync', async (req, res) => {
   );
 });
 
-router.post('/sync', async (req, res) => {
+router.post('/sync', requireGithubToken, async (req, res) => {
   const sessionKey = resolveSessionKey(req);
   respondSafe(res, 'syncAll')(
     githubAiService.refreshSnapshot(sessionKey).then(async () => {
@@ -174,11 +195,11 @@ router.post('/sync', async (req, res) => {
   );
 });
 
-router.post('/github/pull', requireToken, async (req, res) => {
+router.post('/github/pull', requireGithubToken, async (req, res) => {
   const sessionKey = resolveSessionKey(req);
   const { owner, repo } = await githubAiService.resolveRepoConfig(sessionKey);
   respondSafe(res, 'pull')(
-    gitCommands.pull({ branch: req.body?.branch || 'main', remote: 'origin', token: process.env.GITHUB_TOKEN }).then(
+    gitCommands.pull({ branch: req.body?.branch || 'main', remote: 'origin', token: req.githubToken }).then(
       async (result) => {
         await githubAiService.refreshSnapshot(sessionKey);
         return {
@@ -190,10 +211,10 @@ router.post('/github/pull', requireToken, async (req, res) => {
   );
 });
 
-router.post('/github/fetch', requireToken, async (req, res) => {
+router.post('/github/fetch', requireGithubToken, async (req, res) => {
   const sessionKey = resolveSessionKey(req);
   respondSafe(res, 'fetch')(
-    gitCommands.fetchRemote({ remote: req.body?.remote || 'origin', token: process.env.GITHUB_TOKEN }).then(async (result) => {
+    gitCommands.fetchRemote({ remote: req.body?.remote || 'origin', token: req.githubToken }).then(async (result) => {
       await githubAiService.refreshSnapshot(sessionKey);
       return result;
     })
@@ -437,11 +458,11 @@ router.post('/git/commit', async (req, res) => {
   respondSafe(res, 'gitCommit')(gitCommands.commit(req.body?.message, req.body?.options));
 });
 
-router.post('/git/push', requireToken, async (req, res) => {
+router.post('/git/push', requireGithubToken, async (req, res) => {
   respondSafe(res, 'gitPush')(gitCommands.push({
     remote: req.body?.remote || 'origin',
     branch: req.body?.branch || 'main',
-    token: process.env.GITHUB_TOKEN
+    token: req.githubToken
   }));
 });
 

@@ -44,6 +44,9 @@ router.post('/connect', requireAdminSetupToken, async (req, res) => {
     const repoUrl = req.body?.repoUrl;
     const token = req.body?.token;
     const sessionKey = resolveSessionKey(req);
+    if (token && req.session) {
+      req.session.githubPat = token;
+    }
     const result = await githubIntegration.connect({ repoUrl, token, sessionKey });
     return res.json(result);
   } catch (error) {
