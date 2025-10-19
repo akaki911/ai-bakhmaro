@@ -147,6 +147,32 @@ class PromptManager {
     return this.getPrompt(classification, context);
   }
 
+  shouldRouteToCodex(context = {}) {
+    try {
+      const metadata = context.metadata || {};
+      if (metadata.useCodex === true || metadata.model === 'codex') {
+        return true;
+      }
+
+      if (context.selectedModel === 'codex' || context.modelOverride === 'codex') {
+        return true;
+      }
+
+      const command = typeof metadata.codexCommand === 'string'
+        ? metadata.codexCommand.toLowerCase()
+        : undefined;
+
+      if (command && ['improve', 'refactor', 'explain', 'auto_improve'].includes(command)) {
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.warn('⚠️ PromptManager Codex routing check failed:', error.message);
+      return false;
+    }
+  }
+
   getPrompt(type, context = {}) {
     const basePrompt = this.prompts.get(type) || this.prompts.get('general');
 

@@ -11,6 +11,17 @@ try {
   console.warn('⚠️ Groq service not available for streaming:', error.message);
 }
 
+const codexAgent = require('../agents/codex_agent');
+
+const isCodexAvailable = () => {
+  try {
+    return Boolean(codexAgent?.isEnabled?.());
+  } catch (error) {
+    console.warn('⚠️ Codex availability check failed:', error.message);
+    return false;
+  }
+};
+
 // SOL-203: POST /api/ai/stream - Server-Sent Events streaming endpoint
 
 const writeSseData = (res, raw) => {
@@ -129,7 +140,17 @@ router.post('/stream', async (req, res) => {
     // Immediate lead-in chunk to unblock clients
     sendTextChunk(res, 'გურულო პასუხს ამზადებს…', message);
 
-    sendMetaEvent(res, { channel: 'direct-ai', mode: groqService ? 'live' : 'fallback' });
+    const metadataPayload = typeof params.metadata === 'object' && params.metadata ? params.metadata : {};
+    const codexRequested =
+      params?.useCodex === true ||
+      req.body?.useCodex === true ||
+      metadataPayload.useCodex === true ||
+      params?.model === 'codex' ||
+      params?.selectedModel === 'codex';
+    const codexFallback = !groqService && isCodexAvailable();
+    const shouldUseCodex = isCodexAvailable() && (codexRequested || codexFallback);
+
+    sendMetaEvent(res, { channel: 'direct-ai', mode: shouldUseCodex ? 'codex' : groqService ? 'live' : 'fallback' });
 
     // Heartbeat to keep connection alive
     const heartbeat = setInterval(() => {
@@ -137,6 +158,49 @@ router.post('/stream', async (req, res) => {
       res.write('event: ping\n');
       writeSseData(res, payload);
     }, 1000);
+
+    if (shouldUseCodex) {
+      res.setHeader('X-Stream-Mode', 'codex');
+
+      try {
+        const codexResult = await codexAgent.stream({
+          command: params?.command || 'chat',
+          message,
+          instructions: params?.instructions,
+          code: params?.code,
+          extraContext: params?.extraContext,
+          filePath: params?.filePath,
+          conversation: Array.isArray(params?.conversation) ? params.conversation : [],
+          metadata: {
+            ...metadataPayload,
+            origin: metadataPayload.origin || 'http-stream',
+            notifySlack: metadataPayload.notifySlack ?? params?.notifySlack === true,
+            useCodex: true,
+          },
+          userId: personalId,
+          onChunk: (chunk) => sendTextChunk(res, chunk, message),
+        });
+
+        if (!codexResult.text) {
+          sendTextChunk(res, 'Codex-მა ცარიელი პასუხი დააბრუნა.', message);
+        }
+
+        res.write('event: end\n');
+        writeSseData(res, 'complete');
+
+        clearInterval(heartbeat);
+        res.end();
+        return;
+      } catch (codexError) {
+        console.error('❌ Codex streaming error:', codexError);
+        sendMetaEvent(res, {
+          channel: 'direct-ai',
+          mode: 'codex-error',
+          message: codexError?.message || 'Codex failure',
+        });
+        sendTextChunk(res, 'Codex სერვისთან პირდაპირი კავშირი ვერ განხორციელდა – გურულო გადადის ალტერნატიულ მოდელზე…', message);
+      }
+    }
 
     if (!groqService || typeof groqService.askGroq !== 'function') {
       const fallbackMessage = [
