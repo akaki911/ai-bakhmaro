@@ -28,6 +28,21 @@ const extractRequestUrl = (input: RequestInfo | URL): string | undefined => {
   }
 };
 
+const shouldForceOmitCredentials = (requestUrl?: string): boolean => {
+  if (!requestUrl) {
+    return false;
+  }
+
+  try {
+    const parsedUrl = new URL(requestUrl, window.location.origin);
+    const hostname = parsedUrl.hostname.toLowerCase();
+
+    return hostname === 'securetoken.googleapis.com' || hostname.endsWith('.googleapis.com');
+  } catch {
+    return false;
+  }
+};
+
 const isSameOriginRequest = (requestUrl?: string): boolean => {
   if (!requestUrl) {
     return true;
@@ -52,7 +67,9 @@ window.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response>
   const existingCredentials = init?.credentials ?? (input instanceof Request ? input.credentials : undefined);
   const requestUrl = extractRequestUrl(input);
 
-  if (!existingCredentials && isSameOriginRequest(requestUrl)) {
+  if (shouldForceOmitCredentials(requestUrl)) {
+    nextInit.credentials = 'omit';
+  } else if (!existingCredentials && isSameOriginRequest(requestUrl)) {
     nextInit.credentials = 'include';
   } else if (existingCredentials) {
     nextInit.credentials = existingCredentials;
