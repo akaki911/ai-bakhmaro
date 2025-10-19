@@ -3,8 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
-import { getEnv } from './env';
-import commissionRouter from './routes/commission';
+import { getEnv } from './env.js';
+import commissionRouter from './routes/commission.js';
 
 // Derive CORS options type from cors() (no @types/cors needed)
 type CorsOptions = Parameters<typeof cors>[0];
