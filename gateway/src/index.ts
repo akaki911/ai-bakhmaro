@@ -12,8 +12,9 @@ import fs from 'node:fs';
 import jwt from 'jsonwebtoken';
 import { createProxyMiddleware, type Options } from 'http-proxy-middleware';
 import type { ClientRequest } from 'http';
-import { env } from './env.js';
+import { getEnv } from './env.js';
 import { createCookieNormaliser, createSessionCookieChecker } from './cookies.js';
+import { buildAllowedOriginsSet, createCorsOriginValidator } from './cors.js';
 
 const env = getEnv();
 const app = express();
@@ -178,10 +179,21 @@ app.get('/health', (_req, res) => {
 
 app.use(
   '/api/property',
-  createProxy(env.REMOTE_SITE_BASE, 'remote-site', {
+  createProxy(env.PROPERTY_API_URL, 'property-api', {
     pathRewrite: { '^/api/property': '' },
   }),
 );
+
+const siteMapping = env.SITE_MAPPING_GITHUB || {};
+app.use('/api/sites/:siteId/github', (req, res, next) => {
+  const repo = siteMapping[req.params.siteId];
+  if (!repo) {
+    res.status(404).json({ error: 'Unknown site', siteId: req.params.siteId });
+    return;
+  }
+  req.headers['x-target-repo'] = repo;
+  next();
+});
 
 app.use('/api', createProxy(env.REMOTE_SITE_BASE, 'remote-site'));
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import { getApiBase } from '../../../lib/apiBase';
 import { buildServiceOrigin } from '../utils/serviceUrls.js';
+import { useNavigate } from 'react-router-dom';
 
 interface ServiceInfo {
   name: string;
@@ -57,6 +58,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
   const [conflictHistory, setConflictHistory] = useState<any[]>([]);
   const [selectedConflict, setSelectedConflict] = useState<PortStatus | null>(null);
   const [showConflictModal, setShowConflictModal] = useState(false);
+  const navigate = useNavigate();
 
   // 🇬🇪 Dynamic Service Names based on real port status
   const getDynamicServices = (): ServiceInfo[] => {
@@ -116,6 +118,12 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
 
   // 🎯 Get services safely after state is initialized
   const services = getDynamicServices();
+
+  const handleOpenDeveloperPanel = () => {
+    navigate('/admin?tab=dashboard');
+  };
+
+  const showDeveloperFallback = !isLoadingRoutes && services.length === 0 && routeMappings.length === 0;
 
   // 🔍 Automatic Route Discovery
   const discoverRoutes = async () => {
@@ -677,24 +685,43 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
 
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      {/* Conflict Modal */}
       <ConflictDetailsModal />
-      {/* Header */}
-      <div className="p-3 border-b border-gray-300 dark:border-gray-600 flex justify-between items-center">
-        <h3 className="text-sm font-semibold flex items-center">
-          🧭 Services და Route Mappings
-        </h3>
-        <button
-          onClick={onBackToLogs}
-          className="px-3 py-1 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors"
-        >
-          ← Logs-ზე დაბრუნება
-        </button>
-      </div>
+      {showDeveloperFallback ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-3xl border border-dashed border-white/10 bg-[#0F1320]/70 p-10 text-center text-[#E6E8EC]">
+          <div className="text-4xl">🛠️</div>
+          <div>
+            <h2 className="text-2xl font-semibold">Service metrics unavailable</h2>
+            <p className="mt-2 text-sm text-[#A0A4AD]">
+              Gurulo automation can continue from the AI Developer Console. Use the admin panel to manage chats,
+              explore files, and control GitHub integrations directly.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleOpenDeveloperPanel}
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#7C6CFF] to-[#4B3FA8] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(124,108,255,0.35)] transition-all hover:shadow-[0_24px_52px_rgba(124,108,255,0.45)]"
+          >
+            Open AI Developer Panel
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="p-3 border-b border-gray-300 dark:border-gray-600 flex justify-between items-center">
+            <h3 className="text-sm font-semibold flex items-center">
+              🧭 Services და Route Mappings
+            </h3>
+            <button
+              onClick={onBackToLogs}
+              className="px-3 py-1 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors"
+            >
+              ← Logs-ზე დაბრუნება
+            </button>
+          </div>
 
-      <div className="flex-1 p-3 space-y-4 overflow-y-auto">
-        {/* Port Status Panel */}
-        <div className="mb-6 p-4 bg-gray-800/40 border border-gray-700/30 rounded-lg">
+          <div className="flex-1 p-3 space-y-4 overflow-y-auto">
+            {/* Port Status Panel */}
+            <div className="mb-6 p-4 bg-gray-800/40 border border-gray-700/30 rounded-lg">
           <h4 className="text-white font-medium mb-3 flex items-center gap-2">
             🔌 Port-ების Status Dashboard
             <span className="text-xs text-gray-400">ცოცხალი მონიტორინგი</span>
@@ -963,8 +990,10 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

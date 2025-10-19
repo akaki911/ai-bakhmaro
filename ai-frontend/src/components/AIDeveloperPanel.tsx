@@ -8,6 +8,7 @@ import {
   Brain,
   Clock,
   FolderOpen,
+  Github,
   HardDrive,
   KeyRound,
   LayoutDashboard,
@@ -21,6 +22,9 @@ import type { LucideIcon } from "lucide-react";
 import ChatTab from "./AIDeveloper/tabs/ChatTab";
 import ConsoleTab from "./AIDeveloper/tabs/ConsoleTab";
 import ExplorerTab from "./AIDeveloper/tabs/ExplorerTab";
+import { SecretsPage } from "./AIDeveloper/tabs/Secrets";
+import BackupTab from "./AIDeveloper/tabs/BackupTab";
+import GitHubTab from "./AIDeveloper/tabs/GitHubTab";
 import { DevConsoleProvider } from "../contexts/DevConsoleContext";
 import { useAIServiceState } from "@/hooks/useAIServiceState";
 import { useFileOperations } from "../hooks/useFileOperations";
@@ -32,7 +36,10 @@ type TabKey =
   | "dashboard"
   | "chat"
   | "console"
-  | "explorer";
+  | "explorer"
+  | "secrets"
+  | "sync"
+  | "github";
 
 type AccentTone = "violet" | "blue" | "green" | "pink" | "gold";
 
@@ -67,7 +74,15 @@ type StatCard = {
   status: "good" | "warning" | "critical" | "neutral";
 };
 
-const CORE_TABS: TabKey[] = ["dashboard", "chat", "console", "explorer"];
+const CORE_TABS: TabKey[] = [
+  "dashboard",
+  "chat",
+  "console",
+  "explorer",
+  "secrets",
+  "sync",
+  "github",
+];
 
 const DEFAULT_AI_SERVICE_HEALTH = { status: "ok", port: 5001, lastCheck: Date.now() };
 
@@ -667,6 +682,7 @@ const AIDeveloperPanel: React.FC = () => {
         badge?: string;
         title?: string;
         isOff?: boolean;
+        href?: string;
       }
     | {
         key: string;
@@ -679,10 +695,62 @@ const AIDeveloperPanel: React.FC = () => {
 
   const sidebarItems: SidebarItem[] = useMemo(() => {
     return [
-      { key: "dashboard", action: "tab", tabKey: "dashboard", icon: LayoutDashboard, label: "დეშბორდი" },
-      { key: "chat", action: "tab", tabKey: "chat", icon: MessageSquare, label: "გურულო" },
-      { key: "console", action: "tab", tabKey: "console", icon: Terminal, label: "კონსოლი" },
-      { key: "explorer", action: "tab", tabKey: "explorer", icon: FolderOpen, label: "ფაილები" },
+      {
+        key: "dashboard",
+        action: "tab",
+        tabKey: "dashboard",
+        icon: LayoutDashboard,
+        label: "Dashboard",
+        href: "/admin?tab=dashboard",
+      },
+      {
+        key: "chat",
+        action: "tab",
+        tabKey: "chat",
+        icon: MessageSquare,
+        label: "AI Chat",
+        href: "/admin?tab=chat",
+      },
+      {
+        key: "console",
+        action: "tab",
+        tabKey: "console",
+        icon: Terminal,
+        label: "Console",
+        href: "/admin?tab=console",
+      },
+      {
+        key: "explorer",
+        action: "tab",
+        tabKey: "explorer",
+        icon: FolderOpen,
+        label: "File Explorer",
+        href: "/admin?tab=explorer",
+      },
+      {
+        key: "secrets",
+        action: "tab",
+        tabKey: "secrets",
+        icon: KeyRound,
+        label: "Secrets Vault",
+        href: "/admin?tab=secrets",
+      },
+      {
+        key: "sync",
+        action: "tab",
+        tabKey: "sync",
+        icon: RefreshCcw,
+        label: "Sync Queue",
+        href: "/admin?tab=sync",
+      },
+      {
+        key: "github",
+        action: "tab",
+        tabKey: "github",
+        icon: Github,
+        label: "GitHub",
+        href: "/admin?tab=github",
+      },
     ];
   }, []);
 
@@ -727,31 +795,52 @@ const AIDeveloperPanel: React.FC = () => {
     () => [
       {
         key: "dashboard",
-        label: "საწვრთნელი პანელი",
-        description: "სტატუსები და ბოლო აქტიურობა ერთ ადგილზე",
+        label: "Dashboard",
+        description: "Review health, telemetry, and rollout updates",
         icon: LayoutDashboard,
         accent: "violet",
       },
       {
         key: "chat",
-        label: "გურულო ჩატი",
-        description: "რეალური დროის დიალოგი Gurulo-სთან",
+        label: "AI Chat",
+        description: "Collaborate with Gurulo for live coding guidance",
         icon: MessageSquare,
         accent: "blue",
       },
       {
         key: "console",
-        label: "დევკონსოლი",
-        description: "სისტემის პროცესის მონიტორინგი და ბრძანებები",
+        label: "Console",
+        description: "Monitor services and run automation jobs",
         icon: Terminal,
         accent: "green",
       },
       {
         key: "explorer",
-        label: "ფაილების მენეჯერი",
-        description: "რედაქტირება და ფაილების მონიტორინგი",
+        label: "File Explorer",
+        description: "Browse, edit, and preview repository files",
         icon: FolderOpen,
         accent: "gold",
+      },
+      {
+        key: "secrets",
+        label: "Secrets Vault",
+        description: "Audit, sync, and roll back environment secrets",
+        icon: KeyRound,
+        accent: "violet",
+      },
+      {
+        key: "sync",
+        label: "Sync Queue",
+        description: "Track pending sync jobs and recovery backups",
+        icon: RefreshCcw,
+        accent: "blue",
+      },
+      {
+        key: "github",
+        label: "GitHub",
+        description: "Connect repos, inspect diffs, and push changes",
+        icon: Github,
+        accent: "green",
       },
     ],
     [],
@@ -1011,6 +1100,16 @@ const AIDeveloperPanel: React.FC = () => {
                         loadFile={loadFile}
                         saveFile={saveFile}
                       />
+                    )}
+
+                    {activeTab === "secrets" && <SecretsPage variant="panel" />}
+
+                    {activeTab === "sync" && (
+                      <BackupTab hasDevConsoleAccess={hasDevConsoleAccess} />
+                    )}
+
+                    {activeTab === "github" && (
+                      <GitHubTab hasDevConsoleAccess={hasDevConsoleAccess} />
                     )}
                   </div>
                 </div>
