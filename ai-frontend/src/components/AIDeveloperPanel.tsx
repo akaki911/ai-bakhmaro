@@ -5,8 +5,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/useAuth";
 import {
   Activity,
+  Beaker,
   Brain,
+  ChevronLeft,
+  ChevronRight,
   Clock,
+  Database,
   FolderOpen,
   Github,
   HardDrive,
@@ -14,14 +18,23 @@ import {
   LayoutDashboard,
   Megaphone,
   MessageSquare,
+  Moon,
   RefreshCcw,
+  ScrollText,
+  Settings,
   Sparkles,
+  Sun,
   Terminal,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ChatTab from "./AIDeveloper/tabs/ChatTab";
 import ConsoleTab from "./AIDeveloper/tabs/ConsoleTab";
 import ExplorerTab from "./AIDeveloper/tabs/ExplorerTab";
+import MemoryTab from "./AIDeveloper/tabs/MemoryTab";
+import LogsTab from "./AIDeveloper/tabs/LogsTab";
+import SettingsTab from "./AIDeveloper/tabs/SettingsTab";
+import AutoImproveTab from "./AIDeveloper/tabs/AutoImproveTab";
+import TestsPage from "./AIDeveloper/tabs/Tests/TestsPage";
 import { SecretsPage } from "./AIDeveloper/tabs/Secrets";
 import BackupTab from "./AIDeveloper/tabs/BackupTab";
 import GitHubTab from "./AIDeveloper/tabs/GitHubTab";
@@ -31,15 +44,22 @@ import { useFileOperations } from "../hooks/useFileOperations";
 import { useSystemState } from "../hooks/useSystemState";
 import { useMemoryManagement } from "../hooks/useMemoryManagement";
 import { fetchSecretsTelemetry } from "@/services/secretsAdminApi";
+import { useTheme } from "../contexts/useTheme";
+import { systemCleanerService } from "../services/SystemCleanerService";
 
 type TabKey =
   | "dashboard"
   | "chat"
   | "console"
   | "explorer"
+  | "autoImprove"
+  | "memory"
+  | "logs"
   | "secrets"
   | "sync"
-  | "github";
+  | "github"
+  | "settings"
+  | "tests";
 
 type AccentTone = "violet" | "blue" | "green" | "pink" | "gold";
 
@@ -79,9 +99,14 @@ const CORE_TABS: TabKey[] = [
   "chat",
   "console",
   "explorer",
+  "autoImprove",
+  "memory",
+  "logs",
   "secrets",
   "sync",
   "github",
+  "settings",
+  "tests",
 ];
 
 const DEFAULT_AI_SERVICE_HEALTH = { status: "ok", port: 5001, lastCheck: Date.now() };
@@ -161,8 +186,10 @@ const AIDeveloperPanel: React.FC = () => {
     refreshHealth,
     loadModels,
     modelControls,
+    setModelControls,
     availableModels,
     selectedModel,
+    setSelectedModel,
   } = useAIServiceState(isAuthenticated, authUser);
   const aiServiceHealth = providedHealth ?? DEFAULT_AI_SERVICE_HEALTH;
 
@@ -171,10 +198,16 @@ const AIDeveloperPanel: React.FC = () => {
     authUser,
   );
 
+  const { isDarkMode, setTheme, toggleTheme } = useTheme();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
   const {
     cleanerEnabled,
+    setCleanerEnabled,
     isCleaningNow,
+    setIsCleaningNow,
     lastCleanup,
+    setLastCleanup,
     telemetryData,
     setTelemetryData,
   } = useSystemState();
@@ -206,6 +239,36 @@ const AIDeveloperPanel: React.FC = () => {
       }),
     [],
   );
+
+  const sidebarTitle = "Ai გურულო";
+  const userDisplayName = useMemo(() => {
+    if (!authUser) {
+      return "სტუმარი";
+    }
+
+    return (
+      authUser.displayName ||
+      authUser.fullName ||
+      authUser.email ||
+      authUser.personalId ||
+      "სტუმარი"
+    );
+  }, [authUser]);
+
+  const handleSetDarkMode = useCallback(
+    (dark: boolean) => {
+      setTheme(dark ? "dark" : "light");
+    },
+    [setTheme],
+  );
+
+  const handleThemeToggle = useCallback(() => {
+    toggleTheme();
+  }, [toggleTheme]);
+
+  const handleSidebarToggle = useCallback(() => {
+    setIsSidebarCollapsed((previous) => !previous);
+  }, []);
 
   const formatRelativeTime = useCallback((value: unknown) => {
     if (!value) {
@@ -261,6 +324,42 @@ const AIDeveloperPanel: React.FC = () => {
 
     return model?.label ?? selectedModel;
   }, [availableModels, selectedModel]);
+
+  const secretsQueueBadge = useMemo(() => {
+    const queueLength = telemetryData?.secrets?.queueLength ?? 0;
+    if (!Number.isFinite(queueLength) || queueLength <= 0) {
+      return undefined;
+    }
+
+    return numberFormatter.format(queueLength);
+  }, [numberFormatter, telemetryData]);
+
+  const handleToggleCleaner = useCallback(() => {
+    const nextState = !cleanerEnabled;
+
+    try {
+      systemCleanerService.setCleaningEnabled(nextState);
+      setCleanerEnabled(nextState);
+
+      if (nextState) {
+        setLastCleanup(systemCleanerService.getLastCleanupTime());
+      }
+    } catch (error) {
+      console.error("⚠️ Failed to toggle system cleaner", error);
+    }
+  }, [cleanerEnabled, setCleanerEnabled, setLastCleanup]);
+
+  const handleManualCleanup = useCallback(async () => {
+    try {
+      setIsCleaningNow(true);
+      const stats = await systemCleanerService.performManualCleanup();
+      setLastCleanup(stats?.timestamp ?? new Date().toISOString());
+    } catch (error) {
+      console.error("⚠️ Manual cleanup failed", error);
+    } finally {
+      setIsCleaningNow(false);
+    }
+  }, [setIsCleaningNow, setLastCleanup]);
 
   const statCards = useMemo<StatCard[]>(() => {
     const {
@@ -525,6 +624,27 @@ const AIDeveloperPanel: React.FC = () => {
     [location.pathname, location.search, navigate],
   );
 
+  const handleOpenFileFromActivity = useCallback(
+    async (path: string) => {
+      if (!path) {
+        return;
+      }
+
+      try {
+        const file = await loadFile(path);
+        setCurrentFile({
+          path,
+          content: file?.content ?? "",
+          lastModified: new Date().toISOString(),
+        });
+        handleTabChange("explorer");
+      } catch (error) {
+        console.error("⚠️ Failed to open file from activity feed", error);
+      }
+    },
+    [handleTabChange, loadFile, setCurrentFile],
+  );
+
   const handleRefreshHealth = useCallback(async () => {
     try {
       setIsRefreshingHealth(true);
@@ -673,24 +793,26 @@ const AIDeveloperPanel: React.FC = () => {
   }, [isSuperAdminUser, setTelemetryData]);
 
   type SidebarItem =
-    | {
+  | {
         key: string;
         action: "tab";
         tabKey: TabKey;
-        icon: typeof MessageSquare;
+        icon: LucideIcon;
         label: string;
         badge?: string;
         title?: string;
         isOff?: boolean;
+        disabled?: boolean;
         href?: string;
       }
     | {
         key: string;
         action: "link";
-        icon: typeof MessageSquare;
+        icon: LucideIcon;
         label: string;
         title?: string;
         href: string;
+        disabled?: boolean;
       };
 
   const sidebarItems: SidebarItem[] = useMemo(() => {
@@ -700,7 +822,8 @@ const AIDeveloperPanel: React.FC = () => {
         action: "tab",
         tabKey: "dashboard",
         icon: LayoutDashboard,
-        label: "Dashboard",
+        label: "დეშბორდი",
+        title: "Dashboard",
         href: "/admin?tab=dashboard",
       },
       {
@@ -708,7 +831,8 @@ const AIDeveloperPanel: React.FC = () => {
         action: "tab",
         tabKey: "chat",
         icon: MessageSquare,
-        label: "AI Chat",
+        label: "AI ჩატი",
+        title: "AI Chat",
         href: "/admin?tab=chat",
       },
       {
@@ -716,7 +840,8 @@ const AIDeveloperPanel: React.FC = () => {
         action: "tab",
         tabKey: "console",
         icon: Terminal,
-        label: "Console",
+        label: "კონსოლი",
+        title: "Developer Console",
         href: "/admin?tab=console",
       },
       {
@@ -724,24 +849,59 @@ const AIDeveloperPanel: React.FC = () => {
         action: "tab",
         tabKey: "explorer",
         icon: FolderOpen,
-        label: "File Explorer",
+        label: "ფაილები",
+        title: "File Explorer",
         href: "/admin?tab=explorer",
+      },
+      {
+        key: "autoImprove",
+        action: "tab",
+        tabKey: "autoImprove",
+        icon: Sparkles,
+        label: "Auto-Improve",
+        title: "Auto-Improve Studio",
+        href: "/admin?tab=autoImprove",
+        isOff: !hasDevConsoleAccess,
+      },
+      {
+        key: "memory",
+        action: "tab",
+        tabKey: "memory",
+        icon: Database,
+        label: "მეხსიერება",
+        title: "Memory Manager",
+        href: "/admin?tab=memory",
+      },
+      {
+        key: "logs",
+        action: "tab",
+        tabKey: "logs",
+        icon: ScrollText,
+        label: "ლოგები",
+        title: "System Logs",
+        href: "/admin?tab=logs",
+        isOff: !hasDevConsoleAccess,
       },
       {
         key: "secrets",
         action: "tab",
         tabKey: "secrets",
         icon: KeyRound,
-        label: "Secrets Vault",
+        label: "საიდუმლოებები",
+        title: "Secrets Vault",
         href: "/admin?tab=secrets",
+        badge: secretsQueueBadge,
+        isOff: !isSuperAdminUser,
       },
       {
         key: "sync",
         action: "tab",
         tabKey: "sync",
         icon: RefreshCcw,
-        label: "Sync Queue",
+        label: "ბექაპი",
+        title: "Sync Queue",
         href: "/admin?tab=sync",
+        badge: secretsQueueBadge,
       },
       {
         key: "github",
@@ -749,10 +909,43 @@ const AIDeveloperPanel: React.FC = () => {
         tabKey: "github",
         icon: Github,
         label: "GitHub",
+        title: "GitHub Integration",
         href: "/admin?tab=github",
       },
+      {
+        key: "settings",
+        action: "tab",
+        tabKey: "settings",
+        icon: Settings,
+        label: "პარამეტრები",
+        title: "Settings",
+        href: "/admin?tab=settings",
+      },
+      {
+        key: "tests",
+        action: "tab",
+        tabKey: "tests",
+        icon: Beaker,
+        label: "ტესტები",
+        title: "Tests Lab",
+        href: "/admin?tab=tests",
+        isOff: !hasDevConsoleAccess,
+      },
     ];
-  }, []);
+  }, [hasDevConsoleAccess, isSuperAdminUser, secretsQueueBadge]);
+
+  const activeTabLabel = useMemo(() => {
+    const current = sidebarItems.find(
+      (item): item is Extract<SidebarItem, { action: "tab" }> =>
+        item.action === "tab" && item.tabKey === activeTab,
+    );
+
+    if (current) {
+      return current.label;
+    }
+
+    return t("aiDeveloper.title", "AI დეველოპერის პანელი");
+  }, [activeTab, sidebarItems, t]);
 
   const dashboardUpdates = useMemo<DashboardUpdate[]>(() => {
     const healthOk = Boolean(aiServiceHealth?.ok);
@@ -822,11 +1015,36 @@ const AIDeveloperPanel: React.FC = () => {
         accent: "gold",
       },
       {
+        key: "autoImprove",
+        label: "Auto-Improve",
+        description: "Audit Gurulo brain metrics and rollout automations",
+        icon: Sparkles,
+        accent: "pink",
+        disabled: !hasDevConsoleAccess,
+      },
+      {
+        key: "memory",
+        label: "Memory",
+        description: "Tune saved context, notes, and recall preferences",
+        icon: Database,
+        accent: "blue",
+      },
+      {
+        key: "logs",
+        label: "Logs",
+        description: "Inspect realtime activity across services",
+        icon: ScrollText,
+        accent: "violet",
+        disabled: !hasDevConsoleAccess,
+      },
+      {
         key: "secrets",
         label: "Secrets Vault",
         description: "Audit, sync, and roll back environment secrets",
         icon: KeyRound,
         accent: "violet",
+        disabled: !isSuperAdminUser,
+        badge: secretsQueueBadge,
       },
       {
         key: "sync",
@@ -834,6 +1052,7 @@ const AIDeveloperPanel: React.FC = () => {
         description: "Track pending sync jobs and recovery backups",
         icon: RefreshCcw,
         accent: "blue",
+        badge: secretsQueueBadge,
       },
       {
         key: "github",
@@ -842,8 +1061,23 @@ const AIDeveloperPanel: React.FC = () => {
         icon: Github,
         accent: "green",
       },
+      {
+        key: "settings",
+        label: "Settings",
+        description: "Configure Gurulo behavior, models, and cleanup",
+        icon: Settings,
+        accent: "gold",
+      },
+      {
+        key: "tests",
+        label: "Tests",
+        description: "Discover, run, and monitor automated suites",
+        icon: Beaker,
+        accent: "pink",
+        disabled: !hasDevConsoleAccess,
+      },
     ],
-    [],
+    [hasDevConsoleAccess, isSuperAdminUser, secretsQueueBadge],
   );
 
   if (isInitializing) {
@@ -876,48 +1110,116 @@ const AIDeveloperPanel: React.FC = () => {
     <DevConsoleProvider>
       <div className="ai-dev-panel full-width">
         <div className="ai-dev-shell">
-          <aside className="ai-dev-sidebar" aria-label="AI Developer პანელის ნავიგაცია">
-            {sidebarItems.map((item) => {
-              const isTab = item.action === "tab";
-              const isActive = isTab && activeTab === item.tabKey;
-              const isOff = isTab ? item.isOff ?? false : false;
-              const itemClasses = [
-                "ai-dev-sidebar__item",
-                isActive ? "is-active" : "",
-                isOff ? "is-muted" : "",
-              ]
-                .filter(Boolean)
-                .join(" ");
-
-              return (
-                <div key={item.key} className={itemClasses}>
-                  <span className="ai-dev-sidebar__glow" aria-hidden="true" />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      item.action === "tab"
-                        ? handleTabChange(item.tabKey)
-                        : navigate(item.href)
-                    }
-                    className="ai-dev-sidebar__button"
-                    title={item.title ?? item.label}
-                    aria-pressed={isActive}
-                  >
-                    <item.icon size={20} />
-                  </button>
-                  {item.action === "tab" && item.badge && (
-                    <span className="ai-dev-sidebar__badge">{item.badge}</span>
-                  )}
+          <aside
+            className={["ai-dev-sidebar", isSidebarCollapsed ? "ai-dev-sidebar--collapsed" : ""]
+              .filter(Boolean)
+              .join(" ")}
+            aria-label="AI Developer პანელის ნავიგაცია"
+          >
+            <div className="ai-dev-sidebar__header">
+              <div
+                className="ai-dev-sidebar__logo"
+                title={`${sidebarTitle} — ${userDisplayName}`}
+                aria-label={`${sidebarTitle} (${userDisplayName})`}
+              >
+                <span className="ai-dev-sidebar__logo-icon">Ai</span>
+              </div>
+              {!isSidebarCollapsed && (
+                <div className="ai-dev-sidebar__meta">
+                  <span className="ai-dev-sidebar__brand">{sidebarTitle}</span>
+                  <span className="ai-dev-sidebar__user">{userDisplayName}</span>
                 </div>
-              );
-            })}
+              )}
+              <button
+                type="button"
+                className="ai-dev-sidebar__theme-toggle"
+                onClick={handleThemeToggle}
+                aria-label={isDarkMode ? "გათენება" : "დაუბნელება"}
+                title={isDarkMode ? "ღია თემა" : "მუქი თემა"}
+              >
+                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+            </div>
+
+            <div className="ai-dev-sidebar__items">
+              {sidebarItems.map((item) => {
+                const isTab = item.action === "tab";
+                const isActive = isTab && activeTab === item.tabKey;
+                const isMuted = isTab ? item.isOff ?? false : false;
+                const isDisabled = Boolean(item.disabled || isMuted);
+                const itemClasses = [
+                  "ai-dev-sidebar__item",
+                  isActive ? "is-active" : "",
+                  isMuted || isDisabled ? "is-muted" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+                const buttonClasses = [
+                  "ai-dev-sidebar__button",
+                  isSidebarCollapsed ? "is-icon-only" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+
+                const handleItemClick = () => {
+                  if (isDisabled) {
+                    return;
+                  }
+
+                  if (item.action === "tab") {
+                    handleTabChange(item.tabKey);
+                  } else {
+                    navigate(item.href);
+                  }
+                };
+
+                return (
+                  <div key={item.key} className={itemClasses}>
+                    <span className="ai-dev-sidebar__glow" aria-hidden="true" />
+                    <button
+                      type="button"
+                      onClick={handleItemClick}
+                      className={buttonClasses}
+                      title={item.title ?? item.label}
+                      aria-pressed={isActive}
+                      aria-disabled={isDisabled}
+                      disabled={isDisabled}
+                    >
+                      <span className="ai-dev-sidebar__icon">
+                        <item.icon size={20} />
+                      </span>
+                      {!isSidebarCollapsed && (
+                        <span className="ai-dev-sidebar__label">{item.label}</span>
+                      )}
+                    </button>
+                    {item.action === "tab" && item.badge && (
+                      <span className="ai-dev-sidebar__badge">{item.badge}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="ai-dev-sidebar__footer">
+              <button
+                type="button"
+                className="ai-dev-sidebar__collapse"
+                onClick={handleSidebarToggle}
+                aria-label={isSidebarCollapsed ? "მენიუს გახსნა" : "მენიუს შეკვეცა"}
+              >
+                {isSidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+                {!isSidebarCollapsed && (
+                  <span className="ai-dev-sidebar__footer-label">მენიუს შეკვეცა</span>
+                )}
+              </button>
+            </div>
           </aside>
 
           <div className="ai-dev-main">
             <header className="ai-dev-topbar">
               <div className="ai-dev-topbar__title">
-                <span>AI Developer Control Center</span>
-                <h1>{activeTab === "dashboard" ? "დეშბორდი" : t("aiDeveloper.title", "AI დეველოპერის პანელი")}</h1>
+                <span>{sidebarTitle}</span>
+                <h1>{activeTabLabel}</h1>
               </div>
 
               <div className="ai-dev-topbar__chips">
@@ -1087,6 +1389,15 @@ const AIDeveloperPanel: React.FC = () => {
                       <ChatTab isAuthenticated={isAuthenticated} userRole={userRole} />
                     )}
 
+                    {activeTab === "autoImprove" && (
+                      <AutoImproveTab
+                        hasDevConsoleAccess={hasDevConsoleAccess}
+                        isAuthenticated={isAuthenticated}
+                        userRole={userRole ?? ""}
+                        openFileFromActivity={handleOpenFileFromActivity}
+                      />
+                    )}
+
                     {activeTab === "console" && (
                       <ConsoleTab hasDevConsoleAccess={hasDevConsoleAccess} />
                     )}
@@ -1102,6 +1413,14 @@ const AIDeveloperPanel: React.FC = () => {
                       />
                     )}
 
+                    {activeTab === "memory" && (
+                      <MemoryTab isAuthenticated={isAuthenticated} />
+                    )}
+
+                    {activeTab === "logs" && (
+                      <LogsTab hasDevConsoleAccess={hasDevConsoleAccess} />
+                    )}
+
                     {activeTab === "secrets" && <SecretsPage variant="panel" />}
 
                     {activeTab === "sync" && (
@@ -1111,6 +1430,26 @@ const AIDeveloperPanel: React.FC = () => {
                     {activeTab === "github" && (
                       <GitHubTab hasDevConsoleAccess={hasDevConsoleAccess} />
                     )}
+
+                    {activeTab === "settings" && (
+                      <SettingsTab
+                        isDarkMode={isDarkMode}
+                        setIsDarkMode={handleSetDarkMode}
+                        cleanerEnabled={cleanerEnabled}
+                        isCleaningNow={isCleaningNow}
+                        lastCleanup={lastCleanup}
+                        onToggleCleaner={handleToggleCleaner}
+                        onManualCleanup={handleManualCleanup}
+                        modelControls={modelControls}
+                        setModelControls={setModelControls}
+                        availableModels={availableModels ?? []}
+                        selectedModel={selectedModel}
+                        setSelectedModel={setSelectedModel}
+                        telemetryData={telemetryData}
+                      />
+                    )}
+
+                    {activeTab === "tests" && <TestsPage />}
                   </div>
                 </div>
               </section>
