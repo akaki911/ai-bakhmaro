@@ -15,7 +15,6 @@ import { AssistantModeProvider } from './contexts/AssistantModeContext';
 import { PermissionsProvider } from './contexts/PermissionsContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { FilePreviewProvider } from './contexts/FilePreviewProvider';
-import { useAuth } from './contexts/useAuth';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './Login';
@@ -55,31 +54,16 @@ function FirebaseInitializer() {
   return null;
 }
 
-function RootRedirect() {
-  const { authInitialized, isAuthenticated } = useAuth();
-
-  if (!authInitialized) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <Navigate to={isAuthenticated ? '/index.html' : '/login'} replace />;
-}
-
-function TabRedirect({ tab }: { tab: 'dashboard' | 'chat' | 'console' | 'explorer' }) {
-  const target = tab === 'dashboard' ? '/index.html' : `/index.html?tab=${tab}`;
-  return <Navigate to={target} replace />;
-}
-
 function AppRouter() {
   return (
     <Routes>
-      <Route path="/" element={<RootRedirect />} />
+      <Route path="/" element={<Navigate to="/admin?tab=dashboard" replace />} />
       <Route path="/login" element={<Login />} />
 
       <Route
-        path="/index.html"
+        path="/admin"
         element={(
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="SUPER_ADMIN">
             <Suspense fallback={<div className="p-6 text-gray-400">Loading AI Developer…</div>}>
               <AIDeveloperPanel />
             </Suspense>
@@ -87,49 +71,7 @@ function AppRouter() {
         )}
       />
 
-      <Route
-        path="/ai/dashboard"
-        element={(
-          <ProtectedRoute>
-            <TabRedirect tab="dashboard" />
-          </ProtectedRoute>
-        )}
-      />
-      <Route
-        path="/ai/chat"
-        element={(
-          <ProtectedRoute>
-            <TabRedirect tab="chat" />
-          </ProtectedRoute>
-        )}
-      />
-      <Route
-        path="/ai/console"
-        element={(
-          <ProtectedRoute>
-            <TabRedirect tab="console" />
-          </ProtectedRoute>
-        )}
-      />
-      <Route
-        path="/ai/explorer"
-        element={(
-          <ProtectedRoute>
-            <TabRedirect tab="explorer" />
-          </ProtectedRoute>
-        )}
-      />
-
-      <Route
-        path="/ai"
-        element={(
-          <ProtectedRoute>
-            <TabRedirect tab="console" />
-          </ProtectedRoute>
-        )}
-      />
-
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/admin?tab=dashboard" replace />} />
     </Routes>
   );
 }
