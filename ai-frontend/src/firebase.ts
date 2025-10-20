@@ -1,123 +1,98 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, initializeAuth, browserLocalPersistence, indexedDBLocalPersistence } from 'firebase/auth';
-import type { Auth } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator, enableNetwork } from 'firebase/firestore';
-import { getStorage } from "firebase/storage";
+import {
+  getAuth,
+  initializeAuth,
+  browserLocalPersistence,
+  indexedDBLocalPersistence,
+  type Auth,
+} from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
-// Debug all available environment variables for Firebase
-console.log("🔍 All import.meta.env variables:", Object.keys(import.meta.env));
-console.log("🔍 All Firebase-related env vars:", 
-  Object.keys(import.meta.env).filter(key => key.includes('FIREBASE'))
-);
+type EnvKey =
+  | 'VITE_FIREBASE_API_KEY'
+  | 'VITE_FIREBASE_AUTH_DOMAIN'
+  | 'VITE_FIREBASE_PROJECT_ID'
+  | 'VITE_FIREBASE_STORAGE_BUCKET'
+  | 'VITE_FIREBASE_MESSAGING_SENDER_ID'
+  | 'VITE_FIREBASE_APP_ID'
+  | 'VITE_FIREBASE_MEASUREMENT_ID';
 
-// Use actual values for Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyBH0-yeuoUIWOiO1ZXGDcuJ7_vP6BkugBw",
-  authDomain: "bakhmaro-cottages.firebaseapp.com",
-  projectId: "bakhmaro-cottages",
-  storageBucket: "bakhmaro-cottages.firebasestorage.app",
-  messagingSenderId: "815060315119",
-  appId: "1:815060315119:web:a1f33d920bcd52e536a41a",
-  measurementId: "G-NT97B9E4YL"
-};
-
-// Validate required environment variables for reference
-const requiredEnvVars = {
-  VITE_FIREBASE_API_KEY: firebaseConfig.apiKey,
-  VITE_FIREBASE_AUTH_DOMAIN: firebaseConfig.authDomain,
-  VITE_FIREBASE_PROJECT_ID: firebaseConfig.projectId,
-  VITE_FIREBASE_APP_ID: firebaseConfig.appId
-};
-
-const missingVars = Object.entries(requiredEnvVars).filter(([key, value]) => !value).map(([key]) => key);
-
-if (missingVars.length > 0) {
-  console.error("❌ Missing required Firebase environment variables:", missingVars);
-  console.error("❌ Available environment variables:", Object.keys(import.meta.env));
-  console.error("❌ Please ensure these are set in your GitHub Repository Secrets:");
-  missingVars.forEach(varName => console.error(`   - ${varName}`));
-  
-  // Provide helpful debugging information
-  console.error("💡 Debug info:");
-  console.error("   - Check if variables are prefixed with VITE_");
-  console.error("   - Verify they are added under https://github.com/akaki911/ai-bakhmaro/settings/secrets/actions");
-  console.error("   - Restart the development server after updating secrets");
-  
-  throw new Error(`Missing Firebase configuration: ${missingVars.join(', ')}`);
-}
-
-// Firebase config is already defined above
-
-// Debug Firebase config
-console.log("🔧 Firebase Config Debug:", {
-  apiKey: firebaseConfig.apiKey ? `${firebaseConfig.apiKey.substring(0, 10)}...` : "MISSING",
-  authDomain: firebaseConfig.authDomain,
-  projectId: firebaseConfig.projectId,
-  currentDomain: typeof window !== 'undefined' ? window.location.hostname : 'server',
-  fullConfig: firebaseConfig
-});
-
-// Validate API key format
-if (!firebaseConfig.apiKey || !firebaseConfig.apiKey.startsWith('AIza')) {
-  console.error("❌ Invalid Firebase API Key format!");
-  console.error("❌ Current API Key:", firebaseConfig.apiKey);
-}
-
-// Validate auth domain
-if (!firebaseConfig.authDomain || !firebaseConfig.authDomain.includes('firebase')) {
-  console.error("❌ Invalid Firebase Auth Domain!");
-  console.error("❌ Current Auth Domain:", firebaseConfig.authDomain);
-}
-
-// Connection timeout configuration with network recovery
-const CONNECTION_TIMEOUT = 15000; // 15 seconds
-const MAX_RETRIES = 3;
-const FIREBASE_OFFLINE_MODE = false;
-
-// Network error recovery helper
-const handleFirebaseNetworkError = (error: any) => {
-  console.error('🔥 Firebase network error detected:', error);
-  
-  if (error.code === 'unavailable' || error.message?.includes('ERR_CONNECTION_CLOSED')) {
-    console.warn('⚠️ Firebase unavailable - switching to offline mode');
-    return true; // Indicates offline mode should be used
+const readEnv = (key: EnvKey): string | undefined => {
+  const viteEnv = typeof import.meta !== 'undefined' && import.meta?.env ? import.meta.env[key] : undefined;
+  if (viteEnv && String(viteEnv).trim() !== '') {
+    return String(viteEnv);
   }
-  
-  return false;
+
+  if (typeof process !== 'undefined' && process?.env?.[key]) {
+    const value = process.env[key];
+    if (value && value.trim() !== '') {
+      return value.trim();
+    }
+  }
+
+  return undefined;
 };
 
-// Check environment variables
-console.log("🔍 Environment Variables Check:", {
-  VITE_FIREBASE_API_KEY: import.meta.env.VITE_FIREBASE_API_KEY ? "SET" : "MISSING",
-  VITE_FIREBASE_AUTH_DOMAIN: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ? "SET" : "MISSING",
-  VITE_FIREBASE_PROJECT_ID: import.meta.env.VITE_FIREBASE_PROJECT_ID ? "SET" : "MISSING",
-  VITE_FIREBASE_APP_ID: import.meta.env.VITE_FIREBASE_APP_ID ? "SET" : "MISSING",
-  VITE_FIREBASE_STORAGE_BUCKET: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ? "SET" : "USING_DEFAULT",
-  VITE_FIREBASE_MESSAGING_SENDER_ID: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ? "SET" : "MISSING",
-  VITE_FIREBASE_MEASUREMENT_ID: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID ? "SET" : "MISSING"
+const firebaseConfig = {
+  apiKey: readEnv('VITE_FIREBASE_API_KEY'),
+  authDomain: readEnv('VITE_FIREBASE_AUTH_DOMAIN'),
+  projectId: readEnv('VITE_FIREBASE_PROJECT_ID'),
+  storageBucket: readEnv('VITE_FIREBASE_STORAGE_BUCKET'),
+  messagingSenderId: readEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
+  appId: readEnv('VITE_FIREBASE_APP_ID'),
+  measurementId: readEnv('VITE_FIREBASE_MEASUREMENT_ID'),
+};
+
+const requiredEntries: Array<[EnvKey, string | undefined]> = [
+  ['VITE_FIREBASE_API_KEY', firebaseConfig.apiKey],
+  ['VITE_FIREBASE_AUTH_DOMAIN', firebaseConfig.authDomain],
+  ['VITE_FIREBASE_PROJECT_ID', firebaseConfig.projectId],
+  ['VITE_FIREBASE_APP_ID', firebaseConfig.appId],
+];
+
+const missingKeys = requiredEntries.filter(([, value]) => !value).map(([key]) => key);
+
+if (missingKeys.length > 0) {
+  const diagnosticMessage =
+    'Missing required Firebase environment variables. Please set the following keys in your environment configuration: ' +
+    missingKeys.join(', ');
+
+  console.error('❌ Firebase configuration error:', diagnosticMessage);
+  throw new Error(diagnosticMessage);
+}
+
+const resolvedConfig = {
+  apiKey: firebaseConfig.apiKey!,
+  authDomain: firebaseConfig.authDomain!,
+  projectId: firebaseConfig.projectId!,
+  storageBucket: firebaseConfig.storageBucket || `${firebaseConfig.projectId}.firebasestorage.app`,
+  messagingSenderId: firebaseConfig.messagingSenderId,
+  appId: firebaseConfig.appId!,
+  measurementId: firebaseConfig.measurementId,
+};
+
+console.debug('🔧 Firebase config resolved', {
+  projectId: resolvedConfig.projectId,
+  authDomain: resolvedConfig.authDomain,
+  storageBucket: resolvedConfig.storageBucket,
+  hasMessagingSenderId: Boolean(resolvedConfig.messagingSenderId),
+  hasMeasurementId: Boolean(resolvedConfig.measurementId),
 });
 
-// Initialize Firebase app (only once)
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-console.log("✅ Firebase app initialized successfully");
+const app = getApps().length ? getApp() : initializeApp(resolvedConfig);
 
-// Initialize Firebase services
 let authInstance: Auth;
 try {
-  // Try to get existing
   authInstance = getAuth(app);
 } catch {
-  // If not existing, init
   authInstance = initializeAuth(app, {
     persistence: [indexedDBLocalPersistence, browserLocalPersistence],
   });
 }
+
 export const auth: Auth = authInstance;
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-// Export the app instance for additional configuration if needed
 export default app;
-export { handleFirebaseNetworkError };
-
-console.log("✅ Firebase services initialized and exported");

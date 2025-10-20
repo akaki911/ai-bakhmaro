@@ -30,7 +30,13 @@ class HttpClient {
       });
 
       const responseCorrelationId = response.headers.get('X-Correlation-ID');
-      
+      const contentType = response.headers.get('content-type') ?? '';
+      const isJsonResponse = contentType.toLowerCase().includes('application/json');
+      const isEmptyResponse =
+        response.status === 204 ||
+        response.status === 205 ||
+        response.headers.get('content-length') === '0';
+
       if (!response.ok) {
         console.error(`[❌ ${correlationId}] HTTP ${response.status} ${url}`, {
           correlationId,
@@ -38,8 +44,19 @@ class HttpClient {
           status: response.status,
           statusText: response.statusText
         });
-        
-        const errorData = await response.json().catch(() => ({}));
+
+        let errorData: any = {};
+        if (!isEmptyResponse) {
+          if (isJsonResponse) {
+            errorData = await response.json().catch(() => ({}));
+          } else {
+            const textPayload = await response.text().catch(() => '');
+            if (textPayload) {
+              errorData = { message: textPayload.slice(0, 500) };
+            }
+          }
+        }
+
         return {
           success: false,
           error: errorData.error || response.statusText,
@@ -47,8 +64,31 @@ class HttpClient {
         };
       }
 
+      if (isEmptyResponse) {
+        return {
+          success: true,
+          data: undefined as T | undefined,
+        };
+      }
+
+      if (!isJsonResponse) {
+        const preview = await response.text().catch(() => '');
+        console.error(`[❌ ${correlationId}] Unexpected non-JSON response from ${url}`, {
+          correlationId,
+          responseCorrelationId,
+          contentType,
+          preview: preview.slice(0, 200),
+        });
+
+        return {
+          success: false,
+          error: 'UNEXPECTED_CONTENT_TYPE',
+          message: `Expected JSON response but received ${contentType || 'an unknown content type'}`,
+        };
+      }
+
       const data = await response.json();
-      
+
       console.log(`[✅ ${correlationId}] HTTP ${response.status} ${url}`, {
         correlationId,
         responseCorrelationId,
