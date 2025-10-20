@@ -57,15 +57,28 @@ const isSameOriginRequestFactory = (globalWindow) => (requestUrl) => {
 };
 
 export const setupGlobalFetch = (globalWindow) => {
-  if (!globalWindow?.fetch) {
+  const globalObject = typeof globalThis !== 'undefined' ? globalThis : undefined;
+  const windowLike = globalWindow ?? globalObject;
+  const fetchOwner = globalWindow?.fetch ? globalWindow : globalObject;
+
+  if (!fetchOwner?.fetch) {
     return () => {};
   }
 
-  const originalFetch = globalWindow.fetch.bind(globalWindow);
-  const shouldForceOmitCredentials = shouldForceOmitCredentialsFactory(globalWindow);
-  const isSameOriginRequest = isSameOriginRequestFactory(globalWindow);
+  const originalFetch = fetchOwner.fetch.bind(fetchOwner);
+  const shouldForceOmitCredentials = shouldForceOmitCredentialsFactory(windowLike);
+  const isSameOriginRequest = isSameOriginRequestFactory(windowLike);
 
-  globalWindow.fetch = (input, init) => {
+  const assignFetch = (implementation) => {
+    if (globalWindow?.fetch) {
+      globalWindow.fetch = implementation;
+    }
+    if (globalObject?.fetch) {
+      globalObject.fetch = implementation;
+    }
+  };
+
+  const patchedFetch = (input, init) => {
     const nextInit = { ...init };
     const requestUrl = extractRequestUrl(input);
     const existingCredentials = init?.credentials ?? (input instanceof Request ? input.credentials : undefined);
@@ -87,8 +100,10 @@ export const setupGlobalFetch = (globalWindow) => {
     return originalFetch(nextInput, nextInit);
   };
 
+  assignFetch(patchedFetch);
+
   return () => {
-    globalWindow.fetch = originalFetch;
+    assignFetch(originalFetch);
   };
 };
 

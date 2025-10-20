@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [routeAdvice, setRouteAdvice] = useState({
     role: null as UserRole | null,
     deviceTrust: false,
-    target: '/login/customer', // Default target
+    target: '/login', // Default target
     reason: '',
     authenticated: false
   });
@@ -92,6 +92,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (response.ok) {
+        const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+
+        if (!contentType.includes('application/json')) {
+          console.warn('⚠️ [Device] Device recognition returned non-JSON payload, treating as unrecognized device.');
+          setDeviceRecognition({
+            isRecognizedDevice: false,
+            currentDevice: undefined,
+            suggestedAuthMethod: 'standard'
+          });
+          setDeviceTrust(false);
+          return;
+        }
+
         const recognition = await response.json();
 
         if (recognition.success && recognition.recognized) {
@@ -155,6 +168,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (response.ok) {
+        const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+
+        if (!contentType.includes('application/json')) {
+          console.warn('⚠️ [Auth] Route advice returned non-JSON payload, using default route.');
+          setRouteAdvice({
+            role: null,
+            deviceTrust: false,
+            target: '/login',
+            reason: 'non_json_route_advice',
+            authenticated: false
+          });
+          return { target: '/login' };
+        }
+
         const advice = await response.json();
         setRouteAdvice(advice);
         console.log('📍 [Auth] Route advice received:', advice);
@@ -165,11 +192,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setRouteAdvice({
           role: null,
           deviceTrust: false,
-          target: '/login/customer',
+          target: '/login',
           reason: 'Route advice fetch failed',
           authenticated: false
         });
-        return { target: '/login/customer' };
+        return { target: '/login' };
       }
     } catch (error) {
       console.error('❌ [Auth] Error fetching route advice:', error);
@@ -177,11 +204,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setRouteAdvice({
         role: null,
         deviceTrust: false,
-        target: '/login/customer',
+        target: '/login',
         reason: 'Route advice fetch error',
         authenticated: false
       });
-      return { target: '/login/customer' };
+      return { target: '/login' };
     }
   };
 
@@ -544,7 +571,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setRouteAdvice(prev => ({
                 ...prev,
                 role: null,
-                target: advice?.target || '/login/customer', // Use advice target or default
+                target: advice?.target || '/login', // Use advice target or default
                 authenticated: false,
               }));
             }
@@ -559,7 +586,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setRouteAdvice(prev => ({
               ...prev,
               role: null,
-              target: advice?.target || '/login/customer', // Use advice target or default
+              target: advice?.target || '/login', // Use advice target or default
               authenticated: false,
             }));
           }
@@ -804,7 +831,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // 7. Determine correct logout target based on user role
-      let logoutTarget = '/login/customer'; // Default for regular users
+      let logoutTarget = '/login'; // Default for regular users
       
       if (currentUserRole === 'SUPER_ADMIN') {
         logoutTarget = '/login'; // Redirect SUPER_ADMIN to main login page with admin options
@@ -842,7 +869,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setFirebaseUid(undefined);
       
       // Still redirect based on role even on error
-      const fallbackTarget = currentUserRole === 'SUPER_ADMIN' ? '/login' : '/login/customer';
+      const fallbackTarget = currentUserRole === 'SUPER_ADMIN' ? '/admin?tab=dashboard' : '/login';
       if (typeof window !== 'undefined') {
         setTimeout(() => {
           window.location.href = fallbackTarget;
