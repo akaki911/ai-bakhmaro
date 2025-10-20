@@ -83,6 +83,7 @@ global.isFirebaseAvailable = isFirebaseAvailable;
 // Import telemetry middleware
 const { telemetryMiddleware, logger } = require('./middleware/telemetry_middleware');
 const { serviceAuth } = require('./middleware/service_auth');
+const registerCodexSlackAgent = require('./agents/slack/codexSlackAgent');
 
 // Enhanced console logging matching Replit format exactly
 const logWithTimestamp = (message, service = 'ai-service', process = 'cd ai-service ...') => {
@@ -373,6 +374,9 @@ app.use('/api/safety-switch', require('./routes/safety_switch'));
 // Multi-Tab Terminal API Routes
 console.log('🖥️ Mounting Terminal Session routes...');
 app.use('/api/terminal', require('./routes/terminal_sessions'));
+
+// Slack Codex integration endpoint
+registerCodexSlackAgent(app);
 
 // Apply service authentication to core AI routes
 console.log('🔒 Applying service authentication to AI API routes...');
