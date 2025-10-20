@@ -158,9 +158,41 @@ export const fetchWithCorrelationId = async (url: string, options: RequestInit =
     headers,
   };
 
-  if (!requestInit.credentials) {
-    requestInit.credentials = 'include';
-  }
+  const determineCredentials = (): RequestCredentials => {
+    const provided = options.credentials ?? requestInit.credentials;
+    if (provided) {
+      return provided;
+    }
+
+    const isRelative = url.startsWith('/') && !url.startsWith('//');
+    if (isRelative) {
+      return 'include';
+    }
+
+    let parsed: URL | null = null;
+    try {
+      const baseOrigin = typeof window !== 'undefined' && window.location ? window.location.origin : undefined;
+      parsed = baseOrigin ? new URL(url, baseOrigin) : new URL(url);
+    } catch {
+      parsed = null;
+    }
+
+    if (parsed) {
+      const hostname = parsed.hostname.toLowerCase();
+      if (hostname === 'securetoken.googleapis.com' || hostname.endsWith('.googleapis.com')) {
+        return 'omit';
+      }
+
+      const currentOrigin = typeof window !== 'undefined' && window.location ? window.location.origin : undefined;
+      if (currentOrigin && parsed.origin === currentOrigin) {
+        return 'include';
+      }
+    }
+
+    return 'same-origin';
+  };
+
+  requestInit.credentials = determineCredentials();
 
   const requestLog = {
     timestamp: new Date().toISOString(),
