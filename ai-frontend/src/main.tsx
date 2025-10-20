@@ -5,78 +5,9 @@ import type { SWRConfiguration } from 'swr';
 import App from './App';
 import './index.css';
 import './i18n/config';
+import { setupGlobalFetch } from './setupFetch';
 
-const originalFetch = window.fetch.bind(window);
-
-const extractRequestUrl = (input: RequestInfo | URL): string | undefined => {
-  if (typeof input === 'string') {
-    return input;
-  }
-
-  if (input instanceof URL) {
-    return input.href;
-  }
-
-  if (input instanceof Request) {
-    return input.url;
-  }
-
-  try {
-    return String(input);
-  } catch {
-    return undefined;
-  }
-};
-
-const shouldForceOmitCredentials = (requestUrl?: string): boolean => {
-  if (!requestUrl) {
-    return false;
-  }
-
-  try {
-    const parsedUrl = new URL(requestUrl, window.location.origin);
-    const hostname = parsedUrl.hostname.toLowerCase();
-
-    return hostname === 'securetoken.googleapis.com' || hostname.endsWith('.googleapis.com');
-  } catch {
-    return false;
-  }
-};
-
-const isSameOriginRequest = (requestUrl?: string): boolean => {
-  if (!requestUrl) {
-    return true;
-  }
-
-  // Relative URLs (e.g. /api/...) are always same-origin
-  if (requestUrl.startsWith('/') && !requestUrl.startsWith('//')) {
-    return true;
-  }
-
-  try {
-    const parsedUrl = new URL(requestUrl, window.location.origin);
-    return parsedUrl.origin === window.location.origin;
-  } catch {
-    // If the URL can't be parsed (rare), fallback to default browser behaviour
-    return false;
-  }
-};
-
-window.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-  const nextInit: RequestInit = { ...init };
-  const existingCredentials = init?.credentials ?? (input instanceof Request ? input.credentials : undefined);
-  const requestUrl = extractRequestUrl(input);
-
-  if (shouldForceOmitCredentials(requestUrl)) {
-    nextInit.credentials = 'omit';
-  } else if (!existingCredentials && isSameOriginRequest(requestUrl)) {
-    nextInit.credentials = 'include';
-  } else if (existingCredentials) {
-    nextInit.credentials = existingCredentials;
-  }
-
-  return originalFetch(input, nextInit);
-};
+setupGlobalFetch(window);
 
 const ensureSWRConfig: (parent?: SWRConfiguration) => SWRConfiguration = (parentConfig) => ({
   ...parentConfig,
