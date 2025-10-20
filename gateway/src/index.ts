@@ -220,13 +220,22 @@ app.get('/index.html', ensureAuth, (req, res, next) => {
   sendIndexHtml(res, next);
 });
 
-app.get('*', (req, res, next) => {
+app.use((req, res, next) => {
   if (req.method.toUpperCase() !== 'GET') {
     next();
     return;
   }
 
-  if (req.path === env.LOGIN_PATH) {
+  const requestPath = req.path ?? '';
+
+  if (requestPath.startsWith('/api')) {
+    if (!res.headersSent) {
+      res.status(502).json({ error: 'Bad gateway', code: 'UPSTREAM_UNAVAILABLE' });
+    }
+    return;
+  }
+
+  if (requestPath === env.LOGIN_PATH) {
     sendIndexHtml(res, next);
     return;
   }
@@ -239,9 +248,11 @@ app.get('*', (req, res, next) => {
   sendIndexHtml(res, next);
 });
 
-const port = env.PORT;
-app.listen(port, () => {
-  console.log(`🌐 Gateway listening on port ${port}`);
-});
+if (env.NODE_ENV !== 'test') {
+  const port = env.PORT;
+  app.listen(port, () => {
+    console.log(`🌐 Gateway listening on port ${port}`);
+  });
+}
 
 export default app;
