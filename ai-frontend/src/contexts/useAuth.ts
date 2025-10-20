@@ -27,12 +27,12 @@ export function useAuth() {
       deviceTrust: false,
       registerCurrentDevice: async () => {},
       setDeviceTrust: async () => {},
-      getAutoRouteTarget: () => '/login/customer',
+      getAutoRouteTarget: () => '/login',
       shouldShowRoleSelection: () => false,
       routeAdvice: {
         role: null,
         deviceTrust: false,
-        target: '/login/customer',
+        target: '/login',
         reason: 'AuthProvider not found',
         authenticated: false
       },
