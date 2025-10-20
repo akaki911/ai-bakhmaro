@@ -10,7 +10,7 @@ const RoleSelectionWithDebug: React.FC = () => {
 
   if (!isDebugMode) {
     console.log('🧭 [DEBUG] Role selection accessed without debug flag, redirecting to customer login');
-    return <Navigate to="/login/customer" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   console.log('🧭 [DEBUG] Role selection shown with debug flag');

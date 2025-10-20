@@ -21,7 +21,7 @@ router.get('/', (req, res) => {
       let reason = 'authenticated_user';
 
       if (userRole === 'SUPER_ADMIN') {
-        target = '/admin';
+        target = '/admin?tab=dashboard';
         reason = 'authenticated_super_admin';
       } else if (userRole === 'CUSTOMER') {
         target = '/dashboard';
@@ -52,7 +52,7 @@ router.get('/', (req, res) => {
       success: true,
       role: null,
       deviceTrust: false,
-      target: '/login/customer',
+      target: '/login',
       reason: 'default_fallback',
       authenticated: false
     };
@@ -73,7 +73,7 @@ router.get('/', (req, res) => {
       success: true,
       role: null,
       deviceTrust: false,
-      target: '/login/customer',
+      target: '/login',
       reason: 'error_fallback',
       authenticated: false
     });
