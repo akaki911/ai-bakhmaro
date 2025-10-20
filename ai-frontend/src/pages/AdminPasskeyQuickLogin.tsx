@@ -49,7 +49,7 @@ const AdminPasskeyQuickLogin: React.FC = () => {
   };
 
   const handleCancel = () => {
-    navigate('/login/customer');
+    navigate('/login');
   };
 
   return (
