@@ -18,6 +18,18 @@ type EnvKey =
   | 'VITE_FIREBASE_APP_ID'
   | 'VITE_FIREBASE_MEASUREMENT_ID';
 
+const FALLBACK_CONFIG: Partial<Record<EnvKey, string>> = {
+  VITE_FIREBASE_API_KEY: 'AIzaSyBH0-yeuoUIWOiO1ZXGDcuJ7_vP6BkugBw',
+  VITE_FIREBASE_AUTH_DOMAIN: 'bakhmaro-cottages.firebaseapp.com',
+  VITE_FIREBASE_PROJECT_ID: 'bakhmaro-cottages',
+  VITE_FIREBASE_STORAGE_BUCKET: 'bakhmaro-cottages.firebasestorage.app',
+  VITE_FIREBASE_MESSAGING_SENDER_ID: '815060315119',
+  VITE_FIREBASE_APP_ID: '1:815060315119:web:a1f33d920bcd52e536a41a',
+  VITE_FIREBASE_MEASUREMENT_ID: 'G-NT97B9E4YL',
+};
+
+const fallbackUsage = new Set<EnvKey>();
+
 const readEnv = (key: EnvKey): string | undefined => {
   const viteEnv = typeof import.meta !== 'undefined' && import.meta?.env ? import.meta.env[key] : undefined;
   if (viteEnv && String(viteEnv).trim() !== '') {
@@ -29,6 +41,12 @@ const readEnv = (key: EnvKey): string | undefined => {
     if (value && value.trim() !== '') {
       return value.trim();
     }
+  }
+
+  const fallbackValue = FALLBACK_CONFIG[key];
+  if (fallbackValue) {
+    fallbackUsage.add(key);
+    return fallbackValue;
   }
 
   return undefined;
@@ -52,6 +70,10 @@ const requiredEntries: Array<[EnvKey, string | undefined]> = [
 ];
 
 const missingKeys = requiredEntries.filter(([, value]) => !value).map(([key]) => key);
+
+if (fallbackUsage.size > 0) {
+  console.warn('⚠️ Firebase configuration fallback in use for keys:', Array.from(fallbackUsage));
+}
 
 if (missingKeys.length > 0) {
   const diagnosticMessage =
