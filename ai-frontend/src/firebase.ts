@@ -19,13 +19,13 @@ type EnvKey =
   | 'VITE_FIREBASE_MEASUREMENT_ID';
 
 const FALLBACK_CONFIG: Partial<Record<EnvKey, string>> = {
-  VITE_FIREBASE_API_KEY: 'AIzaSyBH0-yeuoUIWOiO1ZXGDcuJ7_vP6BkugBw',
-  VITE_FIREBASE_AUTH_DOMAIN: 'bakhmaro-cottages.firebaseapp.com',
-  VITE_FIREBASE_PROJECT_ID: 'bakhmaro-cottages',
-  VITE_FIREBASE_STORAGE_BUCKET: 'bakhmaro-cottages.firebasestorage.app',
-  VITE_FIREBASE_MESSAGING_SENDER_ID: '815060315119',
-  VITE_FIREBASE_APP_ID: '1:815060315119:web:a1f33d920bcd52e536a41a',
-  VITE_FIREBASE_MEASUREMENT_ID: 'G-NT97B9E4YL',
+  VITE_FIREBASE_API_KEY: 'AIzaSyBPkVGW4VsM55GlEB6koU3ZYkKmLATMGC8',
+  VITE_FIREBASE_AUTH_DOMAIN: 'ai-bakhmaro.firebaseapp.com',
+  VITE_FIREBASE_PROJECT_ID: 'ai-bakhmaro',
+  VITE_FIREBASE_STORAGE_BUCKET: 'ai-bakhmaro.firebasestorage.app',
+  VITE_FIREBASE_MESSAGING_SENDER_ID: '34250385727',
+  VITE_FIREBASE_APP_ID: '1:34250385727:web:7ca8712e87287c0ff38b8a',
+  VITE_FIREBASE_MEASUREMENT_ID: 'VITE_FIREBASE_MEASUREMENT_ID',
 };
 
 const fallbackUsage = new Set<EnvKey>();
@@ -53,12 +53,12 @@ const readEnv = (key: EnvKey): string | undefined => {
 };
 
 const firebaseConfig = {
-  apiKey: readEnv('VITE_FIREBASE_API_KEY'),
-  authDomain: readEnv('VITE_FIREBASE_AUTH_DOMAIN'),
-  projectId: readEnv('VITE_FIREBASE_PROJECT_ID'),
-  storageBucket: readEnv('VITE_FIREBASE_STORAGE_BUCKET'),
-  messagingSenderId: readEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
-  appId: readEnv('VITE_FIREBASE_APP_ID'),
+  apiKey: readEnv('AIzaSyBPkVGW4VsM55GlEB6koU3ZYkKmLATMGC8'),
+  authDomain: readEnv('ai-bakhmaro.firebaseapp.com'),
+  projectId: readEnv('ai-bakhmaro'),
+  storageBucket: readEnv('ai-bakhmaro.firebasestorage.app'),
+  messagingSenderId: readEnv('34250385727'),
+  appId: readEnv('1:34250385727:web:7ca8712e87287c0ff38b8a'),
   measurementId: readEnv('VITE_FIREBASE_MEASUREMENT_ID'),
 };
 
