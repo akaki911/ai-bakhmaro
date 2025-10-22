@@ -53,12 +53,12 @@ const readEnv = (key: EnvKey): string | undefined => {
 };
 
 const firebaseConfig = {
-  apiKey: readEnv('AIzaSyBPkVGW4VsM55GlEB6koU3ZYkKmLATMGC8'),
-  authDomain: readEnv('ai-bakhmaro.firebaseapp.com'),
-  projectId: readEnv('ai-bakhmaro'),
-  storageBucket: readEnv('ai-bakhmaro.firebasestorage.app'),
-  messagingSenderId: readEnv('34250385727'),
-  appId: readEnv('1:34250385727:web:7ca8712e87287c0ff38b8a'),
+  apiKey: readEnv('VITE_FIREBASE_API_KEY'),
+  authDomain: readEnv('VITE_FIREBASE_AUTH_DOMAIN'),
+  projectId: readEnv('VITE_FIREBASE_PROJECT_ID'),
+  storageBucket: readEnv('VITE_FIREBASE_STORAGE_BUCKET'),
+  messagingSenderId: readEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
+  appId: readEnv('VITE_FIREBASE_APP_ID'),
   measurementId: readEnv('VITE_FIREBASE_MEASUREMENT_ID'),
 };
 
