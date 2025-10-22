@@ -14,7 +14,10 @@ const AdminPasskeyLogin: React.FC = () => {
   const {
     login,
     loginWithPasskey,
-    deviceRecognition
+    deviceRecognition,
+    authInitialized,
+    isAuthenticated,
+    getAutoRouteTarget
   } = useAuth();
 
   const [step, setStep] = useState<AuthStep>('email');
@@ -35,6 +38,21 @@ const AdminPasskeyLogin: React.FC = () => {
     const deviceId = deviceRecognition?.currentDevice?.deviceId;
     return deviceId ? deviceId.slice(-6).toUpperCase() : null;
   }, [deviceRecognition]);
+
+  useEffect(() => {
+    document.title = 'AI დეველოპერ კონსოლზე შესვლა – ai.bakhmaro.co';
+  }, []);
+
+  useEffect(() => {
+    if (!authInitialized) {
+      return;
+    }
+
+    if (isAuthenticated) {
+      const target = getAutoRouteTarget?.() ?? '/admin?tab=dashboard';
+      navigate(target, { replace: true });
+    }
+  }, [authInitialized, getAutoRouteTarget, isAuthenticated, navigate]);
 
   useEffect(() => {
     const enforceHttps = () => {
