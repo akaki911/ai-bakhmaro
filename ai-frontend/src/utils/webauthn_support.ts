@@ -9,10 +9,10 @@ type RegistrationResponseJSON = any;
 type AuthenticationResponseJSON = any;
 
 const PASSKEY_ENDPOINTS = {
-  registerOptions: ['/api/auth/passkey/register-options', '/api/admin/webauthn/register-options'],
-  registerVerify: ['/api/auth/passkey/register-verify', '/api/admin/webauthn/register-verify'],
-  loginOptions: ['/api/auth/passkey/login-options', '/api/admin/webauthn/login-options'],
-  loginVerify: ['/api/auth/passkey/login-verify', '/api/admin/webauthn/login-verify'],
+  registerOptions: ['/api/admin/webauthn/register-options', '/api/auth/passkey/register-options'],
+  registerVerify: ['/api/admin/webauthn/register-verify', '/api/auth/passkey/register-verify'],
+  loginOptions: ['/api/admin/webauthn/login-options', '/api/auth/passkey/login-options'],
+  loginVerify: ['/api/admin/webauthn/login-verify', '/api/auth/passkey/login-verify'],
 };
 
 interface PasskeyRequestInit extends RequestInit {
@@ -45,7 +45,23 @@ async function postPasskeyJson(
 
       if (response.status === 404 && i < endpoints.length - 1) {
         console.warn(`⚠️ [Passkey] Endpoint ${endpoint} not available, trying fallback...`);
+        response.body?.cancel();
         continue;
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+      const isJson = contentType.toLowerCase().includes('application/json');
+
+      if (!isJson && i < endpoints.length - 1) {
+        console.warn(
+          `⚠️ [Passkey] Endpoint ${endpoint} returned non-JSON payload (${contentType || 'unknown'}), trying fallback...`
+        );
+        response.body?.cancel();
+        continue;
+      }
+
+      if (!isJson) {
+        throw new Error(`Passkey endpoint ${endpoint} did not return JSON response`);
       }
 
       return { response, endpoint };
@@ -208,7 +224,12 @@ export async function registerPasskey(options: PasskeyRegistrationOptions): Prom
       throw new Error(error.error || 'Failed to get registration options');
     }
 
-    const { options: registrationOptions } = await optionsResponse.json();
+    const optionsPayload = await optionsResponse.json();
+    const registrationOptions = optionsPayload?.publicKey ?? optionsPayload?.options;
+
+    if (!registrationOptions) {
+      throw new Error('Invalid registration options payload received');
+    }
 
     console.log('🔐 [Passkey Registration] Got options from server');
 
@@ -295,7 +316,12 @@ export async function authenticateWithPasskey(conditional: boolean = false): Pro
       throw new Error(error.error || 'Failed to get authentication options');
     }
 
-    const { options: authenticationOptions } = await optionsResponse.json();
+    const optionsPayload = await optionsResponse.json();
+    const authenticationOptions = optionsPayload?.publicKey ?? optionsPayload?.options;
+
+    if (!authenticationOptions) {
+      throw new Error('Invalid authentication options payload received');
+    }
 
     console.log('🔐 [Passkey Login] Got options from server');
 
