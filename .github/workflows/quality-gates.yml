@@ -19,11 +19,35 @@ jobs:
           node-version: '20.x'
           cache: 'npm'
 
-      - name: Install Dependencies
+      - name: Clean npm cache
+        run: npm cache clean --force
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --prefer-online
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: false
+          NPM_CONFIG_CACHE: ~/.npm
+
+      - name: Install backend dependencies
         run: |
-          npm ci
-          cd backend && npm install
-          cd ../ai-service && npm install
+          cd backend
+          npm install --legacy-peer-deps --prefer-online
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: false
+          NPM_CONFIG_CACHE: ~/.npm
+
+      - name: Install AI service dependencies
+        run: |
+          cd ai-service
+          npm install --legacy-peer-deps --prefer-online
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: false
+          NPM_CONFIG_CACHE: ~/.npm
+
+      - name: Verify cache integrity
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install --legacy-peer-deps
 
       - name: TypeScript Strict Check
         run: |
