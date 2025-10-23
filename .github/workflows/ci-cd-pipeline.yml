@@ -2,17 +2,16 @@ name: Gurula AI Assistant CI/CD Pipeline (Full Auto Deploy)
 
 on:
   push:
-    branches: [ "main", "development" ]
+    branches:
+      - main
+      - development
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '20.x'
-  STAGING_REPL_URL: ${{ secrets.STAGING_REPL_URL }}
-  PRODUCTION_REPL_URL: ${{ secrets.PRODUCTION_REPL_URL }}
-  FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-  FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+  NODE_VERSION: 20
 
 jobs:
   build-and-deploy:
@@ -20,32 +19,29 @@ jobs:
     name: Full Auto Build + Firebase Deploy
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
 
-      - name: Clean and install dependencies
-        run: |
-          npm cache clean --force
-          npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
-      - name: Build Frontend
-        working-directory: ai-frontend
-        run: |
-          echo "⚙️ Building frontend for deployment..."
-          npm install --legacy-peer-deps --no-audit --no-fund
-          npm run build
+      - name: Run lint checks
+        run: npm run lint --if-present
 
-      - name: Build Backend
-        working-directory: ai-service
-        run: |
-          echo "⚙️ Building backend..."
-          npm install --legacy-peer-deps --no-audit --no-fund
-          npm run build || echo "Backend build optional"
+      - name: Run test suite
+        run: npm run test --if-present
+
+      - name: Build workspaces
+        run: npm run build --if-present
 
       - name: Firebase Deploy
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development'
@@ -61,14 +57,14 @@ jobs:
           echo "✅ Firebase auto-deploy complete!"
           echo "Branch: ${{ github.ref_name }}"
           echo "Commit: ${{ github.sha }}"
-          echo "Environment: ${{ github.ref_name == 'main' && 'Production' || 'Staging' }}"
-          echo "Timestamp: $(date)"
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "Environment: Production"
+          else
+            echo "Environment: Staging"
+          fi
+          echo "Timestamp: $(date --utc)"
 
       - name: Notify (optional)
         if: always()
         run: |
-          echo "📣 Notifying deployment success..."
-          # future Slack or Email integration
-
-# If you don’t have Firebase setup yet — it will skip deploy gracefully.
-# If setup exists — will auto-upload build result.
+          echo "📣 Deployment notifications can be added here (Slack, Email, etc.)."

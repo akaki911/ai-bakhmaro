@@ -2,11 +2,11 @@ name: Repository Health Monitor (Advanced)
 
 on:
   schedule:
-    # ყოველდღე 06:00 UTC-ზე
     - cron: '0 6 * * *'
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   repository-health:
@@ -24,6 +24,18 @@ jobs:
           echo "🧩 Setting up environment..."
           sudo apt-get update -y
           sudo apt-get install -y jq tree
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+
+      - name: Install dependencies for auditing
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Analyze Repository Health
         id: repo_health
@@ -54,7 +66,6 @@ jobs:
           echo "JavaScript files: $JS_COUNT"
           echo "Total source files: $TOTAL_SRC"
 
-          # Save values for later steps
           echo "repo_size=$REPO_SIZE" >> $GITHUB_OUTPUT
           echo "commits_week=$COMMITS_LAST_WEEK" >> $GITHUB_OUTPUT
           echo "commits_month=$COMMITS_LAST_MONTH" >> $GITHUB_OUTPUT
@@ -81,8 +92,7 @@ jobs:
           fi
 
           echo "🛡️ Running dependency audit..."
-          npm install --no-audit --no-fund --legacy-peer-deps
-          npm audit --audit-level=moderate || echo "⚠️ Minor vulnerabilities detected"
+          npm audit --production --audit-level=high || echo "⚠️ Vulnerabilities detected (high severity or above)."
 
           echo "🚫 Checking for API key patterns..."
           ! grep -r "AIza" . --exclude-dir=node_modules --exclude-dir=.git || echo "⚠️ Firebase key pattern found"
@@ -101,8 +111,7 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           echo "🔗 Checking GitHub API health..."
-          curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/$REPO > api_status.txt
-          STATUS=$(cat api_status.txt)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/$REPO)
           if [ "$STATUS" = "200" ]; then
             echo "✅ GitHub API reachable and healthy."
           else
@@ -112,7 +121,7 @@ jobs:
       - name: Generate Health Report
         run: |
           echo "📄 Generating repository-health-report.md..."
-          cat << EOF > repository-health-report.md
+          cat << REPORT > repository-health-report.md
           # 🏥 Repository Health Report
 
           **Date:** $(date)
@@ -128,14 +137,14 @@ jobs:
 
           ## 🔍 Security Summary
           - .gitignore status: Verified
-          - npm audit: Run completed
+          - npm audit: Completed (high severity threshold)
           - Secret patterns: Scanned
           - Dependency freshness: Checked
 
           ## ⚙️ System Health
-          - ✅ Repository structure valid
-          - ✅ Commit activity healthy
-          - ✅ Dependencies up to date
+          - ✅ Repository structure evaluated
+          - ✅ Commit activity inspected
+          - ✅ Dependencies reviewed
           - ✅ GitHub API responsive
 
           ## ⚠️ Recommendations
@@ -146,7 +155,7 @@ jobs:
 
           ## 🧩 Summary
           Repository remains stable, secure, and active.
-          EOF
+          REPORT
 
           echo "✅ Health report generated successfully."
 

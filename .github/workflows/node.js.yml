@@ -2,9 +2,13 @@ name: Node.js Quality Pipeline (Enhanced QA)
 
 on:
   push:
-    branches: [ "main", "development" ]
+    branches:
+      - main
+      - development
   pull_request:
-    branches: [ "main", "development" ]
+    branches:
+      - main
+      - development
 
 jobs:
   build_and_test:
@@ -15,76 +19,39 @@ jobs:
         node-version: [20.x]
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
 
-      - name: Clean npm registry and cache
-        run: |
-          npm config delete proxy || true
-          npm config delete https-proxy || true
-          npm config delete http-proxy || true
-          npm config set registry https://registry.npmjs.org/
-          npm cache clean --force
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
-      - name: Install Dependencies
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci --no-audit --no-fund
-          else
-            npm install --legacy-peer-deps --no-audit --no-fund
-          fi
+      - name: Run linting
+        run: npm run lint --if-present
 
-      - name: Verify Required Secrets
-        run: |
-          echo "🔐 Checking required secrets..."
-          npm run check:secrets-required || echo "⚠️ Some secrets may be missing, review manually."
+      - name: Run type checks
+        run: npm run type-check --if-present
 
-      - name: Run Linting
-        run: |
-          echo "🧹 Running ESLint..."
-          npm run lint --if-present || echo "⚠️ Lint warnings detected."
+      - name: Build project
+        run: npm run build --if-present
 
-      - name: Run Type Check
-        run: |
-          echo "🧠 Running TypeScript type checks..."
-          npm run type-check --if-present || echo "⚠️ Type warnings detected."
+      - name: Run tests
+        run: npm run test --if-present
 
-      - name: Build Project
-        run: |
-          echo "🏗️ Building project..."
-          npm run build --if-present
-
-      - name: Run Unit Tests
-        run: |
-          echo "🧪 Running unit tests..."
-          npm test --if-present || echo "⚠️ Some tests failed."
-
-      - name: Generate Test Coverage Report
-        if: success()
-        run: |
-          echo "📊 Generating coverage report..."
-          npm run coverage --if-present || echo "ℹ️ Coverage skipped (no script)."
-
-      - name: Performance Audit (Lighthouse)
-        if: success()
-        run: |
-          echo "⚡ Running Lighthouse performance audit..."
-          npx lighthouse http://localhost:3000 --quiet --chrome-flags="--headless" --output=json --output-path=./lighthouse-report.json || true
-          echo "✅ Lighthouse audit completed."
-
-      - name: Upload Reports
+      - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: build-test-reports-${{ github.run_number }}
+          name: node-pipeline-artifacts-${{ github.run_number }}
           path: |
-            coverage/
-            lighthouse-report.json
-            eslint.log
-            build/
+            **/coverage/**
+            ai-frontend/dist
+          if-no-files-found: ignore
