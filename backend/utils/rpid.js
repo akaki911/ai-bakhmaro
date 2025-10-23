@@ -34,6 +34,7 @@ const resolveFromRequest = (req = {}) => {
   const originHeader = req?.get?.('origin') || req?.get?.('Origin') || req?.headers?.origin;
   const hostHeader = req?.get?.('host') || req?.get?.('Host') || req?.headers?.host;
   const forwardedProto = req?.get?.('x-forwarded-proto') || req?.get?.('X-Forwarded-Proto');
+  const forwardedHostHeader = req?.get?.('x-forwarded-host') || req?.get?.('X-Forwarded-Host') || req?.headers?.['x-forwarded-host'];
 
   const parsedOrigin = parseOrigin(originHeader);
   if (parsedOrigin) {
@@ -42,6 +43,21 @@ const resolveFromRequest = (req = {}) => {
       origin: parsedOrigin.toString(),
       source: 'origin-header'
     };
+  }
+
+  if (forwardedHostHeader) {
+    const forwardedHostValue = String(forwardedHostHeader).split(',')[0] || '';
+    const forwardedHost = normaliseHost(forwardedHostValue.split(':')[0] || forwardedHostValue);
+    if (forwardedHost) {
+      const proto = forwardedProto === 'http' ? 'http' : 'https';
+      const origin = proto === 'https' ? buildHttpsOrigin(forwardedHost) : `${proto}://${forwardedHost}`;
+
+      return {
+        rpID: forwardedHost,
+        origin: isReplitHost(forwardedHost) ? buildHttpsOrigin(forwardedHost) : origin,
+        source: 'x-forwarded-host',
+      };
+    }
   }
 
   if (hostHeader) {
