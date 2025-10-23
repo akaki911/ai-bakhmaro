@@ -3,7 +3,7 @@ class AICacheService {
     this.responseCache = new Map();
     this.conversationCache = new Map();
     this.maxCacheSize = parseInt(process.env.CACHE_MAX_SIZE) || 1000;
-    this.cacheTTL = parseInt(process.env.CACHE_TTL) || 3600000; // 1 hour
+    this.cacheTTL = parseInt(process.env.CACHE_TTL) || 3600000; // 1 hour (milliseconds)
     this.cacheHits = 0;
     this.cacheMisses = 0;
     this.totalRequestTime = 0;
