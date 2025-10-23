@@ -9,7 +9,7 @@ console.log('🔧 FRONTEND_URL:', process.env.FRONTEND_URL || 'NOT_SET');
 console.log('PORT:', process.env.PORT || 'NOT_SET');
 
 // Environment setup
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://ai.bakhmaro.co';
 const DEBUG_LEVEL = process.env.DEBUG_LEVEL || 'info'; // debug, info, warn, error
 
 // Enhanced logging with level control
@@ -51,7 +51,7 @@ const PORT = process.env.PORT || 5003;
 // CORS Configuration
 const allowedOrigins = [
   'https://d2c296ba-6bdd-412e-987c-2af0f275fc6d-00-3mn8zz92vqke4.riker.replit.dev',
-  'http://localhost:3000',
+  'https://ai.bakhmaro.co',
   'http://localhost:5000',
   'https://12224013-3626-4849-b9ee-d5c2e07173af-00-x1g26xmwc88m.sisko.replit.dev',
   'https://workspace.akakicincadze.repl.co'

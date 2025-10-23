@@ -3,7 +3,7 @@
 
 const fetch = require('node-fetch');
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'https://ai.bakhmaro.co';
 const AI_BASE_URL = 'http://localhost:5001';
 
 const endpoints = [

@@ -58,7 +58,7 @@ console.log('🔧 DEV_TASKS_ENABLED:', formatEnvValue('DEV_TASKS_ENABLED'));
 console.log('PORT:', process.env.PORT || 'NOT_SET');
 
 // Environment setup
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://ai.bakhmaro.co';
 const DEBUG_LEVEL = process.env.DEBUG_LEVEL || 'info'; // debug, info, warn, error
 
 // Enhanced logging with level control
@@ -131,7 +131,7 @@ const allowedOrigins = [
 ];
 
 if (process.env.NODE_ENV !== 'production') {
-  allowedOrigins.push('http://localhost:3000');
+  allowedOrigins.push('https://ai.bakhmaro.co');
   allowedOrigins.push('http://127.0.0.1:3000');
 }
 

@@ -117,7 +117,7 @@ logWithTimestamp(`🔧 Port configuration: ${PORT}`);
 // Build allowed origins array
 const allowedOrigins = [
   'https://d2c296ba-6bdd-412e-987c-2af0f275fc6d-00-3mn8zz92vqke4.riker.replit.dev',
-  'http://localhost:3000',
+  'https://ai.bakhmaro.co',
   'http://localhost:5000',    // Frontend dev server
   'http://0.0.0.0:3000',
   'http://0.0.0.0:5000',      // Replit binding
