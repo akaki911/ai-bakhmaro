@@ -10,11 +10,15 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: [
-          '"Noto Sans Georgian"',
           '"Inter"',
+          '-apple-system',
+          '"Segoe UI"',
+          '"Sylfaen"',
+          '"Helvetica Neue"',
+          'Arial',
           ...defaultTheme.fontFamily.sans,
         ],
-        georgian: ['"Noto Sans Georgian"', '"Inter"', 'sans-serif'],
+        georgian: ['"Inter"', '"Segoe UI"', '"Sylfaen"', 'sans-serif'],
       },
       letterSpacing: {
         georgian: '0.015em',
