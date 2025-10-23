@@ -123,6 +123,20 @@ const aiTraceRoutes = require('./routes/ai_trace');
 
 const httpServer = http.createServer(app);
 
+const allowedOrigins = [
+  'https://ai.bakhmaro.co',
+  process.env.FRONTEND_URL,
+  process.env.ALT_FRONTEND_URL,
+  process.env.AI_DOMAIN,
+];
+
+if (process.env.NODE_ENV !== 'production') {
+  allowedOrigins.push('http://localhost:3000');
+  allowedOrigins.push('http://127.0.0.1:3000');
+}
+
+const allowedOriginsSet = new Set(allowedOrigins.filter(Boolean));
+
 const websocketAllowlist = [
   FRONTEND_URL,
   process.env.ALT_FRONTEND_URL,
@@ -325,8 +339,22 @@ app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
 // CORS Configuration
+const determineAllowedOrigin = (req) => {
+  const requestOrigin = req.header('Origin');
+  if (!requestOrigin) {
+    return getRpConfig(req).origin;
+  }
+
+  if (allowedOriginsSet.has(requestOrigin)) {
+    return requestOrigin;
+  }
+
+  return null;
+};
+
 const resolveCorsOptions = (req) => {
-  const { origin } = getRpConfig(req);
+  const fallbackOrigin = getRpConfig(req).origin;
+  const origin = determineAllowedOrigin(req) || fallbackOrigin;
   return {
     origin,
     credentials: true,
@@ -355,11 +383,12 @@ const resolveCorsOptions = (req) => {
 
 app.use((req, res, next) => {
   try {
-    const { origin } = getRpConfig(req);
-    const requestOrigin = req.header('Origin');
-    if (!requestOrigin || requestOrigin === origin) {
+    const origin = determineAllowedOrigin(req);
+    if (origin) {
       res.setHeader('Access-Control-Allow-Origin', origin);
       res.setHeader('Access-Control-Allow-Credentials', 'true');
+    } else if (req.header('Origin')) {
+      console.warn(`🚫 [CORS] Blocked response header for origin: ${req.header('Origin')}`);
     }
   } catch (error) {
     console.error('⚠️ [CORS] Failed to resolve origin header:', error.message);
@@ -368,17 +397,20 @@ app.use((req, res, next) => {
 });
 
 const corsOptionsDelegate = (req, callback) => {
-  const options = resolveCorsOptions(req);
-  const requestOrigin = req.header('Origin');
-
-  if (requestOrigin && requestOrigin !== options.origin) {
-    console.warn(`🚫 CORS blocked origin: ${requestOrigin} (expected ${options.origin})`);
-    return callback(null, { ...options, origin: false });
+  const allowedOrigin = determineAllowedOrigin(req);
+  if (!allowedOrigin) {
+    const requestOrigin = req.header('Origin');
+    if (requestOrigin) {
+      console.warn(`🚫 CORS blocked origin: ${requestOrigin}`);
+    }
+    return callback(new Error('Not allowed by CORS'));
   }
 
+  const options = resolveCorsOptions(req);
   callback(null, options);
 };
 
+app.options('*', cors(corsOptionsDelegate));
 app.use(cors(corsOptionsDelegate));
 
 // Enhanced Rate Limiting Configuration - Increased for WebAuthn testing
