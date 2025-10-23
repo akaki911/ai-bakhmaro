@@ -83,6 +83,7 @@ global.isFirebaseAvailable = isFirebaseAvailable;
 // Import telemetry middleware
 const { telemetryMiddleware, logger } = require('./middleware/telemetry_middleware');
 const { serviceAuth } = require('./middleware/service_auth');
+const { requireAssistantAuth, requireRole } = require('./middleware/authz');
 const registerCodexSlackAgent = require('./agents/slack/codexSlackAgent');
 
 // Enhanced console logging matching Replit format exactly
@@ -205,7 +206,11 @@ guardedPrefixes.forEach((prefix) => {
 
 // Enhanced File Monitor Service Integration
 const EnhancedFileMonitorService = require('./services/enhanced_file_monitor_service');
-const { router: enhancedFileMonitorRouter, setEnhancedFileMonitorService } = require('./routes/enhanced_file_monitor_api');
+const enhancedFileMonitorModule = require('./routes/enhanced_file_monitor_api');
+const {
+  router: enhancedFileMonitorRouter,
+  setEnhancedFileMonitorService,
+} = enhancedFileMonitorModule;
 const ConsolidatedMemoryService = require('./services/consolidated_memory_service');
 
 // Initialize Enhanced File Monitor with Georgian AI intelligence
@@ -240,25 +245,25 @@ console.log('🔗 Registering routes...');
 app.use('/metrics', require('./routes/metrics'));
 
 // Georgian AI Enhanced File Monitor API - WITH DIAGNOSTICS
-const efm = require('./routes/enhanced_file_monitor_api');
 console.log('🔍 [DEBUG] Enhanced File Monitor require:', {
-  hasModule: !!efm,
-  keys: Object.keys(efm || {}),
-  hasRouter: !!efm?.router,
-  routerType: typeof efm?.router,
-  stackLength: efm?.router?.stack?.length
+  hasModule: !!enhancedFileMonitorModule,
+  keys: Object.keys(enhancedFileMonitorModule || {}),
+  hasRouter: !!enhancedFileMonitorRouter,
+  routerType: typeof enhancedFileMonitorRouter,
+  stackLength: enhancedFileMonitorRouter?.stack?.length
 });
 
-if (efm && efm.router) {
+if (enhancedFileMonitorRouter) {
   console.log('🔍 Mounting Enhanced File Monitor API...');
-  app.use('/api/file-monitor', efm.router);
-  // Set service connection
-  if (efm.setEnhancedFileMonitorService) {
-    efm.setEnhancedFileMonitorService = setEnhancedFileMonitorService;
-  }
+  app.use(
+    '/api/file-monitor',
+    requireAssistantAuth,
+    requireRole(['SUPER_ADMIN', 'ADMIN']),
+    enhancedFileMonitorRouter
+  );
   console.log('✅ Enhanced File Monitor API routes mounted successfully');
 } else {
-  console.error('❌ Enhanced File Monitor API import failed:', efm);
+  console.error('❌ Enhanced File Monitor API import failed:', enhancedFileMonitorModule);
 }
 
 // File system routes FIRST
@@ -802,8 +807,8 @@ const server = app.listen(PORT, HOST, async () => {
       });
 
       // Connect the service to the API routes
-      if (efm && efm.setEnhancedFileMonitorService) {
-        efm.setEnhancedFileMonitorService(enhancedFileMonitorService);
+      if (typeof setEnhancedFileMonitorService === 'function') {
+        setEnhancedFileMonitorService(enhancedFileMonitorService);
         console.log('✅ Enhanced File Monitor service connected to API routes');
       }
 
