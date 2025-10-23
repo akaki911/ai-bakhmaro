@@ -237,8 +237,9 @@ export const setupGlobalFetch = (globalWindow?: Window) => {
     }
 
     const primaryPromise = originalFetch(nextInput as RequestInfo | URL, nextInit);
+    const fallbackInput = rewritten.fallbackInput;
 
-    if (!rewritten.fallbackInput) {
+    if (!fallbackInput) {
       return primaryPromise;
     }
 
@@ -247,7 +248,7 @@ export const setupGlobalFetch = (globalWindow?: Window) => {
         throw error;
       }
 
-      const fallbackUrl = extractRequestUrl(rewritten.fallbackInput) ?? '(unknown url)';
+      const fallbackUrl = extractRequestUrl(fallbackInput) ?? '(unknown url)';
       const originalUrl = rewritten.requestUrl ?? requestUrl ?? '(unknown url)';
 
       console.warn(
@@ -255,7 +256,7 @@ export const setupGlobalFetch = (globalWindow?: Window) => {
         error,
       );
 
-      return originalFetch(rewritten.fallbackInput as RequestInfo | URL, nextInit);
+      return originalFetch(fallbackInput as RequestInfo | URL, nextInit);
     });
   };
 
