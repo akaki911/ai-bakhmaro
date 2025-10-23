@@ -16,7 +16,7 @@ const baseSchema = z.object({
   STATIC_ROOT: z.string().default('../../ai-frontend/dist'),
   CORS_ALLOWED_ORIGIN: z
     .string()
-    .default('https://ai.bakhmaro.co,http://localhost:3000,http://localhost:5173'),
+    .default('https://ai.bakhmaro.co'),
   JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters long'),
   SERVICE_JWT_ISSUER: z.string().default('ai-gateway'),
   SERVICE_JWT_SUBJECT: z.string().default('gateway-service'),

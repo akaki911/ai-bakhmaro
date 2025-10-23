@@ -10,7 +10,7 @@ const HOST = process.env.HOST || '127.0.0.1';
 // Middleware
 app.use(cors({
   origin: [
-    'http://localhost:3000',
+    'https://ai.bakhmaro.co',
     'http://localhost:5000',
     'https://workspace-akakicincadze.replit.app',
     /https:\/\/.*\.replit\.dev$/,

@@ -38,7 +38,7 @@ export const getEnv = (): PropertyApiEnv => {
   }
 
   const data = parsed.data;
-  const fallbackOrigins = 'https://ai.bakhmaro.co,http://localhost:3000,http://localhost:5173';
+  const fallbackOrigins = 'https://ai.bakhmaro.co';
   const allowedOrigin = data.ALLOWED_ORIGIN?.trim();
   const corsAllowedOrigin = data.CORS_ALLOWED_ORIGIN?.trim();
   const effectiveAllowedOrigin =
