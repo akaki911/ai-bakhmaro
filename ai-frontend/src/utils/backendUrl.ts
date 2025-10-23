@@ -2,14 +2,24 @@ import { getBackendBaseURL } from '@/lib/env';
 
 const ABSOLUTE_URL_PATTERN = /^https?:\/\//i;
 
-const backendBaseURL = (() => {
+let cachedBackendBaseURL: string | null = null;
+
+const resolveBackendBaseUrl = (): string => {
+  if (cachedBackendBaseURL) {
+    return cachedBackendBaseURL;
+  }
+
   try {
-    return getBackendBaseURL();
+    const resolved = getBackendBaseURL();
+    if (resolved) {
+      cachedBackendBaseURL = resolved;
+    }
+    return resolved;
   } catch (error) {
     console.warn('⚠️ [BackendURL] Failed to resolve backend base URL, falling back to relative paths.', error);
     return '';
   }
-})();
+};
 
 /**
  * Resolve an API path against the configured backend base URL, if any.
@@ -22,6 +32,8 @@ export function resolveBackendUrl(path: string): string {
   if (ABSOLUTE_URL_PATTERN.test(path)) {
     return path;
   }
+
+  const backendBaseURL = resolveBackendBaseUrl();
 
   if (!backendBaseURL) {
     return path;
