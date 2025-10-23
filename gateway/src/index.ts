@@ -26,6 +26,53 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const staticRoot = path.resolve(__dirname, env.STATIC_ROOT);
 const logLevel = env.NODE_ENV === 'production' ? 'warn' : 'debug';
 
+const defaultCspDirectives = helmet.contentSecurityPolicy.getDefaultDirectives();
+const buildDirectiveSet = (values: string[] = []): Set<string> => new Set(values);
+
+const scriptSrc = buildDirectiveSet(defaultCspDirectives['script-src'] ?? ["'self'"]);
+env.CSP_SCRIPT_SRC.forEach((origin) => {
+  if (origin && origin.length > 0) {
+    scriptSrc.add(origin);
+  }
+});
+if (env.NODE_ENV !== 'production') {
+  scriptSrc.add("'unsafe-eval'");
+}
+
+const styleSrc = buildDirectiveSet(defaultCspDirectives['style-src'] ?? ["'self'"]);
+styleSrc.add("'unsafe-inline'");
+
+const imgSrc = buildDirectiveSet(defaultCspDirectives['img-src'] ?? ["'self'"]);
+imgSrc.add('data:');
+imgSrc.add('https:');
+imgSrc.add('http:');
+
+const connectSrc = buildDirectiveSet(defaultCspDirectives['connect-src'] ?? ["'self'"]);
+connectSrc.add(env.REMOTE_SITE_BASE);
+connectSrc.add('https:');
+connectSrc.add('wss:');
+connectSrc.add('http:');
+connectSrc.add('ws:');
+
+const fontSrc = buildDirectiveSet(defaultCspDirectives['font-src'] ?? ["'self'"]);
+fontSrc.add('data:');
+fontSrc.add('https:');
+fontSrc.add('http:');
+
+const workerSrc = buildDirectiveSet(defaultCspDirectives['worker-src'] ?? ["'self'"]);
+workerSrc.add('blob:');
+
+const contentSecurityPolicyDirectives = {
+  ...defaultCspDirectives,
+  "default-src": defaultCspDirectives['default-src'] ?? ["'self'"],
+  "script-src": Array.from(scriptSrc),
+  "style-src": Array.from(styleSrc),
+  "img-src": Array.from(imgSrc),
+  "connect-src": Array.from(connectSrc),
+  "font-src": Array.from(fontSrc),
+  "worker-src": Array.from(workerSrc),
+};
+
 if (!fs.existsSync(staticRoot)) {
   console.warn(`⚠️ Static root ${staticRoot} does not exist; SPA responses may fail until the frontend is built.`);
 }
@@ -45,6 +92,49 @@ const headerHasValue = (value: string | string[] | undefined): boolean => {
     return value.some((item) => typeof item === 'string' && item.trim().length > 0);
   }
   return typeof value === 'string' && value.trim().length > 0;
+};
+
+const getFirstHeaderValue = (value: string | string[] | undefined): string | null => {
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      if (typeof entry === 'string' && entry.trim().length > 0) {
+        return entry;
+      }
+    }
+    return null;
+  }
+
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return value;
+  }
+
+  return null;
+};
+
+const applyForwardedHeaders = (proxyReq: ClientRequest, req: Request) => {
+  const originalHost = getFirstHeaderValue(req.headers['x-forwarded-host']) ?? req.headers.host;
+  if (originalHost) {
+    proxyReq.setHeader('x-forwarded-host', originalHost);
+  }
+
+  const originalProto =
+    getFirstHeaderValue(req.headers['x-forwarded-proto']) ||
+    (req.protocol || (req.secure ? 'https' : 'http'));
+  if (originalProto) {
+    proxyReq.setHeader('x-forwarded-proto', originalProto);
+  }
+
+  const forwardedPort = getFirstHeaderValue(req.headers['x-forwarded-port']);
+  if (forwardedPort) {
+    proxyReq.setHeader('x-forwarded-port', forwardedPort);
+  }
+
+  const originHeader = getFirstHeaderValue(req.headers.origin);
+  if (originHeader) {
+    proxyReq.setHeader('origin', originHeader);
+  } else if (env.PUBLIC_ORIGIN) {
+    proxyReq.setHeader('origin', env.PUBLIC_ORIGIN);
+  }
 };
 
 const isAuthenticatedRequest = (req: Request): boolean => {
@@ -110,7 +200,7 @@ export const normaliseCookie = createCookieNormaliser({
 });
 
 const createProxy = (target: string, audience: ServiceAudience, extra: Options = {}) => {
-  const { onProxyRes: upstreamOnProxyRes, ...rest } = extra;
+  const { onProxyReq: upstreamOnProxyReq, onProxyRes: upstreamOnProxyRes, ...rest } = extra;
 
   return createProxyMiddleware({
     target,
@@ -120,7 +210,14 @@ const createProxy = (target: string, audience: ServiceAudience, extra: Options =
     logLevel,
     proxyTimeout: 30_000,
     timeout: 30_000,
-    onProxyReq: applyServiceAuth(audience),
+    xfwd: true,
+    onProxyReq(proxyReq, req, res) {
+      applyServiceAuth(audience)(proxyReq, req as Request);
+      applyForwardedHeaders(proxyReq, req as Request);
+      if (typeof upstreamOnProxyReq === 'function') {
+        upstreamOnProxyReq(proxyReq, req, res);
+      }
+    },
     onError(err, req, res) {
       console.error(`❌ Proxy error for ${audience} (${req.method} ${req.url}) → ${target}:`, err);
       if (!res.headersSent) {
@@ -161,7 +258,18 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: false,
+      directives: contentSecurityPolicyDirectives,
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+    crossOriginResourcePolicy: { policy: 'same-site' },
+    referrerPolicy: { policy: 'no-referrer' },
+  }),
+);
 app.use(compression());
 app.use(
   cors({
