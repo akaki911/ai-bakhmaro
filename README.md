@@ -88,8 +88,8 @@ Both the gateway and the property API now default to allowing requests only from
 
 ```dotenv
 # .env
-CORS_ALLOWED_ORIGIN=https://ai.bakhmaro.co,http://localhost:5173
-ALLOWED_ORIGIN=https://ai.bakhmaro.co,http://localhost:5173
+CORS_ALLOWED_ORIGIN=https://ai.bakhmaro.co
+ALLOWED_ORIGIN=https://ai.bakhmaro.co
 ```
 
 Each variable accepts a comma-separated list. The middleware rejects any origin that is not listed, so unconfigured sites receive a CORS error by default. The new unit tests in both workspaces exercise this behaviour to guard against regressions.

@@ -54,7 +54,7 @@ const buildServiceHeaders = (req, permissions = DEFAULT_SERVICE_PERMISSIONS) => 
 };
 app.use(cors({
   origin: [
-    'http://localhost:3000',
+    'https://ai.bakhmaro.co',
     'http://127.0.0.1:3000',
     'http://0.0.0.0:3000',
     process.env.FRONTEND_URL,
