@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { setupGlobalFetch } from '../src/setupFetch.ts';
+import { setupGlobalFetch } from '../src/setupFetch.js';
 
 const createFakeWindow = () => {
   const calls = [];
