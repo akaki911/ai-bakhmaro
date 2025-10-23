@@ -9,7 +9,8 @@ const envSchema = z.object({
   GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
 
   // Comma-separated origins. Example: "https://ai.bakhmaro.co"
-  ALLOWED_ORIGIN: z.string().default('https://ai.bakhmaro.co'),
+  ALLOWED_ORIGIN: z.string().optional(),
+  CORS_ALLOWED_ORIGIN: z.string().optional(),
 
   INTERNAL_SERVICE_TOKEN: z.string().optional(),
   JWT_SECRET: z.string().min(16, 'EeRXxs92ARsT48HE7jJhZYkYxr9MHGPQ'),
@@ -18,7 +19,11 @@ const envSchema = z.object({
   SERVICE_JWT_SUBJECT: z.string().default('gateway-service'),
 });
 
-export type PropertyApiEnv = z.infer<typeof envSchema>;
+type ParsedEnv = z.infer<typeof envSchema>;
+
+export type PropertyApiEnv = Omit<ParsedEnv, 'ALLOWED_ORIGIN'> & {
+  ALLOWED_ORIGIN: string;
+};
 
 let cachedEnv: PropertyApiEnv | null = null;
 
@@ -32,6 +37,18 @@ export const getEnv = (): PropertyApiEnv => {
     throw new Error('Invalid environment configuration for property-api');
   }
 
-  cachedEnv = parsed.data;
+  const data = parsed.data;
+  const fallbackOrigins = 'https://ai.bakhmaro.co,http://localhost:3000,http://localhost:5173';
+  const allowedOrigin = data.ALLOWED_ORIGIN?.trim();
+  const corsAllowedOrigin = data.CORS_ALLOWED_ORIGIN?.trim();
+  const effectiveAllowedOrigin =
+    (allowedOrigin && allowedOrigin.length > 0 ? allowedOrigin : null) ??
+    (corsAllowedOrigin && corsAllowedOrigin.length > 0 ? corsAllowedOrigin : null) ??
+    fallbackOrigins;
+
+  cachedEnv = {
+    ...data,
+    ALLOWED_ORIGIN: effectiveAllowedOrigin,
+  };
   return cachedEnv;
 };
