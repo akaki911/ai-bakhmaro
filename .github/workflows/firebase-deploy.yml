@@ -46,7 +46,13 @@ jobs:
       - name: Verify Hosting Deployment
         run: |
           echo "🔍 Checking hosting status..."
-          curl -I "https://ai.bakhmaro.co" || echo "⚠️ Hosting check failed"
+          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://ai.bakhmaro.co)
+          if [ "$STATUS_CODE" -eq 200 ]; then
+            echo "✅ Hosting is live and serving content!"
+          else
+            echo "⚠️ Hosting check failed with status $STATUS_CODE"
+            exit 1
+          fi
 
       - name: Deployment Summary
         run: |
