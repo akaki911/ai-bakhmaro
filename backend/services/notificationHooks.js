@@ -264,7 +264,7 @@ class NotificationHooksService {
     const { proposal, actions } = notification;
     
     return `
-      <div style="font-family: 'Noto Sans Georgian', 'Inter', 'Manrope', sans-serif; letter-spacing: 0.015em; max-width: 600px; margin: 0 auto;">
+      <div style="font-family: 'Noto Sans Georgian', 'Inter', sans-serif; letter-spacing: 0.01em; max-width: 600px; margin: 0 auto;">
         <div style="background: #1a1a1a; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
           <h1 style="margin: 0; font-size: 24px;">${notification.title}</h1>
           <p style="margin: 10px 0 0; opacity: 0.8;">${new Date(notification.timestamp).toLocaleString('ka-GE')}</p>
