@@ -29,15 +29,28 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
+      - name: Clean npm cache
+        run: npm cache clean --force
+
       - name: Install Dependencies
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-          cd backend && npm install
-          cd ../ai-service && npm install
+          npm install --legacy-peer-deps --prefer-online || (npm cache verify && npm install --legacy-peer-deps --prefer-online)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: false
+
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          npm install --legacy-peer-deps --prefer-online || (npm cache verify && npm install --legacy-peer-deps --prefer-online)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: false
+
+      - name: Install AI Service Dependencies
+        run: |
+          cd ai-service
+          npm install --legacy-peer-deps --prefer-online || (npm cache verify && npm install --legacy-peer-deps --prefer-online)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: false
 
       - name: Code Quality & Security Checks
         run: |
