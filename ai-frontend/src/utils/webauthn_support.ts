@@ -4,6 +4,7 @@ import {
   browserSupportsWebAuthn,
   platformAuthenticatorIsAvailable
 } from '@simplewebauthn/browser';
+import { resolveBackendUrls } from './backendUrl';
 // Types are included in the browser package
 type RegistrationResponseJSON = any;
 type AuthenticationResponseJSON = any;
@@ -60,10 +61,13 @@ async function postPasskeyJson(
     ...(init.headers || {}),
   };
 
+  const resolvedEndpoints = resolveBackendUrls(endpoints);
   let lastError: unknown = null;
 
-  for (let i = 0; i < endpoints.length; i += 1) {
-    const endpoint = endpoints[i];
+  for (let i = 0; i < resolvedEndpoints.length; i += 1) {
+    const configuredEndpoint = endpoints[i];
+    const endpoint = resolvedEndpoints[i];
+
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -76,7 +80,7 @@ async function postPasskeyJson(
       const status = response.status;
 
       if (status === 404 && i < endpoints.length - 1) {
-        console.warn(`⚠️ [Passkey] Endpoint ${endpoint} not available, trying fallback...`);
+        console.warn(`⚠️ [Passkey] Endpoint ${configuredEndpoint} (${endpoint}) not available, trying fallback...`);
         response.body?.cancel();
         continue;
       }
@@ -90,9 +94,9 @@ async function postPasskeyJson(
         normalizedContentType.includes('application/problem+json');
 
       if (!isJson) {
-        if (i < endpoints.length - 1) {
+        if (i < resolvedEndpoints.length - 1) {
           console.warn(
-            `⚠️ [Passkey] Endpoint ${endpoint} returned non-JSON payload (${contentType || 'unknown'}), trying fallback...`,
+            `⚠️ [Passkey] Endpoint ${configuredEndpoint} (${endpoint}) returned non-JSON payload (${contentType || 'unknown'}), trying fallback...`,
             { status, preview: bodyPreview }
           );
           response.body?.cancel();
@@ -100,7 +104,7 @@ async function postPasskeyJson(
         }
 
         throw new PasskeyEndpointResponseError(
-          `Passkey endpoint ${endpoint} returned unexpected content type`,
+          `Passkey endpoint ${configuredEndpoint} returned unexpected content type`,
           { endpoint, status, contentType, bodyPreview }
         );
       }
@@ -110,9 +114,9 @@ async function postPasskeyJson(
         try {
           data = JSON.parse(bodyText);
         } catch (parseError) {
-          if (i < endpoints.length - 1) {
+          if (i < resolvedEndpoints.length - 1) {
             console.warn(
-              `⚠️ [Passkey] Endpoint ${endpoint} returned unreadable JSON, trying fallback...`,
+              `⚠️ [Passkey] Endpoint ${configuredEndpoint} (${endpoint}) returned unreadable JSON, trying fallback...`,
               parseError
             );
             response.body?.cancel();
@@ -120,7 +124,7 @@ async function postPasskeyJson(
           }
 
           throw new PasskeyEndpointResponseError(
-            `Passkey endpoint ${endpoint} returned unreadable JSON`,
+            `Passkey endpoint ${configuredEndpoint} returned unreadable JSON`,
             { endpoint, status, contentType, bodyPreview }
           );
         }
@@ -129,9 +133,9 @@ async function postPasskeyJson(
       if (!response.ok) {
         const message = data?.error || data?.message || `HTTP ${status}`;
 
-        if (i < endpoints.length - 1) {
+        if (i < resolvedEndpoints.length - 1) {
           console.warn(
-            `⚠️ [Passkey] Endpoint ${endpoint} responded with ${status}, trying fallback...`,
+            `⚠️ [Passkey] Endpoint ${configuredEndpoint} (${endpoint}) responded with ${status}, trying fallback...`,
             message
           );
           response.body?.cancel();
@@ -139,7 +143,7 @@ async function postPasskeyJson(
         }
 
         throw new PasskeyEndpointResponseError(
-          `Passkey endpoint ${endpoint} responded with ${status}: ${message}`,
+          `Passkey endpoint ${configuredEndpoint} responded with ${status}: ${message}`,
           { endpoint, status, contentType, bodyPreview }
         );
       }
@@ -153,8 +157,8 @@ async function postPasskeyJson(
       };
     } catch (error) {
       lastError = error;
-      if (i < endpoints.length - 1) {
-        console.warn(`⚠️ [Passkey] Endpoint ${endpoint} failed, trying fallback...`, error);
+      if (i < resolvedEndpoints.length - 1) {
+        console.warn(`⚠️ [Passkey] Endpoint ${configuredEndpoint} (${endpoint}) failed, trying fallback...`, error);
         continue;
       }
       throw error;
