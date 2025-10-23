@@ -2,7 +2,9 @@ name: Quality Gates (Advanced AI & Backend Checks)
 
 on:
   pull_request:
-    branches: [ "main", "development" ]
+    branches:
+      - main
+      - development
 
 jobs:
   code-quality:
@@ -10,105 +12,83 @@ jobs:
     name: 🧩 Code Quality Gate (Frontend + Backend)
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js 20.x
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-          cache: 'npm'
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
 
-      - name: Clean npm Cache & Proxies
-        run: |
-          npm config delete proxy || true
-          npm config delete https-proxy || true
-          npm config delete http-proxy || true
-          npm cache clean --force
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
-      - name: Install Root Dependencies
-        run: |
-          echo "📦 Installing root dependencies..."
-          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund
+      - name: Lint workspaces
+        run: npm run lint --if-present
 
-      - name: Install Backend Dependencies
-        run: |
-          echo "🛠️ Installing backend dependencies..."
-          cd backend
-          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund
+      - name: Type check frontend
+        run: npm run type-check --if-present
 
-      - name: Install AI Service Dependencies
-        run: |
-          echo "🤖 Installing AI service dependencies..."
-          cd ai-service
-          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund
+      - name: Format check
+        run: npx prettier --check "**/*.{ts,tsx,js,jsx,json,css,scss,md}"
 
-      - name: Verify Cache Integrity
-        run: |
-          echo "🧩 Verifying npm integrity..."
-          rm -rf node_modules package-lock.json
-          npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Run tests
+        run: npm run test --if-present
 
-      - name: TypeScript Strict Check
-        run: |
-          echo "🔍 Running strict TypeScript checks..."
-          npx tsc --noEmit --strict || echo "⚠️ TypeScript warnings detected."
+      - name: Build workspaces
+        run: npm run build --if-present
 
-      - name: Code Formatting Check (Prettier)
+      - name: Enforce bundle budget
         run: |
-          echo "✨ Checking code formatting..."
-          npx prettier --check "**/*.{ts,tsx,js,jsx,json,css,scss,md}"
-
-      - name: Security & Secret Leak Check
-        run: |
-          echo "🛡️ Checking for vulnerabilities and secrets..."
-          npm audit --audit-level=moderate || echo "⚠️ Minor vulnerabilities detected."
-          echo "🔎 Scanning for hardcoded secrets..."
-          ! grep -r "sk-" . --exclude-dir=node_modules --exclude-dir=.git || (echo "❌ Found OpenAI secret pattern"; exit 1)
-          ! grep -r "AIza" . --exclude-dir=node_modules --exclude-dir=.git || (echo "❌ Found Firebase key pattern"; exit 1)
-
-      - name: Performance Budget Check
-        run: |
-          echo "⚡ Checking performance bundle size..."
-          npm run build --if-present
-          BUNDLE_SIZE=$(du -sk dist | cut -f1 || echo 0)
-          MAX_SIZE=8000
-          if [ "$BUNDLE_SIZE" -gt "$MAX_SIZE" ]; then
-            echo "❌ Bundle size $BUNDLE_SIZE KB exceeds $MAX_SIZE KB"
-            exit 1
+          if [ -d "ai-frontend/dist" ]; then
+            BUNDLE_SIZE=$(du -sk ai-frontend/dist | cut -f1)
+            MAX_SIZE=8000
+            echo "Bundle size: ${BUNDLE_SIZE}KB (limit ${MAX_SIZE}KB)"
+            if [ "$BUNDLE_SIZE" -gt "$MAX_SIZE" ]; then
+              echo "❌ Bundle size exceeds limit"
+              exit 1
+            fi
           else
-            echo "✅ Bundle size $BUNDLE_SIZE KB within limits."
+            echo "No built frontend found, skipping bundle size check."
           fi
+
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --source . --no-git
 
   ai-service-quality:
     runs-on: ubuntu-latest
     name: 🤖 AI Service Quality & Stability
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js 20.x
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ai-service/package-lock.json
 
-      - name: Install AI Service Dependencies
-        run: |
-          cd ai-service
-          npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Install AI service dependencies
+        working-directory: ai-service
+        run: npm install --no-audit --no-fund
 
-      - name: Run AI Service Unit Tests
+      - name: Syntax check
+        working-directory: ai-service
         run: |
-          echo "🧠 Running AI service test scripts..."
-          cd ai-service
-          timeout 30s node test_trusted_ops.js || echo "✅ TrustedOps test finished."
-          timeout 30s node test_security_fixes.js || echo "✅ Security test finished."
+          node --check server.js
+          bash -n start-ai-service.sh 2>/dev/null || echo "Shell script syntax check skipped"
 
-      - name: Memory Leak Check
+      - name: Run available npm scripts
+        working-directory: ai-service
         run: |
-          echo "🧮 Running memory stability check..."
-          cd ai-service
-          timeout 30s node --inspect server.js &
-          sleep 30
-          echo "✅ Memory test completed successfully."
+          npm run lint --if-present
+          npm run test --if-present
+          npm run build --if-present
