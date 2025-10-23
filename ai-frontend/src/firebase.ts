@@ -72,7 +72,12 @@ const requiredEntries: Array<[EnvKey, string | undefined]> = [
 const missingKeys = requiredEntries.filter(([, value]) => !value).map(([key]) => key);
 
 if (fallbackUsage.size > 0) {
-  console.warn('⚠️ Firebase configuration fallback in use for keys:', Array.from(fallbackUsage));
+  const fallbackKeys = Array.from(fallbackUsage);
+  if (import.meta.env?.DEV) {
+    console.warn('⚠️ Firebase configuration fallback in use for keys:', fallbackKeys);
+  } else {
+    console.info('ℹ️ [Firebase] Using baked-in configuration for keys:', fallbackKeys);
+  }
 }
 
 if (missingKeys.length > 0) {
