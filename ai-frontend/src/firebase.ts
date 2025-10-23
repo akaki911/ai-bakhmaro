@@ -94,9 +94,9 @@ if (fallbackUsage.size > 0 && isProdLike && !isTestLike) {
     'Firebase fallback credentials are intended for development only. ' +
     'Set VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID, ' +
     'VITE_FIREBASE_APP_ID, VITE_FIREBASE_STORAGE_BUCKET, VITE_FIREBASE_MESSAGING_SENDER_ID ' +
-    'and VITE_FIREBASE_MEASUREMENT_ID with the production project values.';
-  console.error('❌ Firebase fallback configuration is not allowed in production:', fallbackKeys);
-  throw new Error(guidance);
+    'and VITE_FIREBASE_MEASUREMENT_ID with the production project values when possible.';
+  console.error('⚠️ Firebase fallback configuration is active in production for keys:', fallbackKeys);
+  console.error(guidance);
 }
 
 if (missingKeys.length > 0) {
