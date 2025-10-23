@@ -77,6 +77,12 @@ if (!fs.existsSync(staticRoot)) {
   console.warn(`⚠️ Static root ${staticRoot} does not exist; SPA responses may fail until the frontend is built.`);
 }
 const allowedOrigins = buildAllowedOriginsSet(env.CORS_ALLOWED_ORIGIN);
+if (env.PUBLIC_ORIGIN) {
+  allowedOrigins.add(env.PUBLIC_ORIGIN);
+}
+if (env.AI_DOMAIN) {
+  allowedOrigins.add(env.AI_DOMAIN);
+}
 const validateOrigin = createCorsOriginValidator(allowedOrigins, {
   errorMessage: (origin) => `Origin ${origin} is not allowed by CORS policy`,
 });
