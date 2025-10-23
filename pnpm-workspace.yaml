@@ -2,3 +2,9 @@ packages:
   - ai-frontend
   - property-api
   - gateway
+
+onlyBuiltDependencies:
+  - '@firebase/util'
+  - core-js
+  - esbuild
+  - protobufjs
