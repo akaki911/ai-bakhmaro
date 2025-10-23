@@ -53,10 +53,10 @@ export function UICustomizationSection({
               onChange={(event) => onFontFamilyChange(event.target.value)}
               className="w-full rounded-2xl border border-[#7C6CFF33] bg-[#1A1F2F]/80 px-3 py-2 text-sm text-[#E6E8EC] focus:outline-none focus:ring-2 focus:ring-[#7C6CFF80]"
             >
-              <option value='"Noto Sans Georgian", "Inter", "Manrope", sans-serif'>Noto Sans Georgian</option>
-              <option value='"Manrope", sans-serif'>Manrope</option>
-              <option value='"Space Grotesk", sans-serif'>Space Grotesk</option>
-              <option value='"Geist", sans-serif'>Geist</option>
+              <option value='"Inter", -apple-system, "Segoe UI", "Sylfaen", sans-serif'>Inter + System (KA)</option>
+              <option value='"Inter", sans-serif'>Inter</option>
+              <option value='"Space Grotesk", "Inter", sans-serif'>Space Grotesk</option>
+              <option value='"Geist", "Inter", sans-serif'>Geist</option>
             </select>
             <label className="block text-xs uppercase tracking-[0.3em] text-[#6F7280]">თემა</label>
             <div className="space-y-2">

@@ -4,20 +4,37 @@ const crypto = require('crypto');
 
 function originGuard(req, res, next) {
   const devDomain = process.env.REPLIT_DEV_DOMAIN || process.env.REPLIT_DOMAINS;
+  const normaliseOrigin = (value) => {
+    if (!value || typeof value !== 'string') {
+      return '';
+    }
+    return value.trim().replace(/\/+$/, '');
+  };
+
   const allowedOrigins = [
     `https://${devDomain}`,
     'https://2c2cd970-4894-4549-bf8a-0ed98550093e-00-2lgecmi2xhw4g.janeway.replit.dev',
     'http://localhost:5000',
-    'http://localhost:3000'
-  ].filter(Boolean);
-
-  // Add custom allowed origins from env
-  const customOrigins = (process.env.ALLOWED_ORIGINS || '')
-    .split(',')
-    .map(s => s.trim())
+    'http://localhost:3000',
+    'https://ai.bakhmaro.co'
+  ]
+    .map(normaliseOrigin)
     .filter(Boolean);
-  
-  const allowed = [...allowedOrigins, ...customOrigins];
+
+  const envOriginCandidates = [
+    process.env.FRONTEND_URL,
+    process.env.AI_DOMAIN,
+    process.env.ORIGIN,
+    process.env.PUBLIC_FRONTEND_ORIGIN,
+    process.env.CORS_ALLOWED_ORIGIN,
+    process.env.ALLOWED_ORIGINS,
+  ]
+    .flatMap(value => (value ? value.split(',') : []))
+    .map(normaliseOrigin)
+    .filter(Boolean);
+
+  const uniqueOrigins = new Set([...allowedOrigins, ...envOriginCandidates]);
+  const allowed = Array.from(uniqueOrigins);
 
   const origin = req.headers.origin || '';
 

@@ -7,6 +7,38 @@ import './index.css';
 import './i18n/config';
 import { setupGlobalFetch } from './setupFetch';
 
+const assignBackendRuntimeHints = () => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return;
+  }
+
+  const env = import.meta.env as Record<string, string | boolean | undefined> | undefined;
+  const candidates = [
+    env?.VITE_BACKEND_URL,
+    env?.VITE_API_BASE,
+    env?.VITE_API_URL,
+    env?.VITE_GATEWAY_URL,
+    env?.VITE_REMOTE_SITE_BASE,
+  ]
+    .map(value => (typeof value === 'string' ? value.trim() : ''))
+    .filter(Boolean);
+
+  if (candidates.length === 0) {
+    return;
+  }
+
+  const backendBase = candidates[0]!.replace(/\/+$/, '');
+  const globalWindow = window as typeof window & {
+    __BACKEND_BASE_URL__?: string;
+    __AI_BACKEND_URL__?: string;
+  };
+
+  globalWindow.__BACKEND_BASE_URL__ = backendBase;
+  globalWindow.__AI_BACKEND_URL__ = backendBase;
+  document.documentElement.setAttribute('data-backend-base-url', backendBase);
+};
+
+assignBackendRuntimeHints();
 setupGlobalFetch(window);
 
 const ensureSWRConfig: (parent?: SWRConfiguration) => SWRConfiguration = (parentConfig) => ({
@@ -65,7 +97,7 @@ try {
   // Fallback error display
   if (rootElement) {
     rootElement.innerHTML = `
-      <div style="padding: 20px; color: red; font-family: 'Noto Sans Georgian', 'Inter', 'Manrope', sans-serif; letter-spacing: 0.015em; background: #fff; min-height: 100vh;">
+      <div style="padding: 20px; color: red; font-family: 'Inter', -apple-system, 'Segoe UI', 'Sylfaen', sans-serif; letter-spacing: 0.01em; background: #fff; min-height: 100vh;">
         <h1>🚨 Application Error</h1>
         <p>Failed to load the application. Please try the following:</p>
         <ol>

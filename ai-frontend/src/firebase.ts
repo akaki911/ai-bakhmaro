@@ -72,7 +72,31 @@ const requiredEntries: Array<[EnvKey, string | undefined]> = [
 const missingKeys = requiredEntries.filter(([, value]) => !value).map(([key]) => key);
 
 if (fallbackUsage.size > 0) {
-  console.warn('⚠️ Firebase configuration fallback in use for keys:', Array.from(fallbackUsage));
+  const fallbackKeys = Array.from(fallbackUsage);
+  if (import.meta.env?.DEV) {
+    console.warn('⚠️ Firebase configuration fallback in use for keys:', fallbackKeys);
+  } else {
+    console.info('ℹ️ [Firebase] Using baked-in configuration for keys:', fallbackKeys);
+  }
+}
+
+const runtimeMode =
+  (typeof import.meta !== 'undefined' && import.meta.env?.MODE) ||
+  (typeof process !== 'undefined' ? process.env?.NODE_ENV : undefined) ||
+  'production';
+
+const isProdLike = runtimeMode === 'production' || import.meta.env?.PROD === true;
+const isTestLike = runtimeMode === 'test' || import.meta.env?.TEST === true;
+
+if (fallbackUsage.size > 0 && isProdLike && !isTestLike) {
+  const fallbackKeys = Array.from(fallbackUsage).join(', ');
+  const guidance =
+    'Firebase fallback credentials are intended for development only. ' +
+    'Set VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID, ' +
+    'VITE_FIREBASE_APP_ID, VITE_FIREBASE_STORAGE_BUCKET, VITE_FIREBASE_MESSAGING_SENDER_ID ' +
+    'and VITE_FIREBASE_MEASUREMENT_ID with the production project values.';
+  console.error('❌ Firebase fallback configuration is not allowed in production:', fallbackKeys);
+  throw new Error(guidance);
 }
 
 if (missingKeys.length > 0) {

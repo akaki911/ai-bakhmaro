@@ -1,221 +1,369 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
+import { ShieldCheck, ScanFace, KeyRound, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
-import { 
+import {
   checkPasskeyAvailability,
-  getWebAuthnErrorMessage 
+  getWebAuthnErrorMessage,
+  PasskeyEndpointResponseError
 } from '../utils/webauthn_support';
 
+type AuthStep = 'email' | 'passkey' | 'password';
+
 const AdminPasskeyLogin: React.FC = () => {
+  const navigate = useNavigate();
+  const {
+    login,
+    loginWithPasskey,
+    deviceRecognition,
+    authInitialized,
+    isAuthenticated,
+    getAutoRouteTarget
+  } = useAuth();
+
+  const [step, setStep] = useState<AuthStep>('email');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [trustDevice, setTrustDevice] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [trustThisDevice, setTrustThisDevice] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [passkeySupport, setPasskeySupport] = useState({
     supported: false,
     platformAuthenticator: false,
     conditionalUI: false
   });
+  const [passkeyAttempted, setPasskeyAttempted] = useState(false);
 
-  const { deviceRecognition, loginWithPasskey, registerCurrentDevice } = useAuth();
-  const navigate = useNavigate();
+  const recognizedDeviceSuffix = useMemo(() => {
+    const deviceId = deviceRecognition?.currentDevice?.deviceId;
+    return deviceId ? deviceId.slice(-6).toUpperCase() : null;
+  }, [deviceRecognition]);
 
-  // Initialize passkey support check
   useEffect(() => {
-    const initializePasskey = async () => {
-      try {
-        // Force HTTPS for Replit domains
-        if (window.location.protocol !== 'https:' && 
-            (window.location.hostname.includes('.replit.dev') || 
-             window.location.hostname.includes('.janeway.replit.dev'))) {
-          const httpsUrl = window.location.href.replace('http:', 'https:');
-          console.log('🔒 Forcing HTTPS redirect for Admin Passkey:', httpsUrl);
-          window.location.replace(httpsUrl);
-          return;
-        }
+    document.title = 'AI დეველოპერ კონსოლზე შესვლა – ai.bakhmaro.co';
+  }, []);
 
-        const support = await checkPasskeyAvailability();
-        setPasskeySupport(support);
-        console.log('🔐 [Admin Login] Passkey support:', support);
+  useEffect(() => {
+    if (!authInitialized) {
+      return;
+    }
 
-        if (!support.supported) {
-          setError('Passkey-ები არ არის მხარდაჭერილი ამ ბრაუზერში. გთხოვთ გამოიყენოთ Passkey-ების მხარდამჭერი ბრაუზერი.');
-        }
-      } catch (error) {
-        console.error('❌ [Admin Login] Passkey initialization failed:', error);
-        setError('Passkey სისტემის ინიციალიზაცია ვერ მოხერხდა');
+    if (isAuthenticated) {
+      const target = getAutoRouteTarget?.() ?? '/admin?tab=dashboard';
+      navigate(target, { replace: true });
+    }
+  }, [authInitialized, getAutoRouteTarget, isAuthenticated, navigate]);
+
+  useEffect(() => {
+    const enforceHttps = () => {
+      if (
+        window.location.protocol !== 'https:' &&
+        (window.location.hostname.includes('.replit.dev') ||
+          window.location.hostname.includes('.janeway.replit.dev'))
+      ) {
+        const httpsUrl = window.location.href.replace('http:', 'https:');
+        window.location.replace(httpsUrl);
       }
     };
 
-    initializePasskey();
+    const fetchPasskeySupport = async () => {
+      try {
+        const support = await checkPasskeyAvailability();
+        setPasskeySupport(support);
+      } catch (error) {
+        console.error('❌ [Admin Login] Passkey support detection failed:', error);
+      }
+    };
+
+    enforceHttps();
+    fetchPasskeySupport();
   }, []);
 
-  const handlePasskeyLogin = async () => {
-    if (!passkeySupport.supported) {
-      setError('Passkey-ები არ არის მხარდაჭერილი');
+  const triggerPasskey = useCallback(async () => {
+    setLoading(true);
+    setStatusMessage('ბიომეტრიული მოთხოვნა იგზავნება...');
+    setErrorMessage('');
+
+    try {
+      await loginWithPasskey();
+      setStatusMessage('Passkey ავტორიზაცია წარმატებით დასრულდა.');
+      setTimeout(() => navigate('/admin'), 600);
+    } catch (error: any) {
+      const friendly = getWebAuthnErrorMessage(error);
+      setErrorMessage(friendly);
+      setStatusMessage('');
+      if (error instanceof PasskeyEndpointResponseError) {
+        setStep('password');
+        setPasskeyAttempted(false);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [loginWithPasskey, navigate]);
+
+  useEffect(() => {
+    if (step === 'passkey' && !passkeyAttempted) {
+      setPasskeyAttempted(true);
+      if (passkeySupport.supported) {
+        triggerPasskey();
+      } else {
+        setErrorMessage('Passkey-ები არ არის მხარდაჭერილი ამ მოწყობილობაზე.');
+      }
+    }
+  }, [passkeyAttempted, passkeySupport.supported, step, triggerPasskey]);
+
+  const resetMessages = () => {
+    setErrorMessage('');
+    setStatusMessage('');
+  };
+
+  const handleEmailSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!email.trim()) {
+      setErrorMessage('გთხოვთ შეიყვანოთ ელ. ფოსტა');
+      return;
+    }
+
+    resetMessages();
+    setPasskeyAttempted(false);
+    setStep('passkey');
+  };
+
+  const handlePasswordSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!password.trim()) {
+      setErrorMessage('გთხოვთ შეიყვანოთ პაროლი');
       return;
     }
 
     setLoading(true);
-    setError('');
-    setSuccess('');
+    resetMessages();
 
     try {
-      console.log('🔐 [Admin Login] Starting passkey authentication...');
-      console.log('🔐 [Admin Login] Environment check:', {
-        hostname: window.location.hostname,
-        protocol: window.location.protocol,
-        passkeySupport: passkeySupport,
-        trustThisDevice: trustThisDevice
-      });
-      
-      // SOL-422: Pass trust device preference
-      await loginWithPasskey(trustThisDevice);
-      
-      setSuccess('წარმატებული ავტორიზაცია! გადამისამართება...');
-      
-      setTimeout(() => {
-        navigate('/admin');
-      }, 1500);
-
+      await login(email, password, trustDevice);
+      navigate('/admin');
     } catch (error: any) {
-      console.error('❌ [Admin Login] Passkey authentication failed:', error);
-      const friendlyMessage = getWebAuthnErrorMessage(error);
-      setError(friendlyMessage);
+      setErrorMessage(error?.message || 'ავტორიზაცია ვერ მოხერხდა');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBackToStandard = () => {
-    navigate('/login');
+  const handleBackToEmail = () => {
+    resetMessages();
+    setStep('email');
+    setPasskeyAttempted(false);
+    setPassword('');
   };
 
-  const isRecognizedAdmin = deviceRecognition?.isRecognizedDevice && 
-                           deviceRecognition?.currentDevice?.registeredRole === 'SUPER_ADMIN';
+  const handleFallback = () => {
+    resetMessages();
+    setStep('password');
+  };
+
+  const passkeyUnavailable = step === 'passkey' && !passkeySupport.supported;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <div className="bg-white/10 backdrop-blur-lg p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-            <Shield className="h-10 w-10 text-white" />
-          </div>
-          <h2 className="text-3xl font-bold text-white">ადმინისტრატორის პანელი</h2>
-          <p className="mt-2 text-white/70">
-            {isRecognizedAdmin 
-              ? `მოგესალმებით! განაგრძეთ ${deviceRecognition?.currentDevice?.deviceId?.slice(-8)} მოწყობილობიდან`
-              : 'Passkey ავტორიზაცია სუპერ ადმინისტრატორისთვის'
-            }
-          </p>
-        </div>
+    <div className="ai-gateway">
+      <div className="ai-gateway__matrix" aria-hidden="true" />
+      <div className="ai-gateway__particles" aria-hidden="true" />
 
-        {/* Device Recognition Status */}
-        {isRecognizedAdmin && (
-          <div className="bg-green-500/20 border border-green-400/30 rounded-lg p-4">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-green-400" />
-              <span className="text-green-400 text-sm">
-                მოწყობილობა აღიარებულია როგორც ადმინისტრატორის მოწყობილობა
-              </span>
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-6 py-12">
+        <div className="w-full max-w-xl">
+          <div className="mb-10 flex items-center justify-between text-sm text-cyan-200/80">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-[0.8rem] font-medium">
+              <ShieldCheck className="h-4 w-4" />
+              <span>სუპერ ადმინი</span>
             </div>
-          </div>
-        )}
-
-        {/* Main Login Card */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl shadow-xl p-8 border border-white/20">
-          
-          {/* Error Display */}
-          {error && (
-            <div className="mb-6 bg-red-500/20 border border-red-400/30 rounded-lg p-4">
-              <div className="flex items-center space-x-2">
-                <AlertCircle className="h-5 w-5 text-red-400" />
-                <span className="text-red-400 text-sm">{error}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Success Display */}
-          {success && (
-            <div className="mb-6 bg-green-500/20 border border-green-400/30 rounded-lg p-4">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5 text-green-400" />
-                <span className="text-green-400 text-sm">{success}</span>
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-6">
-            {/* Passkey Support Status */}
-            <div className="text-center text-white/70 text-sm">
-              <div className="space-y-1">
-                <div className={`flex items-center justify-center space-x-2 ${passkeySupport.supported ? 'text-green-400' : 'text-red-400'}`}>
-                  <span>Passkey მხარდაჭერა:</span>
-                  <span>{passkeySupport.supported ? '✓ მხარდაჭერილია' : '✗ არ არის მხარდაჭერილი'}</span>
-                </div>
-                {passkeySupport.supported && (
-                  <div className={`flex items-center justify-center space-x-2 ${passkeySupport.platformAuthenticator ? 'text-green-400' : 'text-yellow-400'}`}>
-                    <span>Platform Authenticator:</span>
-                    <span>{passkeySupport.platformAuthenticator ? '✓ ხელმისაწვდომია' : '⚠ შეზღუდული'}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Trust Device Checkbox */}
-            <div className="flex items-center space-x-2">
-              <input
-                id="trust-device-admin"
-                type="checkbox"
-                checked={trustThisDevice}
-                onChange={(e) => setTrustThisDevice(e.target.checked)}
-                className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
-              />
-              <label htmlFor="trust-device-admin" className="text-sm text-white/80">
-                ამ მოწყობილობას ენდო სწრაფი შესვლისთვის
-              </label>
-            </div>
-
-            {/* Passkey Login Button */}
             <button
-              onClick={handlePasskeyLogin}
-              disabled={loading || !passkeySupport.supported}
-              className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-lg font-medium transition-all duration-200 ${
-                passkeySupport.supported && !loading
-                  ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
-                  : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+              type="button"
+              onClick={handleBackToEmail}
+              className={`inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition ${
+                step === 'email' ? 'pointer-events-none opacity-0' : 'hover:text-cyan-200'
               }`}
             >
-              {loading ? (
-                <>
-                  <div className="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full"></div>
-                  <span>ავტორიზაცია...</span>
-                </>
-              ) : (
-                <>
-                  <Shield className="h-5 w-5" />
-                  <span>Passkey-ით ავტორიზაცია</span>
-                </>
-              )}
-            </button>
-
-            {/* Back to Standard Login */}
-            <button
-              onClick={handleBackToStandard}
-              className="w-full flex items-center justify-center space-x-2 py-3 px-4 text-white/70 hover:text-white transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>სტანდარტული ავტორიზაციისკენ დაბრუნება</span>
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>სხვა მისამართი</span>
             </button>
           </div>
-        </div>
 
-        {/* Help Text */}
-        <div className="text-center text-white/50 text-sm">
-          <p>ეს არის უსაფრთხო ავტორიზაცია სუპერ ადმინისტრატორისთვის</p>
-          <p className="mt-1">Passkey-ები იყენებს თქვენი მოწყობილობის ბიომეტრიულ ან PIN ავტორიზაციას</p>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-10 backdrop-blur-2xl shadow-[0_25px_80px_rgba(15,23,42,0.65)]">
+            <header className="mb-10 space-y-4 text-center">
+              <h1 className="text-3xl font-semibold text-white sm:text-4xl">
+                AI დეველოპერ კონსოლზე შესვლა
+              </h1>
+              <p className="text-sm text-slate-400">
+                {step === 'email'
+                  ? 'შეიყვანეთ სუპერ ადმინისტრატორის ელ. ფოსტა'
+                  : `${email}`}
+              </p>
+            </header>
+
+            {recognizedDeviceSuffix && (
+              <div className="mb-6 rounded-2xl border border-cyan-500/20 bg-cyan-500/10 px-5 py-3 text-sm text-cyan-100">
+                მოწყობილობა აღიარებულია • იდენტიფიკატორი ‑ {recognizedDeviceSuffix}
+              </div>
+            )}
+
+            {errorMessage && (
+              <div className="mb-6 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-5 py-3 text-sm text-rose-100">
+                {errorMessage}
+              </div>
+            )}
+
+            {statusMessage && (
+              <div className="mb-6 rounded-2xl border border-cyan-400/30 bg-cyan-400/10 px-5 py-3 text-sm text-cyan-100">
+                {statusMessage}
+              </div>
+            )}
+
+            {step === 'email' && (
+              <form className="space-y-6" onSubmit={handleEmailSubmit}>
+                <div className="space-y-2 text-left">
+                  <label htmlFor="admin-email" className="text-sm text-slate-200">
+                    ელ. ფოსტა
+                  </label>
+                  <input
+                    id="admin-email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="username"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    className="glow-input w-full rounded-2xl px-4 py-3 text-base text-white placeholder-slate-500"
+                    placeholder="super.admin@ai.bakhmaro.co"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="glow-button w-full rounded-2xl px-4 py-3 text-base font-semibold text-slate-950"
+                >
+                  {loading ? 'იგზავნება...' : 'გაგრძელება'}
+                </button>
+              </form>
+            )}
+
+            {step === 'passkey' && (
+              <div className="space-y-8 text-center">
+                <div className="flex flex-col items-center gap-3 text-slate-100">
+                  <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 p-3">
+                    <ScanFace className="h-7 w-7 text-cyan-200" />
+                  </span>
+                  <div>
+                    <p className="text-lg font-medium text-white">Passkey-თ ავტორიზაცია</p>
+                    <p className="mt-1 text-sm text-slate-400">დაადასტურეთ წვდომა {email}</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={triggerPasskey}
+                  disabled={loading || passkeyUnavailable}
+                  className={`glow-button w-full rounded-2xl px-4 py-3 text-base font-semibold ${
+                    loading || passkeyUnavailable ? 'opacity-70' : ''
+                  }`}
+                >
+                  {loading ? (
+                    <span className="inline-flex items-center justify-center gap-3 text-slate-950">
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
+                      ავტორიზაცია...
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center justify-center gap-3 text-slate-950">
+                      <ScanFace className="h-5 w-5" />
+                      Passkey-თ ავტორიზაცია
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleFallback}
+                  className="text-sm font-medium text-cyan-200 transition hover:text-cyan-100"
+                >
+                  პაროლით შესვლა
+                </button>
+              </div>
+            )}
+
+            {step === 'password' && (
+              <form className="space-y-6" onSubmit={handlePasswordSubmit}>
+                <div className="flex items-center justify-between text-left">
+                  <div className="flex items-center gap-3 text-slate-200">
+                    <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 p-2">
+                      <KeyRound className="h-4 w-4 text-cyan-200" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-medium text-white">პაროლით შესვლა</p>
+                      <p className="text-xs text-slate-500">Passkey ავტორიზაცია ვერ მოხერხდა?</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep('passkey');
+                      setPasskeyAttempted(false);
+                      resetMessages();
+                    }}
+                    className="text-xs font-medium text-cyan-200 transition hover:text-cyan-100"
+                  >
+                    Passkey-თ ავტორიზაცია
+                  </button>
+                </div>
+
+                <div className="space-y-2 text-left">
+                  <label htmlFor="admin-password" className="text-sm text-slate-200">
+                    პაროლი
+                  </label>
+                  <input
+                    id="admin-password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    className="glow-input w-full rounded-2xl px-4 py-3 text-base text-white placeholder-slate-500"
+                    placeholder="••••••••"
+                  />
+                </div>
+
+                <label className="flex items-center gap-3 text-sm text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={trustDevice}
+                    onChange={(event) => setTrustDevice(event.target.checked)}
+                    className="h-4 w-4 rounded border-cyan-400/40 bg-transparent text-cyan-300 focus:ring-0"
+                  />
+                  <span>ამ მოწყობილობის ნდობა</span>
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`glow-button w-full rounded-2xl px-4 py-3 text-base font-semibold text-slate-950 ${
+                    loading ? 'opacity-70' : ''
+                  }`}
+                >
+                  {loading ? 'ვერიფიკაცია...' : 'შესვლა'}
+                </button>
+              </form>
+            )}
+          </div>
+
+          <footer className="mt-12 flex flex-col items-center gap-4 text-xs text-slate-500 sm:flex-row sm:justify-between">
+            <span className="tracking-[0.3em] text-slate-400">AI.BAKHMARO.CO</span>
+            <div className="flex items-center gap-6">
+              <a href="/security-policy" className="transition hover:text-cyan-200">
+                უსაფრთხოების პოლიტიკა
+              </a>
+              <a href="/terms" className="transition hover:text-cyan-200">
+                მოხმარებლის წესები
+              </a>
+            </div>
+          </footer>
         </div>
       </div>
     </div>
@@ -223,3 +371,4 @@ const AdminPasskeyLogin: React.FC = () => {
 };
 
 export default AdminPasskeyLogin;
+
