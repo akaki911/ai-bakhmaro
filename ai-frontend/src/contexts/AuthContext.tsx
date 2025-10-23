@@ -23,7 +23,11 @@ import { getDeviceInfo, logDeviceInfo, isDeviceFingerprintingSupported } from '.
 import { AuthContext } from './AuthContextObject';
 import type { AuthContextType, BookingUserData, User, UserRole } from './AuthContext.types';
 export type { UserRole, AuthContextType, BookingUserData, User } from './AuthContext.types';
-import { authenticateWithPasskey, registerPasskey as performPasskeyRegistration } from '../utils/webauthn_support';
+import {
+  authenticateWithPasskey,
+  registerPasskey as performPasskeyRegistration,
+  PasskeyEndpointResponseError
+} from '../utils/webauthn_support';
 
 interface DeviceRecognitionState {
   isRecognizedDevice: boolean;
@@ -726,7 +730,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authenticated: true,
       }));
     } catch (error: any) {
-      throw new Error(error.message || 'Passkey ავტორიზაცია ვერ მოხერხდა');
+      if (error instanceof PasskeyEndpointResponseError) {
+        throw error;
+      }
+      throw new Error(error?.message || 'Passkey ავტორიზაცია ვერ მოხერხდა');
     }
   };
 
