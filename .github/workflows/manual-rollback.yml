@@ -22,6 +22,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Install tooling
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y jq
+
       - name: Validate Rollback Request
         run: |
           echo "🔍 Validating rollback request..."
