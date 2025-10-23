@@ -29,29 +29,69 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
-      - name: Clean npm cache
+      - name: Ensure npm registry and robust retries
+        run: |
+          npm config set registry https://registry.npmjs.org/
+          npm config set fetch-retries 5
+          npm config set fetch-retry-factor 2
+          npm config set fetch-retry-mintimeout 20000
+          npm config set fetch-retry-maxtimeout 120000
+
+      - name: Clean npm cache (force)
         run: npm cache clean --force
 
-      - name: Install Dependencies
+      - name: Install dependencies (root)
         run: |
-          echo "🧹 Performing clean install with retry..."
-          npm install --legacy-peer-deps --prefer-online || (npm cache verify && npm install --legacy-peer-deps --prefer-online)
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
         env:
-          NPM_CONFIG_FROZEN_LOCKFILE: false
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
 
-      - name: Install Backend Dependencies
+      - name: Install dependencies (backend)
+        working-directory: backend
         run: |
-          cd backend
-          npm install --legacy-peer-deps --prefer-online || (npm cache verify && npm install --legacy-peer-deps --prefer-online)
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
         env:
-          NPM_CONFIG_FROZEN_LOCKFILE: false
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
 
-      - name: Install AI Service Dependencies
+      - name: Install dependencies (ai-service)
+        working-directory: ai-service
         run: |
-          cd ai-service
-          npm install --legacy-peer-deps --prefer-online || (npm cache verify && npm install --legacy-peer-deps --prefer-online)
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
         env:
-          NPM_CONFIG_FROZEN_LOCKFILE: false
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (property-api)
+        working-directory: property-api
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (gateway)
+        working-directory: gateway
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (ai-frontend)
+        working-directory: ai-frontend
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
 
       - name: Code Quality & Security Checks
         run: |
@@ -103,23 +143,69 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
-      - name: Clean npm cache
+      - name: Ensure npm registry and robust retries
+        run: |
+          npm config set registry https://registry.npmjs.org/
+          npm config set fetch-retries 5
+          npm config set fetch-retry-factor 2
+          npm config set fetch-retry-mintimeout 20000
+          npm config set fetch-retry-maxtimeout 120000
+
+      - name: Clean npm cache (force)
         run: npm cache clean --force
 
-      - name: Install Dependencies
+      - name: Install dependencies (root)
         run: |
-          echo "🧹 Performing clean install with retry..."
-          npm install --legacy-peer-deps --prefer-online || (npm cache verify && npm install --legacy-peer-deps --prefer-online)
-          (
-            cd backend && \
-            (npm install --legacy-peer-deps --prefer-online || (npm cache verify && npm install --legacy-peer-deps --prefer-online))
-          )
-          (
-            cd ai-service && \
-            (npm install --legacy-peer-deps --prefer-online || (npm cache verify && npm install --legacy-peer-deps --prefer-online))
-          )
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
         env:
-          NPM_CONFIG_FROZEN_LOCKFILE: false
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (backend)
+        working-directory: backend
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (ai-service)
+        working-directory: ai-service
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (property-api)
+        working-directory: property-api
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (gateway)
+        working-directory: gateway
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (ai-frontend)
+        working-directory: ai-frontend
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
 
       - name: Start Services for Testing
         run: |
@@ -155,10 +241,73 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
+      - name: Ensure npm registry and robust retries
+        run: |
+          npm config set registry https://registry.npmjs.org/
+          npm config set fetch-retries 5
+          npm config set fetch-retry-factor 2
+          npm config set fetch-retry-mintimeout 20000
+          npm config set fetch-retry-maxtimeout 120000
+
+      - name: Clean npm cache (force)
+        run: npm cache clean --force
+
+      - name: Install dependencies (root)
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (backend)
+        working-directory: backend
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (ai-service)
+        working-directory: ai-service
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (property-api)
+        working-directory: property-api
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (gateway)
+        working-directory: gateway
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (ai-frontend)
+        working-directory: ai-frontend
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
       - name: Build for Staging
         run: |
           echo "📦 Building for staging..."
-          npm ci
           npm run build
 
       - name: Deploy to Staging Repl
@@ -199,10 +348,73 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
+      - name: Ensure npm registry and robust retries
+        run: |
+          npm config set registry https://registry.npmjs.org/
+          npm config set fetch-retries 5
+          npm config set fetch-retry-factor 2
+          npm config set fetch-retry-mintimeout 20000
+          npm config set fetch-retry-maxtimeout 120000
+
+      - name: Clean npm cache (force)
+        run: npm cache clean --force
+
+      - name: Install dependencies (root)
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (backend)
+        working-directory: backend
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (ai-service)
+        working-directory: ai-service
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (property-api)
+        working-directory: property-api
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (gateway)
+        working-directory: gateway
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (ai-frontend)
+        working-directory: ai-frontend
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
       - name: Build for Production
         run: |
           echo "📦 Building for production..."
-          npm ci
           npm run build
 
       - name: Pre-deployment Backup
@@ -286,11 +498,69 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
-      - name: Install Dependencies
+      - name: Ensure npm registry and robust retries
         run: |
-          npm ci
-          cd backend && npm install
-          cd ../ai-service && npm install
+          npm config set registry https://registry.npmjs.org/
+          npm config set fetch-retries 5
+          npm config set fetch-retry-factor 2
+          npm config set fetch-retry-mintimeout 20000
+          npm config set fetch-retry-maxtimeout 120000
+
+      - name: Clean npm cache (force)
+        run: npm cache clean --force
+
+      - name: Install dependencies (root)
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (backend)
+        working-directory: backend
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (ai-service)
+        working-directory: ai-service
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (property-api)
+        working-directory: property-api
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (gateway)
+        working-directory: gateway
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
+
+      - name: Install dependencies (ai-frontend)
+        working-directory: ai-frontend
+        run: |
+          rm -rf node_modules
+          npm install --legacy-peer-deps --prefer-online --no-audit --no-fund \
+            || (npm cache verify && rm -rf node_modules && npm install --legacy-peer-deps --prefer-online --no-audit --no-fund)
+        env:
+          NPM_CONFIG_FROZEN_LOCKFILE: "false"
 
       - name: Performance Testing
         run: |
