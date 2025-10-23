@@ -4,7 +4,8 @@ import { ShieldCheck, ScanFace, KeyRound, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
 import {
   checkPasskeyAvailability,
-  getWebAuthnErrorMessage
+  getWebAuthnErrorMessage,
+  PasskeyEndpointResponseError
 } from '../utils/webauthn_support';
 
 type AuthStep = 'email' | 'passkey' | 'password';
@@ -92,6 +93,10 @@ const AdminPasskeyLogin: React.FC = () => {
       const friendly = getWebAuthnErrorMessage(error);
       setErrorMessage(friendly);
       setStatusMessage('');
+      if (error instanceof PasskeyEndpointResponseError) {
+        setStep('password');
+        setPasskeyAttempted(false);
+      }
     } finally {
       setLoading(false);
     }
@@ -168,15 +173,15 @@ const AdminPasskeyLogin: React.FC = () => {
 
       <div className="relative z-10 flex min-h-screen items-center justify-center px-6 py-12">
         <div className="w-full max-w-xl">
-          <div className="mb-10 flex items-center justify-between text-xs uppercase tracking-[0.35em] text-cyan-200/70">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-[0.7rem] font-medium">
+          <div className="mb-10 flex items-center justify-between text-sm text-cyan-200/80">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-[0.8rem] font-medium">
               <ShieldCheck className="h-4 w-4" />
               <span>სუპერ ადმინი</span>
             </div>
             <button
               type="button"
               onClick={handleBackToEmail}
-              className={`inline-flex items-center gap-2 text-[0.65rem] font-medium text-slate-400 transition ${
+              className={`inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition ${
                 step === 'email' ? 'pointer-events-none opacity-0' : 'hover:text-cyan-200'
               }`}
             >

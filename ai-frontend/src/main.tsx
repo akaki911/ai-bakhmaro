@@ -65,7 +65,7 @@ try {
   // Fallback error display
   if (rootElement) {
     rootElement.innerHTML = `
-      <div style="padding: 20px; color: red; font-family: 'Noto Sans Georgian', 'Inter', 'Manrope', sans-serif; letter-spacing: 0.015em; background: #fff; min-height: 100vh;">
+      <div style="padding: 20px; color: red; font-family: 'Noto Sans Georgian', 'Inter', sans-serif; letter-spacing: 0.01em; background: #fff; min-height: 100vh;">
         <h1>🚨 Application Error</h1>
         <p>Failed to load the application. Please try the following:</p>
         <ol>

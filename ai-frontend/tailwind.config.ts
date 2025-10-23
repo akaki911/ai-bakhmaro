@@ -12,10 +12,9 @@ const config: Config = {
         sans: [
           '"Noto Sans Georgian"',
           '"Inter"',
-          '"Manrope"',
           ...defaultTheme.fontFamily.sans,
         ],
-        georgian: ['"Noto Sans Georgian"', '"Inter"', '"Manrope"', 'sans-serif'],
+        georgian: ['"Noto Sans Georgian"', '"Inter"', 'sans-serif'],
       },
       letterSpacing: {
         georgian: '0.015em',

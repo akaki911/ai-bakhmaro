@@ -12,7 +12,7 @@
 /* ===== BASE MESSAGE STYLES ===== */
 .message-enhanced {
   @apply rounded-lg p-4 mb-4 border-l-4 transition-all duration-300 hover:shadow-lg;
-  font-family: var(--app-font-sans, 'Noto Sans Georgian', 'Inter', 'Manrope', sans-serif);
+  font-family: var(--app-font-sans, 'Noto Sans Georgian', 'Inter', sans-serif);
   letter-spacing: var(--app-font-letter-spacing, 0.015em);
   line-height: 1.6;
   position: relative;
@@ -147,7 +147,7 @@
 
 .copy-button {
   @apply text-xs bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded transition-all duration-200 text-white font-medium;
-  font-family: var(--app-font-sans, 'Noto Sans Georgian', 'Inter', 'Manrope', sans-serif);
+  font-family: var(--app-font-sans, 'Noto Sans Georgian', 'Inter', sans-serif);
   letter-spacing: var(--app-font-letter-spacing, 0.015em);
 }
 
@@ -322,7 +322,7 @@
 
 /* Georgian text styling */
 .message-enhanced .georgian-text {
-  font-family: var(--app-font-sans, 'Noto Sans Georgian', 'Inter', 'Manrope', sans-serif);
+  font-family: var(--app-font-sans, 'Noto Sans Georgian', 'Inter', sans-serif);
   letter-spacing: var(--app-font-letter-spacing, 0.015em);
 }
 

@@ -15,6 +15,34 @@ const PASSKEY_ENDPOINTS = {
   loginVerify: ['/api/admin/webauthn/login-verify', '/api/auth/passkey/login-verify'],
 };
 
+interface PasskeyJsonResult<T = any> {
+  endpoint: string;
+  status: number;
+  headers: Headers;
+  data: T;
+  bodyPreview: string;
+}
+
+export class PasskeyEndpointResponseError extends Error {
+  endpoint: string;
+  status: number;
+  contentType: string;
+  bodyPreview?: string;
+
+  constructor(
+    message: string,
+    details: { endpoint: string; status: number; contentType: string; bodyPreview?: string }
+  ) {
+    super(message);
+    this.name = 'PasskeyEndpointResponseError';
+    this.endpoint = details.endpoint;
+    this.status = details.status;
+    this.contentType = details.contentType;
+    this.bodyPreview = details.bodyPreview;
+    Object.setPrototypeOf(this, PasskeyEndpointResponseError.prototype);
+  }
+}
+
 interface PasskeyRequestInit extends RequestInit {
   headers?: Record<string, string>;
 }
@@ -23,10 +51,12 @@ async function postPasskeyJson(
   endpoints: string[],
   body: unknown,
   init: PasskeyRequestInit = {}
-): Promise<{ response: Response; endpoint: string }> {
+): Promise<PasskeyJsonResult> {
   const payload = body === undefined ? undefined : JSON.stringify(body);
   const baseHeaders = {
+    Accept: 'application/json, application/problem+json',
     'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
     ...(init.headers || {}),
   };
 
@@ -43,28 +73,84 @@ async function postPasskeyJson(
         body: payload,
       });
 
-      if (response.status === 404 && i < endpoints.length - 1) {
+      const status = response.status;
+
+      if (status === 404 && i < endpoints.length - 1) {
         console.warn(`⚠️ [Passkey] Endpoint ${endpoint} not available, trying fallback...`);
         response.body?.cancel();
         continue;
       }
 
       const contentType = response.headers.get('content-type') || '';
-      const isJson = contentType.toLowerCase().includes('application/json');
-
-      if (!isJson && i < endpoints.length - 1) {
-        console.warn(
-          `⚠️ [Passkey] Endpoint ${endpoint} returned non-JSON payload (${contentType || 'unknown'}), trying fallback...`
-        );
-        response.body?.cancel();
-        continue;
-      }
+      const normalizedContentType = contentType.toLowerCase();
+      const bodyText = await response.clone().text().catch(() => '');
+      const bodyPreview = bodyText.replace(/\s+/g, ' ').trim().slice(0, 280);
+      const isJson =
+        normalizedContentType.includes('application/json') ||
+        normalizedContentType.includes('application/problem+json');
 
       if (!isJson) {
-        throw new Error(`Passkey endpoint ${endpoint} did not return JSON response`);
+        if (i < endpoints.length - 1) {
+          console.warn(
+            `⚠️ [Passkey] Endpoint ${endpoint} returned non-JSON payload (${contentType || 'unknown'}), trying fallback...`,
+            { status, preview: bodyPreview }
+          );
+          response.body?.cancel();
+          continue;
+        }
+
+        throw new PasskeyEndpointResponseError(
+          `Passkey endpoint ${endpoint} returned unexpected content type`,
+          { endpoint, status, contentType, bodyPreview }
+        );
       }
 
-      return { response, endpoint };
+      let data: any = {};
+      if (bodyText) {
+        try {
+          data = JSON.parse(bodyText);
+        } catch (parseError) {
+          if (i < endpoints.length - 1) {
+            console.warn(
+              `⚠️ [Passkey] Endpoint ${endpoint} returned unreadable JSON, trying fallback...`,
+              parseError
+            );
+            response.body?.cancel();
+            continue;
+          }
+
+          throw new PasskeyEndpointResponseError(
+            `Passkey endpoint ${endpoint} returned unreadable JSON`,
+            { endpoint, status, contentType, bodyPreview }
+          );
+        }
+      }
+
+      if (!response.ok) {
+        const message = data?.error || data?.message || `HTTP ${status}`;
+
+        if (i < endpoints.length - 1) {
+          console.warn(
+            `⚠️ [Passkey] Endpoint ${endpoint} responded with ${status}, trying fallback...`,
+            message
+          );
+          response.body?.cancel();
+          continue;
+        }
+
+        throw new PasskeyEndpointResponseError(
+          `Passkey endpoint ${endpoint} responded with ${status}: ${message}`,
+          { endpoint, status, contentType, bodyPreview }
+        );
+      }
+
+      return {
+        endpoint,
+        status,
+        headers: response.headers,
+        data,
+        bodyPreview,
+      };
     } catch (error) {
       lastError = error;
       if (i < endpoints.length - 1) {
@@ -140,6 +226,15 @@ export function getWebAuthnErrorMessage(error: any): string {
 
   console.error('🔐 [WebAuthn Error]', errorName, errorMessage);
 
+  if (error instanceof PasskeyEndpointResponseError) {
+    if (error.status === 404) {
+      return 'Passkey სერვისი ამჟამად მიუწვდომელია. სცადეთ პაროლით შესვლა ან დაუკავშირდით მხარდაჭერას.';
+    }
+
+    const statusLabel = error.status ? ` (${error.status})` : '';
+    return `Passkey სერვერმა დააბრუნა გაურკვეველი პასუხი${statusLabel}. სცადეთ პაროლით შესვლა ან დაუკავშირდით მხარდაჭერას.`;
+  }
+
   switch (errorName) {
     case 'NotAllowedError':
       // Enhanced Windows Hello specific messaging
@@ -203,7 +298,7 @@ export async function registerPasskey(options: PasskeyRegistrationOptions): Prom
 
     // Step 1: Get registration options from server
     console.log('🔐 [Passkey Registration] Requesting options from server...');
-    const { response: optionsResponse } = await postPasskeyJson(
+    const optionsResult = await postPasskeyJson(
       PASSKEY_ENDPOINTS.registerOptions,
       {
         userId: options.userId,
@@ -217,14 +312,9 @@ export async function registerPasskey(options: PasskeyRegistrationOptions): Prom
       }
     );
 
-    console.log('🔐 [Passkey Registration] Options response status:', optionsResponse.status);
+    console.log('🔐 [Passkey Registration] Options response status:', optionsResult.status);
 
-    if (!optionsResponse.ok) {
-      const error = await optionsResponse.json().catch(() => ({}));
-      throw new Error(error.error || 'Failed to get registration options');
-    }
-
-    const optionsPayload = await optionsResponse.json();
+    const optionsPayload = optionsResult.data;
     const registrationOptions = optionsPayload?.publicKey ?? optionsPayload?.options;
 
     if (!registrationOptions) {
@@ -241,17 +331,12 @@ export async function registerPasskey(options: PasskeyRegistrationOptions): Prom
     console.log('🔐 [Passkey Registration] Credential created, verifying...');
 
     // Step 3: Send credential to server for verification
-    const { response: verificationResponse } = await postPasskeyJson(
+    const verificationResult = await postPasskeyJson(
       PASSKEY_ENDPOINTS.registerVerify,
       { credential }
     );
 
-    if (!verificationResponse.ok) {
-      const error = await verificationResponse.json().catch(() => ({}));
-      throw new Error(error.error || 'Passkey registration verification failed');
-    }
-
-    const verification = await verificationResponse.json();
+    const verification = verificationResult.data;
 
     if (!verification.verified) {
       throw new Error('Passkey verification failed');
@@ -262,6 +347,9 @@ export async function registerPasskey(options: PasskeyRegistrationOptions): Prom
 
   } catch (error: any) {
     console.error('❌ [Passkey Registration] Error:', error);
+    if (error instanceof PasskeyEndpointResponseError) {
+      throw error;
+    }
     throw new Error(getWebAuthnErrorMessage(error));
   }
 }
@@ -303,7 +391,7 @@ export async function authenticateWithPasskey(conditional: boolean = false): Pro
     await ensureWebAuthnReady();
 
     // Step 1: Get authentication options from server
-    const { response: optionsResponse } = await postPasskeyJson(
+    const optionsResult = await postPasskeyJson(
       PASSKEY_ENDPOINTS.loginOptions,
       {},
       {
@@ -311,12 +399,7 @@ export async function authenticateWithPasskey(conditional: boolean = false): Pro
       }
     );
 
-    if (!optionsResponse.ok) {
-      const error = await optionsResponse.json().catch(() => ({}));
-      throw new Error(error.error || 'Failed to get authentication options');
-    }
-
-    const optionsPayload = await optionsResponse.json();
+    const optionsPayload = optionsResult.data;
     const authenticationOptions = optionsPayload?.publicKey ?? optionsPayload?.options;
 
     if (!authenticationOptions) {
@@ -392,7 +475,7 @@ export async function authenticateWithPasskey(conditional: boolean = false): Pro
     console.log('🔐 [Passkey Login] Assertion created, verifying...');
 
     // Step 3: Send assertion to server for verification
-    const { response: verificationResponse } = await postPasskeyJson(
+    const verificationResult = await postPasskeyJson(
       PASSKEY_ENDPOINTS.loginVerify,
       { credential },
       {
@@ -400,15 +483,10 @@ export async function authenticateWithPasskey(conditional: boolean = false): Pro
       }
     );
 
-    if (!verificationResponse.ok) {
-      const error = await verificationResponse.json().catch(() => ({}));
-      throw new Error(error.error || 'Passkey authentication verification failed');
-    }
-
-    const verification = await verificationResponse.json();
+    const verification = verificationResult.data;
 
     if (!verification.success) {
-      throw new Error('Passkey authentication failed');
+      throw new Error(verification.error || 'Passkey authentication failed');
     }
 
     console.log('✅ [Passkey Login] Successfully authenticated!');
@@ -431,6 +509,10 @@ export async function authenticateWithPasskey(conditional: boolean = false): Pro
     if (conditional && (error.name === 'NotAllowedError' || error.name === 'AbortError')) {
       console.log('ℹ️ [Conditional Passkey] User canceled or no passkey available - this is normal');
       return { success: false };
+    }
+
+    if (error instanceof PasskeyEndpointResponseError) {
+      throw error;
     }
 
     throw new Error(getWebAuthnErrorMessage(error));
