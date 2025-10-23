@@ -50,11 +50,29 @@ VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+VITE_ADMIN_SETUP_TOKEN=bootstrap_admin_token
+VITE_ORIGIN=https://ai.bakhmaro.co
+VITE_RP_ID=ai.bakhmaro.co
+VITE_ENABLE_PUBLIC_CHAT=false
+VITE_ASSISTANT_MODE=admin
+VITE_GITHUB_ENABLED=0
+VITE_BACKEND_URL=https://backend.ai.bakhmaro.co
+VITE_API_BASE=/api
+VITE_GATEWAY_URL=https://ai.bakhmaro.co
+VITE_REMOTE_SITE_BASE=https://bakhmaro.co
+AI_SERVICE_URL=https://api.ai.bakhmaro.co
 ```
 
 | Secret | სად გამოიყენება | რეფერენსი |
 | --- | --- | --- |
 | ყველა `VITE_FIREBASE_*` ცვლადი | Frontend build-ისას Firebase client config-ს ავსებს. | [`src/firebase.ts`](src/firebase.ts) 【F:src/firebase.ts†L13-L117】 |
+| `VITE_ADMIN_SETUP_TOKEN` | ადმინის საწყისი კონფიგურაციისთვის SPA-ში. | [`ai-frontend/src/utils/adminToken.ts`](ai-frontend/src/utils/adminToken.ts) 【F:ai-frontend/src/utils/adminToken.ts†L1-L60】 |
+| `VITE_ORIGIN`, `VITE_RP_ID` | WebAuthn passkey origin/რელაიინგ-პარტის პარამეტრები. | [`ai-frontend/src/utils/webauthn_support.ts`](ai-frontend/src/utils/webauthn_support.ts) 【F:ai-frontend/src/utils/webauthn_support.ts†L182-L214】 |
+| `VITE_ENABLE_PUBLIC_CHAT` | გესტ ჩატის დაშვება აუთენტიფიცირებელი მომხმარებლებისთვის. | [`ai-frontend/src/components/AIAssistantEnhanced.tsx`](ai-frontend/src/components/AIAssistantEnhanced.tsx) 【F:ai-frontend/src/components/AIAssistantEnhanced.tsx†L698-L715】 |
+| `VITE_ASSISTANT_MODE` | ასისტენტის საწყისი რეჟიმი (plan/build/admin). | [`ai-frontend/src/contexts/AssistantModeContext.tsx`](ai-frontend/src/contexts/AssistantModeContext.tsx) 【F:ai-frontend/src/contexts/AssistantModeContext.tsx†L108-L133】 |
+| `VITE_GITHUB_ENABLED` | GitHub workspace-ის ჩართვა/გამორთვა. | [`ai-frontend/src/lib/featureFlags.ts`](ai-frontend/src/lib/featureFlags.ts) 【F:ai-frontend/src/lib/featureFlags.ts†L28-L48】 |
+| `VITE_BACKEND_URL`, `VITE_API_BASE`, `VITE_GATEWAY_URL`, `VITE_REMOTE_SITE_BASE` | Backend discovery fallbacks SPA-ში. | [`ai-frontend/src/lib/env.ts`](ai-frontend/src/lib/env.ts) 【F:ai-frontend/src/lib/env.ts†L46-L97】 |
+| `AI_SERVICE_URL` | API proxy/ტესტები → AI Service საბოლოო მისამართი. | [`ai-frontend/pages/api/ai/[...path].ts`](ai-frontend/pages/api/ai/[...path].ts) 【F:ai-frontend/pages/api/ai/[...path].ts†L1-L63】 |
 
 ## Production Security ❗
 - `AI_INTERNAL_TOKEN`: 256-bit რანდომული სტრინგი (ორივე სერვისში ერთნაირი)
