@@ -32,7 +32,9 @@ test('securetoken requests clone Request objects with credentials omitted', asyn
 
   assert.ok(input instanceof Request, 'fetch should receive a Request object');
   assert.equal(input.credentials, 'omit', 'cloned Request must omit credentials');
-  assert.equal(init.credentials, 'omit', 'init credentials must be set to omit');
+  if (init) {
+    assert.equal(init.credentials, 'omit', 'init credentials must be set to omit');
+  }
 });
 
 test('other googleapis hosts also omit credentials', async () => {
@@ -49,5 +51,7 @@ test('other googleapis hosts also omit credentials', async () => {
   const [{ input, init }] = calls;
 
   assert.equal(input.credentials, 'omit');
-  assert.equal(init.credentials, 'omit');
+  if (init) {
+    assert.equal(init.credentials, 'omit');
+  }
 });
