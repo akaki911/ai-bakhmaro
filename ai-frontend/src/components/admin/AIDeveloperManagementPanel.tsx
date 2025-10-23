@@ -66,7 +66,7 @@ export default function AIDeveloperManagementPanel({
   const [activeTheme, setActiveTheme] = useState(themePresets[0]?.id ?? 'aurora');
   const [primaryColor, setPrimaryColor] = useState('#60a5fa');
   const [secondaryColor, setSecondaryColor] = useState('#22d3ee');
-  const [fontFamily, setFontFamily] = useState('"Noto Sans Georgian", "Inter", "Manrope", sans-serif');
+  const [fontFamily, setFontFamily] = useState('"Inter", -apple-system, "Segoe UI", "Sylfaen", sans-serif');
   const [errorLogs, setErrorLogs] = useState<string[]>([]);
   const [apiKey, setApiKey] = useState('********-****-****-BKHMR-API');
   const [isRotatingKey, setIsRotatingKey] = useState(false);
