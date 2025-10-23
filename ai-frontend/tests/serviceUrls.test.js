@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildServiceOrigin } from '../src/features/devconsole-v2/utils/serviceUrls.js';
+import { buildServiceOrigin } from '../src/features/devconsole-v2/utils/serviceUrls.ts';
 
 const originalWindow = globalThis.window;
 
