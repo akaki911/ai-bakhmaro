@@ -1,0 +1,56 @@
+name: Firebase Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Build & Deploy to Firebase Hosting
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm config delete proxy || true
+          npm install --legacy-peer-deps --no-audit --no-fund
+
+      - name: Build frontend
+        run: |
+          echo "⚙️ Building frontend for Firebase Hosting..."
+          npm run build --workspace=ai-frontend
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Authenticate with Service Account
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+
+      - name: Deploy to Firebase Hosting
+        run: |
+          echo "🚀 Deploying build to Firebase Hosting..."
+          firebase deploy --only hosting
+
+      - name: Verify Hosting Deployment
+        run: |
+          echo "🔍 Checking hosting status..."
+          curl -I "https://ai.bakhmaro.co" || echo "⚠️ Hosting check failed"
+
+      - name: Deployment Summary
+        run: |
+          echo "📢 Deployment notification..."
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Timestamp: $(date)"
