@@ -107,36 +107,91 @@ const mergeRequestInit = (request: Request, overrides?: RequestInit): RequestIni
   return merged;
 };
 
+type RewrittenRequest = {
+  input: RequestInfo | URL;
+  init: RequestInit | undefined;
+  /** Final request URL string for logging purposes. */
+  requestUrl?: string;
+  /**
+   * Optional fallback request that should be attempted if the primary network request
+   * fails with a recoverable network error (e.g. DNS resolution failure).
+   */
+  fallbackInput?: RequestInfo | URL;
+};
+
 const rewriteBackendRequest = (
   input: RequestInfo | URL,
   init: RequestInit | undefined,
   globalWindow?: Window,
-): { input: RequestInfo | URL; init: RequestInit | undefined } => {
+): RewrittenRequest => {
   const requestUrl = extractRequestUrl(input);
   if (!requestUrl) {
-    return { input, init };
+    return { input, init, requestUrl };
   }
 
   const relativeUrl = normaliseRelativeUrl(requestUrl, globalWindow);
   if (!relativeUrl.startsWith('/') || !API_PATH_PATTERN.test(relativeUrl)) {
-    return { input, init };
+    return { input, init, requestUrl };
   }
 
   const resolved = resolveBackendUrl(relativeUrl);
   if (!resolved || resolved === relativeUrl) {
-    return { input, init };
+    return { input, init, requestUrl: requestUrl };
   }
 
   if (typeof input === 'string' || input instanceof URL) {
-    return { input: resolved, init };
+    return {
+      input: resolved,
+      init,
+      requestUrl: resolved,
+      fallbackInput: relativeUrl,
+    };
   }
 
   if (input instanceof Request) {
     const mergedInit = mergeRequestInit(input, init);
-    return { input: new Request(resolved, mergedInit), init: undefined };
+    return {
+      input: new Request(resolved, mergedInit),
+      init: undefined,
+      requestUrl: resolved,
+    };
   }
 
-  return { input: resolved, init };
+  return {
+    input: resolved,
+    init,
+    requestUrl: resolved,
+    fallbackInput: relativeUrl,
+  };
+};
+
+const isRecoverableNetworkError = (error: unknown): boolean => {
+  if (!error) {
+    return false;
+  }
+
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'string'
+        ? error
+        : '';
+
+  if (message) {
+    const normalized = message.toLowerCase();
+    if (
+      normalized.includes('failed to fetch') ||
+      normalized.includes('networkerror') ||
+      normalized.includes('network error') ||
+      normalized.includes('err_name_not_resolved') ||
+      normalized.includes('name not resolved') ||
+      normalized.includes('dns')
+    ) {
+      return true;
+    }
+  }
+
+  return error instanceof TypeError;
 };
 
 export const setupGlobalFetch = (globalWindow?: Window) => {
@@ -181,7 +236,27 @@ export const setupGlobalFetch = (globalWindow?: Window) => {
       nextInit.credentials = existingCredentials;
     }
 
-    return originalFetch(nextInput as RequestInfo | URL, nextInit);
+    const primaryPromise = originalFetch(nextInput as RequestInfo | URL, nextInit);
+
+    if (!rewritten.fallbackInput) {
+      return primaryPromise;
+    }
+
+    return primaryPromise.catch((error) => {
+      if (!isRecoverableNetworkError(error)) {
+        throw error;
+      }
+
+      const fallbackUrl = extractRequestUrl(rewritten.fallbackInput) ?? '(unknown url)';
+      const originalUrl = rewritten.requestUrl ?? requestUrl ?? '(unknown url)';
+
+      console.warn(
+        `⚠️ [Fetch] Primary backend request failed (${originalUrl}). Retrying with same-origin fallback: ${fallbackUrl}`,
+        error,
+      );
+
+      return originalFetch(rewritten.fallbackInput as RequestInfo | URL, nextInit);
+    });
   };
 
   assignFetch(patchedFetch);

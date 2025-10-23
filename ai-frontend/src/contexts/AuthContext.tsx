@@ -20,7 +20,6 @@ import {
 } from 'firebase/auth';
 import { singleFlight } from '../lib/singleFlight';
 import { getDeviceInfo, logDeviceInfo, isDeviceFingerprintingSupported } from '../utils/deviceFingerprint';
-import { resolveBackendUrl } from '../utils/backendUrl';
 import { AuthContext } from './AuthContextObject';
 import type { AuthContextType, BookingUserData, User, UserRole } from './AuthContext.types';
 export type { UserRole, AuthContextType, BookingUserData, User } from './AuthContext.types';
@@ -83,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const deviceInfo = getDeviceInfo();
       logDeviceInfo(deviceInfo);
 
-      const response = await fetch(resolveBackendUrl('/api/auth/device/recognize'), {
+      const response = await fetch('/api/auth/device/recognize', {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -162,7 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // SOL-431: Fetch route advice from backend
   const fetchRouteAdvice = async () => {
     try {
-      const response = await fetch(resolveBackendUrl('/api/auth/route-advice'), {
+      const response = await fetch('/api/auth/route-advice', {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -226,7 +225,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await performDeviceRecognition();
 
       // Step 1: Check admin session first
-      const adminResponse = await fetch(resolveBackendUrl('/api/admin/webauthn/me'), {
+      const adminResponse = await fetch('/api/admin/webauthn/me', {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -279,7 +278,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Step 2: Check general auth session
-      const generalResponse = await fetch(resolveBackendUrl('/api/auth/me'), {
+      const generalResponse = await fetch('/api/auth/me', {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -773,7 +772,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // 1. Logout from admin WebAuthn session
       try {
-        await fetch(resolveBackendUrl('/api/admin/webauthn/logout'), {
+        await fetch('/api/admin/webauthn/logout', {
           method: 'POST',
           credentials: 'include',
         });
@@ -784,7 +783,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // 2. Logout from admin auth session
       try {
-        await fetch(resolveBackendUrl('/api/admin/auth/logout'), {
+        await fetch('/api/admin/auth/logout', {
           method: 'POST',
           credentials: 'include',
         });
@@ -795,7 +794,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // 3. Logout from general auth session
       try {
-        await fetch(resolveBackendUrl('/api/auth/logout'), {
+        await fetch('/api/auth/logout', {
           method: 'POST',
           credentials: 'include',
         });
@@ -1110,7 +1109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // SOL-422: Set device trust method
   const setDeviceTrustMethod = async (deviceId: string, trusted: boolean) => {
     try {
-      const response = await fetch(resolveBackendUrl('/api/auth/device/trust'), {
+      const response = await fetch('/api/auth/device/trust', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -1163,7 +1162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const deviceId = generateDeviceFingerprint();
 
-      const response = await fetch(resolveBackendUrl('/api/device/check'), {
+      const response = await fetch('/api/device/check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -1201,7 +1200,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const deviceInfo = getDeviceInfo();
 
-      const response = await fetch(resolveBackendUrl('/api/auth/device/register'), {
+      const response = await fetch('/api/auth/device/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
