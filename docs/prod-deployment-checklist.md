@@ -16,6 +16,39 @@ This checklist captures the required steps to replace the legacy static site wit
    REMOTE_SITE_BASE=https://8a86230f-...riker.replit.dev  # Temporary until bakhmaro.co backend is live
    JWT_SECRET=<generate-a-strong-secret>
    ```
+   Review the advanced AI governance switches and set them intentionally for production operations:
+   ```bash
+   # Comma-separated IDs that may access AI admin tooling.
+   AI_AUTHORIZED_PERSONAL_IDS=01019062020,01019062030
+   # Control panel service token (rotate with other admin secrets).
+   AI_PANEL_TOKEN=<unique_32+_char_token>
+   # Shared key for internal smoke tests hitting privileged routes.
+   TEST_SERVICE_KEY=<unique_test_service_key>
+   # Staging/alternate UI hostname used during blue/green or DR workflows.
+   ALT_FRONTEND_URL=https://staging.ai.bakhmaro.co
+   # Toggle guest chat access (true/false); keep `false` unless policy allows anonymous sessions.
+   ALLOW_ANONYMOUS_AI_CHAT=false
+   # AI proxy streaming strategy (chunked|buffered); `chunked` keeps live token streaming enabled.
+   AI_PROXY_STREAMING_MODE=chunked
+   # Global smart-routing toggle for complex prompts (true/false).
+   AI_SMART_ROUTING=true
+   # File patterns treated as complex and routed through guarded flows.
+   AI_SMART_ROUTING_COMPLEX_FILES=**/*.sql,**/*.ipynb,docs/architecture/*.md
+   # Risk labels that require elevated review or HITL workflows.
+   AI_SMART_ROUTING_COMPLEX_RISK_LEVELS=high,critical
+   # Require human sign-off before executing elevated actions (true/false).
+   AI_HITL_APPROVALS=true
+   # Persist structured feedback for ongoing AI quality reviews (true/false).
+   AI_FEEDBACK_LOOP=true
+   # Assistant operating mode (hybrid|autonomous|manual); production defaults to `hybrid` for guardrails.
+   ASSISTANT_MODE=hybrid
+   # CI authentication token for `/admin/secrets/check` automation.
+   CI_SECRETS_CHECK_TOKEN=<rotate_ci_token>
+   # Persist metadata from AI sessions to analytics stores (true/false).
+   ENABLE_METADATA=true
+   # Route rollout cohorts through the proxy experiment layer (true/false).
+   ENABLE_AI_ROLLOUT_PROXY=false
+   ```
 4. Build and launch the Compose stack:
    ```bash
    docker compose up --build -d
