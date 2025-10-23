@@ -27,7 +27,7 @@ const SERVICE_HEALTH_TARGETS: ServiceHealthTarget[] = [
   { name: "Property API", label: "Property:5100", url: "http://127.0.0.1:5100/health" },
 ];
 
-const BACKEND_PROXY_TARGET = process.env.VITE_PROXY_TARGET?.trim() || "http://127.0.0.1:4000";
+const BACKEND_PROXY_TARGET = process.env.VITE_PROXY_TARGET?.trim() || "http://127.0.0.1:5002";
 const PROPERTY_API_TARGET = process.env.VITE_PROPERTY_API_TARGET?.trim() || "http://127.0.0.1:5100";
 const INTERNAL_HEADER = "x-internal-token";
 const INTERNAL_TOKEN = (process.env.AI_INTERNAL_TOKEN ?? "").trim();
@@ -409,7 +409,9 @@ export default defineConfig({
     },
     proxy: {
       "/api/property": createServiceProxyConfig("Property API (5100) :: /api/property", PROPERTY_API_TARGET),
-      "/api": createServiceProxyConfig("Gateway (4000) :: /api", BACKEND_PROXY_TARGET),
+      "/api/admin": createServiceProxyConfig("Backend (5002) :: /api/admin", BACKEND_PROXY_TARGET),
+      "/api/auth": createServiceProxyConfig("Backend (5002) :: /api/auth", BACKEND_PROXY_TARGET),
+      "/api": createServiceProxyConfig("Backend (5002) :: /api", BACKEND_PROXY_TARGET),
     },
   },
   optimizeDeps: {
