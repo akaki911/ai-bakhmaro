@@ -16,6 +16,10 @@ This checklist captures the required steps to replace the legacy static site wit
    REMOTE_SITE_BASE=https://8a86230f-...riker.replit.dev  # Temporary until bakhmaro.co backend is live
    JWT_SECRET=<generate-a-strong-secret>
    ```
+   When configuring the backend service environment, ensure the cache TTL remains in milliseconds:
+   ```env
+   CACHE_TTL=3600000  # milliseconds (1 hour default)
+   ```
 4. Build and launch the Compose stack:
    ```bash
    docker compose up --build -d
