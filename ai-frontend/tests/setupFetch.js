@@ -1,8 +1,14 @@
-import { resolveBackendUrl } from '@/utils/backendUrl';
+// The test suite exercises credential handling logic and does not depend on
+// backend URL rewriting, so we provide a minimal stub.
+const resolveBackendUrl = (path) => path;
 
 const API_PATH_PATTERN = /^\/api(\/|$)/i;
 
-const extractRequestUrl = (input: RequestInfo | URL): string | undefined => {
+/**
+ * @param {RequestInfo | URL} input
+ * @returns {string | undefined}
+ */
+const extractRequestUrl = (input) => {
   if (typeof input === 'string') {
     return input;
   }
@@ -22,8 +28,12 @@ const extractRequestUrl = (input: RequestInfo | URL): string | undefined => {
   }
 };
 
-const shouldForceOmitCredentialsFactory = (globalWindow?: Window) => {
-  return (requestUrl: string | undefined): boolean => {
+/**
+ * @param {Window | undefined} [globalWindow]
+ * @returns {(requestUrl: string | undefined) => boolean}
+ */
+const shouldForceOmitCredentialsFactory = (globalWindow) => {
+  return (requestUrl) => {
     if (!requestUrl) {
       return false;
     }
@@ -40,8 +50,12 @@ const shouldForceOmitCredentialsFactory = (globalWindow?: Window) => {
   };
 };
 
-const isSameOriginRequestFactory = (globalWindow?: Window) => {
-  return (requestUrl: string | undefined): boolean => {
+/**
+ * @param {Window | undefined} [globalWindow]
+ * @returns {(requestUrl: string | undefined) => boolean}
+ */
+const isSameOriginRequestFactory = (globalWindow) => {
+  return (requestUrl) => {
     if (!requestUrl) {
       return true;
     }
@@ -64,7 +78,12 @@ const isSameOriginRequestFactory = (globalWindow?: Window) => {
   };
 };
 
-const normaliseRelativeUrl = (url: string, globalWindow?: Window): string => {
+/**
+ * @param {string} url
+ * @param {Window | undefined} [globalWindow]
+ * @returns {string}
+ */
+const normaliseRelativeUrl = (url, globalWindow) => {
   if (url.startsWith('/') && !url.startsWith('//')) {
     return url;
   }
@@ -85,11 +104,17 @@ const normaliseRelativeUrl = (url: string, globalWindow?: Window): string => {
   }
 };
 
-const mergeRequestInit = (request: Request, overrides?: RequestInit): RequestInit => {
+/**
+ * @param {Request} request
+ * @param {RequestInit | undefined} overrides
+ * @returns {RequestInit}
+ */
+const mergeRequestInit = (request, overrides) => {
   const clone = request.clone();
   const headers = overrides?.headers ?? new Headers(clone.headers);
 
-  const merged: RequestInit = {
+  /** @type {RequestInit} */
+  const merged = {
     method: overrides?.method ?? clone.method,
     headers,
     body: overrides?.body ?? (clone.body ?? null),
@@ -107,23 +132,21 @@ const mergeRequestInit = (request: Request, overrides?: RequestInit): RequestIni
   return merged;
 };
 
-type RewrittenRequest = {
-  input: RequestInfo | URL;
-  init: RequestInit | undefined;
-  /** Final request URL string for logging purposes. */
-  requestUrl?: string;
-  /**
-   * Optional fallback request that should be attempted if the primary network request
-   * fails with a recoverable network error (e.g. DNS resolution failure).
-   */
-  fallbackInput?: RequestInfo | URL;
-};
+/**
+ * @typedef {Object} RewrittenRequest
+ * @property {RequestInfo | URL} input
+ * @property {RequestInit | undefined} init
+ * @property {string | undefined} [requestUrl]
+ * @property {RequestInfo | URL} [fallbackInput]
+ */
 
-const rewriteBackendRequest = (
-  input: RequestInfo | URL,
-  init: RequestInit | undefined,
-  globalWindow?: Window,
-): RewrittenRequest => {
+/**
+ * @param {RequestInfo | URL} input
+ * @param {RequestInit | undefined} init
+ * @param {Window | undefined} [globalWindow]
+ * @returns {RewrittenRequest}
+ */
+const rewriteBackendRequest = (input, init, globalWindow) => {
   const requestUrl = extractRequestUrl(input);
   if (!requestUrl) {
     return { input, init, requestUrl };
@@ -165,7 +188,11 @@ const rewriteBackendRequest = (
   };
 };
 
-const isRecoverableNetworkError = (error: unknown): boolean => {
+/**
+ * @param {unknown} error
+ * @returns {boolean}
+ */
+const isRecoverableNetworkError = (error) => {
   if (!error) {
     return false;
   }
@@ -194,10 +221,20 @@ const isRecoverableNetworkError = (error: unknown): boolean => {
   return error instanceof TypeError;
 };
 
-export const setupGlobalFetch = (globalWindow?: Window) => {
+/**
+ * @param {Window | undefined} [globalWindow]
+ * @returns {() => void}
+ */
+export const setupGlobalFetch = (globalWindow) => {
   const globalObject = typeof globalThis !== 'undefined' ? globalThis : undefined;
-  const windowLike = globalWindow ?? (globalObject as Window | undefined);
-  const fetchOwner = globalWindow?.fetch ? globalWindow : (globalObject as typeof globalThis & { fetch?: typeof fetch });
+  /** @type {Window | undefined} */
+  const windowLike =
+    globalWindow ?? (typeof window !== 'undefined' ? window : undefined);
+  /** @type {(typeof globalThis & { fetch?: typeof fetch }) | undefined} */
+  const fetchableGlobal = globalObject;
+  const fetchOwner =
+    (globalWindow && typeof globalWindow.fetch === 'function' ? globalWindow : undefined) ??
+    (fetchableGlobal && typeof fetchableGlobal.fetch === 'function' ? fetchableGlobal : undefined);
 
   if (!fetchOwner?.fetch) {
     return () => {};
@@ -207,19 +244,26 @@ export const setupGlobalFetch = (globalWindow?: Window) => {
   const shouldForceOmitCredentials = shouldForceOmitCredentialsFactory(windowLike);
   const isSameOriginRequest = isSameOriginRequestFactory(windowLike);
 
-  const assignFetch = (implementation: typeof fetch) => {
+  /**
+   * @param {typeof fetch} implementation
+   */
+  const assignFetch = (implementation) => {
     if (globalWindow && 'fetch' in globalWindow) {
       globalWindow.fetch = implementation;
     }
-    if (globalObject && 'fetch' in globalObject) {
-      (globalObject as typeof globalThis & { fetch: typeof fetch }).fetch = implementation;
+    if (fetchableGlobal && 'fetch' in fetchableGlobal) {
+      fetchableGlobal.fetch = implementation;
     }
   };
 
-  const patchedFetch: typeof fetch = (input, init) => {
+  /**
+   * @type {typeof fetch}
+   */
+  const patchedFetch = (input, init) => {
     const rewritten = rewriteBackendRequest(input, init, windowLike);
     const nextInput = rewritten.input;
-    const nextInit: RequestInit = { ...(rewritten.init ?? {}) };
+    /** @type {RequestInit} */
+    const nextInit = { ...(rewritten.init ?? {}) };
     const requestUrl = extractRequestUrl(nextInput);
     const existingCredentials =
       nextInit.credentials ?? (nextInput instanceof Request ? nextInput.credentials : init?.credentials);
@@ -236,7 +280,7 @@ export const setupGlobalFetch = (globalWindow?: Window) => {
       nextInit.credentials = existingCredentials;
     }
 
-    const primaryPromise = originalFetch(nextInput as RequestInfo | URL, nextInit);
+    const primaryPromise = originalFetch(nextInput, nextInit);
     const fallbackInput = rewritten.fallbackInput;
 
     if (!fallbackInput) {
@@ -256,7 +300,7 @@ export const setupGlobalFetch = (globalWindow?: Window) => {
         error,
       );
 
-      return originalFetch(fallbackInput as RequestInfo | URL, nextInit);
+      return originalFetch(fallbackInput, nextInit);
     });
   };
 
