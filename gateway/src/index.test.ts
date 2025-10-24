@@ -47,7 +47,7 @@ describe('gateway integration', () => {
       JWT_SECRET: process.env.JWT_SECRET,
       SERVICE_JWT_ISSUER: process.env.SERVICE_JWT_ISSUER,
       SERVICE_JWT_SUBJECT: process.env.SERVICE_JWT_SUBJECT,
-      REMOTE_SITE_BASE: process.env.REMOTE_SITE_BASE,
+      API_PROXY_BASE: process.env.API_PROXY_BASE,
       STATIC_ROOT: process.env.STATIC_ROOT,
     };
 
@@ -56,7 +56,7 @@ describe('gateway integration', () => {
       JWT_SECRET: 'test-secret-key-1234567890',
       SERVICE_JWT_ISSUER: 'gateway-test',
       SERVICE_JWT_SUBJECT: 'gateway-service-test',
-      REMOTE_SITE_BASE: 'http://127.0.0.1:5999',
+      API_PROXY_BASE: 'http://127.0.0.1:5999',
       STATIC_ROOT: '.',
     };
 

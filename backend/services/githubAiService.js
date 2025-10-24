@@ -12,7 +12,12 @@
  *   3. Verify commits, branches, and issues update with real GitHub data.
  */
 
+const path = require('path');
+const fs = require('fs');
+const { randomUUID } = require('crypto');
+
 const admin = require('../firebase');
+const gitCommands = require('./gitCommandsService');
 const {
   getStatus,
   parseRepoInput,
@@ -32,6 +37,324 @@ const MIN_POLLING_INTERVAL = 60 * 1000;
 const MAX_POLLING_INTERVAL = 15 * 60 * 1000;
 
 const pollingTimers = new Map();
+
+const fsp = fs.promises;
+
+const sanitizePathInput = (input) => {
+  if (typeof input !== 'string') {
+    return null;
+  }
+
+  const trimmed = input.trim();
+  if (!trimmed || trimmed.includes('\0')) {
+    return null;
+  }
+
+  let normalized = trimmed.replace(/\\/g, '/');
+  normalized = normalized.replace(/^\.+\/+/, '');
+  normalized = normalized.replace(/^\/+/, '');
+  normalized = normalized.replace(/\/{2,}/g, '/');
+
+  if (normalized.startsWith('../') || normalized.includes('/../') || normalized === '..') {
+    return null;
+  }
+
+  return normalized;
+};
+
+const ensureDirectoryNotation = (entry) => {
+  if (entry === '*' || entry.endsWith('/')) {
+    return entry;
+  }
+
+  if (!entry.includes('.')) {
+    return `${entry}/`;
+  }
+
+  return entry;
+};
+
+const normalizePolicyEntry = (value) => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const sanitized = sanitizePathInput(value);
+  if (!sanitized) {
+    return null;
+  }
+
+  if (sanitized === '*') {
+    return '*';
+  }
+
+  return ensureDirectoryNotation(sanitized);
+};
+
+const parseListEnv = (raw) => {
+  if (typeof raw !== 'string') {
+    return [];
+  }
+
+  return raw
+    .split(',')
+    .map((entry) => normalizePolicyEntry(entry))
+    .filter(Boolean);
+};
+
+const dedupeList = (list) => Array.from(new Set(list));
+
+const sanitizePathList = (value) => {
+  if (Array.isArray(value)) {
+    return dedupeList(value.map((entry) => sanitizePathInput(entry)).filter(Boolean));
+  }
+  if (typeof value === 'string') {
+    const sanitized = sanitizePathInput(value);
+    return sanitized ? [sanitized] : [];
+  }
+  return [];
+};
+
+const buildOperationsPolicy = () => {
+  const allowFromEnv = parseListEnv(process.env.GITHUB_OPERATIONS_ALLOWLIST);
+  const denyFromEnv = parseListEnv(process.env.GITHUB_OPERATIONS_DENYLIST);
+
+  const allowList = dedupeList([...DEFAULT_OPERATIONS_ALLOW.map(normalizePolicyEntry).filter(Boolean), ...allowFromEnv]);
+  const denyList = dedupeList([...DEFAULT_OPERATIONS_DENY.map(normalizePolicyEntry).filter(Boolean), ...denyFromEnv]);
+
+  const denyPatterns = [
+    ...DEFAULT_OPERATIONS_DENY_PATTERNS,
+    ...denyList
+      .filter((entry) => typeof entry === 'string' && entry.startsWith('regexp:'))
+      .map((entry) => {
+        const pattern = entry.slice('regexp:'.length);
+        try {
+          return new RegExp(pattern);
+        } catch (error) {
+          console.warn('⚠️ Invalid denylist regexp entry:', entry, error.message || error);
+          return null;
+        }
+      })
+      .filter(Boolean),
+  ];
+
+  const sanitizedDenyList = denyList.filter((entry) => typeof entry === 'string' && !entry.startsWith('regexp:'));
+
+  const baseBranch =
+    (typeof process.env.GITHUB_OPERATIONS_BASE_BRANCH === 'string' &&
+      process.env.GITHUB_OPERATIONS_BASE_BRANCH.trim()) ||
+    'main';
+
+  return {
+    allowList,
+    denyList: sanitizedDenyList,
+    denyPatterns,
+    baseBranch,
+    guidelines: [
+      'Only docs, marketing copy, and styling tweaks are eligible for fast-track PRs.',
+      'Backend, gateway, or AI pipeline files require manual review and cannot be included here.',
+      'Changes must be staged locally before triggering an operations PR.',
+    ],
+  };
+};
+
+const operationsPolicyCache = {
+  value: null,
+  updatedAt: 0,
+};
+
+const getOperationsPolicy = () => {
+  const ttlMs = 60 * 1000;
+  if (operationsPolicyCache.value && Date.now() - operationsPolicyCache.updatedAt < ttlMs) {
+    return operationsPolicyCache.value;
+  }
+
+  const policy = buildOperationsPolicy();
+  operationsPolicyCache.value = policy;
+  operationsPolicyCache.updatedAt = Date.now();
+  return policy;
+};
+
+const matchesPolicyEntry = (candidate, entry) => {
+  if (entry === '*') {
+    return true;
+  }
+
+  if (entry.endsWith('/')) {
+    const prefix = entry;
+    return candidate === prefix.slice(0, -1) || candidate.startsWith(prefix);
+  }
+
+  return candidate === entry || candidate.startsWith(`${entry}/`);
+};
+
+const evaluatePolicyForPath = (candidatePath, policy) => {
+  const normalized = sanitizePathInput(candidatePath);
+  if (!normalized) {
+    return { allowed: false, reason: 'Invalid path' };
+  }
+
+  if (policy.denyPatterns.some((pattern) => pattern.test(normalized))) {
+    return { allowed: false, reason: 'Path is blocked by deny pattern' };
+  }
+
+  if (policy.denyList.some((entry) => matchesPolicyEntry(normalized, entry))) {
+    return { allowed: false, reason: 'Path is denied by policy' };
+  }
+
+  if (policy.allowList.some((entry) => matchesPolicyEntry(normalized, entry))) {
+    return { allowed: true };
+  }
+
+  return { allowed: false, reason: 'Path is outside the allow-list' };
+};
+
+const resolvePolicyAnchor = (candidatePath, policy) => {
+  const match = policy.allowList.find((entry) => matchesPolicyEntry(candidatePath, entry));
+  if (match) {
+    return match;
+  }
+  return candidatePath.includes('/') ? candidatePath.split('/')[0] + '/' : candidatePath;
+};
+
+const calculateDirectorySize = async (targetPath) => {
+  try {
+    const stat = await fsp.stat(targetPath);
+    if (stat.isFile()) {
+      return stat.size;
+    }
+    if (!stat.isDirectory()) {
+      return 0;
+    }
+
+    const entries = await fsp.readdir(targetPath, { withFileTypes: true });
+    let total = 0;
+    for (const entry of entries) {
+      const fullPath = path.join(targetPath, entry.name);
+      total += await calculateDirectorySize(fullPath);
+    }
+    return total;
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return 0;
+    }
+    throw error;
+  }
+};
+
+const readJsonIfExists = async (filePath) => {
+  try {
+    const raw = await fsp.readFile(filePath, 'utf8');
+    return JSON.parse(raw);
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return null;
+    }
+    throw error;
+  }
+};
+
+const getBundleMetrics = async () => {
+  const baselineJson = await readJsonIfExists(OPERATIONS_BUNDLE_BASELINE_PATH);
+  const baselineRaw =
+    baselineJson?.aiFrontend?.baselineKb ??
+    baselineJson?.ai_frontend?.baselineKb ??
+    baselineJson?.baselineKb ??
+    baselineJson?.baseline_kb ??
+    null;
+
+  const baselineKb = typeof baselineRaw === 'number' ? baselineRaw : Number.parseFloat(baselineRaw || '');
+  const distPath = path.join(PROJECT_ROOT, 'ai-frontend', 'dist');
+
+  try {
+    const sizeBytes = await calculateDirectorySize(distPath);
+    if (!Number.isFinite(sizeBytes) || sizeBytes <= 0) {
+      return {
+        baselineKb: Number.isFinite(baselineKb) ? baselineKb : null,
+        currentKb: null,
+        deltaKb: null,
+        source: 'local',
+        note: 'Frontend bundle not built yet — run pnpm -w run build',
+      };
+    }
+
+    const currentKb = Math.round((sizeBytes / 1024) * 10) / 10;
+    const deltaKb = Number.isFinite(baselineKb) ? Math.round((currentKb - baselineKb) * 10) / 10 : null;
+
+    return {
+      baselineKb: Number.isFinite(baselineKb) ? baselineKb : null,
+      currentKb,
+      deltaKb,
+      source: 'local',
+    };
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return {
+        baselineKb: Number.isFinite(baselineKb) ? baselineKb : null,
+        currentKb: null,
+        deltaKb: null,
+        source: 'local',
+        note: 'Bundle directory missing',
+      };
+    }
+    console.warn('⚠️ Unable to calculate bundle metrics:', error.message || error);
+    return {
+      baselineKb: Number.isFinite(baselineKb) ? baselineKb : null,
+      currentKb: null,
+      deltaKb: null,
+      source: 'local',
+      note: error.message || 'Unable to compute bundle size',
+    };
+  }
+};
+
+const PROJECT_ROOT = path.resolve(__dirname, '..', '..');
+const OPERATIONS_BUNDLE_BASELINE_PATH = path.join(
+  PROJECT_ROOT,
+  'docs',
+  'metrics',
+  'bundle-baseline.json'
+);
+
+const DEFAULT_OPERATIONS_ALLOW = [
+  'docs/',
+  'README.md',
+  'CHANGELOG.md',
+  'REQUIRED_SECRETS.md',
+  'REPLIT_SECRETS_SETUP.md',
+  'docs/ai-space/',
+  'docs/metrics/',
+  'ai-frontend/src/styles/',
+  'ai-frontend/src/index.css',
+  'ai-frontend/src/components/content/',
+  'ai-frontend/src/components/marketing/',
+  'ai-frontend/src/pages/content/',
+  'ai-frontend/src/i18n/',
+  'ai-frontend/src/layout/marketing/',
+];
+
+const DEFAULT_OPERATIONS_DENY = [
+  'backend/',
+  'gateway/',
+  'ai-service/',
+  'functions/',
+  'property-api/',
+  'shared/security/',
+  'scripts/deploy',
+];
+
+const DEFAULT_OPERATIONS_DENY_PATTERNS = [
+  /^ai-frontend\/src\/services\//,
+  /^ai-frontend\/src\/hooks\//,
+  /^ai-frontend\/src\/contexts\//,
+  /^ai-frontend\/src\/api\//,
+  /^ai-frontend\/src\/lib\//,
+  /^ai-frontend\/src\/state\//,
+  /^ai-frontend\/src\/features\/ai\//,
+  /^tests?\//,
+  /^firebase\//,
+  /^storage\//,
+];
 
 const resolveSessionKey = (sessionKey) =>
   typeof sessionKey === 'string' && sessionKey.trim().length > 0 ? sessionKey.trim() : SESSION_KEY_FALLBACK;
@@ -1295,6 +1618,416 @@ const saveSettings = async (sessionKey, payload = {}) => {
   return formatSettingsForClient(latestState);
 };
 
+const listOperationsChanges = async () => {
+  const policy = getOperationsPolicy();
+  const status = await gitCommands.getStatus();
+
+  if (!status?.success) {
+    throw Object.assign(new Error(status?.error || 'Unable to read git status'), { status: 500 });
+  }
+
+  const filesRaw = Array.isArray(status.files) ? status.files : [];
+  const files = filesRaw.map((file) => {
+    const pathValue = sanitizePathInput(file.path || '');
+    const evaluation = evaluatePolicyForPath(pathValue, policy);
+    return {
+      path: pathValue,
+      status: file.status,
+      staged: Boolean(file.staged),
+      modified: Boolean(file.modified),
+      untracked: Boolean(file.untracked),
+      allowed: evaluation.allowed,
+      reason: evaluation.allowed ? null : evaluation.reason,
+      anchor: resolvePolicyAnchor(pathValue, policy),
+    };
+  });
+
+  const directoriesMap = new Map();
+  for (const file of files) {
+    const key = file.anchor;
+    if (!directoriesMap.has(key)) {
+      directoriesMap.set(key, { allowed: 0, blocked: 0, total: 0 });
+    }
+    const bucket = directoriesMap.get(key);
+    bucket.total += 1;
+    if (file.allowed) {
+      bucket.allowed += 1;
+    } else {
+      bucket.blocked += 1;
+    }
+  }
+
+  const directories = Array.from(directoriesMap.entries())
+    .map(([pathValue, summary]) => ({ path: pathValue, ...summary }))
+    .sort((a, b) => a.path.localeCompare(b.path));
+
+  return {
+    policy: {
+      allowList: policy.allowList,
+      denyList: policy.denyList,
+      guidelines: policy.guidelines,
+      baseBranch: policy.baseBranch,
+    },
+    branch: status.branch,
+    aheadBehind: status.aheadBehind,
+    summary: {
+      total: files.length,
+      allowed: files.filter((file) => file.allowed).length,
+      blocked: files.filter((file) => !file.allowed).length,
+    },
+    files,
+    directories,
+  };
+};
+
+const ensureBranchFresh = async (branchName, baseBranch) => {
+  const branches = await gitCommands.getBranches();
+  if (branches?.success && Array.isArray(branches.local)) {
+    const exists = branches.local.some((entry) => entry.name === branchName);
+    if (exists) {
+      await gitCommands.deleteBranch(branchName, { force: true });
+    }
+  }
+
+  const createResult = await gitCommands.createBranch(branchName, baseBranch);
+  if (!createResult?.success) {
+    throw Object.assign(new Error(createResult?.error || 'Unable to create branch'), { status: 500 });
+  }
+
+  return createResult;
+};
+
+const normalizeBranchName = (input) => {
+  if (typeof input !== 'string') {
+    return '';
+  }
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return '';
+  }
+  const sanitized = trimmed
+    .replace(/[^A-Za-z0-9._\-/]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/\/+\/+/g, '/')
+    .replace(/^-+|-+$/g, '');
+  return sanitized.slice(0, 120);
+};
+
+const createOperationsPullRequest = async (sessionKey, payload = {}) => {
+  const policy = getOperationsPolicy();
+  const config = await resolveRepoConfig(sessionKey);
+  const token = payload.token || config.token;
+
+  if (!token) {
+    throw Object.assign(new Error('GitHub token missing for operations PR'), { status: 401 });
+  }
+
+  const baseBranchRaw = typeof payload.baseBranch === 'string' && payload.baseBranch.trim().length > 0
+    ? payload.baseBranch.trim()
+    : policy.baseBranch;
+  const baseBranch = normalizeBranchName(baseBranchRaw) || policy.baseBranch;
+
+  const branchName = normalizeBranchName(payload.branchName || `ops/${Date.now()}`);
+  if (!branchName) {
+    throw Object.assign(new Error('Branch name is required'), { status: 400 });
+  }
+
+  const commitMessage = typeof payload.commitMessage === 'string' && payload.commitMessage.trim().length > 0
+    ? payload.commitMessage.trim()
+    : null;
+  if (!commitMessage) {
+    throw Object.assign(new Error('Commit message is required'), { status: 400 });
+  }
+
+  const requestedPaths = sanitizePathList(payload.files || payload.paths);
+  if (requestedPaths.length === 0) {
+    throw Object.assign(new Error('Select at least one file or directory to include in the PR'), { status: 400 });
+  }
+
+  const violations = requestedPaths
+    .map((pathValue) => ({ path: pathValue, evaluation: evaluatePolicyForPath(pathValue, policy) }))
+    .filter((entry) => !entry.evaluation.allowed);
+
+  if (violations.length > 0) {
+    const details = violations.map((entry) => `${entry.path}: ${entry.evaluation.reason}`).join('\n');
+    throw Object.assign(new Error(`Some paths are not allowed:\n${details}`), { status: 403, details: violations });
+  }
+
+  await gitCommands.switchBranch(baseBranch);
+  await gitCommands.pull({ branch: baseBranch, token });
+  await ensureBranchFresh(branchName, baseBranch);
+
+  let commitHash = null;
+
+  try {
+    const addResult = await gitCommands.addFiles(requestedPaths);
+    if (!addResult?.success) {
+      throw Object.assign(new Error(addResult?.error || 'Unable to stage files'), { status: 500 });
+    }
+
+    const commitResult = await gitCommands.commit(commitMessage);
+    if (!commitResult?.success) {
+      const message = commitResult?.error || 'Unable to create commit';
+      const statusCode = /nothing to commit/i.test(message) ? 409 : 500;
+      throw Object.assign(new Error(message), { status: statusCode });
+    }
+    commitHash = commitResult.hash || null;
+
+    const pushResult = await gitCommands.push({ branch: branchName, token });
+    if (!pushResult?.success) {
+      throw Object.assign(new Error(pushResult?.error || 'Unable to push branch'), { status: 502 });
+    }
+
+    const octokit = getOctokit(token);
+    const prTitle = typeof payload.prTitle === 'string' && payload.prTitle.trim().length > 0
+      ? payload.prTitle.trim()
+      : commitMessage;
+    const prBody = typeof payload.prBody === 'string' ? payload.prBody : '';
+
+    const prResponse = await octokit.pulls.create({
+      owner: config.owner,
+      repo: config.repo,
+      title: prTitle,
+      head: branchName,
+      base: baseBranch,
+      body: prBody,
+    });
+
+    const headSha = prResponse.data.head.sha;
+    const [combinedStatus, checkRuns] = await Promise.all([
+      octokit.repos.getCombinedStatusForRef({ owner: config.owner, repo: config.repo, ref: headSha }),
+      octokit.checks.listForRef({ owner: config.owner, repo: config.repo, ref: headSha, per_page: 20 }),
+    ]);
+
+    const warnings = [];
+    const status = await gitCommands.getStatus();
+    if (status?.success && Array.isArray(status.files)) {
+      const unstaged = status.files.filter((file) => !file.staged);
+      if (unstaged.length > 0) {
+        warnings.push({
+          type: 'unstaged',
+          message: `${unstaged.length} files remain unstaged after commit`,
+          files: unstaged.map((file) => file.path),
+        });
+      }
+    }
+
+    return {
+      branch: branchName,
+      baseBranch,
+      commit: { hash: commitHash },
+      pr: {
+        number: prResponse.data.number,
+        url: prResponse.data.html_url,
+        title: prResponse.data.title,
+        state: prResponse.data.state,
+      },
+      ci: {
+        state: combinedStatus?.data?.state,
+        statuses: Array.isArray(combinedStatus?.data?.statuses)
+          ? combinedStatus.data.statuses.map((statusEntry) => ({
+              context: statusEntry.context,
+              state: statusEntry.state,
+              targetUrl: statusEntry.target_url,
+              description: statusEntry.description,
+              updatedAt: statusEntry.updated_at,
+            }))
+          : [],
+        checks: Array.isArray(checkRuns?.data?.check_runs)
+          ? checkRuns.data.check_runs.map((run) => ({
+              id: run.id,
+              name: run.name,
+              status: run.status,
+              conclusion: run.conclusion,
+              startedAt: run.started_at,
+              completedAt: run.completed_at,
+              url: run.html_url,
+            }))
+          : [],
+      },
+      warnings,
+    };
+  } finally {
+    await gitCommands.switchBranch(baseBranch).catch((error) => {
+      console.warn('⚠️ Failed to switch back to base branch after operations PR:', error?.message || error);
+    });
+  }
+};
+
+const listOperationsPullRequests = async (sessionKey, { token, limit = 5 } = {}) => {
+  const config = await resolveRepoConfig(sessionKey);
+  const resolvedToken = token || config.token;
+  if (!resolvedToken) {
+    throw Object.assign(new Error('GitHub token missing for PR status fetch'), { status: 401 });
+  }
+
+  const octokit = getOctokit(resolvedToken);
+  const { data: pulls } = await octokit.pulls.list({
+    owner: config.owner,
+    repo: config.repo,
+    state: 'open',
+    per_page: Math.min(Math.max(limit, 1), 20),
+  });
+
+  const enriched = await Promise.all(
+    pulls.map(async (pull) => {
+      try {
+        const status = await octokit.repos.getCombinedStatusForRef({
+          owner: config.owner,
+          repo: config.repo,
+          ref: pull.head.sha,
+        });
+        return {
+          number: pull.number,
+          title: pull.title,
+          url: pull.html_url,
+          headRef: pull.head.ref,
+          headSha: pull.head.sha,
+          state: pull.state,
+          ciState: status.data.state,
+          statuses: status.data.statuses?.map((entry) => ({
+            context: entry.context,
+            state: entry.state,
+            targetUrl: entry.target_url,
+            description: entry.description,
+          })) || [],
+        };
+      } catch (error) {
+        console.warn('⚠️ Failed to load status for PR', pull.number, error?.message || error);
+        return {
+          number: pull.number,
+          title: pull.title,
+          url: pull.html_url,
+          headRef: pull.head.ref,
+          headSha: pull.head.sha,
+          state: pull.state,
+          ciState: 'unknown',
+          statuses: [],
+        };
+      }
+    })
+  );
+
+  return {
+    pulls: enriched,
+    count: enriched.length,
+  };
+};
+
+const getOperationsMetrics = async (sessionKey, { token } = {}) => {
+  const config = await resolveRepoConfig(sessionKey);
+  const resolvedToken = token || config.token;
+  if (!resolvedToken) {
+    throw Object.assign(new Error('GitHub token missing for metrics fetch'), { status: 401 });
+  }
+
+  const octokit = getOctokit(resolvedToken);
+  const [pullsResponse, workflowsResponse, bundle] = await Promise.all([
+    octokit.pulls.list({ owner: config.owner, repo: config.repo, state: 'all', per_page: 30 }),
+    octokit.actions.listWorkflowRunsForRepo({ owner: config.owner, repo: config.repo, per_page: 50 }),
+    getBundleMetrics(),
+  ]);
+
+  const pulls = pullsResponse?.data || [];
+  const totalPrs = pulls.length;
+  const mergedCount = pulls.filter((pr) => pr.merged_at).length;
+  const prMergeRate = totalPrs > 0 ? mergedCount / totalPrs : null;
+
+  const workflowRuns = workflowsResponse?.data?.workflow_runs || [];
+  const ciRuns = workflowRuns.filter((run) => /(ci|build|test)/i.test(run.name || ''));
+  const ciSuccess = ciRuns.filter((run) => run.conclusion === 'success').length;
+  const ciPassRatio = ciRuns.length > 0 ? ciSuccess / ciRuns.length : null;
+
+  const lintRuns = workflowRuns
+    .filter((run) => /(lint|eslint)/i.test(run.name || run.display_title || ''))
+    .slice(0, 10)
+    .map((run) => ({
+      id: run.id,
+      name: run.name,
+      conclusion: run.conclusion || run.status,
+      createdAt: run.created_at,
+      updatedAt: run.updated_at,
+      headSha: run.head_sha,
+    }));
+
+  return {
+    prMergeRate,
+    ciPassRatio,
+    bundle,
+    eslintTrend: {
+      recent: lintRuns,
+      failing: lintRuns.filter((run) => run.conclusion && run.conclusion !== 'success').length,
+    },
+    fetchedAt: new Date().toISOString(),
+  };
+};
+
+const runSandboxSmokeTest = async (sessionKey, { token, note } = {}) => {
+  const resolvedToken = token || (await resolveRepoConfig(sessionKey)).token;
+  if (!resolvedToken) {
+    throw Object.assign(new Error('GitHub token missing for sandbox smoke test'), { status: 401 });
+  }
+
+  const owner = process.env.GITHUB_SANDBOX_OWNER || process.env.GITHUB_REPO_OWNER;
+  const repo = process.env.GITHUB_SANDBOX_REPO || process.env.GITHUB_REPO_NAME;
+
+  if (!owner || !repo) {
+    throw Object.assign(new Error('Sandbox repository is not configured'), { status: 412 });
+  }
+
+  const octokit = getOctokit(resolvedToken);
+  const repoDetails = await octokit.repos.get({ owner, repo });
+  const baseBranch = process.env.GITHUB_SANDBOX_BASE_BRANCH || repoDetails.data.default_branch || 'main';
+  const baseRef = await octokit.git.getRef({ owner, repo, ref: `heads/${baseBranch}` });
+  const branchName = `ai-smoke-${new Date().toISOString().replace(/[:.]/g, '').replace('T', '-').slice(0, 20)}-${randomUUID().slice(0, 6)}`;
+
+  await octokit.git.createRef({ owner, repo, ref: `refs/heads/${branchName}`, sha: baseRef.data.object.sha });
+
+  const filePath = `sandbox/smoke-${new Date().toISOString().split('T')[0]}-${randomUUID().slice(0, 4)}.md`;
+  const contentLines = [
+    '# Sandbox smoke test',
+    `- Timestamp: ${new Date().toISOString()}`,
+    '- Trigger: AI Operations panel',
+    note ? `- Note: ${note}` : null,
+  ].filter(Boolean);
+
+  await octokit.repos.createOrUpdateFileContents({
+    owner,
+    repo,
+    path: filePath,
+    message: `chore(smoke): verify sandbox pipeline for ${filePath}`,
+    content: Buffer.from(`${contentLines.join('\n')}\n`).toString('base64'),
+    branch: branchName,
+  });
+
+  const prTitle = `chore(smoke): sandbox verification ${new Date().toISOString()}`;
+  const prBody = [
+    'Automated smoke test triggered from the AI operations panel.',
+    '',
+    `- Branch: \`${branchName}\``,
+    `- File: \`${filePath}\``,
+  ].join('\n');
+
+  const prResponse = await octokit.pulls.create({
+    owner,
+    repo,
+    title: prTitle,
+    head: branchName,
+    base: baseBranch,
+    body: prBody,
+  });
+
+  return {
+    branch: branchName,
+    file: filePath,
+    pr: {
+      number: prResponse.data.number,
+      url: prResponse.data.html_url,
+      state: prResponse.data.state,
+    },
+  };
+};
+
 module.exports = {
   resolveRepoConfig,
   refreshSnapshot,
@@ -1321,4 +2054,10 @@ module.exports = {
   loadState,
   getSettings,
   saveSettings,
+  getOperationsPolicy,
+  listOperationsChanges,
+  createOperationsPullRequest,
+  listOperationsPullRequests,
+  getOperationsMetrics,
+  runSandboxSmokeTest,
 };

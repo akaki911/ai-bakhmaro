@@ -30,12 +30,16 @@ VITE_FIREBASE_MEASUREMENT_ID=G-NT97B9E4YL
 - `VITE_ENABLE_PUBLIC_CHAT` — სტუმრის ჩატის ჩართვა (`ai-frontend/src/components/AIAssistantEnhanced.tsx`).
 - `VITE_ASSISTANT_MODE` — ასისტენტის საწყისი რეჟიმი (`ai-frontend/src/contexts/AssistantModeContext.tsx`).
 - `VITE_GITHUB_ENABLED` — GitHub workspace-ის ტოგლი (`ai-frontend/src/lib/featureFlags.ts`).
-- `VITE_BACKEND_URL` / `VITE_API_BASE` / `VITE_GATEWAY_URL` / `VITE_REMOTE_SITE_BASE` — backend/gateway მისამართები (`ai-frontend/src/lib/env.ts`).
+- `VITE_BACKEND_URL` / `VITE_API_BASE` / `VITE_GATEWAY_URL` — backend/gateway მისამართები (`ai-frontend/src/lib/env.ts`).
 - `AI_SERVICE_URL` — API proxy fallback მისამართი (`ai-frontend/pages/api/ai/[...path].ts`).
 
 ## 3. განაახლეთ GitHub Actions გარემო ცვლადები
 - თუ უკვე გაშვებულია workflow-ები, ხელახლა გაუშვით მათი secrets განახლების შემდეგ, რომ ახალი მნიშვნელობები ჩაიტვირთოს
 - საჭიროების შემთხვევაში გამოიყენეთ `node check-secrets.js` ადგილობრივად მნიშვნელობების დასადასტურებლად
+- ახალი Operations პანელი საჭიროებს GitHub smoke ტესტის სეკრეტებს (თუ გსურთ sandbox PR-ების ავტომატური შექმნა):
+  - `GITHUB_SANDBOX_OWNER`
+  - `GITHUB_SANDBOX_REPO`
+  - `GITHUB_SANDBOX_BASE_BRANCH` (სურვილისამებრ)
 
 ## 4. ვერიფიკაცია
 - Frontend build-ისას კონსოლში უნდა გამოჩნდეს: "✅ Firebase initialized successfully"
