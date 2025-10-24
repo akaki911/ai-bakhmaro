@@ -41,6 +41,11 @@ export function resolveBackendUrl(path: string): string {
 
   const normalizedBase = backendBaseURL.replace(/\/+$/, '');
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
+  if (normalizedBase.startsWith('/') && normalizedPath.startsWith(`${normalizedBase}/`)) {
+    return normalizedPath;
+  }
+
   return `${normalizedBase}${normalizedPath}`;
 }
 
