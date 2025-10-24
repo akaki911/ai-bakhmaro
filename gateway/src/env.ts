@@ -9,8 +9,6 @@ const parseCsvList = (value: string): string[] =>
 const baseSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(8080),
-  PROPERTY_API_URL: z.string().url().default('http://property-api:5100'),
-  GATEWAY_PROPERTY_API_URL: z.string().url().optional(),
   REMOTE_SITE_BASE: z.string().url().optional(),
   UPSTREAM_API_URL: z.string().url().optional(),
   STATIC_ROOT: z.string().default('../../ai-frontend/dist'),
@@ -48,7 +46,6 @@ export type GatewayEnv = Omit<ParsedEnv, 'SITE_MAPPING_GITHUB'> & {
   REMOTE_SITE_BASE: string;
   COOKIE_DOMAIN: string | null;
   SESSION_COOKIE_NAMES: string[];
-  PROPERTY_API_URL: string;
   SITE_MAPPING_GITHUB: Record<string, string>;
   PUBLIC_ORIGIN: string | null;
   AI_DOMAIN: string | null;
@@ -71,7 +68,6 @@ export const getEnv = (): GatewayEnv => {
 
   const data = parsed.data;
   const remoteBase = data.REMOTE_SITE_BASE ?? data.UPSTREAM_API_URL ?? 'http://127.0.0.1:5002';
-  const propertyApiUrl = data.GATEWAY_PROPERTY_API_URL ?? data.PROPERTY_API_URL;
   let siteMapping: Record<string, string> = {};
   if (typeof data.SITE_MAPPING_GITHUB === 'string' && data.SITE_MAPPING_GITHUB.trim().length > 0) {
     try {
@@ -95,7 +91,6 @@ export const getEnv = (): GatewayEnv => {
     REMOTE_SITE_BASE: remoteBase,
     COOKIE_DOMAIN: cookieDomain,
     SESSION_COOKIE_NAMES: data.SESSION_COOKIE_NAMES,
-    PROPERTY_API_URL: propertyApiUrl,
     SITE_MAPPING_GITHUB: siteMapping,
     AI_DOMAIN: aiDomain,
     PUBLIC_ORIGIN: publicOrigin,

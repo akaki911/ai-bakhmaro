@@ -91,7 +91,7 @@ const cookieSecure = env.COOKIE_SECURE;
 const sessionCookieNameSet = new Set(env.SESSION_COOKIE_NAMES);
 const isSessionCookieName = createSessionCookieChecker(sessionCookieNameSet);
 
-type ServiceAudience = 'property-api' | 'remote-site';
+type ServiceAudience = 'remote-site';
 
 const headerHasValue = (value: string | string[] | undefined): boolean => {
   if (Array.isArray(value)) {
@@ -290,13 +290,6 @@ app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
-
-app.use(
-  '/api/property',
-  createProxy(env.PROPERTY_API_URL, 'property-api', {
-    pathRewrite: { '^/api/property': '' },
-  }),
-);
 
 const siteMapping = env.SITE_MAPPING_GITHUB || {};
 app.use('/api/sites/:siteId/github', (req, res, next) => {
