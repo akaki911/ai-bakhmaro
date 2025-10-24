@@ -1,21 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import {
-  Bell,
-  Calendar,
-  ChevronDown,
-  Filter,
-  Heart,
-  LogOut,
-  MapPin,
-  Menu,
-  Mountain,
-  Search,
-  Shield,
-  User as UserIcon,
-  Users
-} from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { Bell, ChevronDown, LogOut, Menu, Shield, Sparkles, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
 import { useAIMode } from '../contexts/useAIMode';
 import type { UserRole } from '../contexts/AuthContext.types';
@@ -41,65 +26,49 @@ type NavItem = {
   };
 };
 
-type SearchSegment = {
-  label: string;
-  placeholder: string;
-  icon: LucideIcon;
-};
-
-type QuickFilter = {
-  label: string;
-  to?: string;
-};
-
 const NAV_ITEMS: NavItem[] = [
-  { label: 'მთავარი', to: '/' },
-  { label: 'კოტეჯები', to: '/cottages', badge: { text: 'ახალი', tone: 'success' } },
-  { label: 'სასტუმროები', to: '/hotels' },
-  { label: 'ტრანსპორტი', to: '/vehicles', badge: { text: 'ტოპ', tone: 'info' } },
-  { label: 'პროფილი', to: '/profile', requiresAuth: true },
   {
-    label: 'სისტემის ჟურნალები',
-    to: '/activity',
+    label: 'AI პანელი',
+    to: '/admin?tab=dashboard',
+    requiresAuth: true,
+    roles: ['SUPER_ADMIN']
+  },
+  {
+    label: 'ტესტები',
+    to: '/admin?tab=tests',
+    requiresAuth: true,
+    roles: ['SUPER_ADMIN']
+  },
+  {
+    label: 'GitHub',
+    to: '/admin?tab=github',
+    requiresAuth: true,
+    roles: ['SUPER_ADMIN']
+  },
+  {
+    label: 'საიდუმლოებები',
+    to: '/admin?tab=secrets',
     requiresAuth: true,
     roles: ['SUPER_ADMIN']
   }
 ];
 
-const SEARCH_SEGMENTS: SearchSegment[] = [
+const AI_HIGHLIGHTS = [
   {
-    label: 'განთავსების ტიპი',
-    placeholder: 'აირჩიეთ თავგადასავალი',
-    icon: Mountain
+    label: 'AI მოდელები',
+    value: '4 აქტიური',
+    description: 'GPT-4.1-mini • GPT-4.1 • o1-mini • o3-mini'
   },
   {
-    label: 'ლოკაცია',
-    placeholder: 'მაგ. ბახმარო',
-    icon: MapPin
+    label: 'Gateway სტატუსი',
+    value: 'ოპერატიული',
+    description: 'Latency < 250ms • ბოლო 24სთ-ში 0 შეცდომა'
   },
   {
-    label: 'თარიღები',
-    placeholder: 'ჩამოსვლა - გასვლა',
-    icon: Calendar
-  },
-  {
-    label: 'სტუმრები',
-    placeholder: '2 სტუმარი',
-    icon: Users
+    label: 'ტესტები',
+    value: '12 წარმატებული',
+    description: 'CI/Smoke ტესტები ბოლო 24 საათში'
   }
-];
-
-const QUICK_FILTERS: QuickFilter[] = [
-  { label: 'ბახმაროს ტოპ შეთავაზებები' },
-  { label: 'ეკო-კოტეჯები' },
-  { label: 'ოჯახური სივრცეები' },
-  { label: 'სათხილამურო პაკეტები' }
-];
-
-const HIGHLIGHT_STATS = [
-  { label: 'დადასტურებული კოტეჯები', value: '120+' },
-  { label: 'გულშემატკივართა შეფასება', value: '4.9/5' },
-  { label: 'მთის აქტივობები', value: '35+' }
 ];
 
 const badgeToneStyles: Record<BadgeTone, { backgroundColor: string; color: string }> = {
@@ -166,12 +135,8 @@ const Header: React.FC<HeaderProps> = () => {
   }, [user]);
   const pageTitle = useMemo(() => {
     const path = location.pathname;
-    if (path.startsWith('/admin')) return 'ადმინ პანელი';
-    if (path.startsWith('/profile')) return 'პროფილი';
-    if (path.startsWith('/vehicles')) return 'ტრანსპორტი';
-    if (path.startsWith('/hotels')) return 'სასტუმროები';
-    if (path.startsWith('/cottages')) return 'კოტეჯები';
-    return 'კოტეჯების ჯავშანი';
+    if (path.startsWith('/admin')) return 'AI მართვის პანელი';
+    return 'AI სივრცე';
   }, [location.pathname]);
 
   useEffect(() => {
@@ -309,14 +274,14 @@ const Header: React.FC<HeaderProps> = () => {
                     color: '#FFFFFF'
                   }}
                 >
-                  <Mountain size={22} />
+                  <Sparkles size={22} />
                 </div>
                 <div className="min-w-0">
                   <p
                     className="truncate text-base font-semibold sm:text-lg"
                     style={{ color: headerTokens.colors.textPrimary }}
                   >
-                    ბახმარო
+                    AI სივრცე
                   </p>
                   <p className="text-[11px] sm:text-xs" style={{ color: headerTokens.colors.textSecondary }}>
                     {pageTitle}
@@ -457,37 +422,11 @@ const Header: React.FC<HeaderProps> = () => {
                     backgroundColor: '#F1F5F9',
                     color: headerTokens.colors.textSecondary
                   }}
-                  aria-label="ფავორიტები"
-                >
-                  <Heart size={18} />
-                </button>
-                <button
-                  type="button"
-                  className={`flex h-10 w-10 items-center justify-center rounded-xl ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
-                  style={{
-                    backgroundColor: '#F1F5F9',
-                    color: headerTokens.colors.textSecondary
-                  }}
                   aria-label="შეტყობინებები"
                 >
                   <Bell size={18} />
                 </button>
               </div>
-
-              {isAuthenticated && (
-                <Link
-                  to="/profile"
-                  className={`hidden h-10 w-10 items-center justify-center rounded-xl md:flex ${motionClass}`}
-                  style={{
-                    backgroundColor: '#ECFDF5',
-                    color: headerTokens.colors.accent,
-                    border: `1px solid ${headerTokens.colors.accent}`
-                  }}
-                  aria-label="ჩემი პროფილი"
-                >
-                  <UserIcon size={18} />
-                </Link>
-              )}
 
               {isAuthenticated && (
                 <div className="hidden min-w-[140px] flex-col text-right md:flex">
@@ -582,14 +521,6 @@ const Header: React.FC<HeaderProps> = () => {
                     <div className="px-2 py-1 text-xs uppercase tracking-wide" style={{ color: headerTokens.colors.textSecondary }}>
                       {user.email}
                     </div>
-                    <Link
-                      to="/profile"
-                      role="menuitem"
-                      className={`block rounded-xl px-3 py-2 text-left text-sm ${motionClass}`}
-                      style={{ color: headerTokens.colors.textPrimary }}
-                    >
-                      პროფილი
-                    </Link>
                     {user.role !== 'CUSTOMER' && (
                       <Link
                         to="/admin"
@@ -618,98 +549,50 @@ const Header: React.FC<HeaderProps> = () => {
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-emerald-50 via-white to-sky-50/60">
-          <div className="mx-auto w-full max-w-[1440px] px-4 py-4 lg:px-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white">
+          <div className="mx-auto w-full max-w-[1440px] px-4 py-5 lg:px-6">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-1 flex-col gap-3">
-                <div className="inline-flex items-center gap-2 self-start rounded-full border border-emerald-200/60 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-600 shadow-sm">
-                  <Mountain size={14} />
-                  ბახმაროს ავთენტური გამოცდილება
+                <div className="inline-flex items-center gap-2 self-start rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide shadow-sm backdrop-blur">
+                  <Sparkles size={14} />
+                  AI რეჟიმი აქტიურია
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-bold leading-tight text-slate-900 lg:text-3xl">
-                    მოემზადეთ მაღალმთიანი თავგადასავლისთვის
-                  </h2>
-                  <p className="max-w-xl text-sm text-slate-600 lg:text-base">
-                    აერთიანეთ დასვენება, აქტივობები და კომფორტი ერთიან პლატფორმაზე. აირჩიეთ თქვენთვის შესაბამისი განთავსების ტიპი და დაგეგმეთ მოგზაურობა რამდენიმე კლიკით.
+                  <h2 className="text-2xl font-bold leading-tight lg:text-3xl">ai.bakhmaro.co • Operational Console</h2>
+                  <p className="max-w-xl text-sm text-white/80 lg:text-base">
+                    მართეთ AI Developer პანელი, smoke ტესტები და gateway ჯანმრთელობა ერთი პორტალიდან.
                   </p>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {HIGHLIGHT_STATS.map(stat => (
-                    <div
-                      key={stat.label}
-                      className="rounded-2xl border border-white/60 bg-white/80 p-3 text-center shadow-sm backdrop-blur"
-                    >
-                      <p className="text-xl font-bold text-emerald-600">{stat.value}</p>
-                      <p className="text-xs font-medium text-slate-500">{stat.label}</p>
-                    </div>
-                  ))}
+                <div className="flex flex-wrap gap-3">
+                  <Link
+                    to="/admin?tab=dashboard"
+                    className={`inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow-lg ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
+                    style={{ boxShadow: '0 16px 32px rgba(16,185,129,0.3)' }}
+                  >
+                    <Sparkles size={16} />
+                    გახსენი AI პანელი
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleSmartLogin}
+                    className={`inline-flex items-center justify-center gap-2 rounded-full border border-white/20 px-5 py-2 text-sm font-semibold text-white/80 transition-colors hover:border-white/40 hover:text-white ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
+                  >
+                    სწრაფი ავტორაუტინგი
+                  </button>
                 </div>
               </div>
 
-              <div className="flex w-full max-w-xl flex-col gap-3 rounded-3xl border border-emerald-100/70 bg-white/90 p-3.5 shadow-lg backdrop-blur">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-700">სწრაფი ძიება</span>
-                  <button
-                    type="button"
-                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
-                    style={{
-                      borderColor: headerTokens.colors.border,
-                      color: headerTokens.colors.textSecondary,
-                      backgroundColor: '#F8FAFC'
-                    }}
+              <div className="grid w-full max-w-xl gap-3 sm:grid-cols-3">
+                {AI_HIGHLIGHTS.map(highlight => (
+                  <div
+                    key={highlight.label}
+                    className="rounded-2xl border border-white/10 bg-white/5 p-3 text-center shadow-sm backdrop-blur"
                   >
-                    <Filter size={14} />
-                    დეტალური ფილტრები
-                  </button>
-                </div>
-
-                <div className="grid gap-1.5 sm:grid-cols-2">
-                  {SEARCH_SEGMENTS.map(segment => {
-                    const Icon = segment.icon;
-                    return (
-                      <div
-                        key={segment.label}
-                        className="group flex items-center gap-3 rounded-2xl border border-slate-100/80 bg-white px-3 py-2.5 shadow-sm transition-colors hover:border-emerald-200"
-                      >
-                        <div
-                          className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-500"
-                        >
-                          <Icon size={18} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                            {segment.label}
-                          </p>
-                          <p className="truncate text-sm font-semibold text-slate-700">
-                            {segment.placeholder}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <button
-                  type="button"
-                  className={`flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
-                  style={{ boxShadow: '0 16px 32px rgba(16,185,129,0.25)' }}
-                >
-                  <Search size={18} />
-                  დაიწყე ძიება
-                </button>
-
-                <div className="flex flex-wrap gap-1.5">
-                  {QUICK_FILTERS.map(filter => (
-                    <button
-                      key={filter.label}
-                      type="button"
-                      className={`rounded-full border border-slate-200/80 bg-white px-3 py-1 text-xs font-semibold text-slate-500 transition-colors hover:border-emerald-200 hover:text-emerald-600 ${motionClass}`}
-                    >
-                      {filter.label}
-                    </button>
-                  ))}
-                </div>
+                    <p className="text-lg font-bold text-white">{highlight.value}</p>
+                    <p className="text-xs font-medium text-white/70">{highlight.label}</p>
+                    <p className="mt-1 text-[11px] text-white/50">{highlight.description}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

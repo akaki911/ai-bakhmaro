@@ -1,28 +1,19 @@
-import type { Review } from './review';
-import type { CottageMonthlyPricing } from './seasonalPricing';
+export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'PROVIDER_ADMIN' | 'CUSTOMER';
 
 export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: 'SUPER_ADMIN' | 'PROVIDER_ADMIN' | 'CUSTOMER';
-  isActive: boolean;
+  role: UserRole;
+  isActive?: boolean;
   phoneNumber?: string;
   personalId?: string;
-  password?: string; // პაროლი
-  address?: string;
-  notes?: string;
-  physicalAddress?: string; // ფიზიკური მისამართი
-  personalNote?: string; // პერსონალური მოკლე აღწერა
   createdAt: Date;
   updatedAt: Date;
-  // წესების დათანხმება
   agreedToTerms?: boolean;
   termsAgreedAt?: Date;
-  // ადმინისტრატორის კონტროლისთვის
-  addedBy?: string; // ვინ დაამატა (user ID)
-  registrationStatus: 'active' | 'inactive' | 'cancelled';
+  notes?: string;
 }
 
 export interface AuthUser {
@@ -30,7 +21,7 @@ export interface AuthUser {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'SUPER_ADMIN' | 'PROVIDER_ADMIN' | 'CUSTOMER';
+  role: UserRole;
   phoneNumber?: string;
   personalId?: string;
   agreedToTerms?: boolean;
@@ -42,45 +33,19 @@ export interface LoginCredentials {
   password: string;
 }
 
+export type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'ACCESS';
+
+export type AuditResource = 'user' | 'ai_workspace' | 'system_setting';
+
 export interface AuditLog {
   id: string;
   userId: string;
   userEmail: string;
-  action: 'CREATE' | 'UPDATE' | 'DELETE';
-  resourceType: 'cottage' | 'hotel' | 'vehicle' | 'booking' | 'user';
+  action: AuditAction;
+  resourceType: AuditResource;
   resourceId: string;
-  oldData?: any;
-  newData?: any;
+  oldData?: Record<string, unknown>;
+  newData?: Record<string, unknown>;
   timestamp: Date;
   ipAddress?: string;
-}
-
-export interface Cottage {
-  id?: string;
-  name: string;
-  description: string;
-  images: string[];
-  pricePerNight: number;
-  maxGuests: number;
-  amenities: string[];
-  location: string;
-  available: boolean;
-  providerId: string;
-  createdAt: Date;
-  updatedAt?: Date;
-  reviews?: Review[];
-  averageRating?: number;
-  totalReviews?: number;
-  customPricing?: {
-    [key: string]: number;
-  };
-  monthlyPricing?: CottageMonthlyPricing;
-  bankName?: string;
-  bankAccount?: string;
-  bankAccountInfo?: {
-    bank: string;
-    accountNumber: string;
-    accountHolderName: string;
-    accountId?: string;
-  };
 }
