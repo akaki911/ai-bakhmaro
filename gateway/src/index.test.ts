@@ -48,6 +48,7 @@ describe('gateway integration', () => {
       SERVICE_JWT_ISSUER: process.env.SERVICE_JWT_ISSUER,
       SERVICE_JWT_SUBJECT: process.env.SERVICE_JWT_SUBJECT,
       API_PROXY_BASE: process.env.API_PROXY_BASE,
+      BACKEND_PROXY_BASE: process.env.BACKEND_PROXY_BASE,
       STATIC_ROOT: process.env.STATIC_ROOT,
     };
 
@@ -57,6 +58,7 @@ describe('gateway integration', () => {
       SERVICE_JWT_ISSUER: 'gateway-test',
       SERVICE_JWT_SUBJECT: 'gateway-service-test',
       API_PROXY_BASE: 'http://127.0.0.1:5999',
+      BACKEND_PROXY_BASE: 'http://127.0.0.1:5999',
       STATIC_ROOT: '.',
     };
 
