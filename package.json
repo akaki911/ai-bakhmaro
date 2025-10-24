@@ -8,10 +8,10 @@
     "gateway"
   ],
   "scripts": {
-    "dev": "concurrently -c cyan,magenta,green --names gateway,property,frontend \"npm:dev:gateway\" \"npm:dev:property-api\" \"npm:dev:frontend\"",
-    "dev:frontend": "npm run dev -w ai-frontend",
-    "dev:property-api": "npm run dev -w property-api",
-    "dev:gateway": "npm run dev -w gateway",
+    "dev": "concurrently -c cyan,magenta,green --names gateway,property,frontend \"pnpm --filter gateway dev\" \"pnpm --filter property-api dev\" \"pnpm --filter ai-frontend dev\"",
+    "dev:frontend": "pnpm --filter ai-frontend dev",
+    "dev:property-api": "pnpm --filter property-api dev",
+    "dev:gateway": "pnpm --filter gateway dev",
     "build": "node scripts/run-workspace-build.mjs",
     "lint": "npm run lint -ws --if-present",
     "test": "npm run test -ws --if-present",
