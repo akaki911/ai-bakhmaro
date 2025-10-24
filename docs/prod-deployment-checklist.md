@@ -13,7 +13,7 @@ This checklist captures the required steps to replace the legacy static site wit
    ```bash
    AI_DOMAIN=https://ai.bakhmaro.co
    ROOT_DOMAIN=bakhmaro.co
-   REMOTE_SITE_BASE=https://8a86230f-...riker.replit.dev  # Temporary until bakhmaro.co backend is live
+   API_PROXY_BASE=https://api.ai.bakhmaro.co
    JWT_SECRET=<generate-a-strong-secret>
    ```
    When configuring the backend service environment, ensure the cache TTL remains in milliseconds:

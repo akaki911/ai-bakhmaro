@@ -442,17 +442,28 @@ export default defineConfig({
         warn(warning);
       },
       output: {
-        manualChunks: {
-          vendor: [
-            'react',
-            'react-dom',
-            'firebase/app',
-            'firebase/auth',
-            'firebase/firestore',
-            'firebase/storage',
-            'chart.js/auto',
-            'monaco-editor',
-          ],
+        manualChunks(id) {
+          if (!id.includes('node_modules')) {
+            return undefined;
+          }
+
+          if (id.includes('monaco-editor') || id.includes('@monaco-editor')) {
+            return 'vendor-editor';
+          }
+
+          if (/[\\/]firebase[\\/]/.test(id)) {
+            return 'vendor-firebase';
+          }
+
+          if (id.includes('@tanstack/') || id.includes('swr')) {
+            return 'vendor-data';
+          }
+
+          if (id.includes('react') || id.includes('scheduler')) {
+            return 'vendor-react';
+          }
+
+          return 'vendor';
         },
       },
     },
