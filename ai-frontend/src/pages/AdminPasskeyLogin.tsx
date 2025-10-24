@@ -9,7 +9,8 @@ import {
   Loader2,
   RefreshCw,
   BadgeCheck,
-  AlertCircle
+  AlertCircle,
+  CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
 import {
@@ -19,6 +20,7 @@ import {
 } from '../utils/webauthn_support';
 
 type AuthStep = 'email' | 'passkey' | 'password';
+type StepStatus = 'loading' | 'ok' | 'warning' | 'error';
 
 const AdminPasskeyLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -48,6 +50,90 @@ const AdminPasskeyLogin: React.FC = () => {
   const [passkeyAttempted, setPasskeyAttempted] = useState(false);
   const [retryingPreflight, setRetryingPreflight] = useState(false);
   const [passkeySupportChecked, setPasskeySupportChecked] = useState(false);
+
+  const preflightChecks = useMemo(() => {
+    const steps: Array<{ key: string; label: string; status: StepStatus; detail: string }> = [];
+    const routeReason = routeAdvice?.reason ?? '';
+
+    const sessionStatus: StepStatus = !authInitialized || retryingPreflight
+      ? 'loading'
+      : isAuthenticated
+        ? 'ok'
+        : 'warning';
+    const sessionDetail = sessionStatus === 'ok'
+      ? 'სესია უკვე აქტიურია.'
+      : !authInitialized || retryingPreflight
+        ? 'სესიის სტატუსი მოწმდება.'
+        : 'საჭიროა ადმინისტრატორის ავტორიზაცია.';
+    steps.push({ key: 'session', label: 'სესიების ვალიდაცია', status: sessionStatus, detail: sessionDetail });
+
+    let policyStatus: StepStatus = !authInitialized || retryingPreflight ? 'loading' : 'ok';
+    let policyDetail = !authInitialized || retryingPreflight
+      ? 'წვდომის პოლიტიკის შემოწმება მიმდინარეობს.'
+      : 'პოლიტიკა მზადაა ავტორიზაციისთვის.';
+
+    if (!authInitialized || retryingPreflight) {
+      // keep loading state
+    } else if (['Route advice fetch failed', 'Route advice fetch error'].includes(routeReason)) {
+      policyStatus = 'error';
+      policyDetail = 'სერვერთან კავშირი ვერ ხერხდება. სცადეთ ხელახლა ან გამოიყენეთ პაროლის რეჟიმი.';
+    } else if (routeReason === 'non_json_route_advice') {
+      policyStatus = 'warning';
+      policyDetail = 'დაიბრუნა მოულოდნელი პასუხი, გამოყენებულია უსაფრთხო ფოლბექი.';
+    } else if (routeAdvice?.target && routeAdvice.target !== '/login') {
+      policyDetail = 'პოლიტიკა უკვე უბრუნებს ავტორიზებულ როუტს.';
+    }
+
+    steps.push({ key: 'policy', label: 'წვდომის პოლიტიკა', status: policyStatus, detail: policyDetail });
+
+    let deviceStatus: StepStatus;
+    let deviceDetail: string;
+
+    if (!authInitialized || retryingPreflight) {
+      deviceStatus = 'loading';
+      deviceDetail = 'მოწყობილობის იდენტიფიკაცია მიმდინარეობს.';
+    } else if (deviceRecognition?.isRecognizedDevice) {
+      const trusted = deviceRecognition?.currentDevice?.trusted === true;
+      deviceStatus = trusted ? 'ok' : 'warning';
+      deviceDetail = trusted
+        ? 'ნდობადი მოწყობილობა დაფიქსირდა.'
+        : 'მოწყობილობა ამოცნობილია, მაგრამ ნდობა საჭიროებს დადასტურებას.';
+    } else {
+      deviceStatus = 'warning';
+      deviceDetail = 'ახალი მოწყობილობა — საჭირო იქნება დამატებითი ვერიფიკაცია.';
+    }
+
+    steps.push({ key: 'device', label: 'მოწყობილობის ვერიფიკაცია', status: deviceStatus, detail: deviceDetail });
+
+    return steps;
+  }, [authInitialized, deviceRecognition, isAuthenticated, retryingPreflight, routeAdvice]);
+
+  const statusStyles: Record<StepStatus, string> = {
+    loading: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-100',
+    ok: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100',
+    warning: 'border-amber-500/40 bg-amber-500/10 text-amber-100',
+    error: 'border-rose-500/40 bg-rose-500/10 text-rose-100'
+  };
+
+  const detailStyles: Record<StepStatus, string> = {
+    loading: 'text-cyan-50/90',
+    ok: 'text-emerald-50/90',
+    warning: 'text-amber-50/90',
+    error: 'text-rose-50/90'
+  };
+
+  const renderStatusIcon = (status: StepStatus) => {
+    switch (status) {
+      case 'ok':
+        return <CheckCircle2 className="h-4 w-4 text-emerald-200" />;
+      case 'warning':
+        return <AlertTriangle className="h-4 w-4 text-amber-200" />;
+      case 'error':
+        return <AlertTriangle className="h-4 w-4 text-rose-200" />;
+      default:
+        return <Loader2 className="h-4 w-4 animate-spin text-cyan-200" />;
+    }
+  };
 
   const recognizedDeviceSuffix = useMemo(() => {
     const deviceId = deviceRecognition?.currentDevice?.deviceId;
@@ -334,6 +420,23 @@ const AdminPasskeyLogin: React.FC = () => {
                   : `${email}`}
               </p>
             </header>
+
+            <div className="mb-6 grid gap-3 sm:grid-cols-3">
+              {preflightChecks.map((stepState) => (
+                <div
+                  key={stepState.key}
+                  className={`rounded-2xl border px-4 py-4 transition-colors ${statusStyles[stepState.status]}`}
+                >
+                  <div className="flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.2em]">
+                    {renderStatusIcon(stepState.status)}
+                    <span>{stepState.label}</span>
+                  </div>
+                  <p className={`mt-3 text-xs leading-5 ${detailStyles[stepState.status]}`}>
+                    {stepState.detail}
+                  </p>
+                </div>
+              ))}
+            </div>
 
             {preflightBanner && (
               <div

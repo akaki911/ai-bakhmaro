@@ -37,7 +37,7 @@ services:
       - .env
     environment:
       PORT: 8080
-      REMOTE_SITE_BASE: ${REMOTE_SITE_BASE:-http://ai-frontend:5173}
+      API_PROXY_BASE: ${API_PROXY_BASE:-http://ai-service:5001}
       STATIC_ROOT: ${GATEWAY_STATIC_ROOT:-/app/static}
       AI_DOMAIN: ${AI_DOMAIN:-http://localhost:5173}
       ROOT_DOMAIN: ${ROOT_DOMAIN:-localhost}

@@ -59,7 +59,7 @@ VITE_GITHUB_ENABLED=0
 VITE_BACKEND_URL=https://backend.ai.bakhmaro.co
 VITE_API_BASE=/api
 VITE_GATEWAY_URL=https://ai.bakhmaro.co
-VITE_REMOTE_SITE_BASE=https://bakhmaro.co
+VITE_API_PROXY_BASE=https://api.ai.bakhmaro.co
 AI_SERVICE_URL=https://api.ai.bakhmaro.co
 ```
 
@@ -71,7 +71,7 @@ AI_SERVICE_URL=https://api.ai.bakhmaro.co
 | `VITE_ENABLE_PUBLIC_CHAT` | გესტ ჩატის დაშვება აუთენტიფიცირებელი მომხმარებლებისთვის. | [`ai-frontend/src/components/AIAssistantEnhanced.tsx`](ai-frontend/src/components/AIAssistantEnhanced.tsx) 【F:ai-frontend/src/components/AIAssistantEnhanced.tsx†L698-L715】 |
 | `VITE_ASSISTANT_MODE` | ასისტენტის საწყისი რეჟიმი (plan/build/admin). | [`ai-frontend/src/contexts/AssistantModeContext.tsx`](ai-frontend/src/contexts/AssistantModeContext.tsx) 【F:ai-frontend/src/contexts/AssistantModeContext.tsx†L108-L133】 |
 | `VITE_GITHUB_ENABLED` | GitHub workspace-ის ჩართვა/გამორთვა. | [`ai-frontend/src/lib/featureFlags.ts`](ai-frontend/src/lib/featureFlags.ts) 【F:ai-frontend/src/lib/featureFlags.ts†L28-L48】 |
-| `VITE_BACKEND_URL`, `VITE_API_BASE`, `VITE_GATEWAY_URL`, `VITE_REMOTE_SITE_BASE` | Backend discovery fallbacks SPA-ში. | [`ai-frontend/src/lib/env.ts`](ai-frontend/src/lib/env.ts) 【F:ai-frontend/src/lib/env.ts†L46-L97】 |
+| `VITE_BACKEND_URL`, `VITE_API_BASE`, `VITE_GATEWAY_URL`, `VITE_API_PROXY_BASE` | Backend discovery fallbacks SPA-ში. | [`ai-frontend/src/lib/env.ts`](ai-frontend/src/lib/env.ts) 【F:ai-frontend/src/lib/env.ts†L46-L97】 |
 | `AI_SERVICE_URL` | API proxy/ტესტები → AI Service საბოლოო მისამართი. | [`ai-frontend/pages/api/ai/[...path].ts`](ai-frontend/pages/api/ai/[...path].ts) 【F:ai-frontend/pages/api/ai/[...path].ts†L1-L63】 |
 
 ## Production Security ❗
@@ -99,6 +99,9 @@ GITHUB_WEBHOOK_SECRET=shared_secret_for_webhook_validation
 GITHUB_API_URL=https://api.github.com (optional override)
 GITHUB_OWNER=legacy_owner_fallback (optional)
 GITHUB_REPO=legacy_repo_fallback (optional)
+GITHUB_SANDBOX_OWNER=github_username_or_org (optional for smoke tests)
+GITHUB_SANDBOX_REPO=repository_name (optional for smoke tests)
+GITHUB_SANDBOX_BASE_BRANCH=main (optional override)
 ```
 
 | Secret | სად გამოიყენება | რეფერენსი |
@@ -108,6 +111,7 @@ GITHUB_REPO=legacy_repo_fallback (optional)
 | `GITHUB_WEBHOOK_SECRET` | GitHub webhook-ის ხელმოწერის ვალიდაცია. | [`ai-service/routes/repository_automation.js`](ai-service/routes/repository_automation.js) 【F:ai-service/routes/repository_automation.js†L100-L118】 |
 | `GITHUB_API_URL` (optional) | Enterprise GitHub instance-ის მისამართი. | [`check-github-env.js`](check-github-env.js) 【F:check-github-env.js†L19-L101】 |
 | `GITHUB_OWNER` / `GITHUB_REPO` (legacy) | ძველი სკრიპტებისა და fallback ლოგიკისთვის. | [`scripts/github-verification.js`](scripts/github-verification.js) 【F:scripts/github-verification.js†L116-L170】 |
+| `GITHUB_SANDBOX_OWNER`, `GITHUB_SANDBOX_REPO`, `GITHUB_SANDBOX_BASE_BRANCH` | Operations smoke ტესტის მიზნობრივი რეპო/ბრენჩის განსაზღვრა. | [`backend/services/githubAiService.js`](backend/services/githubAiService.js) 【F:backend/services/githubAiService.js†L1800-L1898】 |
 
 ℹ️ **შენიშვნა:** `SECRET_KEY_BASE` და `GCP_SLACK_TOKEN` ამ რეპოზიტორიის აქტიურ კოდში არ გამოიყენება; თუ GitHub Secrets-ში რჩება, გადაამოწმეთ მათი საჭიროება redundant სეკრეტების თავიდან ასაცილებლად.【F:backend/services/secretsRequiredService.js†L12-L50】【313811†L1-L1】【ce6f0e†L1-L1】
 

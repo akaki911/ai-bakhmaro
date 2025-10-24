@@ -48,7 +48,7 @@ imgSrc.add('https:');
 imgSrc.add('http:');
 
 const connectSrc = buildDirectiveSet(defaultCspDirectives['connect-src'] ?? ["'self'"]);
-connectSrc.add(env.REMOTE_SITE_BASE);
+connectSrc.add(env.API_PROXY_BASE);
 connectSrc.add('https:');
 connectSrc.add('wss:');
 connectSrc.add('http:');
@@ -91,7 +91,7 @@ const cookieSecure = env.COOKIE_SECURE;
 const sessionCookieNameSet = new Set(env.SESSION_COOKIE_NAMES);
 const isSessionCookieName = createSessionCookieChecker(sessionCookieNameSet);
 
-type ServiceAudience = 'remote-site';
+type ServiceAudience = 'ai-service';
 
 const headerHasValue = (value: string | string[] | undefined): boolean => {
   if (Array.isArray(value)) {
@@ -302,7 +302,7 @@ app.use('/api/sites/:siteId/github', (req, res, next) => {
   next();
 });
 
-app.use('/api', createProxy(env.REMOTE_SITE_BASE, 'remote-site'));
+app.use('/api', createProxy(env.API_PROXY_BASE, 'ai-service'));
 
 app.use(express.static(staticRoot, { index: false, maxAge: env.NODE_ENV === 'production' ? '1h' : 0 }));
 

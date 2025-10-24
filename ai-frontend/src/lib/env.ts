@@ -87,7 +87,7 @@ export function getBackendBaseURL(): string {
       typeof env.VITE_API_BASE === 'string' ? env.VITE_API_BASE : undefined,
       typeof env.VITE_API_URL === 'string' ? env.VITE_API_URL : undefined,
       typeof env.VITE_GATEWAY_URL === 'string' ? env.VITE_GATEWAY_URL : undefined,
-      typeof env.VITE_REMOTE_SITE_BASE === 'string' ? env.VITE_REMOTE_SITE_BASE : undefined,
+      typeof env.VITE_API_PROXY_BASE === 'string' ? env.VITE_API_PROXY_BASE : undefined,
     );
   }
 
@@ -96,7 +96,7 @@ export function getBackendBaseURL(): string {
     readProcessEnv('VITE_API_BASE'),
     readProcessEnv('VITE_API_URL'),
     readProcessEnv('VITE_GATEWAY_URL'),
-    readProcessEnv('VITE_REMOTE_SITE_BASE'),
+    readProcessEnv('VITE_API_PROXY_BASE'),
     readProcessEnv('BACKEND_BASE_URL'),
   ];
 

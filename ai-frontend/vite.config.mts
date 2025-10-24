@@ -442,17 +442,48 @@ export default defineConfig({
         warn(warning);
       },
       output: {
-        manualChunks: {
-          vendor: [
-            'react',
-            'react-dom',
-            'firebase/app',
-            'firebase/auth',
-            'firebase/firestore',
-            'firebase/storage',
-            'chart.js/auto',
-            'monaco-editor',
-          ],
+        manualChunks(id) {
+          if (!id.includes('node_modules')) {
+            return undefined;
+          }
+
+          if (id.includes('monaco-editor') || id.includes('@monaco-editor')) {
+            return 'vendor-editor';
+          }
+
+          if (id.includes('lucide-react') || id.includes('@tabler/icons-react')) {
+            return 'vendor-icons';
+          }
+
+          if (id.includes('react-syntax-highlighter')) {
+            return 'vendor-highlighter';
+          }
+
+          if (id.includes('framer-motion')) {
+            return 'vendor-motion';
+          }
+
+          if (id.includes('date-fns')) {
+            return 'vendor-time';
+          }
+
+          if (id.includes('jspdf')) {
+            return 'vendor-export';
+          }
+
+          if (/[\\/]firebase[\\/]/.test(id)) {
+            return 'vendor-firebase';
+          }
+
+          if (id.includes('@tanstack/') || id.includes('swr')) {
+            return 'vendor-data';
+          }
+
+          if (id.includes('react') || id.includes('scheduler')) {
+            return 'vendor-react';
+          }
+
+          return 'vendor';
         },
       },
     },
