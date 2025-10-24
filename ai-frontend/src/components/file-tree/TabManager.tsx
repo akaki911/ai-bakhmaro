@@ -1,11 +1,18 @@
 
-import React, { useCallback, useRef } from 'react';
+import React, { Suspense, useCallback, useRef } from 'react';
+import type { editor as MonacoEditorApi } from 'monaco-editor';
 import { IconX, IconLoader2, IconAlertTriangle, IconCopy, IconCheck } from '@tabler/icons-react';
-import { Editor } from '@monaco-editor/react';
-import * as monaco from 'monaco-editor';
 import classNames from 'classnames';
 import { Tab } from '../../types/fileTree';
 import { getMonacoLanguage, encodeForHeader } from '../../utils/fileTreeUtils';
+
+const MonacoEditor = React.lazy(async () => {
+  const module = await import('@monaco-editor/react');
+  return { default: module.Editor };
+});
+
+type MonacoType = typeof import('monaco-editor');
+type MonacoEditorInstance = MonacoEditorApi.IStandaloneCodeEditor;
 
 interface TabManagerProps {
   openTabs: Tab[];
@@ -38,7 +45,7 @@ export const TabManager: React.FC<TabManagerProps> = ({
   setLoadingTabs,
   setOpenTabs
 }) => {
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const editorRef = useRef<MonacoEditorInstance | null>(null);
 
   // Get active tab data FIRST
   const activeTabData = openTabs.find(tab => tab.id === activeTab);
@@ -214,7 +221,7 @@ export const TabManager: React.FC<TabManagerProps> = ({
   }, [setOpenTabs]);
 
   // Handle editor mount
-  const handleEditorDidMount = useCallback((editor: monaco.editor.IStandaloneCodeEditor, monacoInstance: typeof monaco, tabId: string) => {
+  const handleEditorDidMount = useCallback((editor: MonacoEditorInstance, monacoInstance: MonacoType, tabId: string) => {
     editorRef.current = editor;
 
     editor.addCommand(monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyS, async () => {
@@ -229,7 +236,7 @@ export const TabManager: React.FC<TabManagerProps> = ({
     });
 
     // Define custom theme
-    monaco.editor.defineTheme('replit-dark', {
+    monacoInstance.editor.defineTheme('replit-dark', {
       base: 'vs-dark',
       inherit: true,
       rules: [
@@ -251,7 +258,7 @@ export const TabManager: React.FC<TabManagerProps> = ({
       }
     });
 
-    monaco.editor.setTheme('replit-dark');
+    monacoInstance.editor.setTheme('replit-dark');
 
     // Set initial content if available
     const currentTab = openTabs.find(t => t.id === tabId);
@@ -537,38 +544,47 @@ export const TabManager: React.FC<TabManagerProps> = ({
                   </button>
                 </div>
               ) : activeTabData.content !== undefined && activeTabData.content !== null && !loadingTabs.has(activeTabData.path) && !activeTabData.isLoading ? (
-                <Editor
-                  height="100%"
-                  language={getMonacoLanguage(activeTabData.name)}
-                  value={activeTabData.content || ''}
-                  theme="replit-dark"
-                  onChange={(value) => handleEditorChange(value, activeTabData.id)}
-                  onMount={(editor, monaco) => handleEditorDidMount(editor, monaco, activeTabData.id)}
-                  options={{
-                    minimap: { enabled: false },
-                    fontSize: 14,
-                    lineHeight: 21,
-                    fontFamily: 'JetBrains Mono, Monaco, monospace',
-                    wordWrap: activeTabData.name?.endsWith('.md') ? 'on' : 'off',
-                    automaticLayout: true,
-                    scrollBeyondLastLine: false,
-                    renderWhitespace: 'selection',
-                    bracketPairColorization: { enabled: true },
-                    guides: {
-                      bracketPairs: true,
-                      indentation: true
-                    },
-                    readOnly: false,
-                    tabSize: activeTabData.name?.endsWith('.json') ? 2 : 4,
-                    insertSpaces: true,
-                    detectIndentation: true,
-                    formatOnPaste: activeTabData.name?.endsWith('.json') || activeTabData.name?.endsWith('.ts') || activeTabData.name?.endsWith('.tsx'),
-                    formatOnType: activeTabData.name?.endsWith('.json'),
-                    lineNumbers: activeTabData.name?.endsWith('.md') ? 'off' : 'on',
-                    folding: true,
-                    foldingStrategy: 'indentation'
-                  }}
-                />
+                <Suspense
+                  fallback={(
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                      <IconLoader2 className="w-8 h-8 animate-spin text-[#58a6ff] mb-2" />
+                      <p className="text-[#e6edf3] text-sm">Monaco Editor იტვირთება…</p>
+                    </div>
+                  )}
+                >
+                  <MonacoEditor
+                    height="100%"
+                    language={getMonacoLanguage(activeTabData.name)}
+                    value={activeTabData.content || ''}
+                    theme="replit-dark"
+                    onChange={(value) => handleEditorChange(value, activeTabData.id)}
+                    onMount={(editor, monaco) => handleEditorDidMount(editor, monaco, activeTabData.id)}
+                    options={{
+                      minimap: { enabled: false },
+                      fontSize: 14,
+                      lineHeight: 21,
+                      fontFamily: 'JetBrains Mono, Monaco, monospace',
+                      wordWrap: activeTabData.name?.endsWith('.md') ? 'on' : 'off',
+                      automaticLayout: true,
+                      scrollBeyondLastLine: false,
+                      renderWhitespace: 'selection',
+                      bracketPairColorization: { enabled: true },
+                      guides: {
+                        bracketPairs: true,
+                        indentation: true
+                      },
+                      readOnly: false,
+                      tabSize: activeTabData.name?.endsWith('.json') ? 2 : 4,
+                      insertSpaces: true,
+                      detectIndentation: true,
+                      formatOnPaste: activeTabData.name?.endsWith('.json') || activeTabData.name?.endsWith('.ts') || activeTabData.name?.endsWith('.tsx'),
+                      formatOnType: activeTabData.name?.endsWith('.json'),
+                      lineNumbers: activeTabData.name?.endsWith('.md') ? 'off' : 'on',
+                      folding: true,
+                      foldingStrategy: 'indentation'
+                    }}
+                  />
+                </Suspense>
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <div className="w-8 h-8 border-4 border-[#58a6ff] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>

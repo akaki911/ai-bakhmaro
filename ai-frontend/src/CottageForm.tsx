@@ -1,8 +1,8 @@
 // @ts-nocheck
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, addDoc, collection, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { doc, getDoc, addDoc, collection, updateDoc } from '@/lib/firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from '@/lib/firebase/storage';
 import { db, storage } from './firebaseConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 

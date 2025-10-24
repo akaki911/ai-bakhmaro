@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import { useAuth } from './contexts/useAuth';
-import { collection, getDocs, query, limit, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, limit, orderBy } from '@/lib/firebase/firestore';
 import { Trees, Sun, Snowflake, Mountain } from 'lucide-react';
 import { db } from './firebaseConfig';
 import { getDisplayPriceForFamily } from './utils/pricing';

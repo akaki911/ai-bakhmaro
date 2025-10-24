@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Send, X, User, Calendar, Paperclip, Phone, Mail, Search, MoreVertical, Image, File, CheckCheck, Check, Clock } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
-import { collection, query, where, getDocs, addDoc, orderBy, onSnapshot, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, orderBy, onSnapshot, updateDoc, doc, serverTimestamp } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 import { messagingService } from '../services/messagingService';
 

@@ -1,5 +1,5 @@
 
-import { collection, query, getDocs, deleteDoc, doc, where, orderBy } from 'firebase/firestore';
+import { collection, query, getDocs, deleteDoc, doc, where, orderBy } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 
 export const cleanTestMessagingData = async () => {

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from './contexts/useAuth';
 import { ArrowLeft, User, Home, Calendar, Car, Hotel as HotelIcon, Star, Phone, Mail, ChevronRight, Download, Sparkles, Heart, Gift, Crown, Trophy, CheckCircle, Clock, CreditCard, RefreshCw, Zap, Palette, Camera } from 'lucide-react';
 import { getBookingsByUser, getCottages, getVehicles, getHotels } from './services/bookingService';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy } from '@/lib/firebase/firestore';
 import { db } from './firebaseConfig';
 import type { Cottage } from './types/cottage';
 import type { Vehicle } from './types/vehicle';

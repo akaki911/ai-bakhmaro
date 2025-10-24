@@ -15,7 +15,7 @@ import {
   limit,
   startAfter,
   DocumentSnapshot
-} from 'firebase/firestore';
+} from '@/lib/firebase/firestore';
 import { db, auth } from '../firebaseConfig';
 
 // Support team configuration - აკაკი ცინცაძე ყველასთვის

@@ -27,7 +27,7 @@ import {
   doc,
   updateDoc,
   serverTimestamp,
-} from "firebase/firestore";
+} from "@/lib/firebase/firestore";
 import { db } from "./firebaseConfig";
 
 interface Booking {

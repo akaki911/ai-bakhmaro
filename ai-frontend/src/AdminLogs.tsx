@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, deleteDoc, doc } from '@/lib/firebase/firestore';
 import { db } from './firebaseConfig';
 // Authentication hooks removed - unused
 import { motion } from 'framer-motion';

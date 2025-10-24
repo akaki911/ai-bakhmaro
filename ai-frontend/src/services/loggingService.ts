@@ -1,5 +1,5 @@
 
-import { collection, addDoc, query, orderBy, limit, where, getDocs, Timestamp, doc, updateDoc, writeBatch, startAfter as startAfterConstraint, QueryConstraint } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, limit, where, getDocs, Timestamp, doc, updateDoc, writeBatch, startAfter as startAfterConstraint, QueryConstraint } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 import { CorrelationId } from '../utils/correlationId';
 

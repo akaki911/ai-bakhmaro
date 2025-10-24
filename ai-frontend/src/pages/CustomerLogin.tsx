@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, ArrowLeft, Eye, EyeOff } from 'lucide-react';
-import { sendPasswordResetEmail } from 'firebase/auth';
+import { sendPasswordResetEmail } from '@/lib/firebase/auth';
 import { auth } from '../firebase';
 import { useAuth } from '../contexts/useAuth';
 
