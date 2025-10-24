@@ -13,9 +13,10 @@ This checklist captures the required steps to replace the legacy static site wit
    ```bash
    AI_DOMAIN=https://ai.bakhmaro.co
    ROOT_DOMAIN=bakhmaro.co
-   API_PROXY_BASE=https://api.ai.bakhmaro.co
+   API_PROXY_BASE=https://backend.ai.bakhmaro.co
    JWT_SECRET=<generate-a-strong-secret>
    ```
+   The TLS certificate installed on `backend.ai.bakhmaro.co` must present that exact host in the Common Name or SAN entries so that Vite's `VITE_BACKEND_URL` fallback and the gateway proxy both negotiate HTTPS without certificate mismatch warnings.
    When configuring the backend service environment, ensure the cache TTL remains in milliseconds:
    ```env
    CACHE_TTL=3600000  # milliseconds (1 hour default)
