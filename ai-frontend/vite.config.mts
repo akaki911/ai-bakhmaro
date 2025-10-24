@@ -36,11 +36,9 @@ interface ServiceHealthStatus extends ServiceHealthTarget {
 const SERVICE_HEALTH_TARGETS: ServiceHealthTarget[] = [
   { name: "AI Service", label: "AI:5001", url: "http://127.0.0.1:5001/health" },
   { name: "Gateway", label: "Gateway:4000", url: "http://127.0.0.1:4000/health" },
-  { name: "Property API", label: "Property:5100", url: "http://127.0.0.1:5100/health" },
 ];
 
 const BACKEND_PROXY_TARGET = process.env.VITE_PROXY_TARGET?.trim() || "http://127.0.0.1:5002";
-const PROPERTY_API_TARGET = process.env.VITE_PROPERTY_API_TARGET?.trim() || "http://127.0.0.1:5100";
 const INTERNAL_HEADER = "x-internal-token";
 const INTERNAL_TOKEN = (process.env.AI_INTERNAL_TOKEN ?? "").trim();
 let internalTokenWarningLogged = false;
@@ -420,7 +418,6 @@ export default defineConfig({
       interval: 800,
     },
     proxy: {
-      "/api/property": createServiceProxyConfig("Property API (5100) :: /api/property", PROPERTY_API_TARGET),
       "/api/admin": createServiceProxyConfig("Backend (5002) :: /api/admin", BACKEND_PROXY_TARGET),
       "/api/auth": createServiceProxyConfig("Backend (5002) :: /api/auth", BACKEND_PROXY_TARGET),
       "/api": createServiceProxyConfig("Backend (5002) :: /api", BACKEND_PROXY_TARGET),

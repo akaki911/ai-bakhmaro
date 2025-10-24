@@ -1,6 +1,5 @@
 import path from 'node:path';
 import frontendConfig from './ai-frontend/eslint.config.mjs';
-import propertyApiConfig from './property-api/eslint.config.mjs';
 import gatewayConfig from './gateway/eslint.config.mjs';
 
 function prefixConfigs(configs, baseDir) {
@@ -53,6 +52,5 @@ const baseIgnores = [
 export default [
   { ignores: baseIgnores },
   ...prefixConfigs(frontendConfig, 'ai-frontend'),
-  ...prefixConfigs(propertyApiConfig, 'property-api'),
   ...prefixConfigs(gatewayConfig, 'gateway'),
 ];
