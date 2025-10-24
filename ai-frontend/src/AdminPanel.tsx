@@ -120,12 +120,8 @@ const AdminPanel: React.FC = () => {
   const menuItems = [
     { id: 'dashboard', label: 'დეშბორდი', icon: BarChart3 },
     { id: 'autoupdate', label: 'ავტო-განახლება', icon: Settings },
-    { id: 'bookings', label: 'ჯავშნები', icon: BookOpen },
-    { id: 'calendar', label: 'კალენდარი', icon: Calendar },
-    { id: 'cottages', label: 'კოტეჯები', icon: Building2 },
-    { id: 'vehicles', label: 'ავტომობილები', icon: Car },
-    { id: 'users', label: 'მომხმარებლები', icon: Users },
-    { id: 'messaging', label: 'მესიჯები', icon: MessageSquare },
+    { id: 'aiDeveloper', label: 'AI სივრცე', icon: BrainCircuit },
+    { id: 'aiDiagnostics', label: 'Health & Diagnostics', icon: Activity },
     { id: 'settings', label: 'პარამეტრები', icon: Settings },
     { id: 'security', label: 'Security Audit', icon: Shield }, // Added Security Audit tab item
   ];
@@ -166,24 +162,6 @@ const AdminPanel: React.FC = () => {
 
   const navigateToSection = (section: string) => {
     switch (section) {
-      case 'bookings':
-        window.location.href = '/admin/javshnissia';
-        break;
-      case 'calendar':
-        window.location.href = '/admin/calendar';
-        break;
-      case 'cottages':
-        window.location.href = '/admin/cottages';
-        break;
-      case 'vehicles':
-        window.location.href = '/admin/vehicles';
-        break;
-      case 'users':
-        window.location.href = '/admin/users';
-        break;
-      case 'messaging':
-        window.location.href = '/admin/messaging';
-        break;
       case 'aiDeveloper':
         setActiveTab('aiDeveloper');
         setSelectedGuruloSection('overview');
