@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { auth, db } from '../firebase';
+import { auth, db, firebaseEnabled } from '../firebase';
 import {
   collection,
   doc,
@@ -380,6 +380,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Optimized authentication initialization with faster loading
   useEffect(() => {
+    if (!firebaseEnabled) {
+      if (import.meta.env.DEV) {
+        console.warn('⚠️ Firebase disabled — skipping client auth bootstrap.');
+      }
+
+      setIsLoading(false);
+      setAuthInitialized(false);
+      setIsAuthReady(true);
+      setRouteAdvice(prev => ({
+        ...prev,
+        reason: 'Firebase disabled; AI-only mode active',
+        authenticated: false,
+      }));
+
+      return;
+    }
+
     let mounted = true;
     let firebaseUnsubscribe: (() => void) | null = null;
     let timeoutId: NodeJS.Timeout;

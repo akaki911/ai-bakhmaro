@@ -71,6 +71,10 @@ This flow is implemented in the gateway entrypoint: unauthenticated requests on 
 | `SERVICE_JWT_ISSUER` | Gateway | Defaults to `ai-gateway`. | Issuer claim attached to the short-lived service token. | Override only if you customise the gateway identity. |
 | `SERVICE_JWT_SUBJECT` | Gateway | Defaults to `gateway-service`. | Subject claim for the service token. | Only change if you operate multiple trusted edge gateways. |
 
+### Firebase configuration policy
+
+> ⚠️ Production deployments must source every `VITE_FIREBASE_*` value from environment variables. The repository now ships only placeholder fallbacks to support local scaffolding, and the retired `bakhmaro-cottages` project identifiers are forbidden in production bundles.
+
 ## Local development servers
 
 Use [`pnpm`](https://pnpm.io/) from the repository root to start both services in watch mode:
