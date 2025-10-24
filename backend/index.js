@@ -339,6 +339,88 @@ app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
 // CORS Configuration
+const defaultCorsMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'];
+const defaultCorsHeaders = [
+  'Content-Type',
+  'Authorization',
+  'X-Admin-Setup-Token',
+  'X-Device-Fingerprint',
+  'X-Requested-With',
+  'X-Correlation-ID',
+  'Cookie',
+  'Cache-Control',
+  'Accept',
+  'Origin',
+  'Referer'
+];
+
+const buildAllowedHeaders = (req) => {
+  const headerMap = new Map(defaultCorsHeaders.map((header) => [header.toLowerCase(), header]));
+  const requestedHeaders = req.header('Access-Control-Request-Headers');
+
+  if (requestedHeaders) {
+    requestedHeaders
+      .split(',')
+      .map((header) => header.trim())
+      .filter(Boolean)
+      .forEach((header) => {
+        const key = header.toLowerCase();
+        if (!headerMap.has(key)) {
+          headerMap.set(key, header);
+        }
+      });
+  }
+
+  return Array.from(headerMap.values());
+};
+
+const buildAllowedMethods = (req) => {
+  const methods = new Set(defaultCorsMethods);
+  const requestedMethod = req.header('Access-Control-Request-Method');
+
+  if (requestedMethod) {
+    methods.add(requestedMethod.toUpperCase());
+  }
+
+  return Array.from(methods);
+};
+
+const applyCorsHeaders = (res, options) => {
+  const {
+    origin,
+    credentials,
+    methods,
+    allowedHeaders,
+    exposedHeaders,
+    maxAge,
+    varyHeaders = []
+  } = options;
+
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  if (credentials) {
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  if (Array.isArray(methods) && methods.length > 0) {
+    res.setHeader('Access-Control-Allow-Methods', methods.join(', '));
+  }
+  if (Array.isArray(allowedHeaders) && allowedHeaders.length > 0) {
+    res.setHeader('Access-Control-Allow-Headers', allowedHeaders.join(', '));
+  }
+  if (Array.isArray(exposedHeaders) && exposedHeaders.length > 0) {
+    res.setHeader('Access-Control-Expose-Headers', exposedHeaders.join(', '));
+  }
+  if (maxAge) {
+    res.setHeader('Access-Control-Max-Age', String(maxAge));
+  }
+
+  res.append('Vary', 'Origin');
+  varyHeaders.forEach((header) => {
+    res.append('Vary', header);
+  });
+};
+
 const determineAllowedOrigin = (req) => {
   const requestOrigin = req.header('Origin');
   if (!requestOrigin) {
@@ -352,23 +434,26 @@ const determineAllowedOrigin = (req) => {
   return null;
 };
 
-const resolveCorsOptions = (req) => {
+const resolveCorsOptions = (req, resolvedOrigin) => {
   const fallbackOrigin = getRpConfig(req).origin;
-  const origin = determineAllowedOrigin(req) || fallbackOrigin;
+  const origin = resolvedOrigin || determineAllowedOrigin(req) || fallbackOrigin;
+  const allowedHeaders = buildAllowedHeaders(req);
+  const methods = buildAllowedMethods(req);
+  const varyHeaders = [];
+
+  if (req.header('Access-Control-Request-Headers')) {
+    varyHeaders.push('Access-Control-Request-Headers');
+  }
+
+  if (req.header('Access-Control-Request-Method')) {
+    varyHeaders.push('Access-Control-Request-Method');
+  }
+
   return {
     origin,
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'X-Admin-Setup-Token',
-      'X-Device-Fingerprint',
-      'X-Requested-With',
-      'X-Correlation-ID',
-      'Cookie',
-      'Cache-Control'
-    ],
+    methods,
+    allowedHeaders,
     exposedHeaders: [
       'Set-Cookie',
       'X-RateLimit-Limit',
@@ -377,7 +462,8 @@ const resolveCorsOptions = (req) => {
       'X-Correlation-ID'
     ],
     optionsSuccessStatus: 200,
-    maxAge: 86400
+    maxAge: 86400,
+    varyHeaders
   };
 };
 
@@ -385,8 +471,8 @@ app.use((req, res, next) => {
   try {
     const origin = determineAllowedOrigin(req);
     if (origin) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      const options = resolveCorsOptions(req, origin);
+      applyCorsHeaders(res, options);
     } else if (req.header('Origin')) {
       console.warn(`🚫 [CORS] Blocked response header for origin: ${req.header('Origin')}`);
     }
@@ -406,11 +492,30 @@ const corsOptionsDelegate = (req, callback) => {
     return callback(new Error('Not allowed by CORS'));
   }
 
-  const options = resolveCorsOptions(req);
+  const options = resolveCorsOptions(req, allowedOrigin);
   callback(null, options);
 };
 
-app.options('*', cors(corsOptionsDelegate));
+app.options('*', (req, res) => {
+  const allowedOrigin = determineAllowedOrigin(req);
+
+  if (!allowedOrigin) {
+    const requestOrigin = req.header('Origin');
+    if (requestOrigin) {
+      console.warn(`🚫 [CORS] Preflight blocked origin: ${requestOrigin}`);
+    }
+    return res.status(403).json({
+      success: false,
+      error: 'CORS_NOT_ALLOWED',
+      message: 'Origin is not permitted'
+    });
+  }
+
+  const options = resolveCorsOptions(req, allowedOrigin);
+  applyCorsHeaders(res, options);
+
+  res.status(options.optionsSuccessStatus || 204).end();
+});
 app.use(cors(corsOptionsDelegate));
 
 // Enhanced Rate Limiting Configuration - Increased for WebAuthn testing
