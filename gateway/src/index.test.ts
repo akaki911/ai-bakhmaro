@@ -48,7 +48,6 @@ describe('gateway integration', () => {
       SERVICE_JWT_ISSUER: process.env.SERVICE_JWT_ISSUER,
       SERVICE_JWT_SUBJECT: process.env.SERVICE_JWT_SUBJECT,
       REMOTE_SITE_BASE: process.env.REMOTE_SITE_BASE,
-      PROPERTY_API_URL: process.env.PROPERTY_API_URL,
       STATIC_ROOT: process.env.STATIC_ROOT,
     };
 
@@ -58,7 +57,6 @@ describe('gateway integration', () => {
       SERVICE_JWT_ISSUER: 'gateway-test',
       SERVICE_JWT_SUBJECT: 'gateway-service-test',
       REMOTE_SITE_BASE: 'http://127.0.0.1:5999',
-      PROPERTY_API_URL: 'http://127.0.0.1:5998',
       STATIC_ROOT: '.',
     };
 

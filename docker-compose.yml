@@ -37,7 +37,6 @@ services:
       - .env
     environment:
       PORT: 8080
-      PROPERTY_API_URL: http://property-api:5100
       REMOTE_SITE_BASE: ${REMOTE_SITE_BASE:-http://ai-frontend:5173}
       STATIC_ROOT: ${GATEWAY_STATIC_ROOT:-/app/static}
       AI_DOMAIN: ${AI_DOMAIN:-http://localhost:5173}
@@ -46,39 +45,12 @@ services:
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-https://ai.bakhmaro.co}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       LOGIN_PATH: ${LOGIN_PATH:-/login}
-    depends_on:
-      property-api:
-        condition: service_healthy
     networks:
       - ai-stack
     volumes:
       - ./ai-frontend/dist:${GATEWAY_STATIC_ROOT:-/app/static}:ro
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://localhost:8080/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-  property-api:
-    build:
-      context: ./property-api
-    ports:
-      - "5100:5100"
-    env_file:
-      - .env
-    environment:
-      PORT: 5100
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
-      SERVICE_JWT_ISSUER: ai-gateway
-      SERVICE_JWT_SUBJECT: gateway-service
-      SERVICE_JWT_AUDIENCE: property-api
-      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-demo-bakhmaro}
-      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-https://ai.bakhmaro.co}
-    networks:
-      - ai-stack
-    healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://localhost:5100/health"]
       interval: 10s
       timeout: 5s
       retries: 5
