@@ -1,0 +1,58 @@
+{
+  "generatedAt": "2025-02-18T00:00:00.000Z",
+  "retryAttempts": 3,
+  "backoffMs": 1500,
+  "timeoutMs": 5000,
+  "results": [
+    {
+      "key": "backend",
+      "label": "Backend",
+      "state": "OK",
+      "summary": "HTTP 200",
+      "attempt": 1,
+      "status": 200,
+      "durationMs": 142,
+      "optional": false
+    },
+    {
+      "key": "ai-service",
+      "label": "AI Service",
+      "state": "OK",
+      "summary": "HTTP 200",
+      "attempt": 1,
+      "status": 200,
+      "durationMs": 187,
+      "optional": false
+    },
+    {
+      "key": "gateway",
+      "label": "Gateway",
+      "state": "WARN",
+      "summary": "HTTP 503",
+      "attempt": 3,
+      "status": 503,
+      "durationMs": 0,
+      "optional": true
+    },
+    {
+      "key": "webauthn-debug",
+      "label": "WebAuthn Debug",
+      "state": "WARN",
+      "summary": "HTTP 401",
+      "attempt": 2,
+      "status": 401,
+      "durationMs": 211,
+      "optional": true
+    },
+    {
+      "key": "admin-session",
+      "label": "Admin Session",
+      "state": "WARN",
+      "summary": "სესია არააქტიურია (401)",
+      "attempt": 1,
+      "status": 401,
+      "durationMs": 95,
+      "optional": false
+    }
+  ]
+}
