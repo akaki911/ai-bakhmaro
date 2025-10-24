@@ -49,6 +49,7 @@ imgSrc.add('http:');
 
 const connectSrc = buildDirectiveSet(defaultCspDirectives['connect-src'] ?? ["'self'"]);
 connectSrc.add(env.API_PROXY_BASE);
+connectSrc.add(env.BACKEND_PROXY_BASE);
 connectSrc.add('https:');
 connectSrc.add('wss:');
 connectSrc.add('http:');
@@ -91,7 +92,7 @@ const cookieSecure = env.COOKIE_SECURE;
 const sessionCookieNameSet = new Set(env.SESSION_COOKIE_NAMES);
 const isSessionCookieName = createSessionCookieChecker(sessionCookieNameSet);
 
-type ServiceAudience = 'ai-service';
+type ServiceAudience = 'ai-service' | 'backend';
 
 const headerHasValue = (value: string | string[] | undefined): boolean => {
   if (Array.isArray(value)) {
@@ -301,6 +302,8 @@ app.use('/api/sites/:siteId/github', (req, res, next) => {
   req.headers['x-target-repo'] = repo;
   next();
 });
+
+app.use('/api/auth/route-advice', createProxy(env.BACKEND_PROXY_BASE, 'backend'));
 
 app.use('/api', createProxy(env.API_PROXY_BASE, 'ai-service'));
 
