@@ -11,6 +11,9 @@ import {
 import type { Auth } from '@/lib/firebase/auth';
 import { getFirestore } from '@/lib/firebase/firestore';
 import { getStorage } from '@/lib/firebase/storage';
+import type { FirebaseApp } from 'firebase/app';
+import type { Firestore } from 'firebase/firestore';
+import type { FirebaseStorage } from 'firebase/storage';
 
 type EnvKey =
   | 'VITE_FIREBASE_API_KEY'
@@ -22,13 +25,13 @@ type EnvKey =
   | 'VITE_FIREBASE_MEASUREMENT_ID';
 
 const FALLBACK_CONFIG: Partial<Record<EnvKey, string>> = {
-  VITE_FIREBASE_API_KEY: 'AIzaSyBPkVGW4VsM55GlEB6koU3ZYkKmLATMGC8',
-  VITE_FIREBASE_AUTH_DOMAIN: 'ai-bakhmaro.firebaseapp.com',
-  VITE_FIREBASE_PROJECT_ID: 'ai-bakhmaro',
-  VITE_FIREBASE_STORAGE_BUCKET: 'ai-bakhmaro.firebasestorage.app',
-  VITE_FIREBASE_MESSAGING_SENDER_ID: '34250385727',
-  VITE_FIREBASE_APP_ID: '1:34250385727:web:7ca8712e87287c0ff38b8a',
-  VITE_FIREBASE_MEASUREMENT_ID: 'VITE_FIREBASE_MEASUREMENT_ID',
+  VITE_FIREBASE_API_KEY: 'MISSING_VITE_FIREBASE_API_KEY',
+  VITE_FIREBASE_AUTH_DOMAIN: 'MISSING_VITE_FIREBASE_AUTH_DOMAIN',
+  VITE_FIREBASE_PROJECT_ID: 'MISSING_VITE_FIREBASE_PROJECT_ID',
+  VITE_FIREBASE_STORAGE_BUCKET: 'MISSING_VITE_FIREBASE_STORAGE_BUCKET',
+  VITE_FIREBASE_MESSAGING_SENDER_ID: 'MISSING_VITE_FIREBASE_MESSAGING_SENDER_ID',
+  VITE_FIREBASE_APP_ID: 'MISSING_VITE_FIREBASE_APP_ID',
+  VITE_FIREBASE_MEASUREMENT_ID: 'MISSING_VITE_FIREBASE_MEASUREMENT_ID',
 };
 
 const fallbackUsage = new Set<EnvKey>();
@@ -49,7 +52,9 @@ const readEnv = (key: EnvKey): string | undefined => {
   const fallbackValue = FALLBACK_CONFIG[key];
   if (fallbackValue) {
     fallbackUsage.add(key);
-    return fallbackValue;
+
+    // Placeholders intentionally do not enable Firebase connectivity.
+    return undefined;
   }
 
   return undefined;
@@ -74,15 +79,6 @@ const requiredEntries: Array<[EnvKey, string | undefined]> = [
 
 const missingKeys = requiredEntries.filter(([, value]) => !value).map(([key]) => key);
 
-if (fallbackUsage.size > 0) {
-  const fallbackKeys = Array.from(fallbackUsage);
-  if (import.meta.env?.DEV) {
-    console.warn('⚠️ Firebase configuration fallback in use for keys:', fallbackKeys);
-  } else {
-    console.info('ℹ️ [Firebase] Using baked-in configuration for keys:', fallbackKeys);
-  }
-}
-
 const runtimeMode =
   (typeof import.meta !== 'undefined' && import.meta.env?.MODE) ||
   (typeof process !== 'undefined' ? process.env?.NODE_ENV : undefined) ||
@@ -90,58 +86,123 @@ const runtimeMode =
 
 const isProdLike = runtimeMode === 'production' || import.meta.env?.PROD === true;
 const isTestLike = runtimeMode === 'test' || import.meta.env?.TEST === true;
-
-if (fallbackUsage.size > 0 && isProdLike && !isTestLike) {
-  const fallbackKeys = Array.from(fallbackUsage).join(', ');
+if (fallbackUsage.size > 0 && !isTestLike) {
+  const fallbackKeys = Array.from(fallbackUsage);
   const guidance =
-    'Firebase fallback credentials are intended for development only. ' +
+    'Firebase environment variables are required in production. ' +
     'Set VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID, ' +
-    'VITE_FIREBASE_APP_ID, VITE_FIREBASE_STORAGE_BUCKET, VITE_FIREBASE_MESSAGING_SENDER_ID ' +
-    'and VITE_FIREBASE_MEASUREMENT_ID with the production project values when possible.';
-  console.error('⚠️ Firebase fallback configuration is active in production for keys:', fallbackKeys);
-  console.error(guidance);
+    'VITE_FIREBASE_APP_ID, VITE_FIREBASE_STORAGE_BUCKET, VITE_FIREBASE_MESSAGING_SENDER_ID, ' +
+    'and VITE_FIREBASE_MEASUREMENT_ID.';
+
+  if (isProdLike) {
+    console.error('❌ Firebase configuration error (fallback placeholders detected for keys):', fallbackKeys);
+    console.error(guidance);
+  } else if (import.meta.env?.DEV) {
+    console.warn('⚠️ Firebase environment variables missing; running with placeholder configuration for keys:', fallbackKeys);
+    console.warn(guidance);
+  }
 }
 
-if (missingKeys.length > 0) {
+const hasRequiredConfig = missingKeys.length === 0;
+
+if (!hasRequiredConfig) {
   const diagnosticMessage =
     'Missing required Firebase environment variables. Please set the following keys in your environment configuration: ' +
     missingKeys.join(', ');
 
-  console.error('❌ Firebase configuration error:', diagnosticMessage);
-  throw new Error(diagnosticMessage);
+  if (isProdLike && !isTestLike) {
+    console.error('❌ Firebase configuration error:', diagnosticMessage);
+    throw new Error(diagnosticMessage);
+  }
+
+  console.warn('⚠️ Firebase disabled — proceeding without Firebase services.');
 }
 
-const resolvedConfig = {
-  apiKey: firebaseConfig.apiKey!,
-  authDomain: firebaseConfig.authDomain!,
-  projectId: firebaseConfig.projectId!,
-  storageBucket: firebaseConfig.storageBucket || `${firebaseConfig.projectId}.firebasestorage.app`,
-  messagingSenderId: firebaseConfig.messagingSenderId,
-  appId: firebaseConfig.appId!,
-  measurementId: firebaseConfig.measurementId,
-};
+const createDisabledProxy = <T extends object>(label: string, base: Record<PropertyKey, unknown> = {}): T =>
+  new Proxy(base, {
+    get(target, prop, receiver) {
+      if (prop === Symbol.toStringTag) {
+        return 'FirebaseDisabled';
+      }
 
-console.debug('🔧 Firebase config resolved', {
-  projectId: resolvedConfig.projectId,
-  authDomain: resolvedConfig.authDomain,
-  storageBucket: resolvedConfig.storageBucket,
-  hasMessagingSenderId: Boolean(resolvedConfig.messagingSenderId),
-  hasMeasurementId: Boolean(resolvedConfig.measurementId),
-});
+      if (Reflect.has(target, prop)) {
+        return Reflect.get(target, prop, receiver);
+      }
 
-const app = getApps().length ? getApp() : initializeApp(resolvedConfig);
+      throw new Error(
+        `Firebase is disabled (${label}). Configure the required VITE_FIREBASE_* environment variables to enable this feature.`,
+      );
+    },
+    apply() {
+      throw new Error(
+        `Firebase is disabled (${label}). Configure the required VITE_FIREBASE_* environment variables to enable this feature.`,
+      );
+    },
+  }) as T;
 
+let app: FirebaseApp;
 let authInstance: Auth;
-try {
-  authInstance = getAuth(app);
-} catch {
-  authInstance = initializeAuth(app, {
-    persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+let dbInstance: Firestore;
+let storageInstance: FirebaseStorage;
+
+if (hasRequiredConfig) {
+  const resolvedConfig = {
+    apiKey: firebaseConfig.apiKey!,
+    authDomain: firebaseConfig.authDomain!,
+    projectId: firebaseConfig.projectId!,
+    storageBucket: firebaseConfig.storageBucket || `${firebaseConfig.projectId}.firebasestorage.app`,
+    messagingSenderId: firebaseConfig.messagingSenderId,
+    appId: firebaseConfig.appId!,
+    measurementId: firebaseConfig.measurementId,
+  };
+
+  console.debug('🔧 Firebase config resolved', {
+    projectId: resolvedConfig.projectId,
+    authDomain: resolvedConfig.authDomain,
+    storageBucket: resolvedConfig.storageBucket,
+    hasMessagingSenderId: Boolean(resolvedConfig.messagingSenderId),
+    hasMeasurementId: Boolean(resolvedConfig.measurementId),
+  });
+
+  app = getApps().length ? getApp() : initializeApp(resolvedConfig);
+
+  try {
+    authInstance = getAuth(app);
+  } catch {
+    authInstance = initializeAuth(app, {
+      persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+    });
+  }
+
+  dbInstance = getFirestore(app);
+  storageInstance = getStorage(app);
+} else {
+  app = createDisabledProxy<FirebaseApp>('app', {
+    name: 'firebase-disabled',
+    automaticDataCollectionEnabled: false,
+    options: {},
+  });
+
+  authInstance = createDisabledProxy<Auth>('auth', {
+    app,
+    currentUser: null,
+    languageCode: null,
+    tenantId: null,
+  });
+
+  dbInstance = createDisabledProxy<Firestore>('firestore', {
+    app,
+    type: 'firestore',
+  });
+
+  storageInstance = createDisabledProxy<FirebaseStorage>('storage', {
+    app,
   });
 }
 
+export const firebaseEnabled = hasRequiredConfig;
 export const auth: Auth = authInstance;
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+export const db = dbInstance;
+export const storage = storageInstance;
 
 export default app;
