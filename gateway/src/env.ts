@@ -72,7 +72,7 @@ export const getEnv = (): GatewayEnv => {
   const data = parsed.data;
   const proxyBase =
     data.API_PROXY_BASE ?? data.UPSTREAM_API_URL ?? data.REMOTE_SITE_BASE ?? 'http://127.0.0.1:5002';
-  const backendBase = data.BACKEND_PROXY_BASE ?? proxyBase ?? 'http://127.0.0.1:5002';
+  const backendProxyBase = data.BACKEND_PROXY_BASE ?? 'http://127.0.0.1:5002';
   let siteMapping: Record<string, string> = {};
   if (typeof data.SITE_MAPPING_GITHUB === 'string' && data.SITE_MAPPING_GITHUB.trim().length > 0) {
     try {
@@ -98,7 +98,7 @@ export const getEnv = (): GatewayEnv => {
   cachedEnv = {
     ...rest,
     API_PROXY_BASE: proxyBase,
-    BACKEND_PROXY_BASE: backendBase,
+    BACKEND_PROXY_BASE: backendProxyBase,
     COOKIE_DOMAIN: cookieDomain,
     SESSION_COOKIE_NAMES: data.SESSION_COOKIE_NAMES,
     SITE_MAPPING_GITHUB: siteMapping,
