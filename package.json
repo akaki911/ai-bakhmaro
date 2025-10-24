@@ -13,8 +13,8 @@
     "dev:property-api": "npm run dev -w property-api",
     "dev:gateway": "npm run dev -w gateway",
     "build": "node scripts/run-workspace-build.mjs",
-    "lint": "npm run lint -ws --if-present",
-    "test": "npm run test -ws --if-present",
+    "lint": "pnpm -w -r run lint --if-present",
+    "test": "pnpm -w -r run test --if-present",
     "type-check": "npm run type-check -w ai-frontend --if-present",
     "check:secrets-required": "echo '✅ Secrets check skipped on CI environment'"
   },
