@@ -95,6 +95,9 @@ curl -I http://127.0.0.1:8080/
 ```
 You should see 302 redirects from `/` to `/login`, 200 health checks, and responses from the new AI gateway instead of the legacy static site.
 
+- From the repository root run `pnpm run health-check` to capture a retry-aware health snapshot. Attach the resulting
+  `artifacts/system-health-report.json` to the deployment record or pipeline logs for traceability.
+
 - Open the AI Developer dashboard → **GitHub → Operations** და გაუშვით sandbox smoke ტესტი, რათა დარწმუნდეთ, რომ GitHub ტოკენი და CI ინტეგრაცია კვლავ მუშაობს.
 
 Once these checks pass, the production deployment is complete.

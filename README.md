@@ -34,6 +34,16 @@ Environment knobs:
 - `GITHUB_SANDBOX_OWNER`, `GITHUB_SANDBOX_REPO`, `GITHUB_SANDBOX_BASE_BRANCH` — target repo/branch for automated smoke PRs.
 - `GITHUB_OPERATIONS_ALLOWLIST`, `GITHUB_OPERATIONS_DENYLIST` — optional overrides for the default path policy (comma-separated values).
 
+## Monitoring & health artifacts
+
+- Run `pnpm run health-check` to execute the resilient `system-health-check.js` script. It retries each probe with exponential backoff,
+  prints a colour-coded summary, and emits a JSON artifact to `artifacts/system-health-report.json` (configurable via
+  `SYSTEM_HEALTH_OUTPUT`).
+- The generated artifact mirrors the format captured in [`docs/metrics/system-health-report.sample.json`](docs/metrics/system-health-report.sample.json),
+  making it easy to upload as a CI attachment or long-term dashboard input.
+- Combine the health report with the bundle baseline metrics in [`docs/metrics/bundle-baseline.json`](docs/metrics/bundle-baseline.json)
+  to monitor performance regressions across releases.
+
 ## Authentication request sequence
 1. A browser request to `/` lands on the gateway.
 2. If no auth headers or session cookies are present, the gateway responds with `302 /login`.

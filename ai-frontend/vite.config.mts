@@ -451,6 +451,26 @@ export default defineConfig({
             return 'vendor-editor';
           }
 
+          if (id.includes('lucide-react') || id.includes('@tabler/icons-react')) {
+            return 'vendor-icons';
+          }
+
+          if (id.includes('react-syntax-highlighter')) {
+            return 'vendor-highlighter';
+          }
+
+          if (id.includes('framer-motion')) {
+            return 'vendor-motion';
+          }
+
+          if (id.includes('date-fns')) {
+            return 'vendor-time';
+          }
+
+          if (id.includes('jspdf')) {
+            return 'vendor-export';
+          }
+
           if (/[\\/]firebase[\\/]/.test(id)) {
             return 'vendor-firebase';
           }

@@ -14,6 +14,7 @@
     "lint": "npm run lint -ws --if-present",
     "test": "npm run test -ws --if-present",
     "type-check": "npm run type-check -w ai-frontend --if-present",
+    "health-check": "node system-health-check.js",
     "test:integration": "./scripts/run-integration-tests.sh",
     "check:secrets-required": "echo '✅ Secrets check skipped on CI environment'"
   },
