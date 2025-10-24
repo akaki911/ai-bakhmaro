@@ -91,7 +91,9 @@ export const getEnv = (): GatewayEnv => {
     : null;
   const publicOrigin = publicOriginRaw ?? aiDomain ?? null;
 
-  const { SITE_MAPPING_GITHUB, REMOTE_SITE_BASE: _legacyRemoteBase, ...rest } = data;
+  const { SITE_MAPPING_GITHUB: _siteMappingJson, REMOTE_SITE_BASE: _legacyRemoteBase, ...rest } = data;
+  void _siteMappingJson;
+  void _legacyRemoteBase;
 
   cachedEnv = {
     ...rest,

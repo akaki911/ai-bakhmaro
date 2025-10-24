@@ -49,6 +49,7 @@ imgSrc.add('http:');
 
 const connectSrc = buildDirectiveSet(defaultCspDirectives['connect-src'] ?? ["'self'"]);
 connectSrc.add(env.API_PROXY_BASE);
+connectSrc.add(env.BACKEND_PROXY_BASE);
 connectSrc.add('https:');
 connectSrc.add('wss:');
 connectSrc.add('http:');
