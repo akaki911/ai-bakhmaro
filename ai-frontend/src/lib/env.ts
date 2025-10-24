@@ -15,6 +15,17 @@ const pickFirstNonEmpty = (values: Array<string | undefined | null>): string => 
   return '';
 };
 
+const isAbsoluteUrl = (value: string | undefined): value is string =>
+  typeof value === 'string' && /^https?:\/\//i.test(value.trim());
+
+const normalizeCandidate = (value: string | undefined): string | undefined => {
+  if (!value || typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed === '' ? undefined : stripTrailingSlashes(trimmed);
+};
+
 const readRuntimeBackendBase = (): string => {
   if (typeof window === 'undefined') {
     return '';
@@ -81,17 +92,31 @@ export function getBackendBaseURL(): string {
   const env = import.meta.env as Record<string, string | boolean | undefined> | undefined;
 
   const envCandidates: Array<string | undefined> = [];
+  const envRelativeFallbacks: Array<string | undefined> = [];
   if (env) {
-    envCandidates.push(
+    const envValues: Array<string | undefined> = [
       typeof env.VITE_BACKEND_URL === 'string' ? env.VITE_BACKEND_URL : undefined,
       typeof env.VITE_API_BASE === 'string' ? env.VITE_API_BASE : undefined,
       typeof env.VITE_API_URL === 'string' ? env.VITE_API_URL : undefined,
       typeof env.VITE_GATEWAY_URL === 'string' ? env.VITE_GATEWAY_URL : undefined,
       typeof env.VITE_API_PROXY_BASE === 'string' ? env.VITE_API_PROXY_BASE : undefined,
-    );
+    ];
+
+    for (const candidate of envValues) {
+      const normalized = normalizeCandidate(candidate);
+      if (!normalized) {
+        continue;
+      }
+
+      if (isAbsoluteUrl(normalized)) {
+        envCandidates.push(normalized);
+      } else {
+        envRelativeFallbacks.push(normalized);
+      }
+    }
   }
 
-  const processCandidates = [
+  const processValues = [
     readProcessEnv('VITE_BACKEND_URL'),
     readProcessEnv('VITE_API_BASE'),
     readProcessEnv('VITE_API_URL'),
@@ -99,6 +124,21 @@ export function getBackendBaseURL(): string {
     readProcessEnv('VITE_API_PROXY_BASE'),
     readProcessEnv('BACKEND_BASE_URL'),
   ];
+
+  const processCandidates: Array<string | undefined> = [];
+  const processRelativeFallbacks: Array<string | undefined> = [];
+  for (const candidate of processValues) {
+    const normalized = normalizeCandidate(candidate);
+    if (!normalized) {
+      continue;
+    }
+
+    if (isAbsoluteUrl(normalized)) {
+      processCandidates.push(normalized);
+    } else {
+      processRelativeFallbacks.push(normalized);
+    }
+  }
 
   const configured = pickFirstNonEmpty([...envCandidates, ...processCandidates]);
   if (configured) {
@@ -108,6 +148,15 @@ export function getBackendBaseURL(): string {
   const runtimeConfigured = readRuntimeBackendBase();
   if (runtimeConfigured) {
     return runtimeConfigured;
+  }
+
+  const relativeConfigured = pickFirstNonEmpty([...envRelativeFallbacks, ...processRelativeFallbacks]);
+  if (relativeConfigured) {
+    console.warn(
+      '⚠️ [BackendURL] Using relative backend base path. Configure VITE_BACKEND_URL for direct backend access.',
+      relativeConfigured,
+    );
+    return relativeConfigured;
   }
 
   if (env?.DEV) {
