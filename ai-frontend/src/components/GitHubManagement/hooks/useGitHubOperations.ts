@@ -325,6 +325,47 @@ export const useGitHubOperations = () => {
     [performOperation],
   );
 
+  const getOperationsPolicy = useCallback(
+    async () => await performOperation('operationsPolicy', '/api/ai/github/operations/policy'),
+    [performOperation],
+  );
+
+  const getOperationsChanges = useCallback(
+    async () => await performOperation('operationsChanges', '/api/ai/github/operations/changes'),
+    [performOperation],
+  );
+
+  const getOperationsMetrics = useCallback(
+    async () => await performOperation('operationsMetrics', '/api/ai/github/operations/metrics'),
+    [performOperation],
+  );
+
+  const listOperationsPulls = useCallback(
+    async (limit?: number) => {
+      const query = typeof limit === 'number' && Number.isFinite(limit) ? `?limit=${Math.max(1, Math.floor(limit))}` : '';
+      return await performOperation('operationsPulls', `/api/ai/github/operations/pulls${query}`);
+    },
+    [performOperation],
+  );
+
+  const createOperationsPullRequest = useCallback(
+    async (payload: Record<string, unknown>) =>
+      await performOperation('operationsCreatePr', '/api/ai/github/operations/create-pr', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    [performOperation],
+  );
+
+  const runOperationsSmokeTest = useCallback(
+    async (note?: string) =>
+      await performOperation('operationsSmokeTest', '/api/ai/github/operations/smoke', {
+        method: 'POST',
+        body: JSON.stringify(note ? { note } : {}),
+      }),
+    [performOperation],
+  );
+
   return {
     initGit,
     addRemote,
@@ -353,6 +394,12 @@ export const useGitHubOperations = () => {
     checkWebhookSecurity,
     checkPullRequestMergeable,
     mergePullRequest,
+    getOperationsPolicy,
+    getOperationsChanges,
+    getOperationsMetrics,
+    listOperationsPulls,
+    createOperationsPullRequest,
+    runOperationsSmokeTest,
     operationLoading,
     lastOperation,
     isLoading: (operation?: string) => (operation ? operationLoading === operation : operationLoading !== null),

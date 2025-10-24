@@ -6,5 +6,6 @@ export { default as GitHubSettingsTab } from './GitHubSettingsTab';
 export { default as GitHubIssuesTab } from './GitHubIssuesTab';
 export { default as GitHubVersionTab } from './GitHubVersionTab';
 export { default as GitHubAnalyticsTab } from './GitHubAnalyticsTab';
+export { default as GitHubOperationsTab } from './GitHubOperationsTab';
 export * from './hooks';
 export * from './types';

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Suspense, useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -10,17 +10,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 
 import { AuthProvider } from './contexts/AuthContext';
-import { AIModeProvider } from './contexts/AIModeContext';
-import { AssistantModeProvider } from './contexts/AssistantModeContext';
-import { PermissionsProvider } from './contexts/PermissionsContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { FilePreviewProvider } from './contexts/FilePreviewProvider';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
-import Login from './Login';
-import AIDeveloperPanel from './components/AIDeveloperPanel';
-import FilePreview from './components/FilePreview';
 import './index.css';
+
+const Login = lazy(() => import('./Login'));
+const AIDashboardShell = lazy(() => import('./components/AIDashboardShell'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,18 +50,53 @@ function FirebaseInitializer() {
   return null;
 }
 
+const RouteFallback = ({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle?: string;
+}) => (
+  <div className="flex min-h-screen flex-col items-center justify-center bg-[#050914] text-slate-200">
+    <div className="mb-6 h-12 w-12 animate-spin rounded-full border-4 border-cyan-400/30 border-t-transparent" />
+    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">{title}</p>
+    {subtitle ? <p className="mt-3 max-w-xs text-center text-sm text-slate-400">{subtitle}</p> : null}
+  </div>
+);
+
 function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/admin?tab=dashboard" replace />} />
-      <Route path="/login" element={<Login />} />
+      <Route
+        path="/login"
+        element={(
+          <Suspense
+            fallback={
+              <RouteFallback
+                title="უსაფრთხო შესვლა"
+                subtitle="ავტენტიკაციის მოდული იტვირთება და სესიის სტატუსი მოწმდება."
+              />
+            }
+          >
+            <Login />
+          </Suspense>
+        )}
+      />
 
       <Route
         path="/admin"
         element={(
           <ProtectedRoute requiredRole="SUPER_ADMIN">
-            <Suspense fallback={<div className="p-6 text-gray-400">Loading AI Developer…</div>}>
-              <AIDeveloperPanel />
+            <Suspense
+              fallback={
+                <RouteFallback
+                  title="AI Developer პანელი"
+                  subtitle="დეშბორდი, ფაილები და GitHub ოპერაციები მზადდება."
+                />
+              }
+            >
+              <AIDashboardShell />
             </Suspense>
           </ProtectedRoute>
         )}
@@ -82,20 +113,11 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ThemeProvider>
-            <AIModeProvider>
-              <AssistantModeProvider>
-                <PermissionsProvider>
-                  <FilePreviewProvider>
-                    <Router>
-                      <AppRouter />
-                    </Router>
-                    <Toaster position="top-center" />
-                    <FilePreview />
-                    <FirebaseInitializer />
-                  </FilePreviewProvider>
-                </PermissionsProvider>
-              </AssistantModeProvider>
-            </AIModeProvider>
+            <Router>
+              <AppRouter />
+            </Router>
+            <Toaster position="top-center" />
+            <FirebaseInitializer />
           </ThemeProvider>
         </AuthProvider>
       </QueryClientProvider>
