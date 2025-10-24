@@ -59,8 +59,8 @@ VITE_GITHUB_ENABLED=0
 VITE_BACKEND_URL=https://backend.ai.bakhmaro.co
 VITE_API_BASE=/api
 VITE_GATEWAY_URL=https://ai.bakhmaro.co
-VITE_API_PROXY_BASE=https://api.ai.bakhmaro.co
-AI_SERVICE_URL=https://api.ai.bakhmaro.co
+VITE_API_PROXY_BASE=https://backend.ai.bakhmaro.co
+AI_SERVICE_URL=https://backend.ai.bakhmaro.co
 ```
 
 | Secret | სად გამოიყენება | რეფერენსი |
