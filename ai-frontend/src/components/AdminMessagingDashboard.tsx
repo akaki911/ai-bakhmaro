@@ -37,7 +37,7 @@ import {
 import { useTheme } from '../contexts/useTheme';
 import { useAuth } from '../contexts/useAuth';
 import { messagingService, Conversation, Message } from '../services/messagingService';
-import { collection, query, getDocs, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, getDocs, where, orderBy, onSnapshot } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 
 interface ConversationStats {

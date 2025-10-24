@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, updateDoc, doc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, addDoc, updateDoc, doc } from '@/lib/firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from '@/lib/firebase/storage';
 import { db, storage } from './firebaseConfig';
 import { useAuth } from './contexts/useAuth';
 import { Activity, Save, X, Upload, Trash2 } from 'lucide-react';

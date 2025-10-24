@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit } from '@/lib/firebase/firestore';
 import { db } from './firebaseConfig';
 import { Hotel } from './types/hotel';
 import Header from './components/Header';

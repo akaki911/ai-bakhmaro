@@ -1,6 +1,6 @@
 
-import { collection, doc, getDocs, addDoc, updateDoc, query, where, orderBy } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, doc, getDocs, addDoc, updateDoc, query, where, orderBy } from '@/lib/firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from '@/lib/firebase/storage';
 import { db, storage } from '../firebaseConfig';
 import { Review, ReviewFormData, ProviderReply, UserBooking } from '../types/review';
 

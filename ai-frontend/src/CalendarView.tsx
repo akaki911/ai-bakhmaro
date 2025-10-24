@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, where, orderBy } from "@/lib/firebase/firestore";
 import { db } from "./firebaseConfig";
 import { useAuth } from "./contexts/useAuth";
 import { usePermissions } from "./hooks/usePermissions";

@@ -9,7 +9,7 @@ import {
   query,
   setDoc,
   where,
-} from 'firebase/firestore';
+} from '@/lib/firebase/firestore';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -17,7 +17,7 @@ import {
   onAuthStateChanged,
   User as FirebaseUser,
   sendPasswordResetEmail
-} from 'firebase/auth';
+} from '@/lib/firebase/auth';
 import { singleFlight } from '../lib/singleFlight';
 import { getDeviceInfo, logDeviceInfo, isDeviceFingerprintingSupported } from '../utils/deviceFingerprint';
 import { AuthContext } from './AuthContextObject';

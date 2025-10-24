@@ -6,7 +6,7 @@ import {
   sendEmailVerification,
   PhoneAuthProvider,
   RecaptchaVerifier
-} from 'firebase/auth';
+} from '@/lib/firebase/auth';
 import { 
   doc, 
   setDoc, 
@@ -17,7 +17,7 @@ import {
   getDocs,
   updateDoc,
   serverTimestamp 
-} from 'firebase/firestore';
+} from '@/lib/firebase/firestore';
 
 export interface BookingUser {
   uid: string;

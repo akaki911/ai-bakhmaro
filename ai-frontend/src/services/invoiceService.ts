@@ -1,5 +1,5 @@
 
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 import { bankAccountService } from './bankAccountService';
 

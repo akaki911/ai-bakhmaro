@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, addDoc, doc, getDoc, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, getDoc, orderBy } from '@/lib/firebase/firestore';
 import { db } from './firebaseConfig';
 import { ArrowLeft, Calendar, Phone, User, Car, Clock, Lock, MapPin } from 'lucide-react';
 import { checkUserExists, registerCustomerDuringBooking } from './services/userService';

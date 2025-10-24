@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, X, Calendar, Users, DollarSign, Home, MapPin, CreditCard, Download, Clock, Building } from 'lucide-react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 import { downloadInvoice, InvoiceData } from '../utils/pdfGenerator';
 

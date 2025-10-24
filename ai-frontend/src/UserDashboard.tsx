@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { User, Settings, BookOpen, Calendar, CreditCard, LogOut } from 'lucide-react';
 import { useAuth } from './contexts/useAuth';
 import type { UserRole } from './contexts/AuthContext.types';
-import { doc, getDoc, collection, query, where, orderBy, getDocs, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, orderBy, getDocs, updateDoc } from '@/lib/firebase/firestore';
 import { db, auth } from './firebaseConfig';
 
 const UserDashboard: React.FC = () => {

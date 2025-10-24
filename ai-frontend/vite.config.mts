@@ -2,9 +2,21 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+
+const preferTerser = (() => {
+  try {
+    require.resolve("terser");
+    return true;
+  } catch {
+    console.warn("⚠️ Terser not found. Falling back to esbuild minifier.");
+    return false;
+  }
+})();
 
 type HealthState = "CONNECTED" | "DEGRADED" | "UNREACHABLE" | "ERROR" | "TIMEOUT";
 
@@ -423,12 +435,28 @@ export default defineConfig({
     },
   },
   build: {
-    chunkSizeWarningLimit: 9000,
+    chunkSizeWarningLimit: 1500,
+    minify: preferTerser ? 'terser' : 'esbuild',
+    target: 'es2022',
     rollupOptions: {
       onwarn(warning, warn) {
         // Suppress certain warnings that don't affect functionality
         if (warning.code === "MODULE_LEVEL_DIRECTIVE") return;
         warn(warning);
+      },
+      output: {
+        manualChunks: {
+          vendor: [
+            'react',
+            'react-dom',
+            'firebase/app',
+            'firebase/auth',
+            'firebase/firestore',
+            'firebase/storage',
+            'chart.js/auto',
+            'monaco-editor',
+          ],
+        },
       },
     },
   },

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, serverTimestamp } from '@/lib/firebase/firestore';
 import { db } from './firebaseConfig';
 import { useAuth } from './contexts/useAuth';
 import { useTheme } from './contexts/useTheme';

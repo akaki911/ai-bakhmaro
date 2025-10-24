@@ -7,8 +7,8 @@ import {
   updateDoc, 
   doc, 
   getDoc
-} from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+} from '@/lib/firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from '@/lib/firebase/storage';
 import { useAuth } from './contexts/useAuth';
 import { 
   Car, 

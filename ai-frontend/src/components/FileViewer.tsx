@@ -1,9 +1,13 @@
 // @ts-nocheck
 
-import React, { useRef, useEffect, useState } from 'react';
-import { Editor } from '@monaco-editor/react';
+import React, { Suspense, useRef, useEffect, useState } from 'react';
 import { Save, Edit, X, Check, Copy, AlertTriangle } from 'lucide-react';
 import { decodeCodeContent, formatCode, encodeCodeContent } from '../utils/codeDecoder';
+
+const MonacoEditor = React.lazy(async () => {
+  const module = await import('@monaco-editor/react');
+  return { default: module.Editor };
+});
 
 interface OpenFile {
   path: string;
@@ -291,54 +295,63 @@ const FileViewer: React.FC<FileViewerProps> = ({
       {/* Monaco Editor */}
       <div className="flex-1 min-h-0 relative" style={{ minHeight: '300px' }}>
         {mounted && (
-          <Editor
-            height="100%"
-            language={getLanguage(file.name)}
-            value={decodedContent}
-            onChange={handleEditorChange}
-            onMount={handleEditorDidMount}
-            theme="replit-dark"
-            options={{
-              readOnly: !file.isEditing,
-              domReadOnly: !file.isEditing,
-              contextmenu: file.isEditing,
-              wordWrap: 'on',
-              minimap: { enabled: false },
-              scrollBeyondLastLine: false,
-              fontSize: 14,
-              fontFamily: 'Monaco, Menlo, "Ubuntu Mono", consolas, "source-code-pro", monospace',
-              lineHeight: 1.6,
-              padding: { top: 16, bottom: 16 },
-              lineNumbers: 'on',
-              lineNumbersMinChars: 3,
-              glyphMargin: true,
-              folding: true,
-              renderLineHighlight: file.isEditing ? 'line' : 'none',
-              cursorBlinking: file.isEditing ? 'phase' : 'solid',
-              cursorStyle: file.isEditing ? 'line' : 'block',
-              renderWhitespace: 'selection',
-              bracketPairColorization: { enabled: true },
-              guides: {
-                bracketPairs: true,
-                indentation: true
-              },
-              // Optimize for large files
-              quickSuggestions: false,
-              parameterHints: { enabled: false },
-              suggestOnTriggerCharacters: false,
-              acceptSuggestionOnEnter: 'off',
-              tabCompletion: 'off',
-              wordBasedSuggestions: false,
-              // Handle tokenization for large files
-              largeFileOptimizations: true,
-              maxTokenizationLineLength: 20000,
-              // Improve scrolling performance
-              smoothScrolling: true,
-              fastScrollSensitivity: 5,
-              // Memory optimization
-              stopRenderingLineAfter: 10000
-            }}
-          />
+          <Suspense
+            fallback={(
+              <div className="h-full flex flex-col items-center justify-center space-y-2 text-gray-300">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400" />
+                <span>Monaco Editor იტვირთება…</span>
+              </div>
+            )}
+          >
+            <MonacoEditor
+              height="100%"
+              language={getLanguage(file.name)}
+              value={decodedContent}
+              onChange={handleEditorChange}
+              onMount={handleEditorDidMount}
+              theme="replit-dark"
+              options={{
+                readOnly: !file.isEditing,
+                domReadOnly: !file.isEditing,
+                contextmenu: file.isEditing,
+                wordWrap: 'on',
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                fontSize: 14,
+                fontFamily: 'Monaco, Menlo, "Ubuntu Mono", consolas, "source-code-pro", monospace',
+                lineHeight: 1.6,
+                padding: { top: 16, bottom: 16 },
+                lineNumbers: 'on',
+                lineNumbersMinChars: 3,
+                glyphMargin: true,
+                folding: true,
+                renderLineHighlight: file.isEditing ? 'line' : 'none',
+                cursorBlinking: file.isEditing ? 'phase' : 'solid',
+                cursorStyle: file.isEditing ? 'line' : 'block',
+                renderWhitespace: 'selection',
+                bracketPairColorization: { enabled: true },
+                guides: {
+                  bracketPairs: true,
+                  indentation: true
+                },
+                // Optimize for large files
+                quickSuggestions: false,
+                parameterHints: { enabled: false },
+                suggestOnTriggerCharacters: false,
+                acceptSuggestionOnEnter: 'off',
+                tabCompletion: 'off',
+                wordBasedSuggestions: false,
+                // Handle tokenization for large files
+                largeFileOptimizations: true,
+                maxTokenizationLineLength: 20000,
+                // Improve scrolling performance
+                smoothScrolling: true,
+                fastScrollSensitivity: 5,
+                // Memory optimization
+                stopRenderingLineAfter: 10000
+              }}
+            />
+          </Suspense>
         )}
       </div>
 

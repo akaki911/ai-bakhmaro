@@ -1,17 +1,18 @@
 
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp } from '@/lib/firebase/firestore';
+import type { FirestoreTimestamp } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 
 interface FirestoreBooking {
   id: string;
   totalPrice?: number;
-  createdAt?: Date | { toDate: () => Date } | Timestamp;
+  createdAt?: Date | { toDate: () => Date } | FirestoreTimestamp;
   'გადასახდილია'?: boolean;
 }
 
 interface FirestoreReview {
   id: string;
-  createdAt?: Date | { toDate: () => Date } | Timestamp;
+  createdAt?: Date | { toDate: () => Date } | FirestoreTimestamp;
   [key: string]: unknown;
 }
 

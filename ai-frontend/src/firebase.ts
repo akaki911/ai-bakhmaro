@@ -1,13 +1,16 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
+const firebaseAppModule = await import('firebase/app');
+
+const { initializeApp, getApps, getApp } = firebaseAppModule;
+
 import {
-  getAuth,
-  initializeAuth,
   browserLocalPersistence,
+  getAuth,
   indexedDBLocalPersistence,
-  type Auth,
-} from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+  initializeAuth,
+} from '@/lib/firebase/auth';
+import type { Auth } from '@/lib/firebase/auth';
+import { getFirestore } from '@/lib/firebase/firestore';
+import { getStorage } from '@/lib/firebase/storage';
 
 type EnvKey =
   | 'VITE_FIREBASE_API_KEY'

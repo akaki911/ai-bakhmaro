@@ -1,15 +1,16 @@
 
-import { 
-  collection, 
-  addDoc, 
-  query, 
-  where, 
-  getDocs, 
-  updateDoc, 
-  doc, 
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  updateDoc,
+  doc,
   serverTimestamp,
-  Timestamp 
-} from 'firebase/firestore';
+  Timestamp
+} from '@/lib/firebase/firestore';
+import type { FirestoreTimestamp } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 
 export interface PriceCode {
@@ -18,9 +19,9 @@ export interface PriceCode {
   resourceId: string;
   resourceType: 'cottage' | 'hotel' | 'vehicle';
   isUsed: boolean;
-  createdAt: Timestamp;
-  expiresAt: Timestamp;
-  usedAt?: Timestamp;
+  createdAt: FirestoreTimestamp;
+  expiresAt: FirestoreTimestamp;
+  usedAt?: FirestoreTimestamp;
 }
 
 // Generate a random 6-digit code

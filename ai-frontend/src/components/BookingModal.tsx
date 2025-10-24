@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { collection, query, where, getDocs, addDoc, doc, getDoc, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, getDoc, limit } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 import { X, Calendar, Users, Phone, User, Clock, Lock, Home, CreditCard } from 'lucide-react';
 import { calculateSeasonalPrice, type PricingResult } from '../utils/pricing';

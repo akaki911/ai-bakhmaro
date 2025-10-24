@@ -8,7 +8,7 @@ import {
   DocumentData,
   QuerySnapshot,
   FirestoreError
-} from 'firebase/firestore';
+} from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 
 type SubscriptionCallback<T> = (data: T[]) => void;
