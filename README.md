@@ -37,9 +37,25 @@ This flow is implemented in the gateway entrypoint: unauthenticated requests on 
 | `SERVICE_JWT_AUDIENCE` | Property API | Defaults to `property-api`. | Audience check for the gateway token. | Keep aligned with `PROPERTY_API_URL`'s logical service name. |
 | `SERVICE_JWT_SUBJECT` | Property API | Defaults to `gateway-service`. | Subject check for the gateway token. | Only change if you operate multiple trusted edge gateways. |
 
-### Secrets storage quick reference
+## Local development servers
 
-Environment files such as `.env` and `.env.production` stay out of Git via the root `.gitignore`, so copy values into those files locally only when you need manual builds. The authoritative list of keys and their storage targets (GitHub Secrets vs. generated `config/local-secrets.json`) lives in [`docs/env-secrets-storage.md`](docs/env-secrets-storage.md).【F:.gitignore†L1-L12】【F:docs/env-secrets-storage.md†L1-L33】
+Use [`pnpm`](https://pnpm.io/) from the repository root to start all three services in watch mode:
+
+```bash
+pnpm dev
+```
+
+The `dev` script uses `concurrently` to launch the gateway, property API, and frontend together with named output streams. This works reliably in shells such as Bash, Zsh, and the default macOS Terminal.
+
+On Windows PowerShell the quoting rules for `concurrently` occasionally conflict with the separators used in our script. If you hit issues starting the stack there, launch each workspace in its own terminal instead:
+
+```powershell
+pnpm -w run dev:gateway
+pnpm -w run dev:property-api
+pnpm -w run dev:frontend
+```
+
+All three commands can run in parallel so you retain hot reloads across the stack. `pnpm dev` remains the canonical entry point when your shell supports the aggregated runner.
 
 ## Docker Compose workflow
 1. Copy and edit `.env` with the matrix values above.
