@@ -36,6 +36,7 @@ export function useAuth() {
         reason: 'AuthProvider not found',
         authenticated: false
       },
+      retryPreflightChecks: async () => {},
       // Compatibility properties
       id: null,
       email: null,
