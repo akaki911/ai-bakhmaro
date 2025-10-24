@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
-import { collection, query, where, getDocs, addDoc, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, getDoc } from '@/lib/firebase/firestore';
 import { db } from './firebaseConfig';
 import { ArrowLeft, Calendar, Users, Phone, User, Building2, Bed, Lock } from 'lucide-react';
 import { checkUserExists, registerCustomerDuringBooking } from './services/userService';

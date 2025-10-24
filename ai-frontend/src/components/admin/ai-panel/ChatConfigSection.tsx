@@ -1,5 +1,4 @@
-import { useCallback } from 'react';
-import Editor from '@monaco-editor/react';
+import React, { Suspense, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { RotateCcw, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/useAuth';
@@ -7,6 +6,11 @@ import { SafetySwitch, PendingAction } from '@/components/SafetySwitch';
 import { getAdminAuthHeaders } from '@/utils/adminToken';
 import { cardVariants, responseLimitPresets } from './constants';
 import type { PromptConfig } from './types';
+
+const MonacoEditor = React.lazy(async () => {
+  const module = await import('@monaco-editor/react');
+  return { default: module.default };
+});
 
 interface ChatConfigSectionProps {
   promptConfigs: PromptConfig[];
@@ -122,22 +126,30 @@ export function ChatConfigSection({
             </select>
           </div>
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/40">
-            <Editor
-              height="260px"
-              defaultLanguage="markdown"
-              value={activePromptValue}
-              onChange={(value) => onPromptChange(value || '')}
-              theme="vs-dark"
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                fontFamily: 'JetBrains Mono, monospace',
-                lineNumbers: 'off',
-                wordWrap: 'on',
-                smoothScrolling: true,
-                scrollBeyondLastLine: false,
-              }}
-            />
+            <Suspense
+              fallback={(
+                <div className="flex h-[260px] items-center justify-center text-sm text-[#A0A4AD]">
+                  მონაკო ჩატვირთვა...
+                </div>
+              )}
+            >
+              <MonacoEditor
+                height="260px"
+                defaultLanguage="markdown"
+                value={activePromptValue}
+                onChange={(value) => onPromptChange(value || '')}
+                theme="vs-dark"
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  fontFamily: 'JetBrains Mono, monospace',
+                  lineNumbers: 'off',
+                  wordWrap: 'on',
+                  smoothScrolling: true,
+                  scrollBeyondLastLine: false,
+                }}
+              />
+            </Suspense>
           </div>
         </motion.div>
 

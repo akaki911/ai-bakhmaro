@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { collection, getDocs, deleteDoc, doc, query, where, limit, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, query, where, limit, updateDoc } from '@/lib/firebase/firestore';
 import { 
   Trash2, 
   Edit2, 

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useAuth } from '../contexts/useAuth';
 import { bookingExpirationService } from '../services/bookingExpirationService';

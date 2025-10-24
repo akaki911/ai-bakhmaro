@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, query, where, orderBy, updateDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, updateDoc, doc } from '@/lib/firebase/firestore';
 import { db } from './firebaseConfig';
 import { useAuth } from './contexts/useAuth';
 import { usePermissions } from './hooks/usePermissions';

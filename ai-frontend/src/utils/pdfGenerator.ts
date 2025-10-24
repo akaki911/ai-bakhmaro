@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 
 export interface InvoiceData {

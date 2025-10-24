@@ -7,7 +7,7 @@ import { BankAccount, GeorgianBank } from '../types/bank';
 import { validateIBAN } from '../utils/validation';
 import { useAuth } from '../contexts/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 
 const georgianBanks = [

@@ -10,7 +10,7 @@ import {
   where, 
   orderBy,
   getDoc
-} from 'firebase/firestore';
+} from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 import { BankAccount } from '../types/bank';
 

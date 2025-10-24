@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Building2, Upload, Save, Plus, Minus, X, Star, Camera, AlertCircle, CheckCircle, Bed, Calendar } from 'lucide-react';
-import { collection, addDoc, doc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, getDoc } from '@/lib/firebase/firestore';
 import { db } from './firebaseConfig';
 import { Hotel, RoomType } from './types/hotel';
 import { useAuth } from './contexts/useAuth';

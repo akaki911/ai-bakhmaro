@@ -1,4 +1,4 @@
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 import { AuditLog } from '../types/user';
 

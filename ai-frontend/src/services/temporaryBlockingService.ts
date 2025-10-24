@@ -1,5 +1,5 @@
 
-import { collection, doc, addDoc, deleteDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, doc, addDoc, deleteDoc, getDocs, query, where } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 
 export interface TemporaryBlock {

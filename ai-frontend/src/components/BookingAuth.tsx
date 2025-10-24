@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { X, User, Lock, AlertCircle } from 'lucide-react';
 import { getUserByPhoneOrPersonalId } from '../services/userService';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 
 interface BookingAuthProps {

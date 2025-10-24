@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from '@/lib/firebase/firestore';
 import { db } from './firebaseConfig';
 import { ArrowLeft, Users, Fuel, Settings, Clock, Calendar as CalendarIcon, MapPin, Star } from 'lucide-react';
 import { Vehicle } from './types/vehicle';
