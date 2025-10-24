@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "npm run build && npm run start",
+    "dev": "node ../scripts/run-pnpm-sequence.mjs build start",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "lint": "eslint .",
-    "test": "npm run build && node --test dist"
+    "test": "node ../scripts/run-pnpm-sequence.mjs build test:run",
+    "test:run": "node --test dist"
   },
   "dependencies": {
     "compression": "^1.8.1",
