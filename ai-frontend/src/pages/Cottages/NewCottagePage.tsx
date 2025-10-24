@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import CottageForm from '../../CottageForm';
+import CottageForm from './CottageForm';
 import { ArrowLeft } from 'lucide-react';
 
 export default function NewCottagePage() {
