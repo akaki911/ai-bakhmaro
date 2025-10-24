@@ -37,6 +37,10 @@ This flow is implemented in the gateway entrypoint: unauthenticated requests on 
 | `SERVICE_JWT_AUDIENCE` | Property API | Defaults to `property-api`. | Audience check for the gateway token. | Keep aligned with `PROPERTY_API_URL`'s logical service name. |
 | `SERVICE_JWT_SUBJECT` | Property API | Defaults to `gateway-service`. | Subject check for the gateway token. | Only change if you operate multiple trusted edge gateways. |
 
+### Secrets storage quick reference
+
+Environment files such as `.env` and `.env.production` stay out of Git via the root `.gitignore`, so copy values into those files locally only when you need manual builds. The authoritative list of keys and their storage targets (GitHub Secrets vs. generated `config/local-secrets.json`) lives in [`docs/env-secrets-storage.md`](docs/env-secrets-storage.md).【F:.gitignore†L1-L12】【F:docs/env-secrets-storage.md†L1-L33】
+
 ## Docker Compose workflow
 1. Copy and edit `.env` with the matrix values above.
 2. Compile the frontend once (the bundle is mounted into the gateway container): `npm run build -w ai-frontend`.
