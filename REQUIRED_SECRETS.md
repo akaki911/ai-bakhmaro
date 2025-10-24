@@ -99,6 +99,9 @@ GITHUB_WEBHOOK_SECRET=shared_secret_for_webhook_validation
 GITHUB_API_URL=https://api.github.com (optional override)
 GITHUB_OWNER=legacy_owner_fallback (optional)
 GITHUB_REPO=legacy_repo_fallback (optional)
+GITHUB_SANDBOX_OWNER=github_username_or_org (optional for smoke tests)
+GITHUB_SANDBOX_REPO=repository_name (optional for smoke tests)
+GITHUB_SANDBOX_BASE_BRANCH=main (optional override)
 ```
 
 | Secret | სად გამოიყენება | რეფერენსი |
@@ -108,6 +111,7 @@ GITHUB_REPO=legacy_repo_fallback (optional)
 | `GITHUB_WEBHOOK_SECRET` | GitHub webhook-ის ხელმოწერის ვალიდაცია. | [`ai-service/routes/repository_automation.js`](ai-service/routes/repository_automation.js) 【F:ai-service/routes/repository_automation.js†L100-L118】 |
 | `GITHUB_API_URL` (optional) | Enterprise GitHub instance-ის მისამართი. | [`check-github-env.js`](check-github-env.js) 【F:check-github-env.js†L19-L101】 |
 | `GITHUB_OWNER` / `GITHUB_REPO` (legacy) | ძველი სკრიპტებისა და fallback ლოგიკისთვის. | [`scripts/github-verification.js`](scripts/github-verification.js) 【F:scripts/github-verification.js†L116-L170】 |
+| `GITHUB_SANDBOX_OWNER`, `GITHUB_SANDBOX_REPO`, `GITHUB_SANDBOX_BASE_BRANCH` | Operations smoke ტესტის მიზნობრივი რეპო/ბრენჩის განსაზღვრა. | [`backend/services/githubAiService.js`](backend/services/githubAiService.js) 【F:backend/services/githubAiService.js†L1800-L1898】 |
 
 ℹ️ **შენიშვნა:** `SECRET_KEY_BASE` და `GCP_SLACK_TOKEN` ამ რეპოზიტორიის აქტიურ კოდში არ გამოიყენება; თუ GitHub Secrets-ში რჩება, გადაამოწმეთ მათი საჭიროება redundant სეკრეტების თავიდან ასაცილებლად.【F:backend/services/secretsRequiredService.js†L12-L50】【313811†L1-L1】【ce6f0e†L1-L1】
 

@@ -434,6 +434,52 @@ router.post('/github/discard', async (req, res) => {
   respondSafe(res, 'discard')(gitCommands.discardChanges(req.body?.files));
 });
 
+router.get('/github/operations/policy', (req, res) => {
+  const policy = githubAiService.getOperationsPolicy();
+  res.json({
+    success: true,
+    policy: {
+      allowList: policy.allowList,
+      denyList: policy.denyList,
+      guidelines: policy.guidelines,
+      baseBranch: policy.baseBranch,
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
+router.get('/github/operations/changes', async (req, res) => {
+  respondSafe(res, 'operationsChanges')(githubAiService.listOperationsChanges());
+});
+
+router.get('/github/operations/metrics', requireGithubToken, async (req, res) => {
+  const sessionKey = resolveSessionKey(req);
+  respondSafe(res, 'operationsMetrics')(githubAiService.getOperationsMetrics(sessionKey, { token: req.githubToken }));
+});
+
+router.get('/github/operations/pulls', requireGithubToken, async (req, res) => {
+  const sessionKey = resolveSessionKey(req);
+  const limit = Number.parseInt(req.query.limit, 10) || 5;
+  respondSafe(res, 'operationsPulls')(githubAiService.listOperationsPullRequests(sessionKey, {
+    token: req.githubToken,
+    limit,
+  }));
+});
+
+router.post('/github/operations/create-pr', requireGithubToken, async (req, res) => {
+  const sessionKey = resolveSessionKey(req);
+  const payload = { ...req.body, token: req.githubToken };
+  respondSafe(res, 'operationsCreatePr')(githubAiService.createOperationsPullRequest(sessionKey, payload));
+});
+
+router.post('/github/operations/smoke', requireGithubToken, async (req, res) => {
+  const sessionKey = resolveSessionKey(req);
+  respondSafe(res, 'operationsSmokeTest')(githubAiService.runSandboxSmokeTest(sessionKey, {
+    token: req.githubToken,
+    note: typeof req.body?.note === 'string' ? req.body.note : undefined,
+  }));
+});
+
 router.get('/git/status', async (req, res) => {
   const status = await gitCommands.getStatus();
   res.json({ ...status, timestamp: new Date().toISOString() });

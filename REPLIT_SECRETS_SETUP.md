@@ -36,6 +36,10 @@ VITE_FIREBASE_MEASUREMENT_ID=G-NT97B9E4YL
 ## 3. განაახლეთ GitHub Actions გარემო ცვლადები
 - თუ უკვე გაშვებულია workflow-ები, ხელახლა გაუშვით მათი secrets განახლების შემდეგ, რომ ახალი მნიშვნელობები ჩაიტვირთოს
 - საჭიროების შემთხვევაში გამოიყენეთ `node check-secrets.js` ადგილობრივად მნიშვნელობების დასადასტურებლად
+- ახალი Operations პანელი საჭიროებს GitHub smoke ტესტის სეკრეტებს (თუ გსურთ sandbox PR-ების ავტომატური შექმნა):
+  - `GITHUB_SANDBOX_OWNER`
+  - `GITHUB_SANDBOX_REPO`
+  - `GITHUB_SANDBOX_BASE_BRANCH` (სურვილისამებრ)
 
 ## 4. ვერიფიკაცია
 - Frontend build-ისას კონსოლში უნდა გამოჩნდეს: "✅ Firebase initialized successfully"

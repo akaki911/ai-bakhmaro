@@ -14,6 +14,7 @@ import GitHubOverviewTab from './GitHubOverviewTab';
 import GitHubSettingsTab from './GitHubSettingsTab';
 import GitHubIssuesTab from './GitHubIssuesTab';
 import GitHubAnalyticsTab from './GitHubAnalyticsTab';
+import GitHubOperationsTab from './GitHubOperationsTab';
 import GitHubGitOpsTab from './GitHubGitOpsTab';
 import RepositoryAutomationTab from './RepositoryAutomationTab'; // Assuming this component exists
 import { useGitHubConnection, useGitHubData, useGitHubOperations } from './hooks';
@@ -29,7 +30,9 @@ export interface GitHubStatus {
 }
 
 const GitHubManagementHub: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'git-ops' | 'settings' | 'issues' | 'analytics' | 'automation'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'git-ops' | 'operations' | 'settings' | 'issues' | 'analytics' | 'automation'
+  >('overview');
   const [status] = useState<GitHubStatus | null>(null);
   const [loading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -78,6 +81,12 @@ const GitHubManagementHub: React.FC = () => {
       icon: Terminal,
       label: 'Git Operations',
       description: 'Git კომანდები, commit-ები, branches და version control'
+    },
+    {
+      key: 'operations',
+      icon: RefreshCw,
+      label: 'Operations',
+      description: 'Allow-listed ცვლილებები, PR გენერაცია და smoke ტესტები'
     },
     {
       key: 'automation', // Added Automation Tab
@@ -157,6 +166,8 @@ const GitHubManagementHub: React.FC = () => {
             isLoading={dataLoading}
           />
         );
+      case 'operations':
+        return <GitHubOperationsTab />;
       case 'automation': // Render for the new automation tab
         return <RepositoryAutomationTab />;
       case 'analytics':
