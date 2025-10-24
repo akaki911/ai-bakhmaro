@@ -59,7 +59,7 @@ VITE_GITHUB_ENABLED=0
 VITE_BACKEND_URL=https://backend.ai.bakhmaro.co
 VITE_API_BASE=/api
 VITE_GATEWAY_URL=https://ai.bakhmaro.co
-VITE_REMOTE_SITE_BASE=https://bakhmaro.co
+VITE_API_PROXY_BASE=https://api.ai.bakhmaro.co
 AI_SERVICE_URL=https://api.ai.bakhmaro.co
 ```
 
@@ -71,7 +71,7 @@ AI_SERVICE_URL=https://api.ai.bakhmaro.co
 | `VITE_ENABLE_PUBLIC_CHAT` | გესტ ჩატის დაშვება აუთენტიფიცირებელი მომხმარებლებისთვის. | [`ai-frontend/src/components/AIAssistantEnhanced.tsx`](ai-frontend/src/components/AIAssistantEnhanced.tsx) 【F:ai-frontend/src/components/AIAssistantEnhanced.tsx†L698-L715】 |
 | `VITE_ASSISTANT_MODE` | ასისტენტის საწყისი რეჟიმი (plan/build/admin). | [`ai-frontend/src/contexts/AssistantModeContext.tsx`](ai-frontend/src/contexts/AssistantModeContext.tsx) 【F:ai-frontend/src/contexts/AssistantModeContext.tsx†L108-L133】 |
 | `VITE_GITHUB_ENABLED` | GitHub workspace-ის ჩართვა/გამორთვა. | [`ai-frontend/src/lib/featureFlags.ts`](ai-frontend/src/lib/featureFlags.ts) 【F:ai-frontend/src/lib/featureFlags.ts†L28-L48】 |
-| `VITE_BACKEND_URL`, `VITE_API_BASE`, `VITE_GATEWAY_URL`, `VITE_REMOTE_SITE_BASE` | Backend discovery fallbacks SPA-ში. | [`ai-frontend/src/lib/env.ts`](ai-frontend/src/lib/env.ts) 【F:ai-frontend/src/lib/env.ts†L46-L97】 |
+| `VITE_BACKEND_URL`, `VITE_API_BASE`, `VITE_GATEWAY_URL`, `VITE_API_PROXY_BASE` | Backend discovery fallbacks SPA-ში. | [`ai-frontend/src/lib/env.ts`](ai-frontend/src/lib/env.ts) 【F:ai-frontend/src/lib/env.ts†L46-L97】 |
 | `AI_SERVICE_URL` | API proxy/ტესტები → AI Service საბოლოო მისამართი. | [`ai-frontend/pages/api/ai/[...path].ts`](ai-frontend/pages/api/ai/[...path].ts) 【F:ai-frontend/pages/api/ai/[...path].ts†L1-L63】 |
 
 ## Production Security ❗

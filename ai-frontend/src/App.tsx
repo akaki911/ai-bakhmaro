@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Suspense, useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -17,10 +17,11 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { FilePreviewProvider } from './contexts/FilePreviewProvider';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
-import Login from './Login';
-import AIDeveloperPanel from './components/AIDeveloperPanel';
-import FilePreview from './components/FilePreview';
 import './index.css';
+
+const Login = lazy(() => import('./Login'));
+const AIDeveloperPanel = lazy(() => import('./components/AIDeveloperPanel'));
+const FilePreview = lazy(() => import('./components/FilePreview'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,7 +59,14 @@ function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/admin?tab=dashboard" replace />} />
-      <Route path="/login" element={<Login />} />
+      <Route
+        path="/login"
+        element={(
+          <Suspense fallback={<div className="p-6 text-gray-400">Loading secure login…</div>}>
+            <Login />
+          </Suspense>
+        )}
+      />
 
       <Route
         path="/admin"
@@ -90,7 +98,9 @@ function App() {
                       <AppRouter />
                     </Router>
                     <Toaster position="top-center" />
-                    <FilePreview />
+                    <Suspense fallback={null}>
+                      <FilePreview />
+                    </Suspense>
                     <FirebaseInitializer />
                   </FilePreviewProvider>
                 </PermissionsProvider>
