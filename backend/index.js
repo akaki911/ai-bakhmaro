@@ -123,19 +123,73 @@ const aiTraceRoutes = require('./routes/ai_trace');
 
 const httpServer = http.createServer(app);
 
-const allowedOrigins = [
-  'https://ai.bakhmaro.co',
-  process.env.FRONTEND_URL,
-  process.env.ALT_FRONTEND_URL,
-  process.env.AI_DOMAIN,
-];
+const DEFAULT_FRONTEND_ORIGIN = 'https://ai.bakhmaro.co';
 
-if (process.env.NODE_ENV !== 'production') {
-  allowedOrigins.push('https://ai.bakhmaro.co');
-  allowedOrigins.push('http://127.0.0.1:3000');
-}
+const normaliseOriginValue = (value) => {
+  if (!value || typeof value !== 'string') {
+    return null;
+  }
 
-const allowedOriginsSet = new Set(allowedOrigins.filter(Boolean));
+  try {
+    const parsed = new URL(value.trim());
+    if (!parsed.protocol || !parsed.hostname) {
+      return null;
+    }
+
+    const portPart = parsed.port ? `:${parsed.port}` : '';
+    return `${parsed.protocol}//${parsed.hostname}${portPart}`;
+  } catch (error) {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+    return trimmed.replace(/\/+$/, '');
+  }
+};
+
+const buildAllowedOriginsMap = () => {
+  const candidates = [
+    DEFAULT_FRONTEND_ORIGIN,
+    process.env.FRONTEND_URL,
+    process.env.ALT_FRONTEND_URL,
+    process.env.AI_DOMAIN,
+    process.env.PUBLIC_FRONTEND_ORIGIN,
+    process.env.CORS_ALLOWED_ORIGIN,
+    process.env.ALLOWED_ORIGINS,
+    process.env.ORIGIN,
+  ];
+
+  const origins = new Map();
+  const addOrigin = (origin) => {
+    const normalised = normaliseOriginValue(origin);
+    if (!normalised) {
+      return;
+    }
+
+    if (!origins.has(normalised)) {
+      origins.set(normalised, normalised);
+    }
+  };
+
+  candidates
+    .flatMap((value) => (typeof value === 'string' ? value.split(',') : []))
+    .forEach(addOrigin);
+
+  if (process.env.NODE_ENV !== 'production') {
+    addOrigin('https://ai.bakhmaro.co');
+    addOrigin('http://127.0.0.1:3000');
+    addOrigin('http://localhost:3000');
+  }
+
+  return origins;
+};
+
+const allowedOriginsMap = buildAllowedOriginsMap();
+const allowedOriginsSet = new Set(allowedOriginsMap.keys());
+const primaryAllowedOrigin =
+  allowedOriginsMap.get(normaliseOriginValue(process.env.FRONTEND_URL)) ||
+  allowedOriginsMap.get(normaliseOriginValue(DEFAULT_FRONTEND_ORIGIN)) ||
+  DEFAULT_FRONTEND_ORIGIN;
 
 const websocketAllowlist = [
   FRONTEND_URL,
@@ -423,19 +477,22 @@ const applyCorsHeaders = (res, options) => {
 
 const determineAllowedOrigin = (req) => {
   const requestOrigin = req.header('Origin');
+
   if (!requestOrigin) {
-    return getRpConfig(req).origin;
+    return getRpConfig(req).origin || primaryAllowedOrigin;
   }
 
-  if (allowedOriginsSet.has(requestOrigin)) {
-    return requestOrigin;
+  const normalised = normaliseOriginValue(requestOrigin);
+  if (normalised && allowedOriginsSet.has(normalised)) {
+    return allowedOriginsMap.get(normalised) ?? normalised;
   }
 
   return null;
 };
 
 const resolveCorsOptions = (req, resolvedOrigin) => {
-  const fallbackOrigin = getRpConfig(req).origin;
+  const rpConfig = getRpConfig(req);
+  const fallbackOrigin = rpConfig?.origin || primaryAllowedOrigin;
   const origin = resolvedOrigin || determineAllowedOrigin(req) || fallbackOrigin;
   const allowedHeaders = buildAllowedHeaders(req);
   const methods = buildAllowedMethods(req);
