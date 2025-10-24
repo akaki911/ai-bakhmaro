@@ -41,7 +41,7 @@ describe('normaliseCookie', () => {
 });
 
 describe('gateway integration', () => {
-  it('returns JSON error for unauthenticated route advice when upstream is unavailable', async () => {
+  it('returns JSON error for backend-auth routes when upstream is unavailable', async () => {
     const previousEnv: Record<string, string | undefined> = {
       NODE_ENV: process.env.NODE_ENV,
       JWT_SECRET: process.env.JWT_SECRET,
@@ -97,22 +97,60 @@ describe('gateway integration', () => {
         });
       });
 
-      const response = await fetch(`http://127.0.0.1:${port}/api/auth/route-advice`, {
-        headers: { accept: 'application/json' },
-      });
+      const scenarios = [
+        {
+          description: 'route advice fallback',
+          path: '/api/auth/route-advice',
+          init: { headers: { accept: 'application/json' } },
+        },
+        {
+          description: 'admin WebAuthn fallback',
+          path: '/api/admin/webauthn/me',
+          init: { headers: { accept: 'application/json' } },
+        },
+        {
+          description: 'device recognition fallback',
+          path: '/api/auth/device/recognize',
+          init: {
+            method: 'POST',
+            headers: {
+              accept: 'application/json',
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify({ clientId: 'test', fingerprint: {}, uaInfo: {} }),
+          },
+        },
+      ];
 
-      assert.ok([502, 504].includes(response.status), `Expected 502 or 504 but received ${response.status}`);
-      const contentType = response.headers.get('content-type') ?? '';
-      const bodyText = await response.text();
+      for (const scenario of scenarios) {
+        const response = await fetch(`http://127.0.0.1:${port}${scenario.path}`, scenario.init);
 
-      assert.ok(!contentType.includes('text/html'), `Expected non-HTML response but received ${contentType}`);
-      assert.ok(!bodyText.toLowerCase().includes('<!doctype html'), 'Expected response body to avoid login HTML');
+        assert.ok(
+          [502, 504].includes(response.status),
+          `${scenario.description}: expected 502 or 504 but received ${response.status}`,
+        );
 
-      if (contentType.includes('application/json')) {
-        const payload = JSON.parse(bodyText);
-        assert.deepEqual(payload, { error: 'Bad gateway', code: 'UPSTREAM_UNAVAILABLE' });
-      } else {
-        assert.ok(bodyText.length > 0, 'Expected upstream error response to have a body');
+        const contentType = response.headers.get('content-type') ?? '';
+        const bodyText = await response.text();
+
+        assert.ok(
+          !contentType.includes('text/html'),
+          `${scenario.description}: expected non-HTML response but received ${contentType}`,
+        );
+        assert.ok(
+          !bodyText.toLowerCase().includes('<!doctype html'),
+          `${scenario.description}: expected response body to avoid login HTML`,
+        );
+
+        if (contentType.includes('application/json')) {
+          const payload = JSON.parse(bodyText);
+          assert.deepEqual(payload, { error: 'Bad gateway', code: 'UPSTREAM_UNAVAILABLE' });
+        } else {
+          assert.ok(
+            bodyText.length > 0,
+            `${scenario.description}: expected upstream error response to have a body`,
+          );
+        }
       }
     } finally {
       if (server) {
