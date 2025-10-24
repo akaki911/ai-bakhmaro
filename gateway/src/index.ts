@@ -91,7 +91,7 @@ const cookieSecure = env.COOKIE_SECURE;
 const sessionCookieNameSet = new Set(env.SESSION_COOKIE_NAMES);
 const isSessionCookieName = createSessionCookieChecker(sessionCookieNameSet);
 
-type ServiceAudience = 'ai-service';
+type ServiceAudience = 'ai-service' | 'backend';
 
 const headerHasValue = (value: string | string[] | undefined): boolean => {
   if (Array.isArray(value)) {
@@ -302,6 +302,7 @@ app.use('/api/sites/:siteId/github', (req, res, next) => {
   next();
 });
 
+app.use('/api/auth/device/recognize', createProxy(env.BACKEND_PROXY_BASE, 'backend'));
 app.use('/api', createProxy(env.API_PROXY_BASE, 'ai-service'));
 
 app.use(express.static(staticRoot, { index: false, maxAge: env.NODE_ENV === 'production' ? '1h' : 0 }));
