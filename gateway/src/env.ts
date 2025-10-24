@@ -9,6 +9,7 @@ const parseCsvList = (value: string): string[] =>
 const baseSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(8080),
+  API_PROXY_BASE: z.string().url().optional(),
   REMOTE_SITE_BASE: z.string().url().optional(),
   UPSTREAM_API_URL: z.string().url().optional(),
   STATIC_ROOT: z.string().default('../../ai-frontend/dist'),
@@ -24,7 +25,7 @@ const baseSchema = z.object({
   COOKIE_SECURE: z.coerce.boolean().default(false),
   SESSION_COOKIE_NAMES: z
     .string()
-    .default('bk_admin.sid,connect.sid,__Secure-bk_admin.sid,bk_customer.sid')
+    .default('ai-space.sid,bk_admin.sid,__Secure-bk_admin.sid')
     .transform((value) =>
       value
         .split(',')
@@ -42,8 +43,8 @@ const baseSchema = z.object({
 
 type ParsedEnv = z.infer<typeof baseSchema>;
 
-export type GatewayEnv = Omit<ParsedEnv, 'SITE_MAPPING_GITHUB'> & {
-  REMOTE_SITE_BASE: string;
+export type GatewayEnv = Omit<ParsedEnv, 'SITE_MAPPING_GITHUB' | 'REMOTE_SITE_BASE'> & {
+  API_PROXY_BASE: string;
   COOKIE_DOMAIN: string | null;
   SESSION_COOKIE_NAMES: string[];
   SITE_MAPPING_GITHUB: Record<string, string>;
@@ -67,7 +68,8 @@ export const getEnv = (): GatewayEnv => {
   }
 
   const data = parsed.data;
-  const remoteBase = data.REMOTE_SITE_BASE ?? data.UPSTREAM_API_URL ?? 'http://127.0.0.1:5002';
+  const proxyBase =
+    data.API_PROXY_BASE ?? data.UPSTREAM_API_URL ?? data.REMOTE_SITE_BASE ?? 'http://127.0.0.1:5002';
   let siteMapping: Record<string, string> = {};
   if (typeof data.SITE_MAPPING_GITHUB === 'string' && data.SITE_MAPPING_GITHUB.trim().length > 0) {
     try {
@@ -86,9 +88,11 @@ export const getEnv = (): GatewayEnv => {
     : null;
   const publicOrigin = publicOriginRaw ?? aiDomain ?? null;
 
+  const { SITE_MAPPING_GITHUB, REMOTE_SITE_BASE: _legacyRemoteBase, ...rest } = data;
+
   cachedEnv = {
-    ...data,
-    REMOTE_SITE_BASE: remoteBase,
+    ...rest,
+    API_PROXY_BASE: proxyBase,
     COOKIE_DOMAIN: cookieDomain,
     SESSION_COOKIE_NAMES: data.SESSION_COOKIE_NAMES,
     SITE_MAPPING_GITHUB: siteMapping,

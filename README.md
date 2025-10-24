@@ -1,10 +1,20 @@
-# Bakhmaro AI Stack
+# AI Space Stack
 
 ## TypeScript service map
 | Service | Directory | Default port | Description |
 | --- | --- | --- | --- |
 | Gateway API | `gateway/` | 8080 | Express proxy that fronts all browser traffic, handles login redirects, and issues service JWTs before forwarding requests to downstream APIs. |
 | AI Frontend | `ai-frontend/` | 5173 | Vite-powered React UI bundled for both local development and static hosting behind the gateway. |
+
+## Repository scope
+
+The repository now contains only the **AI Space** surfaces:
+
+- **AI Frontend** — the administrative console and assistant UI.
+- **Gateway** — the edge service that secures every route and proxies `/api/*` directly to the AI Service or backend façade configured via `API_PROXY_BASE`.
+- **AI Service** — automation and LLM orchestration utilities consumed by the UI and gateway.
+
+All booking, cottage, hotel, and provider modules were removed. Any remaining references to those domains should be treated as bugs and reported.
 
 The compose file maps each container port to the same host port so the services are reachable at `http://localhost:<port>` when started with Docker Compose.
 
@@ -19,7 +29,7 @@ Additional hardening details:
 
 - Gateway enforces `bakhmaro.co → https://ai.bakhmaro.co` with an HTTP 301 that preserves the original request URI.
 - CORS is constrained to the AI domain with `Access-Control-Allow-Credentials: true` so secure cookies survive cross-origin hops.
-- Service-to-service calls automatically receive a short-lived JWT signed by the gateway (`aud` = `remote-site`).
+- Service-to-service calls automatically receive a short-lived JWT signed by the gateway (`aud` = `ai-service`).
 - Upstream `Set-Cookie` headers are normalised to `SameSite=None` and `Domain=.${ROOT_DOMAIN}` so AI-only tooling works across subdomains while remaining configurable via `COOKIE_SECURE`.
 - Every `fetch` call from the frontend defaults to `credentials: 'include'`; session cookies are issued with `SameSite=None; Secure; HttpOnly` when delivered by the authentication backend.
 
@@ -30,7 +40,7 @@ This flow is implemented in the gateway entrypoint: unauthenticated requests on 
 | --- | --- | --- | --- | --- |
 | `AI_DOMAIN` | Frontend & gateway containers | Defaults to `http://localhost:5173` when unset in Compose. | Used by client code and reverse proxy logic to describe the public-facing AI hostname. | Set this to your live AI domain (e.g., `https://ai.bakhmaro.co`) when deploying beyond localhost. |
 | `ROOT_DOMAIN` | Frontend & gateway containers | Defaults to `localhost` in Compose. | Controls cookie / redirect handling that depends on the parent domain. | Replace with `bakhmaro.co` (or your root) so redirects like `bakhmaro.co → ai.bakhmaro.co` resolve correctly. |
-| `REMOTE_SITE_BASE` | Gateway | Resolved to `http://ai-frontend:5173` in Compose, or falls back to `UPSTREAM_API_URL` → `http://127.0.0.1:5002` in code. | Target for `/api` proxy traffic that ultimately serves the public site. | Point this at the desired upstream: keep a Replit URL during development, then switch to `https://bakhmaro.co` for production. |
+| `API_PROXY_BASE` | Gateway | Defaults to `http://ai-service:5001` in Compose, or falls back to `UPSTREAM_API_URL` → `http://127.0.0.1:5002` in code. | Primary upstream for `/api` proxy traffic that powers the AI stack. | Point this at the gateway-facing AI Service base URL for each environment. |
 | `JWT_SECRET` | Gateway | Required; Compose enforces presence. | Signs and validates the short-lived service tokens injected on proxied requests. | Rotate per environment. Must be at least 16 characters to satisfy validation. |
 | `SERVICE_JWT_ISSUER` | Gateway | Defaults to `ai-gateway`. | Issuer claim attached to the short-lived service token. | Override only if you customise the gateway identity. |
 | `SERVICE_JWT_SUBJECT` | Gateway | Defaults to `gateway-service`. | Subject claim for the service token. | Only change if you operate multiple trusted edge gateways. |
@@ -67,22 +77,18 @@ Both commands can run in parallel so you retain hot reloads across the stack. `p
 ## Gateway proxy topology
 ```
 Browser ↔ Gateway (8080)
-  ↳ /api/* → Remote site (REMOTE_SITE_BASE)
+  ↳ /api/* → AI Service (API_PROXY_BASE)
 ```
 The gateway issues service JWTs before forwarding each proxied call, and surfaces `/health` to report which upstream base URLs are currently active.
 
-### Remote control switch
+### Proxy validation checks
 
-Set `REMOTE_SITE_BASE` to the current upstream once and the gateway will forward all `/api` requests there without further code changes. Today this can point at the Replit staging API; when production is ready flip the value to `https://bakhmaro.co` and restart the stack. No frontend rebuild is required because the proxy mapping lives entirely in the gateway.
-
-### Switch validation checks
-
-After changing `REMOTE_SITE_BASE`, run these quick probes to confirm the gateway is wired to the expected upstream:
+After changing `API_PROXY_BASE`, run these quick probes to confirm the gateway is wired to the expected upstream:
 
 1. `curl -i http://localhost:8080/api/health` → confirms the general `/api` proxy path responds.
 2. `curl -i http://localhost:8080/health` → gateway self-check.
 
-All three calls should succeed; failures indicate a misconfigured `REMOTE_SITE_BASE` or an offline upstream.
+Both calls should succeed; failures indicate a misconfigured `API_PROXY_BASE` or an offline upstream.
 
 ### Deployment checklist
 
