@@ -47,7 +47,7 @@ if (!firebaseAdminDisabled && !admin.apps.length) {
     if (firebaseServiceAccount) {
       admin.initializeApp({
         credential: admin.credential.cert(firebaseServiceAccount),
-        projectId: process.env.FIREBASE_PROJECT_ID || firebaseServiceAccount.project_id || 'bakhmaro-cottages'
+        projectId: process.env.FIREBASE_PROJECT_ID || firebaseServiceAccount.project_id || 'ai-bakhmaro'
       });
       isFirebaseAvailable = true;
       const sourceSuffix = firebaseCredentialSource ? ` [${firebaseCredentialSource}]` : '';

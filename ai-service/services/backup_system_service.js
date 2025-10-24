@@ -191,7 +191,7 @@ class BackupSystemService {
         backupId,
         timestamp: new Date().toISOString(),
         version: '1.0',
-        source: 'bakhmaro-cottages'
+        source: 'ai-bakhmaro'
       };
 
       // Encrypt database backup

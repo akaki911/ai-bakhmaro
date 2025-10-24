@@ -21,14 +21,14 @@ class DatabaseManager {
 
           admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
-            databaseURL: "https://bakhmaro-cottages-default-rtdb.firebaseio.com"
+            databaseURL: "https://ai-bakhmaro-default-rtdb.firebaseio.com"
           });
 
           console.log('🔥 Firebase Admin initialized with service account');
         } catch (serviceError) {
           // Fallback to environment variables
           admin.initializeApp({
-            projectId: process.env.FIREBASE_PROJECT_ID || 'bakhmaro-cottages',
+            projectId: process.env.FIREBASE_PROJECT_ID || 'ai-bakhmaro',
           });
 
           console.log('🔥 Firebase Admin initialized with environment');
