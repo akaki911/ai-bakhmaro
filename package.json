@@ -4,13 +4,11 @@
   "private": true,
   "workspaces": [
     "ai-frontend",
-    "property-api",
     "gateway"
   ],
   "scripts": {
-    "dev": "concurrently -c cyan,magenta,green --names gateway,property,frontend \"pnpm --filter gateway dev\" \"pnpm --filter property-api dev\" \"pnpm --filter ai-frontend dev\"",
+    "dev": "concurrently -c cyan,magenta --names gateway,frontend \"pnpm --filter gateway dev\" \"pnpm --filter ai-frontend dev\"",
     "dev:frontend": "pnpm --filter ai-frontend dev",
-    "dev:property-api": "pnpm --filter property-api dev",
     "dev:gateway": "pnpm --filter gateway dev",
     "build": "node scripts/run-workspace-build.mjs",
     "lint": "npm run lint -ws --if-present",
