@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node ../scripts/run-pnpm-sequence.mjs build:types build:client",
+    "build:types": "tsc -b",
+    "build:client": "vite build",
     "lint": "eslint .",
     "preview": "vite preview --port 5000 --host 0.0.0.0",
     "test": "node --test tests",
