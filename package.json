@@ -13,9 +13,10 @@
     "dev:property-api": "pnpm --filter property-api dev",
     "dev:gateway": "pnpm --filter gateway dev",
     "build": "node scripts/run-workspace-build.mjs",
-    "lint": "pnpm -r --if-present run lint",
-    "test": "pnpm -r --if-present run test",
-    "type-check": "pnpm --filter ai-frontend --if-present run type-check",
+    "lint": "npm run lint -ws --if-present",
+    "test": "npm run test -ws --if-present",
+    "type-check": "npm run type-check -w ai-frontend --if-present",
+    "test:integration": "./scripts/run-integration-tests.sh",
     "check:secrets-required": "echo '✅ Secrets check skipped on CI environment'"
   },
   "devDependencies": {
