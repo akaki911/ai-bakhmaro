@@ -1,5 +1,5 @@
 
-import { getFirestore, writeBatch, doc, collection, DocumentReference } from 'firebase/firestore';
+import { getFirestore, writeBatch, doc, collection, DocumentReference } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 
 /**

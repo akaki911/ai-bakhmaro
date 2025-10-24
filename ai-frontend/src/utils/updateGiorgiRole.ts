@@ -1,5 +1,5 @@
 
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 
 export const updateGiorgiRole = async () => {

@@ -2,7 +2,7 @@
 // BookingForm.tsx - Fixed syntax error and added proper imports
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, addDoc, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, getDoc, setDoc } from '@/lib/firebase/firestore';
 import { db } from './firebaseConfig';
 import { ArrowLeft, Calendar, Users, User, Clock } from 'lucide-react';
 import { calculateSeasonalPrice, type PricingResult } from './utils/pricing';

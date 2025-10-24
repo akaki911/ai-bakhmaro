@@ -8,7 +8,7 @@ import {
   query,
   where,
   orderBy,
-} from "firebase/firestore";
+} from "@/lib/firebase/firestore";
 import { db } from "../firebaseConfig";
 
 export interface Booking {

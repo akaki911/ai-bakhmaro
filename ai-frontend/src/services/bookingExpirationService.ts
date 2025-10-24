@@ -1,4 +1,4 @@
-import { collection, doc, updateDoc, deleteDoc, getDocs, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, doc, updateDoc, deleteDoc, getDocs, query, where, onSnapshot } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 
 export class BookingExpirationService {

@@ -1,5 +1,5 @@
 
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 
 export const updateUserRole = async (userId: string, role: 'CUSTOMER' | 'ADMIN' | 'PROVIDER_ADMIN' | 'SUPER_ADMIN') => {

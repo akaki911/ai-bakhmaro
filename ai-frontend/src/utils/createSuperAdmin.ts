@@ -1,6 +1,6 @@
 
 import { createUserWithId, getUserByEmail } from '../services/userService';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from '@/lib/firebase/auth';
 import { auth } from '../firebaseConfig';
 
 export const createSuperAdmin = async () => {

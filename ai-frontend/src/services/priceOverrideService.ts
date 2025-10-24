@@ -1,5 +1,6 @@
 
-import { collection, doc, addDoc, updateDoc, getDocs, query, where, Timestamp } from 'firebase/firestore';
+import { collection, doc, addDoc, updateDoc, getDocs, query, where, Timestamp } from '@/lib/firebase/firestore';
+import type { FirestoreTimestamp } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 
 export interface PriceOverrideToken {
@@ -8,11 +9,11 @@ export interface PriceOverrideToken {
   productType: 'cottage' | 'vehicle' | 'hotel';
   productId: string;
   createdBy: string;
-  expiresAt: Timestamp;
+  expiresAt: FirestoreTimestamp;
   used: boolean;
   usedBy?: string;
-  usedAt?: Timestamp;
-  createdAt: Timestamp;
+  usedAt?: FirestoreTimestamp;
+  createdAt: FirestoreTimestamp;
 }
 
 // Generate random 6-character code

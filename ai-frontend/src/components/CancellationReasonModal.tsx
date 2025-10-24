@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
-import { updateDoc, doc } from 'firebase/firestore';
+import { updateDoc, doc } from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 
 interface CancellationReasonModalProps {

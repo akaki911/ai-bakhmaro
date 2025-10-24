@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, limit } from '@/lib/firebase/firestore';
 import { db } from './firebaseConfig';
 import { ArrowLeft, Users, MapPin, Wifi, Car, Utensils, Bath, Tv, Wind, Home } from 'lucide-react';
 import { getDisplayPriceForFamily } from './utils/pricing';

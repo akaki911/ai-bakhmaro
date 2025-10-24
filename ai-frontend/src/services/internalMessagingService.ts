@@ -10,7 +10,7 @@ import {
   orderBy, 
   onSnapshot,
   serverTimestamp,
-} from 'firebase/firestore';
+} from '@/lib/firebase/firestore';
 import { db } from '../firebaseConfig';
 
 export interface InternalMessage {
