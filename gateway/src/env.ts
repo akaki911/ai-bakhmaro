@@ -10,6 +10,7 @@ const baseSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(8080),
   API_PROXY_BASE: z.string().url().optional(),
+  BACKEND_PROXY_BASE: z.string().url().optional(),
   REMOTE_SITE_BASE: z.string().url().optional(),
   UPSTREAM_API_URL: z.string().url().optional(),
   STATIC_ROOT: z.string().default('../../ai-frontend/dist'),
@@ -45,6 +46,7 @@ type ParsedEnv = z.infer<typeof baseSchema>;
 
 export type GatewayEnv = Omit<ParsedEnv, 'SITE_MAPPING_GITHUB' | 'REMOTE_SITE_BASE'> & {
   API_PROXY_BASE: string;
+  BACKEND_PROXY_BASE: string;
   COOKIE_DOMAIN: string | null;
   SESSION_COOKIE_NAMES: string[];
   SITE_MAPPING_GITHUB: Record<string, string>;
@@ -70,6 +72,7 @@ export const getEnv = (): GatewayEnv => {
   const data = parsed.data;
   const proxyBase =
     data.API_PROXY_BASE ?? data.UPSTREAM_API_URL ?? data.REMOTE_SITE_BASE ?? 'http://127.0.0.1:5002';
+  const backendProxyBase = data.BACKEND_PROXY_BASE ?? 'http://127.0.0.1:5002';
   let siteMapping: Record<string, string> = {};
   if (typeof data.SITE_MAPPING_GITHUB === 'string' && data.SITE_MAPPING_GITHUB.trim().length > 0) {
     try {
@@ -93,6 +96,7 @@ export const getEnv = (): GatewayEnv => {
   cachedEnv = {
     ...rest,
     API_PROXY_BASE: proxyBase,
+    BACKEND_PROXY_BASE: backendProxyBase,
     COOKIE_DOMAIN: cookieDomain,
     SESSION_COOKIE_NAMES: data.SESSION_COOKIE_NAMES,
     SITE_MAPPING_GITHUB: siteMapping,
