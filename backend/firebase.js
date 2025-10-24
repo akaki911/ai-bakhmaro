@@ -37,26 +37,24 @@ if (!runtimeConfig.integrations.firebase.enabled) {
         process.env.FIREBASE_SERVICE_ACCOUNT_KEY = stringValue;
       }
 
+      const projectId = serviceAccount.project_id || process.env.FIREBASE_PROJECT_ID;
+
+      if (!projectId) {
+        throw new Error(
+          'FIREBASE_PROJECT_ID environment variable is required when project_id is not present in the service account JSON.',
+        );
+      }
+
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        projectId: serviceAccount.project_id || process.env.FIREBASE_PROJECT_ID || 'bakhmaro-cottages',
+        projectId,
       });
 
       const sourceSuffix = source ? ` [${source}]` : '';
       console.log(`✅ Firebase Admin initialized successfully${sourceSuffix}`);
     } catch (error) {
       console.error('❌ Firebase Admin initialization failed:', error.message);
-
-      // Fallback initialization with minimal config
-      try {
-        admin.initializeApp({
-          projectId: process.env.FIREBASE_PROJECT_ID || 'bakhmaro-cottages',
-        });
-        console.log('✅ Firebase Admin initialized with minimal config');
-      } catch (fallbackError) {
-        console.error('❌ Fallback Firebase Admin initialization failed:', fallbackError.message);
-        throw fallbackError;
-      }
+      throw error;
     }
   }
 

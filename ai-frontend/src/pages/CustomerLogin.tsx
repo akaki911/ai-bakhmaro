@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { sendPasswordResetEmail } from '@/lib/firebase/auth';
-import { auth } from '../firebase';
+import { auth, firebaseEnabled } from '../firebase';
 import { useAuth } from '../contexts/useAuth';
 
 const CustomerLogin: React.FC = () => {
@@ -38,6 +38,11 @@ const CustomerLogin: React.FC = () => {
   const handleForgotPassword = async () => {
     if (!email.trim()) {
       setError('გთხოვთ შეიყვანოთ ელ-ფოსტა');
+      return;
+    }
+
+    if (!firebaseEnabled) {
+      setError('Firebase სერვისი გათიშულია. გთხოვთ დაუკავშირდეთ ადმინისტრატორს.');
       return;
     }
 
