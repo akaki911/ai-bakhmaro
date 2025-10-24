@@ -176,14 +176,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (!contentType.includes('application/json')) {
           console.warn('⚠️ [Auth] Route advice returned non-JSON payload, using default route.');
-          setRouteAdvice({
+          const fallbackAdvice = {
             role: null,
             deviceTrust: false,
             target: '/login',
             reason: 'non_json_route_advice',
             authenticated: false
-          });
-          return { target: '/login' };
+          };
+          setRouteAdvice(fallbackAdvice);
+          return fallbackAdvice;
         }
 
         const advice = await response.json();
@@ -193,26 +194,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         // Fallback to default if route advice fails
         console.warn('⚠️ [Auth] Failed to fetch route advice, falling back to default.');
-        setRouteAdvice({
+        const fallbackAdvice = {
           role: null,
           deviceTrust: false,
           target: '/login',
           reason: 'Route advice fetch failed',
           authenticated: false
-        });
-        return { target: '/login' };
+        };
+        setRouteAdvice(fallbackAdvice);
+        return fallbackAdvice;
       }
     } catch (error) {
       console.error('❌ [Auth] Error fetching route advice:', error);
       // Fallback to default on error
-      setRouteAdvice({
+      const fallbackAdvice = {
         role: null,
         deviceTrust: false,
         target: '/login',
         reason: 'Route advice fetch error',
         authenticated: false
-      });
-      return { target: '/login' };
+      };
+      setRouteAdvice(fallbackAdvice);
+      return fallbackAdvice;
     }
   };
 
@@ -1271,6 +1274,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return urlParams.get('debug') === '1';
   };
 
+  const retryPreflightChecks = async () => {
+    try {
+      await performDeviceRecognition();
+      const advice = await fetchRouteAdvice();
+      const fatalReasons = ['Route advice fetch failed', 'Route advice fetch error'];
+
+      if (advice && fatalReasons.includes(advice.reason)) {
+        throw new Error(advice.reason);
+      }
+    } catch (error) {
+      console.error('❌ [Auth] Preflight retry failed:', error);
+      throw error;
+    }
+  };
+
   // Perform device recognition on component mount
   useEffect(() => {
     performDeviceRecognition();
@@ -1300,6 +1318,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getAutoRouteTarget,
     shouldShowRoleSelection,
     routeAdvice,
+    retryPreflightChecks,
     // Compatibility properties
     id: user?.id ?? null,
     email: user?.email ?? null,
@@ -1316,6 +1335,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userRole, isAuthReady, personalId, firebaseUid,
     login, logout, registerCurrentDevice, setDeviceTrustMethod,
     routeAdvice, // Include routeAdvice in dependencies
+    retryPreflightChecks,
     updateUserPreferences,
   ]);
 

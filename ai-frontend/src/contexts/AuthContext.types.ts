@@ -67,5 +67,6 @@ export interface AuthContextType {
     reason: string;
     authenticated: boolean;
   };
+  retryPreflightChecks: () => Promise<void>;
   updateUserPreferences: (preferences: Partial<NonNullable<User['preferences']>>) => Promise<void> | void;
 }

@@ -1,6 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, ScanFace, KeyRound, ArrowLeft } from 'lucide-react';
+import {
+  ShieldCheck,
+  ScanFace,
+  KeyRound,
+  ArrowLeft,
+  AlertTriangle,
+  Loader2,
+  RefreshCw,
+  BadgeCheck,
+  AlertCircle
+} from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
 import {
   checkPasskeyAvailability,
@@ -18,7 +28,9 @@ const AdminPasskeyLogin: React.FC = () => {
     deviceRecognition,
     authInitialized,
     isAuthenticated,
-    getAutoRouteTarget
+    getAutoRouteTarget,
+    routeAdvice,
+    retryPreflightChecks
   } = useAuth();
 
   const [step, setStep] = useState<AuthStep>('email');
@@ -34,11 +46,82 @@ const AdminPasskeyLogin: React.FC = () => {
     conditionalUI: false
   });
   const [passkeyAttempted, setPasskeyAttempted] = useState(false);
+  const [retryingPreflight, setRetryingPreflight] = useState(false);
+  const [passkeySupportChecked, setPasskeySupportChecked] = useState(false);
 
   const recognizedDeviceSuffix = useMemo(() => {
     const deviceId = deviceRecognition?.currentDevice?.deviceId;
     return deviceId ? deviceId.slice(-6).toUpperCase() : null;
   }, [deviceRecognition]);
+
+  const preflightBanner = useMemo(() => {
+    if (!authInitialized) {
+      return {
+        variant: 'info' as const,
+        message: 'ვამოწმებთ სესიას და მოწყობილობის ნდობას...',
+        showSpinner: true,
+        showRetry: false
+      };
+    }
+
+    const reason = routeAdvice?.reason ?? '';
+
+    if (['Route advice fetch failed', 'Route advice fetch error'].includes(reason)) {
+      return {
+        variant: 'error' as const,
+        message: 'სერვერთან კავშირი ვერ მოხერხდა. სცადეთ ხელახლა ან გამოიყენეთ პაროლის რეჟიმი.',
+        showRetry: true
+      };
+    }
+
+    if (reason === 'non_json_route_advice') {
+      return {
+        variant: 'warning' as const,
+        message: 'სესიის შემოწმება დააბრუნა მოულოდნელი პასუხი. გამოყენებულია უსაფრთხო ფოლბექი.',
+        showRetry: true
+      };
+    }
+
+    if (routeAdvice?.authenticated && routeAdvice.role && routeAdvice.role !== 'SUPER_ADMIN') {
+      const target = routeAdvice.target && routeAdvice.target !== '/login' ? routeAdvice.target : undefined;
+      return {
+        variant: 'warning' as const,
+        message: 'თქვენ არ ხართ ავტორიზებული ადმინისტრაციულ პანელში. გამოიყენეთ მომხმარებლის პორტალი.',
+        ctaHref: target,
+        ctaLabel: target ? 'გადასვლა მომხმარებლის პორტალზე' : undefined,
+        showRetry: false
+      };
+    }
+
+    return null;
+  }, [authInitialized, routeAdvice]);
+
+  const passkeySupportDetails = useMemo(
+    () => [
+      {
+        label: 'Passkey მხარდაჭერა',
+        enabled: passkeySupport.supported,
+        description: passkeySupport.supported
+          ? 'ბრაუზერი მხარს უჭერს Passkey ავტორიზაციას.'
+          : 'ბრაუზერი ამ დროს ვერ ამუშავებს Passkey ავტორიზაციას.'
+      },
+      {
+        label: 'პლატფორმური ავტენტიკატორი',
+        enabled: passkeySupport.platformAuthenticator,
+        description: passkeySupport.platformAuthenticator
+          ? 'მოწყობილობაში ჩაშენებული ავტენტიკატორი მზადაა.'
+          : 'პლატფორმური ავტენტიკატორი მიუწვდომელია ამ მოწყობილობაზე.'
+      },
+      {
+        label: 'Passkey სწრაფი გამოხმაურება',
+        enabled: passkeySupport.conditionalUI,
+        description: passkeySupport.conditionalUI
+          ? 'ბრაუზერი უჭერს მხარს Conditional UI-ს.'
+          : 'Conditional UI მიუწვდომელია; გამოჩნდება სტანდარტული ფანჯარა.'
+      }
+    ],
+    [passkeySupport]
+  );
 
   useEffect(() => {
     document.title = 'AI დეველოპერ კონსოლზე შესვლა – ai.bakhmaro.co';
@@ -73,6 +156,8 @@ const AdminPasskeyLogin: React.FC = () => {
         setPasskeySupport(support);
       } catch (error) {
         console.error('❌ [Admin Login] Passkey support detection failed:', error);
+      } finally {
+        setPasskeySupportChecked(true);
       }
     };
 
@@ -103,15 +188,30 @@ const AdminPasskeyLogin: React.FC = () => {
   }, [loginWithPasskey, navigate]);
 
   useEffect(() => {
-    if (step === 'passkey' && !passkeyAttempted) {
-      setPasskeyAttempted(true);
-      if (passkeySupport.supported) {
-        triggerPasskey();
-      } else {
-        setErrorMessage('Passkey-ები არ არის მხარდაჭერილი ამ მოწყობილობაზე.');
-      }
+    if (step !== 'passkey' || passkeyAttempted) {
+      return;
     }
-  }, [passkeyAttempted, passkeySupport.supported, step, triggerPasskey]);
+
+    if (!passkeySupportChecked) {
+      return;
+    }
+
+    if (!passkeySupport.supported) {
+      setErrorMessage('');
+      setStatusMessage('ეს მოწყობილობა Passkey-ს არ უჭერს მხარს. გაგრძელება პაროლით.');
+      setStep('password');
+      return;
+    }
+
+    setPasskeyAttempted(true);
+    triggerPasskey();
+  }, [
+    passkeyAttempted,
+    passkeySupportChecked,
+    passkeySupport.supported,
+    step,
+    triggerPasskey
+  ]);
 
   const resetMessages = () => {
     setErrorMessage('');
@@ -128,7 +228,17 @@ const AdminPasskeyLogin: React.FC = () => {
 
     resetMessages();
     setPasskeyAttempted(false);
-    setStep('passkey');
+    if (!passkeySupportChecked) {
+      setStep('passkey');
+      return;
+    }
+
+    if (passkeySupport.supported) {
+      setStep('passkey');
+    } else {
+      setStatusMessage('ეს მოწყობილობა Passkey-ს არ უჭერს მხარს. გაგრძელება პაროლით.');
+      setStep('password');
+    }
   };
 
   const handlePasswordSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -164,7 +274,30 @@ const AdminPasskeyLogin: React.FC = () => {
     setStep('password');
   };
 
-  const passkeyUnavailable = step === 'passkey' && !passkeySupport.supported;
+  const handleRetryPreflight = useCallback(async () => {
+    if (!retryPreflightChecks) {
+      return;
+    }
+
+    setRetryingPreflight(true);
+    setStatusMessage('');
+    setErrorMessage('');
+
+    try {
+      await retryPreflightChecks();
+      setStatusMessage('სესიის შემოწმება განახლდა. სცადეთ ავტორიზაცია ხელახლა.');
+    } catch (error: any) {
+      const reason = String(error?.message ?? '').toLowerCase();
+      const friendly = reason.includes('route advice')
+        ? 'სერვერთან კავშირი ჯერ კიდევ ვერ ხერხდება. შეამოწმეთ ქსელი ან სცადეთ მოგვიანებით.'
+        : 'სესიის განახლება ვერ მოხერხდა. სცადეთ პაროლის რეჟიმი.';
+      setErrorMessage(friendly);
+    } finally {
+      setRetryingPreflight(false);
+    }
+  }, [retryPreflightChecks]);
+
+  const passkeyUnavailable = step === 'passkey' && passkeySupportChecked && !passkeySupport.supported;
 
   return (
     <div className="ai-gateway">
@@ -202,9 +335,97 @@ const AdminPasskeyLogin: React.FC = () => {
               </p>
             </header>
 
+            {preflightBanner && (
+              <div
+                className={`mb-6 rounded-2xl border px-5 py-4 text-sm ${
+                  preflightBanner.variant === 'error'
+                    ? 'border-rose-500/50 bg-rose-500/10 text-rose-100'
+                    : preflightBanner.variant === 'warning'
+                      ? 'border-amber-400/40 bg-amber-500/10 text-amber-100'
+                      : 'border-cyan-400/30 bg-cyan-500/10 text-cyan-100'
+                }`}
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-start gap-3">
+                    {preflightBanner.variant === 'info' ? (
+                      <Loader2 className="mt-0.5 h-5 w-5 animate-spin text-cyan-200" />
+                    ) : (
+                      <AlertTriangle
+                        className={`mt-0.5 h-5 w-5 ${
+                          preflightBanner.variant === 'error' ? 'text-rose-200' : 'text-amber-200'
+                        }`}
+                      />
+                    )}
+                    <div className="space-y-2">
+                      <p className="text-sm leading-5">{preflightBanner.message}</p>
+                      {preflightBanner.ctaHref && (
+                        <a
+                          href={preflightBanner.ctaHref}
+                          className="inline-flex items-center gap-2 text-xs font-medium text-white/90 transition hover:text-cyan-100"
+                        >
+                          <span>{preflightBanner.ctaLabel ?? 'გაგრძელება'}</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  {preflightBanner.showRetry && (
+                    <button
+                      type="button"
+                      onClick={handleRetryPreflight}
+                      disabled={retryingPreflight}
+                      className="inline-flex items-center justify-center gap-2 self-start rounded-full border border-white/10 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20 disabled:opacity-60"
+                    >
+                      {retryingPreflight ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          განახლება...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-4 w-4" />
+                          სცადე თავიდან
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
             {recognizedDeviceSuffix && (
               <div className="mb-6 rounded-2xl border border-cyan-500/20 bg-cyan-500/10 px-5 py-3 text-sm text-cyan-100">
                 მოწყობილობა აღიარებულია • იდენტიფიკატორი ‑ {recognizedDeviceSuffix}
+              </div>
+            )}
+
+            {passkeySupportChecked && (
+              <div className="mb-6 grid gap-3 sm:grid-cols-3">
+                {passkeySupportDetails.map((detail) => (
+                  <div
+                    key={detail.label}
+                    className={`rounded-2xl border px-4 py-3 text-left ${
+                      detail.enabled
+                        ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-100'
+                        : 'border-slate-500/40 bg-slate-900/40 text-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      {detail.enabled ? (
+                        <BadgeCheck className="h-4 w-4 text-emerald-300" />
+                      ) : (
+                        <AlertCircle className="h-4 w-4 text-slate-300" />
+                      )}
+                      <span>{detail.label}</span>
+                    </div>
+                    <p
+                      className={`mt-2 text-xs leading-5 ${
+                        detail.enabled ? 'text-emerald-100/80' : 'text-slate-400'
+                      }`}
+                    >
+                      {detail.description}
+                    </p>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -302,17 +523,19 @@ const AdminPasskeyLogin: React.FC = () => {
                       <p className="text-xs text-slate-500">Passkey ავტორიზაცია ვერ მოხერხდა?</p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep('passkey');
-                      setPasskeyAttempted(false);
-                      resetMessages();
-                    }}
-                    className="text-xs font-medium text-cyan-200 transition hover:text-cyan-100"
-                  >
-                    Passkey-თ ავტორიზაცია
-                  </button>
+                  {(!passkeySupportChecked || passkeySupport.supported) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStep('passkey');
+                        setPasskeyAttempted(false);
+                        resetMessages();
+                      }}
+                      className="text-xs font-medium text-cyan-200 transition hover:text-cyan-100"
+                    >
+                      Passkey-თ ავტორიზაცია
+                    </button>
+                  )}
                 </div>
 
                 <div className="space-y-2 text-left">
