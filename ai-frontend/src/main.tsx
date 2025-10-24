@@ -18,7 +18,6 @@ const assignBackendRuntimeHints = () => {
     env?.VITE_API_BASE,
     env?.VITE_API_URL,
     env?.VITE_GATEWAY_URL,
-    env?.VITE_REMOTE_SITE_BASE,
   ]
     .map(value => (typeof value === 'string' ? value.trim() : ''))
     .filter(Boolean);
