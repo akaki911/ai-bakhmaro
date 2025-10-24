@@ -18,6 +18,22 @@ All booking, cottage, hotel, and provider modules were removed. Any remaining re
 
 The compose file maps each container port to the same host port so the services are reachable at `http://localhost:<port>` when started with Docker Compose.
 
+## GitHub Operations Panel
+
+The AI Developer dashboard now includes an **Operations** tab that lets trusted administrators:
+
+- View an allow-listed set of documentation, marketing, and styling changes that are safe to fast-track.
+- Stage those paths directly from the UI and submit a pull request with a custom branch name, commit message, and PR body.
+- Monitor repository health with live PR merge rate, CI pass ratio, bundle-size delta, and ESLint trend metrics.
+- Run a sandbox smoke test that opens a tiny PR against the configured GitHub test repository to verify credentials and CI wiring.
+
+Only paths under `docs/`, `ai-frontend/src/styles/`, and other non-critical directories are eligible. Back-end and AI pipeline code remain blocked by policy. The backend enforces this allow/deny list server-side before staging files or opening a PR.
+
+Environment knobs:
+
+- `GITHUB_SANDBOX_OWNER`, `GITHUB_SANDBOX_REPO`, `GITHUB_SANDBOX_BASE_BRANCH` — target repo/branch for automated smoke PRs.
+- `GITHUB_OPERATIONS_ALLOWLIST`, `GITHUB_OPERATIONS_DENYLIST` — optional overrides for the default path policy (comma-separated values).
+
 ## Authentication request sequence
 1. A browser request to `/` lands on the gateway.
 2. If no auth headers or session cookies are present, the gateway responds with `302 /login`.

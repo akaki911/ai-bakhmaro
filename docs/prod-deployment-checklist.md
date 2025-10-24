@@ -95,4 +95,6 @@ curl -I http://127.0.0.1:8080/
 ```
 You should see 302 redirects from `/` to `/login`, 200 health checks, and responses from the new AI gateway instead of the legacy static site.
 
+- Open the AI Developer dashboard → **GitHub → Operations** და გაუშვით sandbox smoke ტესტი, რათა დარწმუნდეთ, რომ GitHub ტოკენი და CI ინტეგრაცია კვლავ მუშაობს.
+
 Once these checks pass, the production deployment is complete.
