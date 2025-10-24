@@ -67,6 +67,7 @@ This flow is implemented in the gateway entrypoint: unauthenticated requests on 
 | `AI_DOMAIN` | Frontend & gateway containers | Defaults to `http://localhost:5173` when unset in Compose. | Used by client code and reverse proxy logic to describe the public-facing AI hostname. | Set this to your live AI domain (e.g., `https://ai.bakhmaro.co`) when deploying beyond localhost. |
 | `ROOT_DOMAIN` | Frontend & gateway containers | Defaults to `localhost` in Compose. | Controls cookie / redirect handling that depends on the parent domain. | Replace with `bakhmaro.co` (or your root) so redirects like `bakhmaro.co → ai.bakhmaro.co` resolve correctly. |
 | `API_PROXY_BASE` | Gateway | Defaults to `http://ai-service:5001` in Compose, or falls back to `UPSTREAM_API_URL` → `http://127.0.0.1:5002` in code. | Primary upstream for `/api` proxy traffic that powers the AI stack. | Point this at the gateway-facing AI Service base URL for each environment. |
+| `BACKEND_PROXY_BASE` | Gateway | Defaults to `http://127.0.0.1:5002` when unset. | Dedicated upstream for backend authentication routes such as `/api/auth/device/recognize`. | Set this to the backend service base URL handling device recognition. |
 | `JWT_SECRET` | Gateway | Required; Compose enforces presence. | Signs and validates the short-lived service tokens injected on proxied requests. | Rotate per environment. Must be at least 16 characters to satisfy validation. |
 | `SERVICE_JWT_ISSUER` | Gateway | Defaults to `ai-gateway`. | Issuer claim attached to the short-lived service token. | Override only if you customise the gateway identity. |
 | `SERVICE_JWT_SUBJECT` | Gateway | Defaults to `gateway-service`. | Subject claim for the service token. | Only change if you operate multiple trusted edge gateways. |
@@ -107,6 +108,7 @@ Both commands can run in parallel so you retain hot reloads across the stack. `p
 ## Gateway proxy topology
 ```
 Browser ↔ Gateway (8080)
+  ↳ /api/auth/device/recognize → Backend (BACKEND_PROXY_BASE)
   ↳ /api/* → AI Service (API_PROXY_BASE)
 ```
 The gateway issues service JWTs before forwarding each proxied call, and surfaces `/health` to report which upstream base URLs are currently active.
