@@ -116,7 +116,7 @@ function ensureLocalSecrets(options = {}) {
     return setEnvIfMissing(key, generated, persist);
   };
 
-  const projectId = ensureValue('FIREBASE_PROJECT_ID', () => stored.FIREBASE_PROJECT_ID || 'bakhmaro-dev-local');
+  const projectId = ensureValue('FIREBASE_PROJECT_ID', () => stored.FIREBASE_PROJECT_ID || 'ai-bakhmaro-dev-local');
   if (projectId) {
     rememberValue('FIREBASE_PROJECT_ID', projectId);
   }

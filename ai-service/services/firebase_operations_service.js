@@ -11,7 +11,7 @@ class FirebaseOperationsService {
     try {
       if (!admin.apps.length) {
         admin.initializeApp({
-          projectId: process.env.FIREBASE_PROJECT_ID || 'bakhmaro-cottages',
+          projectId: process.env.FIREBASE_PROJECT_ID || 'ai-bakhmaro',
         });
       }
       this.db = getFirestore();

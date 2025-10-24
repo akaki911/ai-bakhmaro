@@ -109,7 +109,7 @@ const USER_MEMORY_SCHEMA = {
   
   // Project-specific context
   projects: {
-    current: 'bakhmaro-cottages',
+    current: 'ai-bakhmaro',
     familiarity: Number,      // 1-10 scale
     contributions: Array,
     expertise: Array          // Areas of project expertise
@@ -329,7 +329,7 @@ function getFirestoreInstance(provided) {
 
   try {
     if (!admin.apps.length) {
-      const projectId = process.env.FIREBASE_PROJECT_ID || 'bakhmaro-cottages';
+      const projectId = process.env.FIREBASE_PROJECT_ID || 'ai-bakhmaro';
       admin.initializeApp({ projectId });
     }
     firestoreInstance = admin.firestore();
@@ -805,7 +805,7 @@ function createUserMemory(personalId, initialData = {}) {
       sessionDurations: []
     },
     projects: {
-      current: 'bakhmaro-cottages',
+      current: 'ai-bakhmaro',
       familiarity,
       contributions: [],
       expertise: asStringArray(initialData.expertise, [])
