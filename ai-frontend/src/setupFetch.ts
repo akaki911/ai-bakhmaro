@@ -1,5 +1,5 @@
 import { describeBackendUrl } from '@/utils/backendUrl';
-import { isDirectBackendDebugEnabled } from '@/lib/env';
+import { isDirectBackendDebugEnabled, shouldPreferDirectBackendRequests } from '@/lib/env';
 
 const API_PATH_PATTERN = /^\/api(\/|$)/i;
 
@@ -199,29 +199,51 @@ const rewriteBackendRequest = (
   const resolution = describeBackendUrl(relativeUrl);
   const sameOriginUrl = resolution.sameOrigin;
   const directBackendUrl = resolution.direct;
+  const preferDirectByHost = shouldPreferDirectBackendRequests(globalWindow);
 
   let nextInput = input;
   let nextInit = init;
 
-  if (sameOriginUrl && requestUrl !== sameOriginUrl) {
+  let fallbackInput: RequestInfo | URL | undefined;
+  if (preferDirectByHost && directBackendUrl) {
     if (typeof input === 'string' || input instanceof URL) {
-      nextInput = sameOriginUrl;
+      nextInput = directBackendUrl;
     } else if (input instanceof Request) {
-      nextInput = cloneRequestForUrl(input, init, sameOriginUrl);
+      nextInput = cloneRequestForUrl(input, init, directBackendUrl);
       nextInit = undefined;
     } else {
-      nextInput = sameOriginUrl;
+      nextInput = directBackendUrl;
     }
-  }
 
-  let fallbackInput: RequestInfo | URL | undefined;
-  if (directBackendUrl && directBackendUrl !== sameOriginUrl) {
-    if (typeof input === 'string' || input instanceof URL) {
-      fallbackInput = directBackendUrl;
-    } else if (input instanceof Request) {
-      fallbackInput = cloneRequestForUrl(input, init, directBackendUrl);
-    } else {
-      fallbackInput = directBackendUrl;
+    if (sameOriginUrl && directBackendUrl !== sameOriginUrl) {
+      if (typeof input === 'string' || input instanceof URL) {
+        fallbackInput = sameOriginUrl;
+      } else if (input instanceof Request) {
+        fallbackInput = cloneRequestForUrl(input, init, sameOriginUrl);
+      } else {
+        fallbackInput = sameOriginUrl;
+      }
+    }
+  } else {
+    if (sameOriginUrl && requestUrl !== sameOriginUrl) {
+      if (typeof input === 'string' || input instanceof URL) {
+        nextInput = sameOriginUrl;
+      } else if (input instanceof Request) {
+        nextInput = cloneRequestForUrl(input, init, sameOriginUrl);
+        nextInit = undefined;
+      } else {
+        nextInput = sameOriginUrl;
+      }
+    }
+
+    if (directBackendUrl && directBackendUrl !== sameOriginUrl) {
+      if (typeof input === 'string' || input instanceof URL) {
+        fallbackInput = directBackendUrl;
+      } else if (input instanceof Request) {
+        fallbackInput = cloneRequestForUrl(input, init, directBackendUrl);
+      } else {
+        fallbackInput = directBackendUrl;
+      }
     }
   }
 

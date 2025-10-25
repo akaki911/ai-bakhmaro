@@ -6,6 +6,7 @@ import App from './App';
 import './index.css';
 import './i18n/config';
 import { setupGlobalFetch } from './setupFetch';
+import { setupEventSource } from './setupEventSource';
 
 const assignBackendRuntimeHints = () => {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
@@ -39,6 +40,7 @@ const assignBackendRuntimeHints = () => {
 
 assignBackendRuntimeHints();
 setupGlobalFetch(window);
+setupEventSource(window);
 
 const ensureSWRConfig: (parent?: SWRConfiguration) => SWRConfiguration = (parentConfig) => ({
   ...parentConfig,
