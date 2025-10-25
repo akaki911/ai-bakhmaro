@@ -1,4 +1,5 @@
-import { resolveBackendUrl } from '@/utils/backendUrl';
+import { describeBackendUrl } from '@/utils/backendUrl';
+import { isDirectBackendDebugEnabled } from '@/lib/env';
 
 const API_PATH_PATTERN = /^\/api(\/|$)/i;
 
@@ -107,11 +108,72 @@ const mergeRequestInit = (request: Request, overrides?: RequestInit): RequestIni
   return merged;
 };
 
+export type BackendFlagConfig = {
+  preferDirectBackend?: boolean;
+  directBackend?: boolean;
+  diagnostics?: boolean;
+  allowDirectBackend?: boolean;
+};
+
+export type BackendAwareRequestInit = RequestInit & {
+  backend?: BackendFlagConfig;
+};
+
+const readBackendPreference = (config?: BackendFlagConfig): boolean => {
+  if (!config) {
+    return false;
+  }
+
+  return (
+    config.preferDirectBackend === true ||
+    config.directBackend === true ||
+    config.diagnostics === true ||
+    config.allowDirectBackend === true
+  );
+};
+
+const extractBackendMetadata = (
+  init?: RequestInit,
+): { sanitizedInit: RequestInit | undefined; preferDirect: boolean } => {
+  if (!init) {
+    return { sanitizedInit: undefined, preferDirect: false };
+  }
+
+  const backendAware = init as BackendAwareRequestInit;
+  const preferDirect = readBackendPreference(backendAware.backend);
+  const { backend: _backend, ...rest } = backendAware;
+
+  return { sanitizedInit: rest, preferDirect };
+};
+
+const extractBackendPreferenceFromInput = (input: RequestInfo | URL): boolean => {
+  if (input instanceof Request) {
+    const possible = input as Request & { backend?: BackendFlagConfig };
+    if (possible.backend) {
+      return readBackendPreference(possible.backend);
+    }
+  }
+
+  return false;
+};
+
+const cloneRequestForUrl = (
+  request: Request,
+  init: RequestInit | undefined,
+  targetUrl: string,
+): Request => {
+  const mergedInit = mergeRequestInit(request, init);
+  const { sanitizedInit } = extractBackendMetadata(mergedInit);
+  return new Request(targetUrl, sanitizedInit ?? mergedInit);
+};
+
 type RewrittenRequest = {
   input: RequestInfo | URL;
   init: RequestInit | undefined;
   /** Final request URL string for logging purposes. */
   requestUrl?: string;
+  sameOriginUrl?: string;
+  directBackendUrl?: string;
   /**
    * Optional fallback request that should be attempted if the primary network request
    * fails with a recoverable network error (e.g. DNS resolution failure).
@@ -134,34 +196,42 @@ const rewriteBackendRequest = (
     return { input, init, requestUrl };
   }
 
-  const resolved = resolveBackendUrl(relativeUrl);
-  if (!resolved || resolved === relativeUrl) {
-    return { input, init, requestUrl: requestUrl };
+  const resolution = describeBackendUrl(relativeUrl);
+  const sameOriginUrl = resolution.sameOrigin;
+  const directBackendUrl = resolution.direct;
+
+  let nextInput = input;
+  let nextInit = init;
+
+  if (sameOriginUrl && requestUrl !== sameOriginUrl) {
+    if (typeof input === 'string' || input instanceof URL) {
+      nextInput = sameOriginUrl;
+    } else if (input instanceof Request) {
+      nextInput = cloneRequestForUrl(input, init, sameOriginUrl);
+      nextInit = undefined;
+    } else {
+      nextInput = sameOriginUrl;
+    }
   }
 
-  if (typeof input === 'string' || input instanceof URL) {
-    return {
-      input: resolved,
-      init,
-      requestUrl: resolved,
-      fallbackInput: relativeUrl,
-    };
-  }
-
-  if (input instanceof Request) {
-    const mergedInit = mergeRequestInit(input, init);
-    return {
-      input: new Request(resolved, mergedInit),
-      init: undefined,
-      requestUrl: resolved,
-    };
+  let fallbackInput: RequestInfo | URL | undefined;
+  if (directBackendUrl && directBackendUrl !== sameOriginUrl) {
+    if (typeof input === 'string' || input instanceof URL) {
+      fallbackInput = directBackendUrl;
+    } else if (input instanceof Request) {
+      fallbackInput = cloneRequestForUrl(input, init, directBackendUrl);
+    } else {
+      fallbackInput = directBackendUrl;
+    }
   }
 
   return {
-    input: resolved,
-    init,
-    requestUrl: resolved,
-    fallbackInput: relativeUrl,
+    input: nextInput,
+    init: nextInit,
+    requestUrl: extractRequestUrl(nextInput) ?? sameOriginUrl ?? requestUrl,
+    sameOriginUrl,
+    directBackendUrl,
+    fallbackInput,
   };
 };
 
@@ -217,12 +287,15 @@ export const setupGlobalFetch = (globalWindow?: Window) => {
   };
 
   const patchedFetch: typeof fetch = (input, init) => {
-    const rewritten = rewriteBackendRequest(input, init, windowLike);
+    const { sanitizedInit, preferDirect: initPreferDirect } = extractBackendMetadata(init);
+    const preferDirect = initPreferDirect || extractBackendPreferenceFromInput(input);
+
+    const rewritten = rewriteBackendRequest(input, sanitizedInit, windowLike);
     const nextInput = rewritten.input;
     const nextInit: RequestInit = { ...(rewritten.init ?? {}) };
     const requestUrl = extractRequestUrl(nextInput);
     const existingCredentials =
-      nextInit.credentials ?? (nextInput instanceof Request ? nextInput.credentials : init?.credentials);
+      nextInit.credentials ?? (nextInput instanceof Request ? nextInput.credentials : sanitizedInit?.credentials);
 
     if (shouldForceOmitCredentials(requestUrl)) {
       nextInit.credentials = 'omit';
@@ -238,8 +311,19 @@ export const setupGlobalFetch = (globalWindow?: Window) => {
 
     const primaryPromise = originalFetch(nextInput as RequestInfo | URL, nextInit);
     const fallbackInput = rewritten.fallbackInput;
+    const debugEnabled = isDirectBackendDebugEnabled();
+    const allowDirectRetry = !!fallbackInput && (debugEnabled || preferDirect);
 
-    if (!fallbackInput) {
+    if (!allowDirectRetry) {
+      if (preferDirect && fallbackInput && !debugEnabled) {
+        console.info(
+          'ℹ️ [Fetch] Direct backend request requested but debug flag is disabled. Skipping direct retry.',
+          {
+            request: rewritten.requestUrl ?? requestUrl,
+            direct: rewritten.directBackendUrl,
+          },
+        );
+      }
       return primaryPromise;
     }
 
@@ -252,7 +336,7 @@ export const setupGlobalFetch = (globalWindow?: Window) => {
       const originalUrl = rewritten.requestUrl ?? requestUrl ?? '(unknown url)';
 
       console.warn(
-        `⚠️ [Fetch] Primary backend request failed (${originalUrl}). Retrying with same-origin fallback: ${fallbackUrl}`,
+        `⚠️ [Fetch] Same-origin backend request failed (${originalUrl}). Retrying with direct backend: ${fallbackUrl}`,
         error,
       );
 
@@ -273,4 +357,5 @@ export const __testables = {
   isSameOriginRequestFactory,
   normaliseRelativeUrl,
   rewriteBackendRequest,
+  extractBackendMetadata,
 };

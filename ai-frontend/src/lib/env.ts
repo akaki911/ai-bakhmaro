@@ -83,6 +83,19 @@ const readProcessEnv = (key: string): string | undefined => {
   return value && value.trim() !== '' ? value.trim() : undefined;
 };
 
+const parseBoolean = (value: unknown): boolean => {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    return ['1', 'true', 'yes', 'on'].includes(normalized);
+  }
+
+  return false;
+};
+
 /**
  * Resolve the primary backend URL for browser requests.
  *
@@ -164,6 +177,45 @@ export function getBackendBaseURL(): string {
   }
 
   return '';
+}
+
+/**
+ * Flag indicating whether cross-origin direct backend calls are authorised for debugging.
+ *
+ * The flag defaults to false unless explicitly enabled via Vite/Process envs or a runtime hint.
+ */
+export function isDirectBackendDebugEnabled(): boolean {
+  const env = import.meta.env as Record<string, string | boolean | undefined> | undefined;
+
+  if (env) {
+    const envValue =
+      env.VITE_DEBUG_DIRECT_BACKEND ??
+      env.VITE_DIRECT_BACKEND_DEBUG ??
+      env.VITE_ENABLE_DIRECT_BACKEND_DEBUG ??
+      env.VITE_ALLOW_DIRECT_BACKEND_DEBUG;
+
+    if (typeof envValue !== 'undefined') {
+      return parseBoolean(envValue);
+    }
+  }
+
+  const processValue =
+    readProcessEnv('VITE_DEBUG_DIRECT_BACKEND') ??
+    readProcessEnv('DEBUG_DIRECT_BACKEND') ??
+    readProcessEnv('ENABLE_DIRECT_BACKEND_DEBUG');
+
+  if (typeof processValue !== 'undefined') {
+    return parseBoolean(processValue);
+  }
+
+  if (typeof window !== 'undefined') {
+    const globalWindow = window as Window & { __DEBUG_DIRECT_BACKEND__?: unknown };
+    if (typeof globalWindow.__DEBUG_DIRECT_BACKEND__ !== 'undefined') {
+      return Boolean(globalWindow.__DEBUG_DIRECT_BACKEND__);
+    }
+  }
+
+  return false;
 }
 
 /**

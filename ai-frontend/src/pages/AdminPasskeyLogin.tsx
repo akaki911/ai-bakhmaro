@@ -5,10 +5,29 @@ import { Chrome, Fingerprint, Github, Loader2 } from 'lucide-react';
 
 import { useAuth } from '../contexts/useAuth';
 import { ensureWebAuthnReady, getWebAuthnErrorMessage } from '../utils/webauthn_support';
-import { resolveBackendUrl } from '../utils/backendUrl';
+import { isDirectBackendDebugEnabled } from '../lib/env';
+import type { BackendAwareRequestInit } from '../setupFetch';
 
 const PASSKEY_OPTIONS_ENDPOINT = '/api/admin/webauthn/login-options';
 const PASSKEY_VERIFY_ENDPOINT = '/api/admin/webauthn/login-verify';
+
+const createBackendPostInit = (payload: unknown): RequestInit => {
+  const baseInit: BackendAwareRequestInit = {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload ?? {}),
+  };
+
+  if (isDirectBackendDebugEnabled()) {
+    baseInit.backend = { ...(baseInit.backend ?? {}), preferDirectBackend: true };
+  }
+
+  return baseInit;
+};
 
 const oauthProviders = [
   { name: 'Google', Icon: Chrome },
@@ -80,15 +99,7 @@ const AdminPasskeyLogin: React.FC = () => {
     try {
       await ensureWebAuthnReady();
 
-      const optionsResponse = await fetch(resolveBackendUrl(PASSKEY_OPTIONS_ENDPOINT), {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}),
-      }).catch((error) => {
+      const optionsResponse = await fetch(PASSKEY_OPTIONS_ENDPOINT, createBackendPostInit({})).catch((error) => {
         console.warn('Passkey options fetch failed:', error);
         throw new Error('passkey-options-network');
       });
@@ -114,15 +125,10 @@ const AdminPasskeyLogin: React.FC = () => {
         optionsJSON: publicKeyOptions,
       });
 
-      const verifyResponse = await fetch(resolveBackendUrl(PASSKEY_VERIFY_ENDPOINT), {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ credential }),
-      }).catch((error) => {
+      const verifyResponse = await fetch(
+        PASSKEY_VERIFY_ENDPOINT,
+        createBackendPostInit({ credential }),
+      ).catch((error) => {
         console.warn('Passkey verify fetch failed:', error);
         throw new Error('passkey-verify-network');
       });
