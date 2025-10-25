@@ -7,10 +7,15 @@ class UserService {
   }
 
   // Create or update user with role
-  async createUser({ userId, email, role = 'CUSTOMER', status = 'active' }) {
+  async createUser({ userId, personalId = null, email, role = 'CUSTOMER', status = 'active' }) {
     try {
+      const normalizedPersonalId = typeof personalId === 'string' && personalId.trim().length > 0
+        ? personalId.trim()
+        : (typeof userId === 'string' ? userId : null);
+
       const userData = {
         userId,
+        personalId: normalizedPersonalId,
         email,
         role, // SUPER_ADMIN, PROVIDER, CUSTOMER
         status, // active, inactive, suspended

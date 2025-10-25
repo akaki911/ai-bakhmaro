@@ -1,5 +1,6 @@
 const { randomUUID, randomBytes } = require('crypto');
 const { z } = require('zod');
+const { normalizeNodeEnv } = require('./envReader');
 
 const INTERNAL_HEADER = 'x-internal-token';
 
@@ -79,7 +80,7 @@ const ensureFallback = (env, key, factory) => {
 const validateEnv = ({ serviceName, exitOnError = true }) => {
   const parsed = baseSchema.parse(process.env);
   const env = { ...parsed };
-  env.NODE_ENV = (env.NODE_ENV || 'development').toLowerCase();
+  env.NODE_ENV = normalizeNodeEnv(env.NODE_ENV);
   const isProduction = env.NODE_ENV === 'production';
 
   const result = buildResult({

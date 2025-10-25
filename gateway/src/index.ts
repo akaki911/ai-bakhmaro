@@ -118,6 +118,113 @@ const getFirstHeaderValue = (value: string | string[] | undefined): string | nul
   return null;
 };
 
+const REPLIT_SUFFIXES = ['.replit.dev', '.repl.co'];
+
+const parseUrl = (value: string | null | undefined): URL | null => {
+  if (!value || typeof value !== 'string') {
+    return null;
+  }
+
+  try {
+    return new URL(value);
+  } catch (error) {
+    console.warn('⚠️ Failed to parse URL', value, error);
+    return null;
+  }
+};
+
+const normaliseHost = (host: string | null | undefined): string | null => {
+  if (!host || typeof host !== 'string') {
+    return null;
+  }
+  const trimmed = host.trim().toLowerCase();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
+const ensureHttpsForKnownHosts = (origin: string | null, host: string | null): string | null => {
+  if (!origin || !host) {
+    return origin;
+  }
+
+  if (REPLIT_SUFFIXES.some((suffix) => host.endsWith(suffix))) {
+    try {
+      const parsed = new URL(origin);
+      parsed.protocol = 'https:';
+      parsed.port = '';
+      return parsed.origin;
+    } catch {
+      return `https://${host}`;
+    }
+  }
+
+  return origin;
+};
+
+const resolveOriginFromHost = (host: string | null, proto: string | null): string | null => {
+  const baseHost = normaliseHost(host?.split(':')[0] ?? host);
+  if (!baseHost) {
+    return null;
+  }
+
+  const scheme = proto && proto.trim().toLowerCase() === 'http' ? 'http' : 'https';
+  return ensureHttpsForKnownHosts(`${scheme}://${baseHost}`, baseHost);
+};
+
+const resolveWebAuthnPolicy = (req: Request) => {
+  const forwardedProto = getFirstHeaderValue(req.headers['x-forwarded-proto']);
+  const forwardedHost = getFirstHeaderValue(req.headers['x-forwarded-host']);
+  const headerOrigin = getFirstHeaderValue(req.headers.origin);
+  const hostHeader = req.headers.host ?? null;
+
+  const envOriginUrl = parseUrl(env.PUBLIC_ORIGIN ?? env.AI_DOMAIN ?? null);
+  let origin = envOriginUrl?.origin ?? null;
+  let rpId = normaliseHost(envOriginUrl?.hostname ?? null);
+
+  const requestOriginUrl = parseUrl(headerOrigin);
+  if (requestOriginUrl) {
+    origin = ensureHttpsForKnownHosts(requestOriginUrl.origin, normaliseHost(requestOriginUrl.hostname)) ?? origin;
+    rpId = normaliseHost(requestOriginUrl.hostname) ?? rpId;
+  }
+
+  const forwardedOrigin = resolveOriginFromHost(forwardedHost, forwardedProto);
+  if (!origin && forwardedOrigin) {
+    origin = forwardedOrigin;
+  }
+
+  const directHostOrigin = resolveOriginFromHost(hostHeader, forwardedProto ?? req.protocol);
+  if (!origin && directHostOrigin) {
+    origin = directHostOrigin;
+  }
+
+  if (!rpId && origin) {
+    const parsedOrigin = parseUrl(origin);
+    rpId = normaliseHost(parsedOrigin?.hostname ?? null);
+  }
+
+  if (!origin && rpId) {
+    origin = ensureHttpsForKnownHosts(`https://${rpId}`, rpId);
+  }
+
+  if (!origin) {
+    origin = ensureHttpsForKnownHosts(directHostOrigin ?? forwardedOrigin ?? envOriginUrl?.origin ?? null, rpId) ?? 'https://localhost';
+  }
+
+  if (!rpId) {
+    rpId = normaliseHost(parseUrl(origin)?.hostname ?? null) ?? 'localhost';
+  }
+
+  return {
+    rpId,
+    origin,
+    expectedOrigins: origin ? [origin] : [],
+    attestation: 'none' as const,
+    allowAttestation: false,
+    userVerification: 'preferred' as const,
+    residentKey: 'preferred' as const,
+    timeout: 120000,
+  };
+};
+
 const applyForwardedHeaders = (proxyReq: ClientRequest, req: Request) => {
   const originalHost = getFirstHeaderValue(req.headers['x-forwarded-host']) ?? req.headers.host;
   if (originalHost) {
@@ -290,6 +397,12 @@ app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
+});
+
+app.get('/api/auth/webauthn/policy', (req, res) => {
+  const policy = resolveWebAuthnPolicy(req);
+  res.setHeader('cache-control', 'no-store, no-cache, must-revalidate');
+  res.json({ success: true, policy });
 });
 
 const siteMapping = env.SITE_MAPPING_GITHUB || {};
