@@ -6,6 +6,15 @@ const {
   setTransparentThoughtModeOverride
 } = require('../context/system_prompts');
 
+const guruloCore = require('../../shared/gurulo-core');
+const {
+  PROMPT_TEMPLATES: GURULO_PROMPT_TEMPLATES,
+  getPromptTemplate: getCorePromptTemplate,
+} = guruloCore.prompts;
+
+const CORE_DEVELOPER_PROMPT =
+  getCorePromptTemplate('developer_prompt') || GURULO_PROMPT_TEMPLATES.developerPrompt;
+
 const {
   createUserMemory,
   validateUserPreferences
@@ -53,6 +62,7 @@ class PromptManager {
           PRODUCT_GUIDE_CTA_LINE,
         ].join('\n');
       },
+      developer: CORE_DEVELOPER_PROMPT,
       tokens: 120,
     });
 
@@ -64,6 +74,7 @@ class PromptManager {
           PRODUCT_GUIDE_CTA_LINE,
         ].join('\n');
       },
+      developer: CORE_DEVELOPER_PROMPT,
       tokens: 120,
     });
 
@@ -75,6 +86,7 @@ class PromptManager {
           PRODUCT_GUIDE_CTA_LINE,
         ].join('\n');
       },
+      developer: CORE_DEVELOPER_PROMPT,
       tokens: 110,
     });
 
@@ -86,6 +98,7 @@ class PromptManager {
           PRODUCT_GUIDE_CTA_LINE,
         ].join('\n');
       },
+      developer: CORE_DEVELOPER_PROMPT,
       tokens: 120,
     });
 
@@ -97,6 +110,7 @@ class PromptManager {
           PRODUCT_GUIDE_CTA_LINE,
         ].join('\n');
       },
+      developer: CORE_DEVELOPER_PROMPT,
       tokens: 80,
     });
 
@@ -197,6 +211,7 @@ class PromptManager {
 
     try {
       let systemPrompt = basePrompt.system;
+      const developerPrompt = basePrompt.developer || CORE_DEVELOPER_PROMPT;
 
       if (type === 'greeting') {
         const greeting = getTimeBasedGreeting();
@@ -214,6 +229,7 @@ class PromptManager {
 
       return {
         system: systemPrompt,
+        developer: developerPrompt,
         tokens: basePrompt.tokens + (context.siteContext ? 25 : 0)
       };
     } finally {
@@ -222,8 +238,13 @@ class PromptManager {
   }
 
   optimizeForTokens(promptData, maxTokens = 150) {
+    const developerPrompt = promptData.developer || CORE_DEVELOPER_PROMPT;
+
     if (promptData.tokens <= maxTokens) {
-      return promptData;
+      return {
+        ...promptData,
+        developer: developerPrompt,
+      };
     }
 
     // Truncate system prompt if too long
@@ -231,6 +252,7 @@ class PromptManager {
 
     return {
       system: truncatedSystem,
+      developer: developerPrompt,
       tokens: maxTokens
     };
   }

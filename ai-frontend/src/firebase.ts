@@ -2,6 +2,7 @@ const firebaseAppModule = await import('firebase/app');
 
 const { initializeApp, getApps, getApp } = firebaseAppModule;
 
+import { GURULO_FIREBASE_PUBLIC_CONFIG } from '../../shared/config/firebaseClient';
 import {
   browserLocalPersistence,
   getAuth,
@@ -25,16 +26,14 @@ type EnvKey =
   | 'VITE_FIREBASE_MEASUREMENT_ID';
 
 const FALLBACK_CONFIG: Partial<Record<EnvKey, string>> = {
-  VITE_FIREBASE_API_KEY: 'MISSING_VITE_FIREBASE_API_KEY',
-  VITE_FIREBASE_AUTH_DOMAIN: 'MISSING_VITE_FIREBASE_AUTH_DOMAIN',
-  VITE_FIREBASE_PROJECT_ID: 'MISSING_VITE_FIREBASE_PROJECT_ID',
-  VITE_FIREBASE_STORAGE_BUCKET: 'MISSING_VITE_FIREBASE_STORAGE_BUCKET',
-  VITE_FIREBASE_MESSAGING_SENDER_ID: 'MISSING_VITE_FIREBASE_MESSAGING_SENDER_ID',
-  VITE_FIREBASE_APP_ID: 'MISSING_VITE_FIREBASE_APP_ID',
-  VITE_FIREBASE_MEASUREMENT_ID: 'MISSING_VITE_FIREBASE_MEASUREMENT_ID',
+  VITE_FIREBASE_API_KEY: GURULO_FIREBASE_PUBLIC_CONFIG.apiKey,
+  VITE_FIREBASE_AUTH_DOMAIN: GURULO_FIREBASE_PUBLIC_CONFIG.authDomain,
+  VITE_FIREBASE_PROJECT_ID: GURULO_FIREBASE_PUBLIC_CONFIG.projectId,
+  VITE_FIREBASE_STORAGE_BUCKET: GURULO_FIREBASE_PUBLIC_CONFIG.storageBucket,
+  VITE_FIREBASE_MESSAGING_SENDER_ID: GURULO_FIREBASE_PUBLIC_CONFIG.messagingSenderId,
+  VITE_FIREBASE_APP_ID: GURULO_FIREBASE_PUBLIC_CONFIG.appId,
+  VITE_FIREBASE_MEASUREMENT_ID: GURULO_FIREBASE_PUBLIC_CONFIG.measurementId,
 };
-
-const fallbackUsage = new Set<EnvKey>();
 
 const readEnv = (key: EnvKey): string | undefined => {
   const viteEnv = typeof import.meta !== 'undefined' && import.meta?.env ? import.meta.env[key] : undefined;
@@ -50,11 +49,8 @@ const readEnv = (key: EnvKey): string | undefined => {
   }
 
   const fallbackValue = FALLBACK_CONFIG[key];
-  if (fallbackValue) {
-    fallbackUsage.add(key);
-
-    // Placeholders intentionally do not enable Firebase connectivity.
-    return undefined;
+  if (fallbackValue && fallbackValue.trim() !== '') {
+    return fallbackValue;
   }
 
   return undefined;
@@ -86,22 +82,6 @@ const runtimeMode =
 
 const isProdLike = runtimeMode === 'production' || import.meta.env?.PROD === true;
 const isTestLike = runtimeMode === 'test' || import.meta.env?.TEST === true;
-if (fallbackUsage.size > 0 && !isTestLike) {
-  const fallbackKeys = Array.from(fallbackUsage);
-  const guidance =
-    'Firebase environment variables are required in production. ' +
-    'Set VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID, ' +
-    'VITE_FIREBASE_APP_ID, VITE_FIREBASE_STORAGE_BUCKET, VITE_FIREBASE_MESSAGING_SENDER_ID, ' +
-    'and VITE_FIREBASE_MEASUREMENT_ID.';
-
-  if (isProdLike) {
-    console.error('❌ Firebase configuration error (fallback placeholders detected for keys):', fallbackKeys);
-    console.error(guidance);
-  } else if (import.meta.env?.DEV) {
-    console.warn('⚠️ Firebase environment variables missing; running with placeholder configuration for keys:', fallbackKeys);
-    console.warn(guidance);
-  }
-}
 
 const hasRequiredConfig = missingKeys.length === 0;
 

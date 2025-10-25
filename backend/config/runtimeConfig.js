@@ -1,14 +1,9 @@
 const crypto = require('crypto');
 const { resolveFirebaseServiceAccount } = require('../../shared/secretResolver');
 const { describeInternalToken } = require('../../shared/internalToken');
+const { normalizeNodeEnv } = require('../../shared/config/envReader');
 
 const MIN_SESSION_SECRET_LENGTH = 32;
-
-const normaliseNodeEnv = (value) => {
-  if (!value) return 'development';
-  const lowered = String(value).trim().toLowerCase();
-  return lowered === 'production' ? 'production' : 'development';
-};
 
 const formatIssue = (key, reason, severity = 'error') => ({ key, reason, severity });
 
@@ -16,7 +11,7 @@ const buildRuntimeConfig = () => {
   const issues = [];
   const warnings = [];
 
-  process.env.NODE_ENV = normaliseNodeEnv(process.env.NODE_ENV);
+  process.env.NODE_ENV = normalizeNodeEnv(process.env.NODE_ENV);
   const nodeEnv = process.env.NODE_ENV;
   const isProduction = nodeEnv === 'production';
 
