@@ -6,6 +6,35 @@ const DEV_BACKEND_DEFAULT = 'http://127.0.0.1:5002';
 
 const stripTrailingSlashes = (value: string) => value.replace(/\/+$/, '');
 
+const HOST_BACKEND_OVERRIDES = new Map<string, string>([
+  ['ai.bakhmaro.co', 'https://backend.ai.bakhmaro.co'],
+  ['ai-bakhmaro.web.app', 'https://backend.ai.bakhmaro.co'],
+  ['ai-bakhmaro.firebaseapp.com', 'https://backend.ai.bakhmaro.co'],
+]);
+
+const normalizeHostname = (value: string | undefined | null): string | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  const trimmed = value.trim().toLowerCase();
+  return trimmed === '' ? undefined : trimmed;
+};
+
+const resolveBackendOverrideForHost = (hostname: string | undefined | null): string | undefined => {
+  const normalizedHost = normalizeHostname(hostname);
+  if (!normalizedHost) {
+    return undefined;
+  }
+
+  const override = HOST_BACKEND_OVERRIDES.get(normalizedHost);
+  if (!override) {
+    return undefined;
+  }
+
+  return stripTrailingSlashes(override);
+};
+
 const pickFirstNonEmpty = (values: Array<string | undefined | null>): string => {
   for (const value of values) {
     if (typeof value === 'string' && value.trim() !== '') {
@@ -163,6 +192,16 @@ export function getBackendBaseURL(): string {
     return runtimeConfigured;
   }
 
+  const hostOverride =
+    typeof window !== 'undefined'
+      ? resolveBackendOverrideForHost(window.location?.hostname ?? undefined)
+      : undefined;
+
+  if (hostOverride) {
+    console.info('ℹ️ [BackendURL] Using hostname override for backend base URL:', hostOverride);
+    return hostOverride;
+  }
+
   const relativeConfigured = pickFirstNonEmpty([...envRelativeFallbacks, ...processRelativeFallbacks]);
   if (relativeConfigured) {
     console.warn(
@@ -216,6 +255,14 @@ export function isDirectBackendDebugEnabled(): boolean {
   }
 
   return false;
+}
+
+export function shouldPreferDirectBackendRequests(globalWindow?: Window): boolean {
+  const hostname =
+    globalWindow?.location?.hostname ??
+    (typeof window !== 'undefined' ? window.location?.hostname : undefined);
+
+  return !!resolveBackendOverrideForHost(hostname);
 }
 
 /**
