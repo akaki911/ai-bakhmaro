@@ -726,6 +726,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const sessionUser = await checkBackendSession();
       const resolvedUser = sessionUser || {
         id: result.user.id,
+        personalId: result.user.personalId ?? null,
         email: result.user.email,
         role: result.user.role as UserRole,
         displayName: result.user.displayName,
@@ -736,7 +737,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(resolvedUser);
       setIsAuthenticated(true);
       setUserRole(resolvedUser.role);
-      setPersonalId(resolvedUser.personalId);
+      setPersonalId(resolvedUser.personalId ?? undefined);
       setFirebaseUid(resolvedUser.id);
 
       if (!deviceRecognition.isRecognizedDevice) {
@@ -762,13 +763,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error('მომხმარებლის სესია არ არის აქტიური');
     }
 
-    const registrationId = user.uid || firebaseUid || user.id;
-    if (!registrationId) {
-      throw new Error('ვერ განისაზღვრა მომხმარებლის იდენტიფიკატორი Passkey-სთვის');
+    const resolvedPersonalId = (user.personalId || personalId || '').trim();
+    if (!resolvedPersonalId) {
+      throw new Error('Passkey რეგისტრაციისთვის საჭიროა პირადი ნომრის დადასტურება');
     }
 
     await performPasskeyRegistration({
-      userId: registrationId,
+      userId: resolvedPersonalId,
+      personalId: resolvedPersonalId,
       email: user.email,
     });
   };
