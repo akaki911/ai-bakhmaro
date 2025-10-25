@@ -4,7 +4,9 @@ import {
   browserSupportsWebAuthn,
   platformAuthenticatorIsAvailable
 } from '@simplewebauthn/browser';
-import { resolveBackendUrls } from './backendUrl';
+import { describeBackendUrl } from './backendUrl';
+import { isDirectBackendDebugEnabled } from '../lib/env';
+import type { BackendAwareRequestInit } from '../setupFetch';
 // Types are included in the browser package
 type RegistrationResponseJSON = any;
 type AuthenticationResponseJSON = any;
@@ -44,7 +46,7 @@ export class PasskeyEndpointResponseError extends Error {
   }
 }
 
-interface PasskeyRequestInit extends RequestInit {
+interface PasskeyRequestInit extends BackendAwareRequestInit {
   headers?: Record<string, string>;
 }
 
@@ -61,26 +63,38 @@ async function postPasskeyJson(
     ...(init.headers || {}),
   };
 
-  const resolvedEndpoints = resolveBackendUrls(endpoints);
+  const endpointResolutions = endpoints.map(describeBackendUrl);
+  const debugEnabled = isDirectBackendDebugEnabled();
   let lastError: unknown = null;
 
-  for (let i = 0; i < resolvedEndpoints.length; i += 1) {
+  for (let i = 0; i < endpointResolutions.length; i += 1) {
     const configuredEndpoint = endpoints[i];
-    const endpoint = resolvedEndpoints[i];
+    const resolution = endpointResolutions[i];
+    const endpoint = resolution.sameOrigin;
+    const directUrl = resolution.direct;
+    const endpointLabel = directUrl && directUrl !== endpoint ? `${endpoint} (direct: ${directUrl})` : endpoint;
 
     try {
-      const response = await fetch(endpoint, {
+      const requestInit: PasskeyRequestInit = {
         method: 'POST',
         credentials: 'include',
         ...init,
         headers: baseHeaders,
         body: payload,
-      });
+      };
+
+      if (debugEnabled) {
+        requestInit.backend = { ...(requestInit.backend ?? {}), preferDirectBackend: true };
+      }
+
+      const response = await fetch(endpoint, requestInit);
 
       const status = response.status;
 
       if (status === 404 && i < endpoints.length - 1) {
-        console.warn(`⚠️ [Passkey] Endpoint ${configuredEndpoint} (${endpoint}) not available, trying fallback...`);
+        console.warn(
+          `⚠️ [Passkey] Endpoint ${configuredEndpoint} (${endpointLabel}) not available, trying fallback...`,
+        );
         response.body?.cancel();
         continue;
       }
@@ -94,9 +108,9 @@ async function postPasskeyJson(
         normalizedContentType.includes('application/problem+json');
 
       if (!isJson) {
-        if (i < resolvedEndpoints.length - 1) {
+        if (i < endpointResolutions.length - 1) {
           console.warn(
-            `⚠️ [Passkey] Endpoint ${configuredEndpoint} (${endpoint}) returned non-JSON payload (${contentType || 'unknown'}), trying fallback...`,
+            `⚠️ [Passkey] Endpoint ${configuredEndpoint} (${endpointLabel}) returned non-JSON payload (${contentType || 'unknown'}), trying fallback...`,
             { status, preview: bodyPreview }
           );
           response.body?.cancel();
@@ -114,9 +128,9 @@ async function postPasskeyJson(
         try {
           data = JSON.parse(bodyText);
         } catch (parseError) {
-          if (i < resolvedEndpoints.length - 1) {
+          if (i < endpointResolutions.length - 1) {
             console.warn(
-              `⚠️ [Passkey] Endpoint ${configuredEndpoint} (${endpoint}) returned unreadable JSON, trying fallback...`,
+              `⚠️ [Passkey] Endpoint ${configuredEndpoint} (${endpointLabel}) returned unreadable JSON, trying fallback...`,
               parseError
             );
             response.body?.cancel();
@@ -133,9 +147,9 @@ async function postPasskeyJson(
       if (!response.ok) {
         const message = data?.error || data?.message || `HTTP ${status}`;
 
-        if (i < resolvedEndpoints.length - 1) {
+        if (i < endpointResolutions.length - 1) {
           console.warn(
-            `⚠️ [Passkey] Endpoint ${configuredEndpoint} (${endpoint}) responded with ${status}, trying fallback...`,
+            `⚠️ [Passkey] Endpoint ${configuredEndpoint} (${endpointLabel}) responded with ${status}, trying fallback...`,
             message
           );
           response.body?.cancel();
@@ -157,8 +171,11 @@ async function postPasskeyJson(
       };
     } catch (error) {
       lastError = error;
-      if (i < resolvedEndpoints.length - 1) {
-        console.warn(`⚠️ [Passkey] Endpoint ${configuredEndpoint} (${endpoint}) failed, trying fallback...`, error);
+      if (i < endpointResolutions.length - 1) {
+        console.warn(
+          `⚠️ [Passkey] Endpoint ${configuredEndpoint} (${endpointLabel}) failed, trying fallback...`,
+          error,
+        );
         continue;
       }
       throw error;
