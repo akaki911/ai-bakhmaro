@@ -306,6 +306,7 @@ export function getWebAuthnErrorMessage(error: any): string {
 
 export interface PasskeyRegistrationOptions {
   userId: string;
+  personalId: string;
   email: string;
 }
 
@@ -323,6 +324,7 @@ export async function registerPasskey(options: PasskeyRegistrationOptions): Prom
       PASSKEY_ENDPOINTS.registerOptions,
       {
         userId: options.userId,
+        personalId: options.personalId,
         email: options.email,
         displayName: options.email,
       },
@@ -381,8 +383,10 @@ export interface PasskeyAuthResult {
   success: boolean;
   user?: {
     id: string;
+    personalId?: string | null;
     email: string;
     role: string;
+    displayName?: string;
     authenticatedViaPasskey: boolean;
   };
 }
