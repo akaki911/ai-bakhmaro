@@ -3,6 +3,15 @@ const performanceMonitor = require('../services/performance_monitoring');
 const aiCacheService = require('../services/ai_cache_service');
 const streamingService = require('../services/streaming_service');
 const router = express.Router();
+const { requireSuperAdmin } = require('../middleware/role_guards');
+const { allowSuperAdmin } = require('../utils/jwt');
+
+router.use(requireSuperAdmin);
+
+const confirmCacheClear = allowSuperAdmin({
+  action: 'backend.performance.cacheClear',
+  destructive: true,
+});
 
 // Get real-time performance metrics
 router.get('/realtime', (req, res) => {
@@ -47,12 +56,6 @@ router.get('/stats', (req, res) => {
 // Export all metrics for external monitoring
 router.get('/export', (req, res) => {
   try {
-    // Check if user is Super Admin
-    const personalId = req.query.personalId;
-    if (personalId !== '01019062020') {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
     const exportData = performanceMonitor.exportMetrics();
     const cacheStats = aiCacheService.getCacheStats();
 
@@ -68,16 +71,10 @@ router.get('/export', (req, res) => {
 });
 
 // Clear cache endpoint
-router.post('/cache/clear', (req, res) => {
+router.post('/cache/clear', confirmCacheClear, (req, res) => {
   try {
-    const { personalId } = req.body;
-
-    // Check if user is Super Admin
-    if (personalId !== '01019062020') {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
-    const targetUserId = req.body.targetUserId || personalId;
+    const { personalId } = req.guruloClaims || {};
+    const targetUserId = req.body.targetUserId || personalId || 'unknown';
     const success = aiCacheService.clearUserCache(targetUserId);
 
     res.json({
