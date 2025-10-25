@@ -12,6 +12,14 @@ const credentialService = require('../services/credential_service');
 const userService = require('../services/user_service');
 const auditService = require('../services/audit_service');
 const deviceService = require('../services/device_service');
+const { isSuperAdmin } = require('../../shared/gurulo-auth/gurulo.auth.js');
+
+const normalisePersonalId = (raw, fallback = null) => {
+  if (typeof raw === 'string' && raw.trim().length > 0) {
+    return raw.trim();
+  }
+  return typeof fallback === 'string' && fallback.trim().length > 0 ? fallback.trim() : null;
+};
 
 const router = express.Router();
 
@@ -66,12 +74,21 @@ const verifyLimiter = rateLimit({
 
 router.post('/register-options', async (req, res) => {
   try {
-    const { userId, email, displayName } = req.body || {};
+    const { userId, email, displayName, personalId } = req.body || {};
 
     if (!userId || !email) {
       return res.status(400).json({
         success: false,
         error: 'userId and email are required',
+      });
+    }
+
+    const normalizedPersonalId = normalisePersonalId(personalId, userId);
+
+    if (!normalizedPersonalId) {
+      return res.status(400).json({
+        success: false,
+        error: 'personalId is required for passkey registration',
       });
     }
 
@@ -130,6 +147,7 @@ router.post('/register-options', async (req, res) => {
       userId,
       email,
       displayName: displayName || email,
+      personalId: normalizedPersonalId,
       createdAt: Date.now(),
     };
 
@@ -189,10 +207,20 @@ router.post('/register-verify', verifyLimiter, async (req, res) => {
     const credentialId = Buffer.from(credentialID).toString('base64url');
     const publicKey = Buffer.from(credentialPublicKey).toString('base64');
 
+    const personalId = normalisePersonalId(sessionData.personalId, sessionData.userId);
+
+    if (!personalId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Registration session missing personalId',
+      });
+    }
+
     const existingUser = await userService.getUser(sessionData.userId).catch(() => null);
     if (!existingUser) {
       await userService.createUser({
         userId: sessionData.userId,
+        personalId,
         email: sessionData.email,
         role: 'CUSTOMER',
         status: 'active',
@@ -202,6 +230,7 @@ router.post('/register-verify', verifyLimiter, async (req, res) => {
     await credentialService.storeCredential({
       credentialId,
       userId: sessionData.userId,
+      personalId,
       publicKey,
       counter,
       aaguid: aaguid ? Buffer.from(aaguid).toString('hex') : null,
@@ -209,7 +238,7 @@ router.post('/register-verify', verifyLimiter, async (req, res) => {
     });
 
     await auditService.logPasskeyVerification(
-      sessionData.userId,
+      personalId,
       credentialId,
       req,
       true,
@@ -329,8 +358,10 @@ router.post('/login-verify', verifyLimiter, async (req, res) => {
       await credentialService.updateCounter(storedCredential.id, verification.authenticationInfo.newCounter);
     }
 
+    const credentialPersonalId = normalisePersonalId(storedCredential.personalId, storedCredential.userId);
+
     await auditService.logPasskeyVerification(
-      storedCredential.userId,
+      credentialPersonalId || storedCredential.userId,
       credentialId,
       req,
       true,
@@ -362,26 +393,36 @@ router.post('/login-verify', verifyLimiter, async (req, res) => {
     }
 
     const user = await userService.getUser(storedCredential.userId);
+    const userPersonalId = normalisePersonalId(user?.personalId, credentialPersonalId);
+    const resolvedRole = isSuperAdmin(userPersonalId) ? 'SUPER_ADMIN' : (user?.role || 'CUSTOMER');
+
     const resolvedUser = {
       id: storedCredential.userId,
+      personalId: userPersonalId,
       email: user?.email || storedCredential.email || 'user@bakhmaro.co',
-      role: user?.role || 'CUSTOMER',
+      role: resolvedRole,
       authenticatedViaPasskey: true,
       displayName: user?.displayName || user?.email || storedCredential.email || 'Passkey User',
     };
 
     req.session.user = {
       id: resolvedUser.id,
+      personalId: resolvedUser.personalId,
       email: resolvedUser.email,
       role: resolvedUser.role,
       authenticatedViaPasskey: true,
     };
     req.session.isAuthenticated = true;
     req.session.authMethod = 'passkey';
+    req.session.isSuperAdmin = isSuperAdmin(resolvedUser.personalId);
 
     delete req.session.passkeyLogin;
 
-    logTelemetry('Passkey login verified', { userId: resolvedUser.id, role: resolvedUser.role });
+    logTelemetry('Passkey login verified', {
+      userId: resolvedUser.id,
+      personalId: resolvedUser.personalId,
+      role: resolvedUser.role,
+    });
 
     res.json({
       success: true,

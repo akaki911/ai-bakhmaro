@@ -7,10 +7,12 @@
 
 const express = require('express');
 const { ToolRegistry } = require('../core/tool_registry');
+const guruloCore = require('../../shared/gurulo-core');
+const { normalizeResponse, GURULO_CORE_VERSION } = guruloCore.response;
 
 // SOL-211: Import security middleware - disabled temporarily
-// const { 
-//   requireAssistantAuth, 
+// const {
+//   requireAssistantAuth,
 //   requireRole, 
 //   assistantRateLimit,
 //   securityHeaders,
@@ -68,9 +70,33 @@ router.post('/replit-assistant',
 
     const executionTime = Date.now() - startTime;
 
+    const personalId = context.personalId || context.userId || options.personalId || 'anonymous';
+    const taskSummary = Array.isArray(result.taskList)
+      ? result.taskList.map((task, index) => `${index + 1}. ${task.type}`).join('\n')
+      : undefined;
+    const rawResponse = result.response;
+    const normalized = normalizeResponse(personalId, rawResponse, {
+      task: taskSummary || userRequest,
+      plan: result.executionSummary,
+      warnings: result.success ? [] : [`შედეგი: ${result.error || 'უცნობი ხარვეზი'}`],
+      metadata: {
+        context,
+        toolsUsed: result.toolsUsed,
+        raw: rawResponse,
+        executionTime,
+      },
+    });
+
     // Return structured response
     res.json({
       ...result,
+      response: normalized,
+      plainText: normalized.plainText,
+      metadata: {
+        core: normalized.meta,
+        format: GURULO_CORE_VERSION,
+        raw: rawResponse,
+      },
       executionTime,
       api: 'replit-assistant',
       version: '1.0.0'
