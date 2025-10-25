@@ -233,6 +233,7 @@ const extractTextFromPayload = (payload, depth = 0) => {
       'assistant',
       'summary',
       'prompt',
+      'plainText',
     ];
 
     for (const key of candidateKeys) {
