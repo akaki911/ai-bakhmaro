@@ -5,6 +5,8 @@ const router = express.Router();
 
 const { detectIntent } = require('../services/gurulo_intent_router');
 const codexAgent = require('../agents/codex_agent');
+const guruloCore = require('../../shared/gurulo-core');
+const { normalizeResponse, GURULO_CORE_VERSION } = guruloCore.response;
 const {
   buildGreetingResponse,
   buildSmalltalkResponse,
@@ -81,47 +83,67 @@ const normalizeIntentName = (value) => {
   return mapping[normalized] || normalized;
 };
 
-const buildSuccessResponse = (intent, payload, historyLength, audience) => {
-  if (audience === 'public_front') {
-    const base = {
-      success: true,
-      response: payload.response,
-      conversationHistoryLength: historyLength,
-    };
+const buildSuccessResponse = (intent, payload, historyLength, audience, normalizationContext = {}) => {
+  const baseMetadata = payload && typeof payload === 'object' && payload.metadata ? { ...payload.metadata } : {};
+  const telemetry = { ...(payload.telemetry || {}), ...(baseMetadata.telemetry || {}) };
 
-    if (Array.isArray(payload.quickPicks) && payload.quickPicks.length) {
-      base.quickPicks = payload.quickPicks;
-    }
-
-    return base;
-  }
-
-  const telemetry = { ...(payload.telemetry || {}) };
   if (typeof telemetry.intent_detected === 'string') {
     telemetry.intent_detected = normalizeIntentName(telemetry.intent_detected);
   }
 
-  const metadata = {
+  const normalized = normalizeResponse(
+    normalizationContext.userId || normalizationContext.personalId || 'anonymous',
+    payload.response,
+    {
+      audience,
+      language: normalizationContext.language || baseMetadata.language,
+      sections: normalizationContext.sections,
+      warnings: baseMetadata.warnings || payload.warnings,
+      task: normalizationContext.task,
+      plan: normalizationContext.plan,
+      final: normalizationContext.final,
+      verification: normalizationContext.verification,
+      metadata: {
+        ...normalizationContext.metadata,
+        ...baseMetadata,
+        telemetry,
+        intent: intent.name,
+        confidence: intent.confidence,
+      },
+    },
+  );
+
+  const responseMetadata = {
+    ...baseMetadata,
     intent: intent.name,
     confidence: intent.confidence,
     telemetry,
+    core: normalized.meta,
+    format: GURULO_CORE_VERSION,
   };
 
   const normalizedIntent = normalizeIntentName(intent.name);
   if (typeof normalizedIntent === 'string' && normalizedIntent !== intent.name) {
-    metadata.intentNormalized = normalizedIntent;
+    responseMetadata.intentNormalized = normalizedIntent;
   }
 
   if (Array.isArray(payload.quickPicks)) {
-    metadata.quickPicks = payload.quickPicks;
+    responseMetadata.quickPicks = payload.quickPicks;
   }
 
-  return {
+  const baseResponse = {
     success: true,
-    response: payload.response,
-    metadata,
+    response: normalized,
+    plainText: normalized.plainText,
+    metadata: responseMetadata,
     conversationHistoryLength: historyLength,
   };
+
+  if (Array.isArray(payload.quickPicks) && payload.quickPicks.length) {
+    baseResponse.quickPicks = payload.quickPicks;
+  }
+
+  return baseResponse;
 };
 
 const handleChatRequest = async (req, res) => {
@@ -203,8 +225,16 @@ const handleChatRequest = async (req, res) => {
     const intent = detectIntent(message, { metadata });
 
     const respondWithPayload = (payload) => {
-      res.set('X-Content-Format', 'text');
-      return res.status(200).json(buildSuccessResponse(intent, payload, historyLength, audience));
+      res.set('X-Content-Format', 'json');
+      return res
+        .status(200)
+        .json(
+          buildSuccessResponse(intent, payload, historyLength, audience, {
+            userId: personalId,
+            language: metadata.language,
+            metadata,
+          }),
+        );
     };
 
     if (intent.name === 'off_topic_consumer_block') {
@@ -265,12 +295,22 @@ const handleChatRequest = async (req, res) => {
       ? 'Sorry, the AI helper is temporarily unavailable. Please try again soon.'
       : 'ბოდიში, AI სისტემა დროებით მიუწვდომელია. სცადეთ ცოტა ხანში კვლავ.';
 
-    res.set('X-Content-Format', 'text');
+    const normalizedFallback = normalizeResponse(personalId, fallbackMessage, {
+      audience,
+      metadata,
+    });
+
+    res.set('X-Content-Format', 'json');
     return res.status(500).json({
       success: false,
       error: 'AI Chat service unavailable',
       details: error.message,
-      response: fallbackMessage,
+      response: normalizedFallback,
+      plainText: normalizedFallback.plainText,
+      metadata: {
+        core: normalizedFallback.meta,
+        format: GURULO_CORE_VERSION,
+      },
       timestamp: new Date().toISOString(),
     });
   }

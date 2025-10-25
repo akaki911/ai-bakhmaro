@@ -12,6 +12,7 @@ import { useAuth } from '../../contexts/useAuth';
 import { useAIMode } from '../../contexts/useAIMode';
 import kaTranslations from '../../i18n/locales/ka.json';
 import enTranslations from '../../i18n/locales/en.json';
+import { adaptGuruloCorePayload, parseGuruloCoreCandidate } from '../../utils/guruloCoreAdapter';
 
 type BrowserSpeechRecognitionAlternative = {
   transcript: string;
@@ -586,7 +587,11 @@ const sanitizeSectionFromPayload = (section: unknown, language: 'ka' | 'en'): Ch
   const record = section as Record<string, unknown>;
   const rawTitle = typeof record.title === 'string' ? record.title.trim() : '';
   const rawCta = typeof record.cta === 'string' ? record.cta.trim() : '';
-  const bulletSource = Array.isArray(record.bullets) ? record.bullets : [];
+  const bulletSource = Array.isArray(record.bullets)
+    ? record.bullets
+    : record.bullets != null
+      ? [record.bullets]
+      : [];
 
   const bullets = bulletSource
     .map((entry) => normalizeChatContent(entry, language).trim())
@@ -625,6 +630,17 @@ const sanitizeStructuredBlockFromPayload = (
   return {
     language: blockLanguage,
     sections,
+    persona: typeof record.persona === 'string' ? record.persona.trim() : undefined,
+    address: typeof record.address === 'string' ? record.address.trim() : undefined,
+    warnings: Array.isArray(record.warnings)
+      ? record.warnings
+          .map((entry) => normalizeChatContent(entry, blockLanguage).trim())
+          .filter(Boolean)
+      : undefined,
+    meta: typeof record.meta === 'object' && record.meta !== null ? (record.meta as Record<string, unknown>) : undefined,
+    sectionOrder: Array.isArray(record.sectionOrder)
+      ? (record.sectionOrder.filter((entry) => typeof entry === 'string') as string[])
+      : undefined,
   };
 };
 
@@ -687,6 +703,23 @@ const parseAssistantPayload = (
   options: { audience?: AudienceTag } = {},
 ): ParsedAssistantPayload => {
   const audience = options.audience;
+  const coreCandidate = parseGuruloCoreCandidate(value);
+  if (coreCandidate) {
+    const adapted = adaptGuruloCorePayload(coreCandidate, language);
+    return finalizeParsedPayload(
+      {
+        content: adapted.content,
+        derivedFrom: 'structured',
+        plainText: adapted.plainText,
+      },
+      {
+        audience,
+        language,
+        source: coreCandidate,
+        derivedFromStructured: true,
+      },
+    );
+  }
   if (
     audience === PUBLIC_AUDIENCE_TAG &&
     typeof value === 'string' &&
@@ -1603,7 +1636,10 @@ export function AIChatInterface() {
 
         const contentType = response.headers.get('content-type') ?? '';
         const initialFormat = normalizeContentFormat(response.headers.get('x-content-format'));
-        let activeContentFormat: ContentFormat = isPublicAudience ? 'text' : initialFormat;
+        let activeContentFormat: ContentFormat = initialFormat;
+        if (isPublicAudience && activeContentFormat !== 'json') {
+          activeContentFormat = 'text';
+        }
         let aggregatedPlainText = '';
         let aggregatedStructured: ChatStructuredContent[] | null = null;
         let blockedReported = false;
