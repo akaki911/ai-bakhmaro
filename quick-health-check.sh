@@ -57,4 +57,16 @@ echo "🔧 Auto-Improve Endpoints:"
 check_service "  Proposals" "http://0.0.0.0:5000/api/ai/autoimprove/proposals"
 
 echo ""
+
+echo "🛡️ Gurulo Policy Enforcement:"
+policy_output=$(node scripts/check-gurulo-policy.js 2>&1)
+policy_status=$?
+if [ "$policy_status" -eq 0 ]; then
+    echo -e "${GREEN}✅ ${policy_output}${NC}"
+else
+    echo -e "${RED}❌ Policy check failed${NC}"
+    echo "$policy_output"
+fi
+
+echo ""
 echo "✨ Health check complete!"
