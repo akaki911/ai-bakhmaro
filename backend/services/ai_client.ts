@@ -8,6 +8,7 @@ import {
   GURULO_CORE_VERSION,
   type NormalizedResponse,
 } from '../../shared/gurulo-core/gurulo.response';
+import { isSuperAdmin as guruloIsSuperAdmin } from '../../shared/gurulo-auth';
 
 /**
  * AI Service Client - Thin layer for Backend to communicate with AI Microservice
@@ -820,11 +821,6 @@ export class AIServiceClient {
    * Check if user has SUPER_ADMIN role
    * This is a placeholder and should ideally be replaced with a proper role check from the user's context.
    */
-  private isSuperAdmin(personalId?: string): boolean {
-    // Replace '01019062020' with the actual SUPER_ADMIN personalId or a more robust role checking mechanism.
-    return personalId === '01019062020';
-  }
-
   /**
    * Helper to make requests to the AI service, incorporating resilientOperation.
    * This centralizes the logic for making requests that need resilience.
@@ -869,7 +865,7 @@ export class AIServiceClient {
    */
   async autoImprove(operation: string, data: any, personalId?: string): Promise<any> {
     // RBAC check: Ensure the user making the call has the SUPER_ADMIN role.
-    if (!this.isSuperAdmin(personalId)) {
+    if (!guruloIsSuperAdmin(personalId ?? null)) {
       logger.warn('RBAC Denied: Auto-Improve operation attempted by non-SUPER_ADMIN user', { personalId });
       throw new Error('RBAC_DENIED: Auto-Improve requires SUPER_ADMIN role');
     }

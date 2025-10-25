@@ -7,6 +7,10 @@
  */
 
 const { verifyToken, extractTokenFromRequest } = require('../../backend/utils/jwt');
+const {
+  requireRole: guruloRequireRole,
+  allowSuperAdmin: guruloAllowSuperAdmin,
+} = require('../../shared/gurulo-auth');
 
 /**
  * Check backend session for authenticated user
@@ -110,45 +114,21 @@ async function requireAssistantAuth(req, res, next) {
 }
 
 /**
- * Role-based authorization check
+ * Role-based authorization check using Gurulo core guards
  * @param {string[]} requiredRoles - Array of required roles
  */
-function requireRole(requiredRoles = ['SUPER_ADMIN', 'ADMIN']) {
-  return (req, res, next) => {
-    try {
-      if (!req.user || !req.user.authenticated) {
-        return res.status(401).json({
-          error: 'Unauthorized',
-          message: 'Authentication required',
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      const userRole = req.user.role;
-      if (!requiredRoles.includes(userRole)) {
-        console.log(`❌ [AUTHZ] Role '${userRole}' not in required roles: ${requiredRoles.join(', ')}`);
-        return res.status(403).json({
-          error: 'Forbidden',
-          message: 'Insufficient permissions',
-          requiredRoles: requiredRoles,
-          userRole: userRole,
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      console.log(`✅ [AUTHZ] Role check passed: ${userRole}`);
-      next();
-
-    } catch (error) {
-      console.error('❌ [AUTHZ] Role check error:', error.message);
-      res.status(500).json({
-        error: 'Authorization Error',
-        message: 'Role validation failed',
-        timestamp: new Date().toISOString()
-      });
-    }
-  };
+function requireRole(requiredRoles = ['SUPER_ADMIN', 'ADMIN'], options = {}) {
+  return guruloRequireRole(requiredRoles, {
+    service: 'ai-service',
+    ...options,
+  });
 }
+
+const allowSuperAdmin = (options = {}) =>
+  guruloAllowSuperAdmin({
+    service: 'ai-service',
+    ...options,
+  });
 
 /**
  * Permission-based authorization check
@@ -309,6 +289,7 @@ function developmentBypass(req, res, next) {
 module.exports = {
   requireAssistantAuth,
   requireRole,
+  allowSuperAdmin,
   requirePermission,
   assistantRateLimit,
   securityHeaders,

@@ -1,19 +1,21 @@
 
 const express = require('express');
 const { syncMemoryToFirebase, periodicSyncCheck } = require('../memory_controller');
+const { requireSuperAdmin } = require('../middleware/role_guards');
+const { allowSuperAdmin } = require('../utils/jwt');
 const router = express.Router();
 
-// Memory sync recovery endpoint
-router.post('/sync', async (req, res) => {
-  try {
-    const { personalId } = req.body;
+router.use(requireSuperAdmin);
 
-    if (personalId !== '01019062020') {
-      return res.status(403).json({ 
-        error: 'არ გაქვთ ამ ფუნქციის გამოყენების უფლება',
-        success: false 
-      });
-    }
+const confirmMemorySync = allowSuperAdmin({
+  action: 'backend.memorySync.manualSync',
+  destructive: true,
+});
+
+// Memory sync recovery endpoint
+router.post('/sync', confirmMemorySync, async (req, res) => {
+  try {
+    const personalId = req.guruloClaims?.personalId || req.body?.personalId || 'unknown';
 
     console.log('🔄 Manual sync recovery requested for user:', personalId);
     
