@@ -172,6 +172,23 @@ async function testFunctional() {
       rollout: chatResponse.data.rollout
     });
 
+    if (chatPassed) {
+      const policy = chatResponse.data?.response?.policy;
+      const policyValid = Boolean(
+        policy &&
+        Array.isArray(policy.warnings) &&
+        Array.isArray(policy.violations) &&
+        policy.permissions &&
+        typeof policy.permissions === 'object'
+      );
+
+      logTest('functional', 'Gurulo Policy Metadata (FE pipeline)', policyValid, {
+        warnings: Array.isArray(policy?.warnings) ? policy.warnings.length : null,
+        violations: Array.isArray(policy?.violations) ? policy.violations.length : null,
+        permissions: policy?.permissions ? Object.keys(policy.permissions) : null
+      });
+    }
+
   } catch (error) {
     logTest('functional', 'AI Chat Flow (FE→BE→AI)', false, {
       error: error.message,
