@@ -3,6 +3,11 @@ import { CorrelationId } from '../../src/utils/correlationId';
 import { traceAIServiceCall, aiServiceCallsCounter, logger } from '../middleware/telemetry_middleware';
 import type { ServiceAuthConfig } from '../../shared/serviceToken.js';
 import { createServiceToken, getServiceAuthConfigs } from '../../shared/serviceToken.js';
+import {
+  normalizeResponse,
+  GURULO_CORE_VERSION,
+  type NormalizedResponse,
+} from '../../shared/gurulo-core/gurulo.response';
 
 /**
  * AI Service Client - Thin layer for Backend to communicate with AI Microservice
@@ -37,14 +42,17 @@ interface ChatRequest {
 
 interface ChatResponse {
   success: boolean;
-  response: string;
-  timestamp: string;
+  response: NormalizedResponse;
+  plainText?: string;
+  metadata?: Record<string, unknown>;
+  timestamp?: string;
   personalId?: string;
   model?: string;
   usage?: {
     tokens: number;
     cost: number;
   };
+  quickPicks?: unknown;
 }
 
 interface AIModel {
@@ -245,18 +253,33 @@ export class AIServiceClient {
 
       // The original code had a check for `response.ok` here which is typical for Node.js `fetch` but not Axios.
       // Axios throws an error for non-2xx status codes by default, so we'll rely on the catch block.
-      const result = response.data;
+      const result = (response.data as ChatResponse) ?? ({} as ChatResponse);
+      const normalized = normalizeResponse(
+        request.personalId ?? 'anonymous',
+        result.response,
+        {
+          audience: (request as Record<string, unknown>)?.['audience'] as string | undefined,
+          metadata: result.metadata ?? {},
+        },
+      );
+      result.response = normalized;
+      result.plainText = normalized.plainText;
+      result.metadata = {
+        ...(result.metadata ?? {}),
+        core: normalized.meta,
+        format: GURULO_CORE_VERSION,
+      };
       span.setStatus({ code: 1 });
       span.setAttributes({
-        'ai.response_length': result.response?.length || 0,
+        'ai.response_length': result.plainText?.length || 0,
         'ai.success': result.success
       });
 
       logger.info('AI service chat request completed', {
         correlationId,
         success: result.success,
-        hasResponse: !!result.response,
-        responseLength: result.response?.length || 0
+        hasResponse: !!result.plainText,
+        responseLength: result.plainText?.length || 0
       });
 
       return result;
