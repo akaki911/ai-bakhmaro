@@ -16,7 +16,7 @@
     "type-check": "npm run type-check -w ai-frontend --if-present",
     "health-check": "node system-health-check.js",
     "test:integration": "./scripts/run-integration-tests.sh",
-    "check:secrets-required": "echo '✅ Secrets check skipped on CI environment'"
+    "check:secrets-required": "node check-secrets.js"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

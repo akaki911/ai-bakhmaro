@@ -4,20 +4,26 @@ const path = require('path');
 const { resolveGroqApiKey } = require('../../shared/secretResolver');
 const { describeInternalToken } = require('../../shared/internalToken');
 const { validateEnv } = require('../../shared/config/envValidator');
+const {
+  normalizeNodeEnv,
+  readEnvBoolean,
+  readEnvNumber,
+  readEnvString,
+} = require('../../shared/config/envReader');
 
 const envState = validateEnv({ serviceName: 'ai-service' });
 
 const CONFIG_PATH = path.join(__dirname, 'runtime.config.json');
 
 const DEFAULT_CONFIG = {
-  backupMode: process.env.FORCE_OPENAI_BACKUP === 'true',
+  backupMode: readEnvBoolean('FORCE_OPENAI_BACKUP', { defaultValue: false }) === true,
   modelStrategy: {
     smallModel: {
-      model: process.env.GROQ_SMALL_MODEL || 'llama-3.1-8b-instant',
+      model: readEnvString('GROQ_SMALL_MODEL', { defaultValue: 'llama-3.1-8b-instant' }) || 'llama-3.1-8b-instant',
     },
     largeModel: {
-      model: process.env.GROQ_LARGE_MODEL || 'llama-3.3-70b-versatile',
-      thresholdChars: Number.parseInt(process.env.GROQ_LARGE_MODEL_THRESHOLD || '220', 10),
+      model: readEnvString('GROQ_LARGE_MODEL', { defaultValue: 'llama-3.3-70b-versatile' }) || 'llama-3.3-70b-versatile',
+      thresholdChars: readEnvNumber('GROQ_LARGE_MODEL_THRESHOLD', { defaultValue: 220, integer: true }) ?? 220,
       keywords: [
         'სრული სისტემის ანალიზი',
         'სრული პროექტის ანალიზი',
@@ -26,12 +32,6 @@ const DEFAULT_CONFIG = {
       ],
     },
   },
-};
-
-const normaliseNodeEnv = (value) => {
-  if (!value) return 'development';
-  const lowered = String(value).trim().toLowerCase();
-  return lowered === 'production' ? 'production' : 'development';
 };
 
 const formatIssue = (key, reason, severity = 'error') => ({ key, reason, severity });
@@ -111,7 +111,8 @@ const updateRuntimeConfig = (patch = {}) => {
   return runtimeConfigCache;
 };
 
-const isBackupModeEnabled = () => process.env.FORCE_OPENAI_BACKUP === 'true' || Boolean(getRuntimeConfig().backupMode);
+const isBackupModeEnabled = () =>
+  readEnvBoolean('FORCE_OPENAI_BACKUP', { defaultValue: false }) === true || Boolean(getRuntimeConfig().backupMode);
 
 const setBackupMode = (enabled) => {
   if (process.env.FORCE_OPENAI_BACKUP === 'true') {
@@ -128,7 +129,7 @@ const buildRuntimeConfig = () => {
   const issues = [];
   const warnings = [];
 
-  process.env.NODE_ENV = normaliseNodeEnv(process.env.NODE_ENV);
+  process.env.NODE_ENV = normalizeNodeEnv(process.env.NODE_ENV);
   const nodeEnv = process.env.NODE_ENV;
   const isProduction = nodeEnv === 'production';
 
