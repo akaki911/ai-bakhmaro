@@ -6,6 +6,35 @@ const DEV_BACKEND_DEFAULT = 'http://127.0.0.1:5002';
 
 const stripTrailingSlashes = (value: string) => value.replace(/\/+$/, '');
 
+const HOST_BACKEND_OVERRIDES = new Map<string, string>([
+  ['ai.bakhmaro.co', 'https://backend.ai.bakhmaro.co'],
+  ['ai-bakhmaro.web.app', 'https://backend.ai.bakhmaro.co'],
+  ['ai-bakhmaro.firebaseapp.com', 'https://backend.ai.bakhmaro.co'],
+]);
+
+const normalizeHostname = (value: string | undefined | null): string | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  const trimmed = value.trim().toLowerCase();
+  return trimmed === '' ? undefined : trimmed;
+};
+
+const resolveBackendOverrideForHost = (hostname: string | undefined | null): string | undefined => {
+  const normalizedHost = normalizeHostname(hostname);
+  if (!normalizedHost) {
+    return undefined;
+  }
+
+  const override = HOST_BACKEND_OVERRIDES.get(normalizedHost);
+  if (!override) {
+    return undefined;
+  }
+
+  return stripTrailingSlashes(override);
+};
+
 const pickFirstNonEmpty = (values: Array<string | undefined | null>): string => {
   for (const value of values) {
     if (typeof value === 'string' && value.trim() !== '') {
@@ -83,6 +112,19 @@ const readProcessEnv = (key: string): string | undefined => {
   return value && value.trim() !== '' ? value.trim() : undefined;
 };
 
+const parseBoolean = (value: unknown): boolean => {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    return ['1', 'true', 'yes', 'on'].includes(normalized);
+  }
+
+  return false;
+};
+
 /**
  * Resolve the primary backend URL for browser requests.
  *
@@ -150,6 +192,16 @@ export function getBackendBaseURL(): string {
     return runtimeConfigured;
   }
 
+  const hostOverride =
+    typeof window !== 'undefined'
+      ? resolveBackendOverrideForHost(window.location?.hostname ?? undefined)
+      : undefined;
+
+  if (hostOverride) {
+    console.info('ℹ️ [BackendURL] Using hostname override for backend base URL:', hostOverride);
+    return hostOverride;
+  }
+
   const relativeConfigured = pickFirstNonEmpty([...envRelativeFallbacks, ...processRelativeFallbacks]);
   if (relativeConfigured) {
     console.warn(
@@ -164,6 +216,53 @@ export function getBackendBaseURL(): string {
   }
 
   return '';
+}
+
+/**
+ * Flag indicating whether cross-origin direct backend calls are authorised for debugging.
+ *
+ * The flag defaults to false unless explicitly enabled via Vite/Process envs or a runtime hint.
+ */
+export function isDirectBackendDebugEnabled(): boolean {
+  const env = import.meta.env as Record<string, string | boolean | undefined> | undefined;
+
+  if (env) {
+    const envValue =
+      env.VITE_DEBUG_DIRECT_BACKEND ??
+      env.VITE_DIRECT_BACKEND_DEBUG ??
+      env.VITE_ENABLE_DIRECT_BACKEND_DEBUG ??
+      env.VITE_ALLOW_DIRECT_BACKEND_DEBUG;
+
+    if (typeof envValue !== 'undefined') {
+      return parseBoolean(envValue);
+    }
+  }
+
+  const processValue =
+    readProcessEnv('VITE_DEBUG_DIRECT_BACKEND') ??
+    readProcessEnv('DEBUG_DIRECT_BACKEND') ??
+    readProcessEnv('ENABLE_DIRECT_BACKEND_DEBUG');
+
+  if (typeof processValue !== 'undefined') {
+    return parseBoolean(processValue);
+  }
+
+  if (typeof window !== 'undefined') {
+    const globalWindow = window as Window & { __DEBUG_DIRECT_BACKEND__?: unknown };
+    if (typeof globalWindow.__DEBUG_DIRECT_BACKEND__ !== 'undefined') {
+      return Boolean(globalWindow.__DEBUG_DIRECT_BACKEND__);
+    }
+  }
+
+  return false;
+}
+
+export function shouldPreferDirectBackendRequests(globalWindow?: Window): boolean {
+  const hostname =
+    globalWindow?.location?.hostname ??
+    (typeof window !== 'undefined' ? window.location?.hostname : undefined);
+
+  return !!resolveBackendOverrideForHost(hostname);
 }
 
 /**
