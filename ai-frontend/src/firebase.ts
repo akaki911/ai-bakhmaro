@@ -2,7 +2,7 @@ const firebaseAppModule = await import('firebase/app');
 
 const { initializeApp, getApps, getApp } = firebaseAppModule;
 
-import { GURULO_FIREBASE_PUBLIC_CONFIG } from '../../shared/config/firebaseClient';
+import { GURULO_FIREBASE_PUBLIC_CONFIG } from '../../shared/config/firebaseClient.ts';
 import {
   browserLocalPersistence,
   getAuth,
