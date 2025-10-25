@@ -497,7 +497,8 @@ router.post('/chat', async (req, res) => {
           codeSnippets: null, // ეს შეიძლება დაემატოს RAG-დან
           errorContext: null  // ეს შეიძლება დაემატოს error detection-დან
         });
-        const systemPrompt = optimizedPrompt;
+        const systemPrompt = optimizedPrompt.system;
+        const developerPrompt = optimizedPrompt.developer;
 
         // ტოკენების ოპტიმიზაცია კლასის მიხედვით
         const tokenLimits = {
@@ -511,10 +512,11 @@ router.post('/chat', async (req, res) => {
         const limits = tokenLimits[queryType] || tokenLimits['general'];
 
         const messages = [
+          ...(developerPrompt ? [{ role: 'system', content: developerPrompt }] : []),
           { role: 'system', content: systemPrompt.substring(0, limits.system) },
-          ...(limits.history > 0 ? limitedHistory.slice(-1).map(h => ({ 
-            role: h.role, 
-            content: h.content.substring(0, limits.history) 
+          ...(limits.history > 0 ? limitedHistory.slice(-1).map(h => ({
+            role: h.role,
+            content: h.content.substring(0, limits.history)
           })) : []),
           { role: 'user', content: message.substring(0, limits.user) }
         ];
@@ -648,7 +650,11 @@ function generateOptimizedPrompt(queryType, userMemory, grammarFixes, additional
 
   console.log(`🎯 Using specialized prompt type: ${queryType}`);
 
-  return optimizedPrompt.system;
+  return {
+    system: optimizedPrompt.system,
+    developer: optimizedPrompt.developer,
+    tokens: optimizedPrompt.tokens,
+  };
 }
 
 // Enhanced query classification system
