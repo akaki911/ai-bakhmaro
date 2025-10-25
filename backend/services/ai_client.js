@@ -1,6 +1,8 @@
 const axios = require('axios');
 const { createServiceToken, getServiceAuthConfigs } = require('../../shared/serviceToken');
 const { generateFallbackResponse } = require('./fallbackResponder');
+const guruloCore = require('../../shared/gurulo-core');
+const { normalizeResponse, GURULO_CORE_VERSION } = guruloCore.response;
 
 /**
  * AI Service Client - JavaScript version
@@ -132,7 +134,22 @@ class AIServiceClient {
         return await this.client.post('/ai/chat', request);
       }, 'chat');
 
-      const result = response.data;
+      const result = response.data || {};
+      const normalized = normalizeResponse(
+        request.personalId || request.userId || 'anonymous',
+        result.response,
+        {
+          audience: request.audience,
+          metadata: result.metadata || {},
+        },
+      );
+      result.response = normalized;
+      result.plainText = normalized.plainText;
+      result.metadata = {
+        ...(result.metadata || {}),
+        core: normalized.meta,
+        format: GURULO_CORE_VERSION,
+      };
       console.log('✅ [AI Client] Chat request completed', {
         correlationId,
         success: result.success
@@ -484,17 +501,26 @@ class AIServiceClient {
       ? generateFallbackResponse(prompt)
       : '🤖 AI სერვისი დროებით მიუწვდომელია. გთხოვთ, კიდევ სცადოთ მოგვიანებით.';
 
+    const normalized = normalizeResponse(request?.personalId || 'anonymous', fallbackMessage, {
+      audience: request?.audience,
+    });
+    const fallbackMeta = {
+      degraded: true,
+      reason: originalError?.message || 'AI service unavailable',
+      core: normalized.meta,
+      format: GURULO_CORE_VERSION,
+    };
+
     return {
       success: true,
-      response: fallbackMessage,
+      response: normalized,
+      plainText: normalized.plainText,
       fallback: true,
       service: 'backend-fallback',
       model: 'offline-fallback',
       timestamp: new Date().toISOString(),
-      meta: {
-        degraded: true,
-        reason: originalError?.message || 'AI service unavailable'
-      }
+      metadata: fallbackMeta,
+      meta: fallbackMeta,
     };
   }
 

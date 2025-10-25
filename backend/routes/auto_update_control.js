@@ -1,18 +1,8 @@
 
 const express = require('express');
 const router = express.Router();
-const { adminSetupGuard } = require('../middleware/admin_guards');
-
-// Create requireSuperAdmin middleware function
-const requireSuperAdmin = (req, res, next) => {
-  // Check if user is SUPER_ADMIN
-  if (req.user && req.user.role === 'SUPER_ADMIN') {
-    return next();
-  }
-  
-  // Fallback to admin setup guard
-  return adminSetupGuard(req, res, next);
-};
+const { requireSuperAdmin } = require('../middleware/role_guards');
+const { allowSuperAdmin } = require('../utils/jwt');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -75,6 +65,23 @@ async function writeJsonFile(filePath, content) {
   }
 }
 
+router.use(requireSuperAdmin);
+
+const confirmConfigChange = allowSuperAdmin({
+  action: 'backend.autoUpdate.updateConfig',
+  destructive: true,
+});
+
+const confirmProposalApproval = allowSuperAdmin({
+  action: 'backend.autoUpdate.approveProposal',
+  destructive: true,
+});
+
+const confirmProposalRejection = allowSuperAdmin({
+  action: 'backend.autoUpdate.rejectProposal',
+  destructive: true,
+});
+
 // Get current configuration
 router.get('/config', async (req, res) => {
   try {
@@ -96,7 +103,7 @@ router.get('/config', async (req, res) => {
 });
 
 // Update configuration (Super Admin only)
-router.post('/config', requireSuperAdmin, async (req, res) => {
+router.post('/config', confirmConfigChange, async (req, res) => {
   try {
     const { config } = req.body;
     
@@ -339,8 +346,8 @@ router.post('/proposals', async (req, res) => {
   }
 });
 
-// Approve proposal (Super Admin only)  
-router.post('/proposals/:proposalId/approve', requireSuperAdmin, async (req, res) => {
+// Approve proposal (Super Admin only)
+router.post('/proposals/:proposalId/approve', confirmProposalApproval, async (req, res) => {
   try {
     const { proposalId } = req.params;
     
@@ -393,7 +400,7 @@ router.post('/proposals/:proposalId/approve', requireSuperAdmin, async (req, res
 });
 
 // Reject proposal (Super Admin only)
-router.post('/proposals/:proposalId/reject', requireSuperAdmin, async (req, res) => {
+router.post('/proposals/:proposalId/reject', confirmProposalRejection, async (req, res) => {
   try {
     const { proposalId } = req.params;
     const { reason } = req.body;

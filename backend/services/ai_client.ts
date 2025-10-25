@@ -3,6 +3,12 @@ import { CorrelationId } from '../../src/utils/correlationId';
 import { traceAIServiceCall, aiServiceCallsCounter, logger } from '../middleware/telemetry_middleware';
 import type { ServiceAuthConfig } from '../../shared/serviceToken.js';
 import { createServiceToken, getServiceAuthConfigs } from '../../shared/serviceToken.js';
+import {
+  normalizeResponse,
+  GURULO_CORE_VERSION,
+  type NormalizedResponse,
+} from '../../shared/gurulo-core/gurulo.response';
+import { isSuperAdmin as guruloIsSuperAdmin } from '../../shared/gurulo-auth';
 
 /**
  * AI Service Client - Thin layer for Backend to communicate with AI Microservice
@@ -37,14 +43,17 @@ interface ChatRequest {
 
 interface ChatResponse {
   success: boolean;
-  response: string;
-  timestamp: string;
+  response: NormalizedResponse;
+  plainText?: string;
+  metadata?: Record<string, unknown>;
+  timestamp?: string;
   personalId?: string;
   model?: string;
   usage?: {
     tokens: number;
     cost: number;
   };
+  quickPicks?: unknown;
 }
 
 interface AIModel {
@@ -245,18 +254,33 @@ export class AIServiceClient {
 
       // The original code had a check for `response.ok` here which is typical for Node.js `fetch` but not Axios.
       // Axios throws an error for non-2xx status codes by default, so we'll rely on the catch block.
-      const result = response.data;
+      const result = (response.data as ChatResponse) ?? ({} as ChatResponse);
+      const normalized = normalizeResponse(
+        request.personalId ?? 'anonymous',
+        result.response,
+        {
+          audience: (request as Record<string, unknown>)?.['audience'] as string | undefined,
+          metadata: result.metadata ?? {},
+        },
+      );
+      result.response = normalized;
+      result.plainText = normalized.plainText;
+      result.metadata = {
+        ...(result.metadata ?? {}),
+        core: normalized.meta,
+        format: GURULO_CORE_VERSION,
+      };
       span.setStatus({ code: 1 });
       span.setAttributes({
-        'ai.response_length': result.response?.length || 0,
+        'ai.response_length': result.plainText?.length || 0,
         'ai.success': result.success
       });
 
       logger.info('AI service chat request completed', {
         correlationId,
         success: result.success,
-        hasResponse: !!result.response,
-        responseLength: result.response?.length || 0
+        hasResponse: !!result.plainText,
+        responseLength: result.plainText?.length || 0
       });
 
       return result;
@@ -797,11 +821,6 @@ export class AIServiceClient {
    * Check if user has SUPER_ADMIN role
    * This is a placeholder and should ideally be replaced with a proper role check from the user's context.
    */
-  private isSuperAdmin(personalId?: string): boolean {
-    // Replace '01019062020' with the actual SUPER_ADMIN personalId or a more robust role checking mechanism.
-    return personalId === '01019062020';
-  }
-
   /**
    * Helper to make requests to the AI service, incorporating resilientOperation.
    * This centralizes the logic for making requests that need resilience.
@@ -846,7 +865,7 @@ export class AIServiceClient {
    */
   async autoImprove(operation: string, data: any, personalId?: string): Promise<any> {
     // RBAC check: Ensure the user making the call has the SUPER_ADMIN role.
-    if (!this.isSuperAdmin(personalId)) {
+    if (!guruloIsSuperAdmin(personalId ?? null)) {
       logger.warn('RBAC Denied: Auto-Improve operation attempted by non-SUPER_ADMIN user', { personalId });
       throw new Error('RBAC_DENIED: Auto-Improve requires SUPER_ADMIN role');
     }

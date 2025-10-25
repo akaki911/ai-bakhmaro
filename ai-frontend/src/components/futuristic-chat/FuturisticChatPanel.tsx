@@ -33,6 +33,11 @@ export interface ChatSection {
 export interface ChatStructuredContent {
   language: 'ka' | 'en';
   sections: ChatSection[];
+  persona?: string;
+  address?: string;
+  warnings?: string[];
+  meta?: Record<string, unknown>;
+  sectionOrder?: string[];
 }
 
 export interface ChatMessage {
