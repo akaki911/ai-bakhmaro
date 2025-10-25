@@ -1,18 +1,4 @@
 {
-  "compilerOptions": {
-    "lib": [
-      "ESNext",
-      "DOM",
-      "DOM.Iterable"
-    ],
-    "strict": true,
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx"
-  },
   "files": [],
   "references": [
     {
@@ -26,7 +12,6 @@
     "../backup_before_restore",
     "../attached_assets",
     "**/*.bak.*",
-    // TODO(SOL-626): Re-enable GitHubManagement sources once TypeScript violations are resolved.
     "src/components/GitHubManagement/**"
   ]
 }
