@@ -122,6 +122,8 @@ const versionRoute = require('./routes/version');
 const aiTraceRoutes = require('./routes/ai_trace');
 
 const httpServer = http.createServer(app);
+const shouldDisableHttpListen = process.env.DISABLE_EXPRESS_LISTEN === 'true';
+let server = null;
 
 const DEFAULT_FRONTEND_ORIGIN = 'https://ai.bakhmaro.co';
 
@@ -1348,61 +1350,72 @@ app.use((req, res) => {
 
 // Start server
 // Enhanced server startup with port conflict handling
-const server = httpServer.listen(PORT, "0.0.0.0", (error) => {
-  if (error) {
-    console.error('❌ Failed to start server:', error);
-    process.exit(1);
-  }
-
-  console.log(`🚀 Backend server running on http://0.0.0.0:${PORT}`);
-  console.log(`📊 Backend initialization complete`);
-
-  // Test critical routes - with safe access
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🧪 Testing critical routes...');
-    try {
-      const routes = (app._router?.stack || []).map(r => {
-        if (r && r.route) {
-          return `${Object.keys(r.route.methods).join(', ').toUpperCase()} ${r.route.path}`;
-        } else if (r && r.name === 'router') {
-          return `ROUTER ${r.regexp.source}`;
-        }
-        return 'MIDDLEWARE';
-      }).filter(r => r !== 'MIDDLEWARE');
-
-      console.log('📋 Registered routes:', routes.length);
-    } catch (error) {
-      console.warn('⚠️ Route listing failed:', error.message);
+if (shouldDisableHttpListen) {
+  console.log('🌀 [Serverless] Skipping HTTP listen; running in Firebase Functions environment.');
+} else {
+  server = httpServer.listen(PORT, "0.0.0.0", (error) => {
+    if (error) {
+      console.error('❌ Failed to start server:', error);
+      process.exit(1);
     }
-  }
-});
 
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`❌ Port ${PORT} is already in use`);
-    console.log('🔧 Try running: bash scripts/port-cleanup.sh');
-    process.exit(1);
-  } else {
-    console.error('❌ Backend startup error:', err);
-    process.exit(1);
-  }
-});
+    console.log(`🚀 Backend server running on http://0.0.0.0:${PORT}`);
+    console.log(`📊 Backend initialization complete`);
 
-// Graceful shutdown
-server.on('close', () => {
-  try {
-    guruloRealtime?.close?.();
-  } catch (error) {
-    console.warn('⚠️ Failed to shut down Gurulo realtime server cleanly:', error.message);
-  }
-});
+    // Test critical routes - with safe access
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🧪 Testing critical routes...');
+      try {
+        const routes = (app._router?.stack || []).map(r => {
+          if (r && r.route) {
+            return `${Object.keys(r.route.methods).join(', ').toUpperCase()} ${r.route.path}`;
+          } else if (r && r.name === 'router') {
+            return `ROUTER ${r.regexp.source}`;
+          }
+          return 'MIDDLEWARE';
+        }).filter(r => r !== 'MIDDLEWARE');
+
+        console.log('📋 Registered routes:', routes.length);
+      } catch (error) {
+        console.warn('⚠️ Route listing failed:', error.message);
+      }
+    }
+  });
+}
+
+if (server) {
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`❌ Port ${PORT} is already in use`);
+      console.log('🔧 Try running: bash scripts/port-cleanup.sh');
+      process.exit(1);
+    } else {
+      console.error('❌ Backend startup error:', err);
+      process.exit(1);
+    }
+  });
+
+  // Graceful shutdown
+  server.on('close', () => {
+    try {
+      guruloRealtime?.close?.();
+    } catch (error) {
+      console.warn('⚠️ Failed to shut down Gurulo realtime server cleanly:', error.message);
+    }
+  });
+}
 
 process.on('SIGTERM', () => {
   console.log('📴 Backend shutting down gracefully...');
-  server.close(() => {
-    console.log('✅ Backend stopped');
+  if (server) {
+    server.close(() => {
+      console.log('✅ Backend stopped');
+      process.exit(0);
+    });
+  } else {
+    console.log('✅ Backend stopped (no active HTTP listener)');
     process.exit(0);
-  });
+  }
 });
 
 // AI Service connection testing removed - using Backend-only architecture
