@@ -179,6 +179,8 @@ const buildAllowedOriginsMap = () => {
     addOrigin('https://ai.bakhmaro.co');
     addOrigin('http://127.0.0.1:3000');
     addOrigin('http://localhost:3000');
+    addOrigin('http://127.0.0.1:5173');
+    addOrigin('http://localhost:5173');
   }
 
   return origins;
@@ -205,6 +207,180 @@ const guruloRealtime = setupGuruloWebSocket(httpServer, {
 });
 
 app.locals.guruloRealtime = guruloRealtime;
+
+// CORS Configuration must execute before any routing logic to ensure
+// preflight requests are evaluated without interference from guards or rate
+// limiters. This keeps same-origin proxy calls from ai.bakhmaro.co working
+// without triggering CORS errors when forwarded through the CDN.
+const defaultCorsMethods = ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'];
+const defaultCorsHeaders = [
+  'Content-Type',
+  'Authorization',
+  'X-Admin-Setup-Token',
+  'X-Device-Fingerprint',
+  'X-Client-Id',
+  'X-Device-Id',
+  'X-Device-Platform',
+  'X-Device-Type',
+  'X-Service-Token',
+  'X-AI-Internal-Token',
+  'X-Requested-With',
+  'X-Correlation-ID',
+  'X-Forwarded-Authorization',
+  'Cookie',
+  'Cache-Control',
+  'Accept',
+  'Origin',
+  'Referer'
+];
+
+const buildAllowedHeaders = (req) => {
+  const headerMap = new Map(defaultCorsHeaders.map((header) => [header.toLowerCase(), header]));
+  const requestedHeaders = req.header('Access-Control-Request-Headers');
+
+  if (requestedHeaders) {
+    requestedHeaders
+      .split(',')
+      .map((header) => header.trim())
+      .filter(Boolean)
+      .forEach((header) => {
+        const key = header.toLowerCase();
+        if (!headerMap.has(key)) {
+          headerMap.set(key, header);
+        }
+      });
+  }
+
+  return Array.from(headerMap.values());
+};
+
+const buildAllowedMethods = (req) => {
+  const methods = new Set(defaultCorsMethods);
+  const requestedMethod = req.header('Access-Control-Request-Method');
+
+  if (requestedMethod) {
+    methods.add(requestedMethod.toUpperCase());
+  }
+
+  return Array.from(methods);
+};
+
+const applyCorsHeaders = (res, options) => {
+  const {
+    origin,
+    credentials,
+    methods,
+    allowedHeaders,
+    exposedHeaders,
+    maxAge,
+    varyHeaders = []
+  } = options;
+
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  if (credentials) {
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  if (Array.isArray(methods) && methods.length > 0) {
+    res.setHeader('Access-Control-Allow-Methods', methods.join(', '));
+  }
+  if (Array.isArray(allowedHeaders) && allowedHeaders.length > 0) {
+    res.setHeader('Access-Control-Allow-Headers', allowedHeaders.join(', '));
+  }
+  if (Array.isArray(exposedHeaders) && exposedHeaders.length > 0) {
+    res.setHeader('Access-Control-Expose-Headers', exposedHeaders.join(', '));
+  }
+  if (maxAge) {
+    res.setHeader('Access-Control-Max-Age', String(maxAge));
+  }
+
+  res.append('Vary', 'Origin');
+  varyHeaders.forEach((header) => {
+    res.append('Vary', header);
+  });
+};
+
+const determineAllowedOrigin = (req) => {
+  const requestOrigin = req.header('Origin');
+
+  if (!requestOrigin) {
+    return getRpConfig(req).origin || primaryAllowedOrigin;
+  }
+
+  const normalised = normaliseOriginValue(requestOrigin);
+  if (normalised && allowedOriginsSet.has(normalised)) {
+    return allowedOriginsMap.get(normalised) ?? normalised;
+  }
+
+  return null;
+};
+
+const resolveCorsOptions = (req, resolvedOrigin) => {
+  const rpConfig = getRpConfig(req);
+  const fallbackOrigin = rpConfig?.origin || primaryAllowedOrigin;
+  const origin = resolvedOrigin || determineAllowedOrigin(req) || fallbackOrigin;
+  const allowedHeaders = buildAllowedHeaders(req);
+  const methods = buildAllowedMethods(req);
+  const varyHeaders = [];
+
+  if (req.header('Access-Control-Request-Headers')) {
+    varyHeaders.push('Access-Control-Request-Headers');
+  }
+
+  if (req.header('Access-Control-Request-Method')) {
+    varyHeaders.push('Access-Control-Request-Method');
+  }
+
+  return {
+    origin,
+    credentials: true,
+    methods,
+    allowedHeaders,
+    exposedHeaders: [
+      'Set-Cookie',
+      'X-RateLimit-Limit',
+      'X-RateLimit-Remaining',
+      'X-RateLimit-Reset',
+      'X-Correlation-ID'
+    ],
+    optionsSuccessStatus: 200,
+    maxAge: 86400,
+    varyHeaders
+  };
+};
+
+app.use((req, res, next) => {
+  try {
+    const origin = determineAllowedOrigin(req);
+    if (origin) {
+      const options = resolveCorsOptions(req, origin);
+      applyCorsHeaders(res, options);
+    } else if (req.header('Origin')) {
+      console.warn(`🚫 [CORS] Blocked response header for origin: ${req.header('Origin')}`);
+    }
+  } catch (error) {
+    console.error('⚠️ [CORS] Failed to resolve origin header:', error.message);
+  }
+  next();
+});
+
+const corsOptionsDelegate = (req, callback) => {
+  const allowedOrigin = determineAllowedOrigin(req);
+  if (!allowedOrigin) {
+    const requestOrigin = req.header('Origin');
+    if (requestOrigin) {
+      console.warn(`🚫 CORS blocked origin: ${requestOrigin}`);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  }
+
+  const options = resolveCorsOptions(req, allowedOrigin);
+  callback(null, options);
+};
+
+app.options('*', cors(corsOptionsDelegate));
+app.use(cors(corsOptionsDelegate));
 
 app.use(buildModeGuard);
 
@@ -358,6 +534,7 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   skip: (req) => {
+    if (req.method === 'OPTIONS') return true;
     // Whitelist health and monitoring endpoints
     if (req.path === '/api/health') return true;
     if (req.path.includes('/api/ai/autoimprove/monitor/')) return true;
@@ -392,189 +569,6 @@ app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
-// CORS Configuration
-const defaultCorsMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'];
-const defaultCorsHeaders = [
-  'Content-Type',
-  'Authorization',
-  'X-Admin-Setup-Token',
-  'X-Device-Fingerprint',
-  'X-Requested-With',
-  'X-Correlation-ID',
-  'Cookie',
-  'Cache-Control',
-  'Accept',
-  'Origin',
-  'Referer'
-];
-
-const buildAllowedHeaders = (req) => {
-  const headerMap = new Map(defaultCorsHeaders.map((header) => [header.toLowerCase(), header]));
-  const requestedHeaders = req.header('Access-Control-Request-Headers');
-
-  if (requestedHeaders) {
-    requestedHeaders
-      .split(',')
-      .map((header) => header.trim())
-      .filter(Boolean)
-      .forEach((header) => {
-        const key = header.toLowerCase();
-        if (!headerMap.has(key)) {
-          headerMap.set(key, header);
-        }
-      });
-  }
-
-  return Array.from(headerMap.values());
-};
-
-const buildAllowedMethods = (req) => {
-  const methods = new Set(defaultCorsMethods);
-  const requestedMethod = req.header('Access-Control-Request-Method');
-
-  if (requestedMethod) {
-    methods.add(requestedMethod.toUpperCase());
-  }
-
-  return Array.from(methods);
-};
-
-const applyCorsHeaders = (res, options) => {
-  const {
-    origin,
-    credentials,
-    methods,
-    allowedHeaders,
-    exposedHeaders,
-    maxAge,
-    varyHeaders = []
-  } = options;
-
-  if (origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  if (credentials) {
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  }
-  if (Array.isArray(methods) && methods.length > 0) {
-    res.setHeader('Access-Control-Allow-Methods', methods.join(', '));
-  }
-  if (Array.isArray(allowedHeaders) && allowedHeaders.length > 0) {
-    res.setHeader('Access-Control-Allow-Headers', allowedHeaders.join(', '));
-  }
-  if (Array.isArray(exposedHeaders) && exposedHeaders.length > 0) {
-    res.setHeader('Access-Control-Expose-Headers', exposedHeaders.join(', '));
-  }
-  if (maxAge) {
-    res.setHeader('Access-Control-Max-Age', String(maxAge));
-  }
-
-  res.append('Vary', 'Origin');
-  varyHeaders.forEach((header) => {
-    res.append('Vary', header);
-  });
-};
-
-const determineAllowedOrigin = (req) => {
-  const requestOrigin = req.header('Origin');
-
-  if (!requestOrigin) {
-    return getRpConfig(req).origin || primaryAllowedOrigin;
-  }
-
-  const normalised = normaliseOriginValue(requestOrigin);
-  if (normalised && allowedOriginsSet.has(normalised)) {
-    return allowedOriginsMap.get(normalised) ?? normalised;
-  }
-
-  return null;
-};
-
-const resolveCorsOptions = (req, resolvedOrigin) => {
-  const rpConfig = getRpConfig(req);
-  const fallbackOrigin = rpConfig?.origin || primaryAllowedOrigin;
-  const origin = resolvedOrigin || determineAllowedOrigin(req) || fallbackOrigin;
-  const allowedHeaders = buildAllowedHeaders(req);
-  const methods = buildAllowedMethods(req);
-  const varyHeaders = [];
-
-  if (req.header('Access-Control-Request-Headers')) {
-    varyHeaders.push('Access-Control-Request-Headers');
-  }
-
-  if (req.header('Access-Control-Request-Method')) {
-    varyHeaders.push('Access-Control-Request-Method');
-  }
-
-  return {
-    origin,
-    credentials: true,
-    methods,
-    allowedHeaders,
-    exposedHeaders: [
-      'Set-Cookie',
-      'X-RateLimit-Limit',
-      'X-RateLimit-Remaining',
-      'X-RateLimit-Reset',
-      'X-Correlation-ID'
-    ],
-    optionsSuccessStatus: 200,
-    maxAge: 86400,
-    varyHeaders
-  };
-};
-
-app.use((req, res, next) => {
-  try {
-    const origin = determineAllowedOrigin(req);
-    if (origin) {
-      const options = resolveCorsOptions(req, origin);
-      applyCorsHeaders(res, options);
-    } else if (req.header('Origin')) {
-      console.warn(`🚫 [CORS] Blocked response header for origin: ${req.header('Origin')}`);
-    }
-  } catch (error) {
-    console.error('⚠️ [CORS] Failed to resolve origin header:', error.message);
-  }
-  next();
-});
-
-const corsOptionsDelegate = (req, callback) => {
-  const allowedOrigin = determineAllowedOrigin(req);
-  if (!allowedOrigin) {
-    const requestOrigin = req.header('Origin');
-    if (requestOrigin) {
-      console.warn(`🚫 CORS blocked origin: ${requestOrigin}`);
-    }
-    return callback(new Error('Not allowed by CORS'));
-  }
-
-  const options = resolveCorsOptions(req, allowedOrigin);
-  callback(null, options);
-};
-
-app.options('*', (req, res) => {
-  const allowedOrigin = determineAllowedOrigin(req);
-
-  if (!allowedOrigin) {
-    const requestOrigin = req.header('Origin');
-    if (requestOrigin) {
-      console.warn(`🚫 [CORS] Preflight blocked origin: ${requestOrigin}`);
-    }
-    return res.status(403).json({
-      success: false,
-      error: 'CORS_NOT_ALLOWED',
-      message: 'Origin is not permitted'
-    });
-  }
-
-  const options = resolveCorsOptions(req, allowedOrigin);
-  applyCorsHeaders(res, options);
-
-  res.status(options.optionsSuccessStatus || 204).end();
-});
-app.use(cors(corsOptionsDelegate));
-
 // Enhanced Rate Limiting Configuration - Increased for WebAuthn testing
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -587,6 +581,9 @@ const globalLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => {
+    if (req.method === 'OPTIONS') {
+      return true;
+    }
     // Skip rate limiting for DevConsole endpoints
     if (req.path.startsWith('/api/dev/console/') || req.path.includes('/dev/')) {
       return true;
@@ -616,6 +613,9 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => {
+    if (req.method === 'OPTIONS') {
+      return true;
+    }
     // SOL-427: Never skip rate limiting for verification routes
     return false;
   }
@@ -631,7 +631,8 @@ const webauthnVerifyLimiter = rateLimit({
     retryAfter: '10 minutes'
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS'
 });
 
 // Apply rate limiting conditionally
@@ -1273,6 +1274,23 @@ app.post('/api/admin/system/cleanup', (req, res) => {
 
 // Global error handler with enhanced logging
 app.use((error, req, res, next) => {
+  if (error?.message === 'Not allowed by CORS') {
+    console.warn('🚫 [CORS] Request blocked by policy', {
+      origin: req.header('Origin'),
+      path: req.originalUrl,
+      method: req.method
+    });
+    if (!res.headersSent) {
+      res.status(403).json({
+        success: false,
+        error: 'CORS_NOT_ALLOWED',
+        message: 'Origin is not permitted',
+        timestamp: new Date().toISOString()
+      });
+    }
+    return;
+  }
+
   const correlationId = req.correlationId || req.headers['x-correlation-id'] || `err_${Date.now()}`;
 
   console.error('❌ [Global Error Handler]:', {
