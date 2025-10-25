@@ -1,6 +1,8 @@
 
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const auditService = require('../services/audit_service');
+const { requireRole: guruloRequireRole, allowSuperAdmin: guruloAllowSuperAdmin } = require('../../shared/gurulo-auth');
 
 // JWT Configuration
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
@@ -112,27 +114,51 @@ const authenticateJWT = (req, res, next) => {
   }
 };
 
-// Role-based authorization middleware
-const requireRole = (allowedRoles) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({
-        error: 'Authentication required',
-        code: 'AUTH_REQUIRED'
-      });
-    }
+const backendAuditHook = async (event, req) => {
+  await auditService.logSecurityEvent({
+    action: event.action,
+    userId: event.claims?.personalId || 'unknown',
+    role: event.claims?.roles?.[0] || 'unknown',
+    req,
+    success: event.allowed,
+    details: {
+      destructive: event.destructive,
+      reason: event.reason,
+      route: event.route,
+      method: event.method,
+      confirmationProvided: event.confirmationProvided,
+      service: event.service,
+    },
+  });
+};
 
-    if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({
-        error: 'Insufficient permissions',
-        code: 'INSUFFICIENT_PERMISSIONS',
-        required: allowedRoles,
-        current: req.user.role
-      });
+const applyBackendGuardOptions = (options = {}) => {
+  const { audit: customAudit, ...rest } = options || {};
+  const combinedAudit = async (event, req) => {
+    try {
+      await backendAuditHook(event, req);
+    } finally {
+      if (typeof customAudit === 'function') {
+        await customAudit(event, req);
+      }
     }
-
-    next();
   };
+
+  return {
+    service: 'backend',
+    ...rest,
+    audit: combinedAudit,
+  };
+};
+
+const requireRole = (allowedRoles = [], options = {}) => {
+  const guardOptions = applyBackendGuardOptions(options);
+  return guruloRequireRole(allowedRoles, guardOptions);
+};
+
+const allowSuperAdmin = (options = {}) => {
+  const guardOptions = applyBackendGuardOptions(options);
+  return guruloAllowSuperAdmin(guardOptions);
 };
 
 // Permission-based authorization middleware
@@ -226,6 +252,7 @@ module.exports = {
   extractTokenFromRequest,
   authenticateJWT,
   requireRole,
+  allowSuperAdmin,
   requirePermission,
   refreshTokenLogic,
   generateTokenForRegularAPI,

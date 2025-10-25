@@ -2,10 +2,39 @@
 const express = require('express');
 const router = express.Router();
 const backupSystemService = require('../services/backup_system_service');
-const { requireAssistantAuth, requireRole } = require('../middleware/authz');
+const { requireAssistantAuth, allowSuperAdmin } = require('../middleware/authz');
+
+const superAdminView = allowSuperAdmin({
+  action: 'ai-service.backup.view',
+});
+
+const confirmInitialize = allowSuperAdmin({
+  action: 'ai-service.backup.initialize',
+  destructive: true,
+});
+
+const confirmFullBackup = allowSuperAdmin({
+  action: 'ai-service.backup.full',
+  destructive: true,
+});
+
+const confirmRecovery = allowSuperAdmin({
+  action: 'ai-service.backup.recovery',
+  destructive: true,
+});
+
+const confirmVerify = allowSuperAdmin({
+  action: 'ai-service.backup.verify',
+  destructive: true,
+});
+
+const confirmCleanup = allowSuperAdmin({
+  action: 'ai-service.backup.cleanup',
+  destructive: true,
+});
 
 // Initialize backup system
-router.post('/initialize', requireAssistantAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
+router.post('/initialize', requireAssistantAuth, confirmInitialize, async (req, res) => {
   try {
     const result = await backupSystemService.initialize();
     res.json(result);
@@ -15,7 +44,7 @@ router.post('/initialize', requireAssistantAuth, requireRole(['SUPER_ADMIN']), a
 });
 
 // Trigger manual backup
-router.post('/backup/full', requireAssistantAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
+router.post('/backup/full', requireAssistantAuth, confirmFullBackup, async (req, res) => {
   try {
     const result = await backupSystemService.performFullBackup();
     res.json(result);
@@ -25,7 +54,7 @@ router.post('/backup/full', requireAssistantAuth, requireRole(['SUPER_ADMIN']), 
 });
 
 // Get backup system status
-router.get('/status', requireAssistantAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
+router.get('/status', requireAssistantAuth, superAdminView, async (req, res) => {
   try {
     const result = await backupSystemService.getBackupStatus();
     res.json(result);
@@ -35,7 +64,7 @@ router.get('/status', requireAssistantAuth, requireRole(['SUPER_ADMIN']), async 
 });
 
 // Test disaster recovery
-router.post('/test/recovery/:backupId', requireAssistantAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
+router.post('/test/recovery/:backupId', requireAssistantAuth, confirmRecovery, async (req, res) => {
   try {
     const { backupId } = req.params;
     const result = await backupSystemService.testDisasterRecovery(backupId);
@@ -46,7 +75,7 @@ router.post('/test/recovery/:backupId', requireAssistantAuth, requireRole(['SUPE
 });
 
 // Verify backup integrity
-router.post('/verify/:backupId', requireAssistantAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
+router.post('/verify/:backupId', requireAssistantAuth, confirmVerify, async (req, res) => {
   try {
     const { backupId } = req.params;
     const result = await backupSystemService.verifyBackupIntegrity(backupId);
@@ -57,7 +86,7 @@ router.post('/verify/:backupId', requireAssistantAuth, requireRole(['SUPER_ADMIN
 });
 
 // List recent backups
-router.get('/backups/recent', requireAssistantAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
+router.get('/backups/recent', requireAssistantAuth, superAdminView, async (req, res) => {
   try {
     const fs = require('fs').promises;
     const path = require('path');
@@ -98,7 +127,7 @@ router.get('/backups/recent', requireAssistantAuth, requireRole(['SUPER_ADMIN'])
 });
 
 // Download backup manifest
-router.get('/backup/:backupId/manifest', requireAssistantAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
+router.get('/backup/:backupId/manifest', requireAssistantAuth, superAdminView, async (req, res) => {
   try {
     const { backupId } = req.params;
     const path = require('path');
@@ -116,7 +145,7 @@ router.get('/backup/:backupId/manifest', requireAssistantAuth, requireRole(['SUP
 });
 
 // Cleanup old backups
-router.post('/cleanup', requireAssistantAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
+router.post('/cleanup', requireAssistantAuth, confirmCleanup, async (req, res) => {
   try {
     const result = await backupSystemService.cleanupOldBackups();
     res.json({ success: true, ...result });
