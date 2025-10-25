@@ -38,7 +38,7 @@ class CredentialService {
   }
 
   // Store WebAuthn credential
-  async storeCredential({ credentialId, userId, publicKey, counter, aaguid, transports }) {
+  async storeCredential({ credentialId, userId, personalId = null, publicKey, counter, aaguid, transports }) {
     try {
       const credIdHash = crypto.createHash('sha256')
         .update(credentialId, 'base64url')
@@ -48,6 +48,9 @@ class CredentialService {
         credIdHash,
         credentialId,
         userId,
+        personalId: typeof personalId === 'string' && personalId.trim().length > 0
+          ? personalId.trim()
+          : (typeof userId === 'string' ? userId : null),
         publicKey,
         counter,
         aaguid,

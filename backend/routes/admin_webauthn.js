@@ -17,6 +17,14 @@ const {
   adminSetupGuard,
   rateLimitSimple
 } = require('../middleware/admin_guards');
+const { isSuperAdmin } = require('../../shared/gurulo-auth/gurulo.auth.js');
+
+const normalisePersonalId = (raw, fallback = null) => {
+  if (typeof raw === 'string' && raw.trim().length > 0) {
+    return raw.trim();
+  }
+  return typeof fallback === 'string' && fallback.trim().length > 0 ? fallback.trim() : null;
+};
 
 const persistSession = (req) => new Promise((resolve, reject) => {
   if (!req.session?.save) {
@@ -128,7 +136,7 @@ router.get('/me', (req, res) => {
 // Step 1: Generate registration options
 router.post('/register-options', adminSetupGuard, async (req, res) => {
   try {
-    const { userId, email } = req.body;
+    const { userId, email, personalId } = req.body;
 
     console.log(`🔐 [Passkey Register] Request received:`, { userId, email, origin: req.get('origin'), host: req.get('host') });
 
@@ -137,6 +145,15 @@ router.post('/register-options', adminSetupGuard, async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'userId and email are required'
+      });
+    }
+
+    const normalizedPersonalId = normalisePersonalId(personalId, userId);
+
+    if (!normalizedPersonalId) {
+      return res.status(400).json({
+        success: false,
+        error: 'personalId is required for admin passkey registration'
       });
     }
 
@@ -197,6 +214,7 @@ router.post('/register-options', adminSetupGuard, async (req, res) => {
       challenge: options.challenge,
       userId,
       email,
+      personalId: normalizedPersonalId,
       createdAt: Date.now()
     };
 
@@ -265,10 +283,19 @@ router.post('/register-verify', adminSetupGuard, webauthnVerifyLimiter, async (r
     const credentialPublicKeyB64 = Buffer.from(credentialPublicKey).toString('base64');
     const userId = registrationState.userId;
     const email = registrationState.email;
+    const personalId = normalisePersonalId(registrationState.personalId, userId);
+
+    if (!personalId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Registration session missing personalId'
+      });
+    }
 
     try {
       await userService.createUser({
         userId,
+        personalId,
         email,
         role: 'SUPER_ADMIN',
         status: 'active'
@@ -280,6 +307,7 @@ router.post('/register-verify', adminSetupGuard, webauthnVerifyLimiter, async (r
     await credentialService.storeCredential({
       credentialId: credentialIdB64Url,
       userId,
+      personalId,
       publicKey: credentialPublicKeyB64,
       counter,
       aaguid: aaguid ? Buffer.from(aaguid).toString('hex') : null,
@@ -287,7 +315,7 @@ router.post('/register-verify', adminSetupGuard, webauthnVerifyLimiter, async (r
     });
 
     await auditService.logPasskeyVerification(
-      userId,
+      personalId,
       credentialIdB64Url,
       req,
       true
@@ -314,7 +342,7 @@ router.post('/register-verify', adminSetupGuard, webauthnVerifyLimiter, async (r
       req.session.user = {
         id: userId,
         role: 'SUPER_ADMIN',
-        personalId: userId,
+        personalId,
         email,
         displayName: req.session.user?.displayName || 'სუპერ ადმინისტრატორი'
       };
@@ -457,8 +485,10 @@ router.post('/login-verify', webauthnVerifyLimiter, async (req, res) => {
       await credentialService.updateCounter(storedCredential.id, verification.authenticationInfo.newCounter);
     }
 
+    const credentialPersonalId = normalisePersonalId(storedCredential.personalId, storedCredential.userId);
+
     await auditService.logPasskeyVerification(
-      storedCredential.userId,
+      credentialPersonalId || storedCredential.userId,
       credentialIdBase64url,
       req,
       true
@@ -492,10 +522,12 @@ router.post('/login-verify', webauthnVerifyLimiter, async (req, res) => {
     }
 
     if (req.session) {
+      const resolvedPersonalId = credentialPersonalId || storedCredential.userId;
+
       req.session.user = {
         id: storedCredential.userId,
         role: 'SUPER_ADMIN',
-        personalId: storedCredential.userId,
+        personalId: resolvedPersonalId,
         email: req.session.user?.email || 'admin@bakhmaro.co',
         displayName: req.session.user?.displayName || 'სუპერ ადმინისტრატორი'
       };
@@ -515,6 +547,7 @@ router.post('/login-verify', webauthnVerifyLimiter, async (req, res) => {
       authenticated: true,
       user: {
         id: storedCredential.userId,
+        personalId: credentialPersonalId || storedCredential.userId,
         role: 'SUPER_ADMIN',
         authenticatedViaPasskey: true
       }
