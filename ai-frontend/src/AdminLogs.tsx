@@ -4,15 +4,15 @@ import { collection, getDocs, query, orderBy, deleteDoc, doc } from '@/lib/fireb
 import { db } from './firebaseConfig';
 // Authentication hooks removed - unused
 import { motion } from 'framer-motion';
-import { 
-  FileText, 
-  Search, 
-  Trash2, 
+import {
+  FileText,
+  Search,
+  Trash2,
   AlertCircle,
   CheckCircle,
   Info,
   AlertTriangle,
-  Calendar,
+  Clock,
   User,
   Database
 } from 'lucide-react';
@@ -36,7 +36,7 @@ const AdminLogs: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [levelFilter, setLevelFilter] = useState<'all' | 'info' | 'warning' | 'error' | 'success'>('all');
-  const [resourceFilter, setResourceFilter] = useState<'all' | 'cottage' | 'hotel' | 'vehicle' | 'user' | 'booking'>('all');
+  const [resourceFilter, setResourceFilter] = useState<'all' | 'system' | 'integration' | 'security' | 'user'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
@@ -102,22 +102,20 @@ const AdminLogs: React.FC = () => {
 
   const getResourceIcon = (resource: string) => {
     switch (resource) {
-      case 'cottage': return '🏠';
-      case 'hotel': return '🏨';
-      case 'vehicle': return '🚗';
+      case 'system': return '🖥️';
+      case 'integration': return '🔗';
+      case 'security': return '🛡️';
       case 'user': return '👤';
-      case 'booking': return '📅';
       default: return '📄';
     }
   };
 
   const getResourceText = (resource: string) => {
     switch (resource) {
-      case 'cottage': return 'კოტეჯი';
-      case 'hotel': return 'სასტუმრო';
-      case 'vehicle': return 'ტრანსპორტი';
+      case 'system': return 'სისტემა';
+      case 'integration': return 'ინტეგრაცია';
+      case 'security': return 'უსაფრთხოება';
       case 'user': return 'მომხმარებელი';
-      case 'booking': return 'ჯავშანი';
       default: return resource;
     }
   };
@@ -266,11 +264,10 @@ const AdminLogs: React.FC = () => {
                   className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-brown-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="all">ყველა რესურსი</option>
-                  <option value="cottage">კოტეჯები</option>
-                  <option value="hotel">სასტუმროები</option>
-                  <option value="vehicle">ტრანსპორტი</option>
+                  <option value="system">სისტემები</option>
+                  <option value="integration">ინტეგრაციები</option>
+                  <option value="security">უსაფრთხოება</option>
                   <option value="user">მომხმარებლები</option>
-                  <option value="booking">ჯავშნები</option>
                 </select>
 
                 <div className="flex border border-gray-200 dark:border-gray-600 rounded-xl overflow-hidden">
@@ -345,7 +342,7 @@ const AdminLogs: React.FC = () => {
                         <span className="text-gray-600 dark:text-gray-400">{log.userName}</span>
                       </div>
                       <div className="flex items-center text-sm">
-                        <Calendar className="w-4 h-4 text-gray-400 mr-2" />
+                        <Clock className="w-4 h-4 text-gray-400 mr-2" />
                         <span className="text-gray-600 dark:text-gray-400">
                           {log.timestamp.toLocaleString('ka-GE')}
                         </span>

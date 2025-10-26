@@ -1547,7 +1547,7 @@ const AIAssistantEnhanced: React.FC = () => {
                     }`}
                   >
                     <li className="rounded-xl border border-transparent bg-white/10 px-3 py-2 dark:border-white/10 dark:bg-white/5">
-                      🔍 მოიძიე ნებისმიერი კოტეჯის ინფორმაცია
+                      🔍 მოიძიე ნებისმიერი უსაფრთხოების ინციდენტი
                     </li>
                     <li className="rounded-xl border border-transparent bg-white/10 px-3 py-2 dark:border-white/10 dark:bg-white/5">
                       ⚡ მიიღე კონტექსტური რეკომენდაციები
@@ -1570,7 +1570,7 @@ const AIAssistantEnhanced: React.FC = () => {
                   : "border-indigo-100 bg-white text-slate-600"
               }`}
             >
-              💡 მაგალითი: "რა ფუნქციებია BookingService-ში?" ან "როგორ მუშაობს ბრონირების სისტემა?"
+              💡 მაგალითი: "რა ფუნქციებია SecurityAudit-ში?" ან "როგორ მუშაობს ლოგების მონიტორინგი?"
             </div>
           </div>
         )}
