@@ -80,7 +80,7 @@ const GuruloFsqIllustration: React.FC<GuruloFsqIllustrationProps> = ({ dark }) =
             ჩათის გამოყენება ↑ 34%
           </text>
           <text x="20" y="66" opacity="0.6">
-            კოტეჯის შეკითხვები · Smart FSQ
+            უსაფრთხოების მოთხოვნები · Smart FSQ
           </text>
         </g>
         <g transform="translate(156 16)">
@@ -102,7 +102,7 @@ const GuruloFsqIllustration: React.FC<GuruloFsqIllustrationProps> = ({ dark }) =
       <g transform="translate(40 164)" fontSize="12" fill={dark ? "#cbd5f5" : "#475569"}>
         <text fontWeight="600">Smart Suggestions</text>
         <text y="18" opacity="0.8">
-          პერსონალიზებული პასუხები და სწრაფი ფაქტების მოძიება კოტეჯებისთვის
+          პერსონალიზებული პასუხები და სწრაფი ფაქტების მოძიება უსაფრთხოების ინციდენტებისთვის
         </text>
       </g>
     </svg>

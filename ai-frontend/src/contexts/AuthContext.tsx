@@ -21,8 +21,8 @@ import {
 import { singleFlight } from '../lib/singleFlight';
 import { getDeviceInfo, logDeviceInfo, isDeviceFingerprintingSupported } from '../utils/deviceFingerprint';
 import { AuthContext } from './AuthContextObject';
-import type { AuthContextType, BookingUserData, User, UserRole } from './AuthContext.types';
-export type { UserRole, AuthContextType, BookingUserData, User } from './AuthContext.types';
+import type { AuthContextType, RegistrationMetadata, User, UserRole } from './AuthContext.types';
+export type { UserRole, AuthContextType, RegistrationMetadata, User } from './AuthContext.types';
 import {
   authenticateWithPasskey,
   registerPasskey as performPasskeyRegistration,
@@ -342,30 +342,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Create Firestore user document
-  const createUserDocument = async (firebaseUser: FirebaseUser, role: UserRole = 'CUSTOMER', additionalData?: BookingUserData) => {
+  const createUserDocument = async (
+    firebaseUser: FirebaseUser,
+    role: UserRole = 'CUSTOMER',
+    metadata?: RegistrationMetadata
+  ) => {
     try {
+      const resolvedDisplayName = metadata?.displayName
+        || (metadata?.firstName && metadata?.lastName
+          ? `${metadata.firstName} ${metadata.lastName}`
+          : firebaseUser.displayName || firebaseUser.email?.split('@')[0]);
+
       const userData = {
         email: firebaseUser.email,
         role,
         createdAt: new Date(),
         updatedAt: new Date(),
-        displayName: additionalData?.firstName && additionalData?.lastName
-          ? `${additionalData.firstName} ${additionalData.lastName}`
-          : firebaseUser.displayName || firebaseUser.email?.split('@')[0],
+        displayName: resolvedDisplayName,
         emailVerified: firebaseUser.emailVerified,
-        ...(additionalData?.phoneNumber && { phoneNumber: additionalData.phoneNumber }),
-        ...(additionalData?.personalId && { personalId: additionalData.personalId }),
-        ...(additionalData?.firstName && { firstName: additionalData.firstName }),
-        ...(additionalData?.lastName && { lastName: additionalData.lastName }),
+        ...(metadata?.phoneNumber && { phoneNumber: metadata.phoneNumber }),
+        ...(metadata?.personalId && { personalId: metadata.personalId }),
+        ...(metadata?.firstName && { firstName: metadata.firstName }),
+        ...(metadata?.lastName && { lastName: metadata.lastName }),
         isActive: true,
         preferences: {
-          notifications: { email: true, sms: !!additionalData?.phoneNumber, push: false },
+          notifications: { email: true, sms: !!metadata?.phoneNumber, push: false },
           language: 'ka',
           theme: 'light'
         },
-        totalBookings: 0,
         lastLoginAt: new Date(),
-        registrationSource: 'booking_form'
       };
 
       await setDoc(doc(db, 'users', firebaseUser.uid), userData);
@@ -675,20 +680,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (email: string, password: string, role: UserRole = 'CUSTOMER', additionalData?: BookingUserData) => {
+  const register = async (
+    email: string,
+    password: string,
+    role: UserRole = 'CUSTOMER',
+    metadata?: RegistrationMetadata
+  ) => {
     try {
       setIsLoading(true);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await createUserDocument(userCredential.user, role, additionalData);
+      await createUserDocument(userCredential.user, role, metadata);
 
       const user: User = {
         id: userCredential.user.uid,
         email: userCredential.user.email || '',
         role,
-        personalId: additionalData?.personalId,
-        displayName: additionalData?.firstName && additionalData?.lastName
-          ? `${additionalData.firstName} ${additionalData.lastName}`
-          : userCredential.user.email?.split('@')[0],
+        personalId: metadata?.personalId,
+        displayName: metadata?.displayName
+          || (metadata?.firstName && metadata?.lastName
+            ? `${metadata.firstName} ${metadata.lastName}`
+            : userCredential.user.email?.split('@')[0]),
         authMethod: 'firebase'
       };
 
@@ -958,36 +969,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authenticated: true,
       }));
     }
-  };
-
-  // Booking integration methods - simplified
-  const registerFromBookingForm = async (userData: BookingUserData): Promise<User> => {
-    const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
-    await createUserDocument(userCredential.user, 'CUSTOMER', userData);
-
-    const user: User = {
-      id: userCredential.user.uid,
-      email: userData.email,
-      role: 'CUSTOMER',
-      personalId: userData.personalId,
-      displayName: `${userData.firstName} ${userData.lastName}`,
-      authMethod: 'firebase'
-    };
-
-    setUser(user);
-    setIsAuthenticated(true);
-    setUserRole('CUSTOMER');
-    setPersonalId(user.personalId);
-    setFirebaseUid(user.id);
-    // SOL-431: Update route advice after registration from booking form
-    const advice = await fetchRouteAdvice();
-    setRouteAdvice(prev => ({
-      ...prev,
-      role: 'CUSTOMER',
-      target: advice?.target || prev.target,
-      authenticated: true,
-    }));
-    return user;
   };
 
   const loginWithPhoneAndPassword = async (phone: string, password: string): Promise<void> => {
@@ -1326,7 +1307,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     verifyFallbackCode,
     logout,
     refreshUserRole,
-    registerFromBookingForm,
     loginWithPhoneAndPassword,
     checkUserExists,
     authInitialized,

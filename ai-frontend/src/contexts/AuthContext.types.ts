@@ -19,13 +19,8 @@ export interface User {
   };
 }
 
-export interface BookingUserData {
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
-  personalId: string;
-  email: string;
-  password: string;
+export interface RegistrationMetadata extends Partial<Pick<User, 'firstName' | 'lastName' | 'phoneNumber' | 'personalId' | 'displayName'>> {
+  [key: string]: unknown;
 }
 
 export interface AuthContextType {
@@ -33,7 +28,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string, trustDevice?: boolean) => Promise<void>;
-  register: (email: string, password: string, role?: UserRole, additionalData?: BookingUserData) => Promise<void>;
+  register: (email: string, password: string, role?: UserRole, additionalData?: RegistrationMetadata) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   loginWithPasskey: (trustDevice?: boolean) => Promise<void>;
   registerPasskey: () => Promise<void>;
@@ -41,7 +36,6 @@ export interface AuthContextType {
   verifyFallbackCode: (fallbackCode: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUserRole: () => Promise<void>;
-  registerFromBookingForm: (userData: BookingUserData) => Promise<User>;
   loginWithPhoneAndPassword: (phone: string, password: string) => Promise<void>;
   checkUserExists: (phoneOrEmail: string, personalId?: string) => Promise<boolean>;
   authInitialized: boolean;

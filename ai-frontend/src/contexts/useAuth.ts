@@ -53,7 +53,6 @@ export function useAuth() {
       registerPasskey: async () => {},
       generateFallbackCode: async () => {},
       verifyFallbackCode: async () => {},
-      registerFromBookingForm: async () => ({ id: '', email: '', role: 'CUSTOMER', authMethod: 'firebase' }),
       loginWithPhoneAndPassword: async () => {},
       checkUserExists: async () => false,
       updateUserPreferences: async () => {},
