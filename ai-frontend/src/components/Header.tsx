@@ -34,8 +34,8 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['SUPER_ADMIN']
   },
   {
-    label: 'ტესტები',
-    to: '/admin?tab=tests',
+    label: 'ლოგები',
+    to: '/admin?tab=logs',
     requiresAuth: true,
     roles: ['SUPER_ADMIN']
   },
