@@ -2740,7 +2740,7 @@ html, body {
   animation: pulse-urgent 1.5s infinite;
 }
 
-/* Custom animations for booking completion glow effects */
+/* Custom animations for admin highlight glow effects */
 @keyframes pulse-glow {
   0%, 100% {
     box-shadow: 0 0 15px rgba(16, 185, 129, 0.3), 0 0 30px rgba(16, 185, 129, 0.2), 0 0 45px rgba(16, 185, 129, 0.1);
