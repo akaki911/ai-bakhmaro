@@ -200,7 +200,7 @@ ${memoryContext ? `Previous context: ${memoryContext}` : ''}`;
 });
 
 // Import cache service
-const cacheService = require('./services/ai_cache_service');
+const cacheService = require('../functions/src/services/ai_cache_service');
 
 // Resource optimization status endpoint
 router.get('/resources', (req, res) => {

@@ -1,5 +1,5 @@
 const express = require('express');
-const { requireSuperAdmin } = require('../middleware/admin_guards');
+const { requireSuperAdmin } = require('../../../backend/middleware/admin_guards');
 const {
   startTraceRun,
   appendTraceEvent,

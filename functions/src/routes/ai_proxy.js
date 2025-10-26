@@ -19,10 +19,10 @@ const fs = require('fs');
 
 const router = express.Router();
 
-const requireAdminSetupToken = require('../middleware/requireAdminSetupToken');
-const gitCommands = require('../services/gitCommandsService');
-const githubIntegration = require('../services/githubIntegration');
-const githubAiService = require('../services/githubAiService');
+const requireAdminSetupToken = require('../../../backend/middleware/requireAdminSetupToken');
+const gitCommands = require('../../../backend/services/gitCommandsService');
+const githubIntegration = require('../../../backend/services/githubIntegration');
+const githubAiService = require('../../../backend/services/githubAiService');
 
 const SESSION_KEY_HEADER = 'x-session-key';
 const metadataFeatureEnabled = (process.env.ENABLE_METADATA || 'false').toLowerCase() === 'true';

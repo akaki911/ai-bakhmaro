@@ -1,14 +1,14 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs/promises');
-const { requireSuperAdmin } = require('../middleware/admin_guards');
-const auditService = require('../services/audit_service');
-const { getRuntimeConfig, setBackupMode } = require('../../ai-service/config/runtimeConfig');
-const logger = require('../utils/logger');
+const { requireSuperAdmin } = require('../../../backend/middleware/admin_guards');
+const auditService = require('../../../backend/services/audit_service');
+const { getRuntimeConfig, setBackupMode } = require('../../../ai-service/config/runtimeConfig');
+const logger = require('../../../backend/utils/logger');
 
 let logBuffer;
 try {
-  ({ logBuffer } = require('./dev_console'));
+  ({ logBuffer } = require('../../../backend/routes/dev_console'));
 } catch (error) {
   console.warn('⚠️ [AI ADMIN] Unable to attach dev console log buffer:', error.message);
   logBuffer = { entries: [] };
