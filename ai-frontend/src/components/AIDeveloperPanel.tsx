@@ -5,7 +5,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/useAuth";
 import {
   Activity,
-  Beaker,
   Brain,
   ChevronLeft,
   ChevronRight,
@@ -34,9 +33,7 @@ import MemoryTab from "./AIDeveloper/tabs/MemoryTab";
 import LogsTab from "./AIDeveloper/tabs/LogsTab";
 import SettingsTab from "./AIDeveloper/tabs/SettingsTab";
 import AutoImproveTab from "./AIDeveloper/tabs/AutoImproveTab";
-import TestsPage from "./AIDeveloper/tabs/Tests/TestsPage";
 import { SecretsPage } from "./AIDeveloper/tabs/Secrets";
-import BackupTab from "./AIDeveloper/tabs/BackupTab";
 import GitHubTab from "./AIDeveloper/tabs/GitHubTab";
 import { DevConsoleProvider } from "../contexts/DevConsoleContext";
 import { useAIServiceState } from "@/hooks/useAIServiceState";
@@ -56,10 +53,8 @@ type TabKey =
   | "memory"
   | "logs"
   | "secrets"
-  | "sync"
   | "github"
-  | "settings"
-  | "tests";
+  | "settings";
 
 type AccentTone = "violet" | "blue" | "green" | "pink" | "gold";
 
@@ -103,10 +98,8 @@ const CORE_TABS: TabKey[] = [
   "memory",
   "logs",
   "secrets",
-  "sync",
   "github",
   "settings",
-  "tests",
 ];
 
 const DEFAULT_AI_SERVICE_HEALTH = { status: "ok", port: 5001, lastCheck: Date.now() };
@@ -894,16 +887,6 @@ const AIDeveloperPanel: React.FC = () => {
         isOff: !isSuperAdminUser,
       },
       {
-        key: "sync",
-        action: "tab",
-        tabKey: "sync",
-        icon: RefreshCcw,
-        label: "ბექაპი",
-        title: "Sync Queue",
-        href: "/admin?tab=sync",
-        badge: secretsQueueBadge,
-      },
-      {
         key: "github",
         action: "tab",
         tabKey: "github",
@@ -920,16 +903,6 @@ const AIDeveloperPanel: React.FC = () => {
         label: "პარამეტრები",
         title: "Settings",
         href: "/admin?tab=settings",
-      },
-      {
-        key: "tests",
-        action: "tab",
-        tabKey: "tests",
-        icon: Beaker,
-        label: "ტესტები",
-        title: "Tests Lab",
-        href: "/admin?tab=tests",
-        isOff: !hasDevConsoleAccess,
       },
     ];
   }, [hasDevConsoleAccess, isSuperAdminUser, secretsQueueBadge]);
@@ -1047,14 +1020,6 @@ const AIDeveloperPanel: React.FC = () => {
         badge: secretsQueueBadge,
       },
       {
-        key: "sync",
-        label: "Sync Queue",
-        description: "Track pending sync jobs and recovery backups",
-        icon: RefreshCcw,
-        accent: "blue",
-        badge: secretsQueueBadge,
-      },
-      {
         key: "github",
         label: "GitHub",
         description: "Connect repos, inspect diffs, and push changes",
@@ -1067,14 +1032,6 @@ const AIDeveloperPanel: React.FC = () => {
         description: "Configure Gurulo behavior, models, and cleanup",
         icon: Settings,
         accent: "gold",
-      },
-      {
-        key: "tests",
-        label: "Tests",
-        description: "Discover, run, and monitor automated suites",
-        icon: Beaker,
-        accent: "pink",
-        disabled: !hasDevConsoleAccess,
       },
     ],
     [hasDevConsoleAccess, isSuperAdminUser, secretsQueueBadge],
@@ -1423,10 +1380,6 @@ const AIDeveloperPanel: React.FC = () => {
 
                     {activeTab === "secrets" && <SecretsPage variant="panel" />}
 
-                    {activeTab === "sync" && (
-                      <BackupTab hasDevConsoleAccess={hasDevConsoleAccess} />
-                    )}
-
                     {activeTab === "github" && (
                       <GitHubTab hasDevConsoleAccess={hasDevConsoleAccess} />
                     )}
@@ -1448,8 +1401,6 @@ const AIDeveloperPanel: React.FC = () => {
                         telemetryData={telemetryData}
                       />
                     )}
-
-                    {activeTab === "tests" && <TestsPage />}
                   </div>
                 </div>
               </section>
