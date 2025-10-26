@@ -4,10 +4,9 @@ import ReplitAssistantPanel from '../../ReplitAssistantPanel';
 
 interface ChatTabProps {
   isAuthenticated: boolean;
-  userRole: string;
 }
 
-const ChatTab: React.FC<ChatTabProps> = ({ isAuthenticated, userRole }) => {
+const ChatTab: React.FC<ChatTabProps> = ({ isAuthenticated }) => {
   if (!isAuthenticated) {
     return (
       <div className="h-full bg-gradient-to-br from-[#0E1116] via-[#1A1533] to-[#2C214E] text-[#E6E8EC] flex items-center justify-center px-6">
