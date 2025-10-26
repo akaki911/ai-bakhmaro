@@ -669,7 +669,6 @@ const healthRoutes = require('./routes/health');
 const adminRoutes = require('./routes/admin_auth');
 const adminWebauthnRoutes = require('./routes/admin_webauthn');
 const passkeyAuthRoutes = require('./routes/passkey_auth');
-const providerAuthRoutes = require('./routes/provider_auth');
 const customerAuthRoutes = require('./routes/customer_auth');
 const securityAuditRoutes = require('./routes/security_audit');
 const roleGuards = require('./middleware/role_guards');
@@ -1126,7 +1125,6 @@ app.use('/api/config', require('./routes/config'));
 
 // User and Notification routes
 app.use('/api/user', require('./routes/user_activity'));
-app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/github', require('./routes/github'));
 
 // Backup fallback routes (disabled in this environment but avoids 404s)
@@ -1241,8 +1239,7 @@ try {
 app.use('/api/ai/autoimprove', require('./routes/auto_improve'));
 
 // Mount notification hooks routes
-const notificationHooks = require('./routes/notification_hooks');
-app.use('/api/notifications', notificationHooks);
+
 
 console.log('[BOOT] All API routes registered successfully');
 

@@ -48,21 +48,7 @@ router.post('/update', requireSuperAdmin, async (req, res) => {
     
     aiRolloutManager.updateRollout(strategy, percentage, userGroups);
     
-    // Send notification if hooks service available
-    try {
-      const NotificationHooksService = require('../services/notificationHooks');
-      const notificationHooks = new NotificationHooksService();
-      
-      await notificationHooks.notify('rollout_update', {
-        strategy,
-        percentage,
-        userGroups,
-        updatedBy: req.user?.id || 'unknown',
-        timestamp: new Date().toISOString()
-      });
-    } catch (notifyError) {
-      console.warn('⚠️ Failed to send rollout notification:', notifyError.message);
-    }
+    console.log('🔕 [Rollout Control] Notification hooks disabled for rollout updates');
     
     console.log(`🔧 [Rollout Control] Strategy updated to ${strategy} by ${req.user?.id}`);
     
@@ -128,19 +114,7 @@ router.post('/rollback', requireSuperAdmin, async (req, res) => {
     
     aiRolloutManager.updateRollout('blue', 100);
     
-    // Send emergency rollback notification
-    try {
-      const NotificationHooksService = require('../services/notificationHooks');
-      const notificationHooks = new NotificationHooksService();
-      
-      await notificationHooks.notify('emergency_rollback', {
-        reason: reason || 'Emergency rollback initiated',
-        rolledBackBy: req.user?.id || 'unknown',
-        timestamp: new Date().toISOString()
-      });
-    } catch (notifyError) {
-      console.warn('⚠️ Failed to send rollback notification:', notifyError.message);
-    }
+    console.log('🔕 [Rollout Control] Notification hooks disabled for rollback');
     
     console.log(`🚨 [Rollout Control] Emergency rollback by ${req.user?.id}: ${reason}`);
     

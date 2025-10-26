@@ -99,7 +99,6 @@ app.get('/health', (req, res) => {
 const fileTreeRoute = require('./routes/file_tree');
 const fileSaveRoute = require('./routes/file_save');
 const aiProxyRoute = require('./routes/ai_proxy');
-const notificationsRoute = require('./routes/notifications');
 const messagingRoute = require('./routes/messaging');
 const projectStatsRoute = require('./routes/project_stats');
 const performanceRoute = require('./routes/performance_routes');
@@ -119,60 +118,7 @@ app.use('/api/health', healthRoute);
 app.use('/api/files', fileTreeRoute);
 app.use('/api/files', fileSaveRoute);
 app.use('/api/ai', aiProxyRoute);
-app.use('/api/notifications', notificationsRoute);
 app.use('/api/messaging', messagingRoute);
-app.use('/api/commission', async (req, res) => {
-  try {
-    const path = req.originalUrl.replace(/^\/api\/commission/, '/commission');
-    const url = `${PROPERTY_API_URL}${path}`;
-
-    const headers = {
-      Accept: req.headers.accept || 'application/json',
-      ...req.headers,
-    };
-
-    if (INTERNAL_SERVICE_TOKEN) {
-      headers['x-internal-token'] = INTERNAL_SERVICE_TOKEN;
-      headers['x-ai-internal-token'] = INTERNAL_SERVICE_TOKEN;
-    }
-
-    delete headers.host;
-    delete headers['content-length'];
-    delete headers['Content-Length'];
-
-    const body = req.method !== 'GET' && req.method !== 'HEAD' && req.body
-      ? JSON.stringify(req.body)
-      : undefined;
-
-    if (body) {
-      headers['Content-Type'] = 'application/json';
-    }
-
-    const response = await fetch(url, {
-      method: req.method,
-      headers,
-      body,
-    });
-
-    const text = await response.text();
-
-    res.status(response.status);
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      try {
-        res.json(JSON.parse(text));
-        return;
-      } catch (error) {
-        console.warn('⚠️ [Backend] Failed to parse Property API JSON response:', error);
-      }
-    }
-
-    res.send(text);
-  } catch (error) {
-    console.error('❌ [Backend] Property API proxy error:', error);
-    res.status(502).json({ error: 'Property API unavailable' });
-  }
-});
 app.use('/api/stats', projectStatsRoute);
 app.use('/api/performance', performanceRoute);
 app.use('/api/developer', developerPanelRoute);
