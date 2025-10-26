@@ -45,7 +45,7 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   ];
 
   const routeOptions = [
-    { value: '/api/booking/*', label: '📅 Booking APIs', color: 'bg-blue-100 text-blue-800' },
+    { value: '/api/security/*', label: '🛡️ Security APIs', color: 'bg-blue-100 text-blue-800' },
     { value: '/api/admin/*', label: '👑 Admin APIs', color: 'bg-purple-100 text-purple-800' },
     { value: '/api/auth/*', label: '🔐 Auth APIs', color: 'bg-green-100 text-green-800' },
     { value: '/api/dev/*', label: '🔧 Dev APIs', color: 'bg-orange-100 text-orange-800' }

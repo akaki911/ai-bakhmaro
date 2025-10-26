@@ -608,31 +608,31 @@ export function FuturisticChatPanel({
                   />
                   <p className="mt-3 text-sm">
                     {language === 'ka'
-                      ? 'დაიწყეთ საუბარი გურულოსთან — ის მოარგებს პასუხს თქვენს მოგზაურობას.'
-                      : 'Open with a question for Gurulo—she tailors every reply to your adventure.'}
+                      ? 'დაიწყეთ საუბარი გურულოსთან — ის დაგეხმარებათ ადმინისტრაციულ ამოცანებში.'
+                      : 'Start a conversation with Gurulo—she is ready to assist with admin operations.'}
                   </p>
                   <div className="mt-4 flex flex-wrap justify-center gap-3">
                     <button
                       type="button"
-                      onClick={() => onSuggestionSelect(language === 'ka' ? 'შეამოწმე ბახმაროს კოტეჯები' : 'Check cottages in Bakhmaro')}
+                      onClick={() => onSuggestionSelect(language === 'ka' ? 'შეამოწმე უსაფრთხოების აუდიტის სტატუსი' : 'Review security audit status')}
                       className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                         isDarkMode
                           ? 'bg-emerald-500/20 text-emerald-50 hover:bg-emerald-400/25'
                           : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
                       }`}
                     >
-                      {language === 'ka' ? 'შეამოწმე კოტეჯები' : 'Check cottages'}
+                      {language === 'ka' ? 'უსაფრთხოების აუდიტი' : 'Security audit'}
                     </button>
                     <button
                       type="button"
-                      onClick={() => onSuggestionSelect(language === 'ka' ? 'როგორია ამინდი ბახმაროში?' : 'What is the weather in Bakhmaro?')}
+                      onClick={() => onSuggestionSelect(language === 'ka' ? 'მაჩვენე ბოლო ლოგების ამონარიდი' : 'Show recent log excerpts')}
                       className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                         isDarkMode
                           ? 'bg-sky-500/20 text-sky-100 hover:bg-sky-400/25'
                           : 'bg-sky-100 text-sky-700 hover:bg-sky-200'
                       }`}
                     >
-                      {language === 'ka' ? 'ამინდი ბახმაროში' : 'Bakhmaro weather'}
+                      {language === 'ka' ? 'ლოგების მონიტორინგი' : 'Log monitoring'}
                     </button>
                   </div>
                 </div>
@@ -748,8 +748,8 @@ export function FuturisticChatPanel({
                   aria-label={language === 'ka' ? 'შეტყობინების ველი' : 'Message input field'}
                   placeholder={
                     language === 'ka'
-                      ? 'ჰკითხეთ გურულოს ბახმაროს შესახებ, დაგეგმეთ მოგზაურობა ან შეამოწმეთ ამინდი...'
-                      : 'Ask Gurulo about Bakhmaro, plan a getaway, or check the weather...'
+                      ? 'ჰკითხეთ გურულოს უსაფრთხოების, ლოგების ან ინტეგრაციების შესახებ...'
+                      : 'Ask Gurulo about security, logs, or integrations...'
                   }
                   className={`flex-1 resize-none bg-transparent text-sm leading-relaxed focus:outline-none ${
                     isDarkMode

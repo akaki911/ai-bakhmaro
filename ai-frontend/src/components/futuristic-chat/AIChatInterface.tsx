@@ -147,45 +147,37 @@ const CONSUMER_DENYLIST_PATTERNS: Array<{ pattern: RegExp; token: string }> = [
 ];
 
 const CONSUMER_ALLOWLIST_KEYWORDS = [
-  'ბახმარ',
-  'კოტეჯ',
-  'თავისუფალი',
-  'დაჯავშნ',
-  'ჯავშნ',
-  'ფას',
-  'ბიუჯეტ',
-  'availability',
-  'available',
-  'book',
-  'booking',
-  'cottage',
-  'price',
-  'rent',
-  'weather',
-  'forecast',
-  'road',
-  'route',
-  'გზა',
-  'მარშრუტ',
-  'ტურ',
-  'tour',
-  'trip',
-  'plan',
-  'stay',
-  'guest',
-  'სტუმრ',
-  'ამინდი',
+  'security',
+  'audit',
+  'ლოგ',
+  'monitor',
+  'კონსოლ',
+  'terminal',
+  'explorer',
+  'memory',
+  'მეხსიერებ',
+  'docs',
+  'დოკუმენტ',
+  'settings',
+  'პარამეტრ',
+  'integration',
+  'ინტეგრაცი',
+  'git',
+  'repository',
+  'auto',
+  'improve',
+  'brain',
+  'admin',
+  'super admin',
+  'compliance',
   'policy',
   'პოლიტიკა',
-  'წეს',
-  'transport',
-  'გზები',
-  'attraction',
-  'სანახ',
-  'activity',
-  'გასართობ',
-  'snow',
-  'road condition',
+  'access',
+  'permission',
+  'auth',
+  'encryption',
+  'threat',
+  'intrusion',
 ];
 
 const GREETING_KEYWORDS = ['გამარჯ', 'hello', 'hi', 'hey', 'gamarjoba'];
@@ -193,8 +185,8 @@ const GREETING_KEYWORDS = ['გამარჯ', 'hello', 'hi', 'hey', 'gamarjob
 const STRUCTURED_PAYLOAD_HINT = /"sections"|"telemetry"|"metadata"|"cta"|"recommendations"|"bullets"/i;
 
 const GUARD_SAMPLE_REQUEST: Record<'ka' | 'en', string> = {
-  ka: '10 აგვისტო - 13 აგვისტო, 4 სტუმარი',
-  en: '10 August - 13 August, 4 guests',
+  ka: 'გააკეთე უსაფრთხოების აუდიტის შემოწმება სტეიჯინგ გარემოზე',
+  en: 'Run a security audit check on the staging environment',
 };
 
 const detectConsumerDenylist = (value: string): string | null => {
@@ -316,37 +308,37 @@ const GURULO_UNAVAILABLE_COPY: Record<'ka' | 'en', UnavailableCopy> = {
 };
 
 const GUARD_FALLBACK = {
-  ka: 'მე გიდგავარ გვერდში სტუმრის თემებზე — ბახმაროს კოტეჯები, ფასები, ამინდი, გზები, მარშრუტები. ტექნიკურ კითხვებზე პასუხს ვერ გაგიტარებ.',
-  en: "I'm here to help with guest topics only—Bakhmaro cottages, pricing, weather, routes, and tours. I can't assist with technical questions.",
+  ka: 'მე ვარ ადმინისტრაციული ასისტენტი — ვმუშაობ უსაფრთხოებაზე, ლოგებზე, ინტეგრაციებზე და პარამეტრებზე. ტურისტულ თემებზე ვერ გიპასუხებ.',
+  en: "I'm an administrative assistant focused on security, logs, integrations, and settings. I can't help with rental or travel topics.",
 } as const;
 
 const GUARD_CTA_FALLBACK = {
-  ka: 'დამიწერე თარიღები და ხალხის რაოდენობა',
-  en: 'Share dates and guest count',
+  ka: 'მითხარი რომელი ადმინისტრაციული მოდული გაინტერესებს',
+  en: 'Tell me which admin module you need',
 } as const;
 
 const CTA_LABEL_FALLBACK = {
   availability: {
-    ka: 'ნახე ხელმისაწვდომობა',
-    en: 'Check availability',
+    ka: 'უსაფრთხოების სტატუსი',
+    en: 'Security status',
   },
   pricing: {
-    ka: 'ფასების წესები',
-    en: 'Pricing rules',
+    ka: 'ინტეგრაციების ხედვა',
+    en: 'Integrations overview',
   },
   weather: {
-    ka: 'ამინდის დეტალური ნახვა',
-    en: 'View detailed weather',
+    ka: 'სისტემის მონიტორინგი',
+    en: 'Monitor systems',
   },
   tripPlan: {
-    ka: 'გეგმა 3 ნაბიჯში',
-    en: 'Plan in 3 steps',
+    ka: 'ლოგების ინსტრუმენტები',
+    en: 'Log tools',
   },
 } as const;
 
 const AVAILABILITY_PARAMS_FALLBACK = {
-  ka: 'მომაწოდე ჩასვლის და გასვლის თარიღები და სტუმრების რაოდენობა, რომ ხელმისაწვდომობა შეგიმოწმო.',
-  en: 'Let me know arrival and departure dates plus guest count so I can check availability.',
+  ka: 'მომაწოდე გარემოს ან სერვისის დასახელება, რომ უსაფრთხოების სტატუსი შევამოწმო.',
+  en: 'Share the environment or service name so I can review security status.',
 } as const;
 
 const getChatLocaleRoot = (language: 'ka' | 'en') =>
@@ -943,35 +935,35 @@ const sanitizeAssistantOutput = (
 
 const BASE_SUGGESTIONS = {
   ka: [
-    'ბახმაროში რომელი კოტეჯები გაქვთ თავისუფალი?',
-    'რამდენი ჯდება 4 სტუმარზე კომფორტული კოტეჯი?',
-    'როგორია ამ კვირის ამინდი ბახმაროში?',
-    'რომელი გზაა საუკეთესო ქუთაისიდან ბახმარომდე?',
-    'რა აქტივობებია საღამოს ბახმაროში?',
+    'როგორ შევამოწმო უსაფრთხოების აუდიტის სტატუსი?',
+    'მაჩვენე ბოლო შეცდომების ლოგები.',
+    'როგორ დავუკავშირდე Git ინტეგრაციას?',
+    'როდის განახლდა მეხსიერების ინდექსი?',
+    'სად დავაკონფიგურირო AI Auto-Improve?',
   ],
   en: [
-    'Which cottages are free in Bakhmaro this month?',
-    'What is the nightly rate for a cottage for 4 guests?',
-    'How is the weather in Bakhmaro this week?',
-    'What is the best route to Bakhmaro from Kutaisi?',
-    'What activities can we plan for evenings in Bakhmaro?',
+    'How do I review the latest security audit status?',
+    'Show me the most recent error logs.',
+    'How do I connect the Git integration?',
+    'When was the memory index refreshed?',
+    'Where do I configure AI Auto-Improve?',
   ],
 };
 
 const SUPER_ADMIN_SUGGESTIONS = {
   ka: [
-    'მაჩვენე ლოგური გეგმა 3 დღიანი მოგზაურობისთვის ბახმაროში.',
-    'გვითხარი რა წესებია წინასწარ გადახდაზე და გაუქმებაზე?',
-    'რა ტრანსპორტის ვარიანტები გვაქვს ბათუმიდან ბახმარომდე?',
-    'რომელი კოტეჯი ჯდება 6 სტუმარზე და რა არის ფასები?',
-    'გაქირავებისას რა ადგილობრივ ატრაქციონებს მირჩევ?',
+    'გაანალიზე მონიტორინგის მეტრიკები ბოლო 24 საათიდან.',
+    'შეადარე აქტიური ინტეგრაციებისა და Git ბრენჩების სტატუსი.',
+    'შექმენი უსაფრთხოების აუდიტის რეპორტი Super Admin-ებისთვის.',
+    'დააგენერირე ინსტრუქცია AI Brain მოდულის სწრაფი ტუნინგისთვის.',
+    'მაჩვენე რა შეცდომები დაფიქსირდა კონსოლში დღეს.',
   ],
   en: [
-    'Outline a 3-day plan for staying in Bakhmaro.',
-    'What are the advance payment and cancellation rules?',
-    'Which transport options work from Batumi to Bakhmaro?',
-    'Which cottage fits 6 guests and what are the prices?',
-    'Which local attractions do you recommend during a rental?',
+    'Analyze monitoring metrics from the last 24 hours.',
+    'Compare active integrations and Git branch status.',
+    'Generate a security audit report for super admins.',
+    'Draft a quick tuning guide for the AI Brain module.',
+    'Show me which console errors occurred today.',
   ],
 } as const;
 

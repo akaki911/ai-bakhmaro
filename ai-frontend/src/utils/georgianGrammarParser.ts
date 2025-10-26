@@ -284,9 +284,9 @@ export const GEORGIAN_GRAMMAR_DATASET: GrammarDatasetEntry[] = [
     focus: 'case'
   },
   {
-    input: 'ეს არის ბახმაროს კოტეჯის კარები',
-    corrected: 'ეს არის ბახმაროს კოტეჯის კარი',
-    explanation: 'ერთეულში – კარის ნაცვლად კარი.',
+    input: 'ეს არის უსაფრთხოების ინციდენტის ჩანაწერები',
+    corrected: 'ეს არის უსაფრთხოების ინციდენტის ჩანაწერი',
+    explanation: 'ერთეულში – ჩანაწერის ნაცვლად ჩანაწერი.',
     focus: 'spelling'
   },
   {

@@ -674,29 +674,29 @@
   "chat": {
     "greeting": {
       "reply": {
-        "text": "Hi! I'm Gurulo, your Bakhmaro trip guide. Share when you're visiting and I'll line up cozy cottages and ideas.",
+        "text": "Hi! I'm Gurulo—give me security, logs, integration, or settings tasks and I'll handle them for you.",
         "actions": [
-          { "label": "Next weekend availability", "value": "Check Bakhmaro cottages next weekend" },
-          { "label": "Plan a 3-day getaway", "value": "Plan a 3-day Bakhmaro getaway" }
+          { "label": "Security status", "value": "Review security audit status" },
+          { "label": "Review logs", "value": "Show recent log excerpts" }
         ]
       }
     },
     "guard": {
-      "onlyConsumerTopics": "I'm here to help with guest topics only—Bakhmaro cottages, pricing, weather, routes, and tours. I can't assist with technical questions.",
-      "retryAskDates": "Share dates and guest count"
+      "onlyConsumerTopics": "I'm an administrative assistant focused on security, logs, integrations, and settings. I can't help with rental or travel topics.",
+      "retryAskDates": "Tell me which module you need help with"
     },
     "tripPlan": {
-      "cta": "Plan in 3 steps"
+      "cta": "Log tools"
     },
     "pricing": {
-      "cta": "Pricing rules"
+      "cta": "Integrations overview"
     },
     "weather": {
-      "cta": "View detailed weather"
+      "cta": "Monitor systems"
     },
     "availability": {
-      "cta": "Check availability",
-      "askParams": "Tell me check-in/check-out dates and guest count so I can confirm availability right away."
+      "cta": "Security status",
+      "askParams": "Share the environment or service name so I can review the status."
     }
   },
   "backup": {

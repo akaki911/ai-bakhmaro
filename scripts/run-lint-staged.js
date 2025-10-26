@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { existsSync } from 'node:fs';
 import { execSync, spawnSync } from 'node:child_process';
 import process from 'node:process';
 
@@ -35,7 +36,7 @@ function runLint(files) {
   }
 
   const runner = detectRunner();
-  const args = [...runner.args, '--max-warnings=0', ...files];
+  const args = [...runner.args, '--max-warnings=0', '--no-warn-ignored', ...files];
   const result = spawnSync(runner.command, args, { stdio: 'inherit' });
 
   if (result.status !== 0) {
@@ -45,6 +46,6 @@ function runLint(files) {
 }
 
 const stagedFiles = getStagedFiles();
-const lintTargets = stagedFiles.filter((file) => PATTERN.test(file));
+const lintTargets = stagedFiles.filter((file) => PATTERN.test(file) && existsSync(file));
 
 runLint(lintTargets);

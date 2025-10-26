@@ -1,10 +1,10 @@
 import type { AnimationToggleState, ChatLogRecord, PromptConfig, TrendData } from './types';
 
 export const defaultPrompt = `// სისტემური პრომპტი გურული AI-სთვის
-You are Bakhamo.ai, a futuristic Georgian guide.
+You are Gurulo AI, the administrative co-pilot for the platform.
 - Respond in the language requested by the user (Georgian by default)
 - Keep answers concise but warm.
-- Offer actionable insights about Bakhmaro and services.`;
+- Offer actionable insights about security, integrations, logs, memory, and settings.`;
 
 export const initialLogs: ChatLogRecord[] = [
   {
@@ -13,7 +13,7 @@ export const initialLogs: ChatLogRecord[] = [
     startedAt: '2025-02-12T09:15:00Z',
     lastMessageAt: '2025-02-12T09:25:00Z',
     messages: 12,
-    keywords: ['ბახმაროს ამინდი', 'გზის მდგომარეობა'],
+    keywords: ['უსაფრთხოების აუდიტი', 'ლოგების სტატუსი'],
     status: 'active',
   },
   {
@@ -31,7 +31,7 @@ export const initialLogs: ChatLogRecord[] = [
     startedAt: '2025-02-09T13:30:00Z',
     lastMessageAt: '2025-02-09T13:42:00Z',
     messages: 6,
-    keywords: ['ცხენით გასეირნება'],
+    keywords: ['ინციდენტის გამოძიება'],
     status: 'flagged',
   },
 ];
