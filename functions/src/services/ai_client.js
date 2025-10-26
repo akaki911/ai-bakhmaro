@@ -1,7 +1,7 @@
 const axios = require('axios');
-const { createServiceToken, getServiceAuthConfigs } = require('../../shared/serviceToken');
-const { generateFallbackResponse } = require('./fallbackResponder');
-const guruloCore = require('../../shared/gurulo-core');
+const { createServiceToken, getServiceAuthConfigs } = require('../../../shared/serviceToken');
+const { generateFallbackResponse } = require('../../../backend/services/fallbackResponder');
+const guruloCore = require('../../../shared/gurulo-core');
 const { normalizeResponse, GURULO_CORE_VERSION } = guruloCore.response;
 
 /**

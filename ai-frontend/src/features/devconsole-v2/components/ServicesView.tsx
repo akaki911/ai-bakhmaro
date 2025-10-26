@@ -291,7 +291,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
         { route: '/login', file: 'src/Login.tsx', type: 'frontend' },
         { route: '/admin', file: 'src/components/AIDeveloperPanel.tsx', type: 'frontend' },
         { route: '/admin?tab=dashboard', file: 'src/components/AIDeveloperPanel.tsx', type: 'frontend' },
-        { route: '/api/ai/version-control/diff', file: 'backend/routes/ai_proxy.js', method: 'POST', type: 'backend' }
+        { route: '/api/ai/version-control/diff', file: 'functions/src/routes/ai_proxy.js', method: 'POST', type: 'backend' }
       ]);
     } finally {
       setIsLoadingRoutes(false);

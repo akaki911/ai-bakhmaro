@@ -77,7 +77,7 @@ class ResourceOptimizer {
 
     // Clear old cached responses (older than 30 minutes)
     try {
-      const cacheService = require('./ai_cache_service');
+      const cacheService = require('../../functions/src/services/ai_cache_service');
       cacheService.clearOldCache(30 * 60 * 1000); // 30 minutes
       console.log('🧹 Old cache entries cleared');
     } catch (error) {

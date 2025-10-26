@@ -1,6 +1,6 @@
 const express = require('express');
 const performanceMonitor = require('../services/performance_monitoring');
-const aiCacheService = require('../services/ai_cache_service');
+const aiCacheService = require('../../functions/src/services/ai_cache_service');
 const streamingService = require('../services/streaming_service');
 const router = express.Router();
 const { requireSuperAdmin } = require('../middleware/role_guards');
