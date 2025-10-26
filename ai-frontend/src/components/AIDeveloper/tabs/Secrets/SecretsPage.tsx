@@ -9,8 +9,6 @@ import {
   revealSecret,
   SecretSummary,
   SecretsApiError,
-  SecretVisibility,
-  SecretSource,
 } from '@/services/secretsAdminApi';
 import type {
   EditorState,

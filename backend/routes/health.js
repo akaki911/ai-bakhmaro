@@ -108,7 +108,7 @@ router.get('/system-status', async (req, res) => {
     // Get circuit breaker status from AI client
     let circuitBreakerStatus = null;
     try {
-      const { aiServiceClient } = require('../services/ai_client');
+      const { aiServiceClient } = require('../../functions/src/services/ai_client');
       circuitBreakerStatus = aiServiceClient.getCircuitBreakerStatus();
     } catch (error) {
       console.warn('Failed to get circuit breaker status:', error.message);

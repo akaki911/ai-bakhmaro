@@ -209,7 +209,7 @@ router.post('/validate-proposals', protectAutoImprove, async (req, res) => {
     console.log('🛡️ [AI AUTO-IMPROVE] Validating proposals against Guard rules');
 
     // Import AI Guard service
-    const AIGuardService = require('../services/aiGuardService');
+    const AIGuardService = require('../../functions/src/services/aiGuardService');
     const guardService = new AIGuardService();
     await guardService.initialize();
 

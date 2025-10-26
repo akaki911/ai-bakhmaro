@@ -98,7 +98,7 @@ app.get('/health', (req, res) => {
 // Routes
 const fileTreeRoute = require('./routes/file_tree');
 const fileSaveRoute = require('./routes/file_save');
-const aiProxyRoute = require('./routes/ai_proxy');
+const aiProxyRoute = require('../../functions/src/routes/ai_proxy');
 const messagingRoute = require('./routes/messaging');
 const projectStatsRoute = require('./routes/project_stats');
 const performanceRoute = require('./routes/performance_routes');
@@ -124,7 +124,7 @@ app.use('/api/performance', performanceRoute);
 app.use('/api/developer', developerPanelRoute);
 console.log('📁 File tree routes registered at /api/files');
 app.use('/api/developer', require('./routes/developer_panel'));
-app.use('/api/ai', require('./routes/ai_proxy'));
+app.use('/api/ai', require('../../functions/src/routes/ai_proxy'));
 
 // Proxy AI service routes for file system operations
 app.use('/api/fs', (req, res) => {
