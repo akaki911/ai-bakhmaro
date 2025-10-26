@@ -19,7 +19,6 @@ import {
   rollbackSecrets,
   type SecretScanSuggestion,
   type SecretVisibility,
-  type SecretSource,
   type RequiredSecretsResponse,
   type RequiredSecretItem,
   type SecretsSyncResponse,
