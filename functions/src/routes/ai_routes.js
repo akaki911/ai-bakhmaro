@@ -1,7 +1,7 @@
 
 const express = require("express");
 const router = express.Router();
-const { rememberFact, getMemory, addToMemory } = require("../memory_controller");
+const { rememberFact, getMemory, addToMemory } = require("../../../backend/memory_controller");
 
 // დაიმახსოვრე ფაქტი
 router.post("/remember", async (req, res) => {

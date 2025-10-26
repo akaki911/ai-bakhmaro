@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const aiRolloutManager = require('../services/ai_rollout_manager');
-const { requireSuperAdmin } = require('../middleware/admin_guards');
+const { requireSuperAdmin } = require('../../../backend/middleware/admin_guards');
 
 // Get current rollout status
 router.get('/status', async (req, res) => {
