@@ -1,147 +1,76 @@
-# AI Space Stack
+# Gurulo AI Space Platform
 
-## TypeScript service map
-| Service | Directory | Default port | Description |
-| --- | --- | --- | --- |
-| Gateway API | `gateway/` | 8080 | Express proxy that fronts all browser traffic, handles login redirects, and issues service JWTs before forwarding requests to downstream APIs. |
-| AI Frontend | `ai-frontend/` | 5173 | Vite-powered React UI bundled for both local development and static hosting behind the gateway. |
+Gurulo AI Space is a Firebase-native automation workspace that unifies conversational AI, workflow orchestration, and knowledge governance for supercharged operations teams. This repository contains the configuration, frontend bundles, and Cloud Functions glue that power the managed AI environment.
 
-## Repository scope
+## Architecture
 
-The repository now contains only the **AI Space** surfaces:
+The production stack is provisioned on **Firebase Hosting** with dynamic routes served through **Cloud Functions for Firebase**. High-level flow:
 
-- **AI Frontend** — the administrative console and assistant UI.
-- **Gateway** — the edge service that secures every route and proxies `/api/*` directly to the AI Service or backend façade configured via `API_PROXY_BASE`.
-- **AI Service** — automation and LLM orchestration utilities consumed by the UI and gateway.
+1. The Vite-built AI console is deployed as a static bundle to Firebase Hosting and cached at the CDN edge.
+2. Hosting rewrites `/api/**` requests to a regional HTTPS Cloud Function that brokers LLM calls, automation jobs, and secure integrations.
+3. Long-running automations dispatch background tasks to Cloud Tasks and persist state in Firestore. Event webhooks from partner tools enter through dedicated HTTPS Functions guarded by WebAuthn service tokens.
+4. Operations telemetry, evaluation artifacts, and audit trails live in Firestore and Cloud Storage buckets scoped to the AI Space project.
 
-All booking, cottage, hotel, and provider modules were removed. Any remaining references to those domains should be treated as bugs and reported.
+The [`docs/architecture.md`](docs/architecture.md) page diagrams component responsibilities and the deployment topology in detail.
 
-The compose file maps each container port to the same host port so the services are reachable at `http://localhost:<port>` when started with Docker Compose.
+## Core Modules
 
-## GitHub Operations Panel
+Gurulo AI Space exposes ten modular surfaces that can be toggled per environment:
 
-The AI Developer dashboard now includes an **Operations** tab that lets trusted administrators:
+1. **Console Shell** – authenticated React dashboard with navigation, announcements, and notification center.
+2. **Prompt Studio** – versioned prompt management with validation hooks and rollout controls.
+3. **Workflow Builder** – visual node editor that compiles automation graphs executed by Cloud Functions.
+4. **Task Orchestrator** – queue-backed engine that schedules function invocations and monitors retries.
+5. **Knowledge Vault** – Firestore-backed document graph with semantic search and retention policies.
+6. **Evaluation Lab** – scenario runner for regression tests, synthetic data playback, and scoring.
+7. **Integration Hub** – managed connectors (Slack, Gmail, HTTP) with secret rotation and per-scope analytics.
+8. **Telemetry Center** – observability dashboards for latency, cost, and quality metrics sourced from BigQuery exports.
+9. **Access Management** – role lattice anchored by Super Admin approval and WebAuthn credential binding.
+10. **Operations Toolkit** – guided runbooks, release timeline, and incident collaboration utilities.
 
-- View an allow-listed set of documentation, marketing, and styling changes that are safe to fast-track.
-- Stage those paths directly from the UI and submit a pull request with a custom branch name, commit message, and PR body.
-- Monitor repository health with live PR merge rate, CI pass ratio, bundle-size delta, and ESLint trend metrics.
-- Run a sandbox smoke test that opens a tiny PR against the configured GitHub test repository to verify credentials and CI wiring.
+Each module is described in [`docs/modules.md`](docs/modules.md) with ownership, SLAs, and implementation notes.
 
-Only paths under `docs/`, `ai-frontend/src/styles/`, and other non-critical directories are eligible. Back-end and AI pipeline code remain blocked by policy. The backend enforces this allow/deny list server-side before staging files or opening a PR.
+## Security Model
 
-Environment knobs:
+Security is anchored by a dedicated Super Admin identity that authorises privileged workflows and approves guarded releases. End users authenticate with passwordless WebAuthn credentials backed by Firebase Authentication. Key guarantees include:
 
-- `GITHUB_SANDBOX_OWNER`, `GITHUB_SANDBOX_REPO`, `GITHUB_SANDBOX_BASE_BRANCH` — target repo/branch for automated smoke PRs.
-- `GITHUB_OPERATIONS_ALLOWLIST`, `GITHUB_OPERATIONS_DENYLIST` — optional overrides for the default path policy (comma-separated values).
+- All privileged mutations require a Super Admin signed policy decision stored in Firestore and mirrored to Cloud Storage for retention.
+- WebAuthn credentials are hardware-bound; fallback OTPs are disabled in production.
+- Service-to-service calls are issued short-lived JWTs minted by Cloud Functions and validated on every edge request.
+- Firestore security rules restrict module access to scoped roles defined in [`docs/security.md`](docs/security.md).
 
-## Monitoring & health artifacts
+## Deployment Notes
 
-- Run `pnpm run health-check` to execute the resilient `system-health-check.js` script. It retries each probe with exponential backoff,
-  prints a colour-coded summary, and emits a JSON artifact to `artifacts/system-health-report.json` (configurable via
-  `SYSTEM_HEALTH_OUTPUT`).
-- The generated artifact mirrors the format captured in [`docs/metrics/system-health-report.sample.json`](docs/metrics/system-health-report.sample.json),
-  making it easy to upload as a CI attachment or long-term dashboard input.
-- Combine the health report with the bundle baseline metrics in [`docs/metrics/bundle-baseline.json`](docs/metrics/bundle-baseline.json)
-  to monitor performance regressions across releases.
+Deployments promote from staging to production through Firebase Hosting channels:
 
-## Authentication request sequence
-1. A browser request to `/` lands on the gateway.
-2. If no auth headers or session cookies are present, the gateway responds with `302 /login`.
-3. `/login` always serves the Vite bundle so React can render the login screen.
-4. After successful authentication the SPA transitions to `/index.html`, which contains the AI Developer dashboard (Console, Brain, Memory, Deploy tabs only).
-5. All subsequent deep links (e.g. `/ai/console`) are gated by the gateway and protected routes inside the React app—unauthenticated requests are re-routed to `/login`.
+1. Run `pnpm build` in the root to compile the AI frontend and package shared modules.
+2. Execute `firebase deploy --only hosting,functions` with the appropriate `.env.production` file sourced via `.runtimeconfig.json`.
+3. Verify the Functions logs for successful cold starts, and confirm Hosting channel activation.
+4. Capture a change record in the Operations Toolkit with Super Admin approval linked to the deployment ID.
 
-Additional hardening details:
+[`docs/deployment.md`](docs/deployment.md) enumerates the full release checklist, rollback strategy, and smoke tests.
 
-- Gateway enforces `bakhmaro.co → https://ai.bakhmaro.co` with an HTTP 301 that preserves the original request URI.
-- CORS is constrained to the AI domain with `Access-Control-Allow-Credentials: true` so secure cookies survive cross-origin hops.
-- Service-to-service calls automatically receive a short-lived JWT signed by the gateway (`aud` = `ai-service`).
-- Upstream `Set-Cookie` headers are normalised to `SameSite=None` and `Domain=.${ROOT_DOMAIN}` so AI-only tooling works across subdomains while remaining configurable via `COOKIE_SECURE`.
-- Every `fetch` call from the frontend defaults to `credentials: 'include'`; session cookies are issued with `SameSite=None; Secure; HttpOnly` when delivered by the authentication backend.
+## Environment Variables
 
-This flow is implemented in the gateway entrypoint: unauthenticated requests on `/` are redirected to `env.LOGIN_PATH` (default `/login`), while a shared `sendIndexHtml` helper responds with the SPA shell for authenticated or subsequent routes. The SPA bundle is read from `STATIC_ROOT`, which defaults to the compiled output in `ai-frontend/dist`.
+Environment configuration is centralised in Firebase runtime config. The most critical keys are summarised below; refer to [`docs/environment.md`](docs/environment.md) for exhaustive tables.
 
-## Configuration matrix
-| Variable | Consumed by | Defaults & source | Purpose | Switching notes |
-| --- | --- | --- | --- | --- |
-| `AI_DOMAIN` | Frontend & gateway containers | Defaults to `http://localhost:5173` when unset in Compose. | Used by client code and reverse proxy logic to describe the public-facing AI hostname. | Set this to your live AI domain (e.g., `https://ai.bakhmaro.co`) when deploying beyond localhost. |
-| `ROOT_DOMAIN` | Frontend & gateway containers | Defaults to `localhost` in Compose. | Controls cookie / redirect handling that depends on the parent domain. | Replace with `bakhmaro.co` (or your root) so redirects like `bakhmaro.co → ai.bakhmaro.co` resolve correctly. |
-| `API_PROXY_BASE` | Gateway | Defaults to `http://ai-service:5001` in Compose, or falls back to `UPSTREAM_API_URL` → `http://127.0.0.1:5002` in code. | Primary upstream for `/api` proxy traffic that powers the AI stack. | Point this at the gateway-facing AI Service base URL for each environment. |
-| `BACKEND_PROXY_BASE` | Gateway | Defaults to `http://127.0.0.1:5002` when unset. | Dedicated upstream for backend authentication routes such as `/api/auth/device/recognize`. | Set this to the backend service base URL handling device recognition. |
-| `JWT_SECRET` | Gateway | Required; Compose enforces presence. | Signs and validates the short-lived service tokens injected on proxied requests. | Rotate per environment. Must be at least 16 characters to satisfy validation. |
-| `SERVICE_JWT_ISSUER` | Gateway | Defaults to `ai-gateway`. | Issuer claim attached to the short-lived service token. | Override only if you customise the gateway identity. |
-| `SERVICE_JWT_SUBJECT` | Gateway | Defaults to `gateway-service`. | Subject claim for the service token. | Only change if you operate multiple trusted edge gateways. |
+| Variable | Scope | Purpose |
+| --- | --- | --- |
+| `VITE_GURULO_API_BASE` | Frontend | Base URL for proxied API calls from the AI console. |
+| `SERVICE_JWT_SECRET` | Cloud Functions | Symmetric key for issuing short-lived service tokens. |
+| `SUPER_ADMIN_UID` | Cloud Functions | Canonical UID that may approve guarded workflows. |
+| `WEB_AUTHN_RP_ID` | Frontend + Auth | Relying Party identifier used during WebAuthn registration and assertion. |
+| `TELEMETRY_DATASET` | Cloud Functions | BigQuery dataset ID for ingestion of metrics exported from Firestore triggers. |
+| `KNOWLEDGE_VAULT_BUCKET` | Cloud Functions | Storage bucket storing vectorised knowledge artifacts. |
 
-### Firebase configuration policy
+## Documentation Index
 
-> ⚠️ Production deployments must source every `VITE_FIREBASE_*` value from environment variables. The repository now ships only placeholder fallbacks to support local scaffolding, and the retired `bakhmaro-cottages` project identifiers are forbidden in production bundles.
+- [`docs/architecture.md`](docs/architecture.md) – hosting topology, component dependencies, and dataflow diagrams.
+- [`docs/modules.md`](docs/modules.md) – full catalogue of the ten AI Space modules and their lifecycles.
+- [`docs/security.md`](docs/security.md) – access control, WebAuthn policies, and secrets governance.
+- [`docs/deployment.md`](docs/deployment.md) – staging, promotion, rollback, and incident readiness.
+- [`docs/environment.md`](docs/environment.md) – runtime configuration keys, examples, and rotation guidance.
+- [`docs/operations.md`](docs/operations.md) – monitoring hooks, on-call rituals, and response templates.
+- [`docs/faq.md`](docs/faq.md) – quick answers for onboarding engineers and administrators.
 
-## Local development servers
-
-Use [`pnpm`](https://pnpm.io/) from the repository root to start both services in watch mode:
-
-```bash
-pnpm dev
-```
-
-The `dev` script uses `concurrently` to launch the gateway and frontend together with named output streams. This works reliably in shells such as Bash, Zsh, and the default macOS Terminal.
-
-On Windows PowerShell the quoting rules for `concurrently` occasionally conflict with the separators used in our script. If you hit issues starting the stack there, launch each workspace in its own terminal instead:
-
-```powershell
-pnpm -w run dev:gateway
-pnpm -w run dev:frontend
-```
-
-Both commands can run in parallel so you retain hot reloads across the stack. `pnpm dev` remains the canonical entry point when your shell supports the aggregated runner.
-
-## Docker Compose workflow
-1. Copy and edit `.env` with the matrix values above.
-2. Compile the frontend once (the bundle is mounted into the gateway container): `npm run build -w ai-frontend`.
-3. Build and start the stack with `docker compose up --build`.
-4. Visit `http://localhost:8080/login` to confirm the SPA renders.
-5. The containers expose:
-   - Frontend on `5173` with an HTTP health probe that fetches `/`.
-   - Gateway on `8080` with a `GET /health` probe.
-6. Stop with `Ctrl+C` and tear down resources via `docker compose down` when finished.
-
-## Gateway proxy topology
-```
-Browser ↔ Gateway (8080)
-  ↳ /api/auth/device/recognize → Backend (BACKEND_PROXY_BASE)
-  ↳ /api/* → AI Service (API_PROXY_BASE)
-```
-The gateway issues service JWTs before forwarding each proxied call, and surfaces `/health` to report which upstream base URLs are currently active.
-
-### Proxy validation checks
-
-After changing `API_PROXY_BASE`, run these quick probes to confirm the gateway is wired to the expected upstream:
-
-1. `curl -i http://localhost:8080/api/health` → confirms the general `/api` proxy path responds.
-2. `curl -i http://localhost:8080/health` → gateway self-check.
-
-Both calls should succeed; failures indicate a misconfigured `API_PROXY_BASE` or an offline upstream.
-
-### Deployment checklist
-
-1. Confirm DNS for both `ai.bakhmaro.co` and `bakhmaro.co` resolves to the gateway.
-2. Ensure TLS certificates exist for both hostnames.
-3. Populate `.env` with the secrets matrix above (`JWT_SECRET`, Firebase credentials, etc.).
-4. Run `docker compose up --build` to launch all services with the correct health checks.
-5. Visit `https://bakhmaro.co` and confirm it 301-redirects to `https://ai.bakhmaro.co/login` and that the AI dashboard renders after signing in.
-
-With these steps the repository operates exclusively in AI mode while retaining a controlled bridge to the upstream API through the gateway proxy.
-
-For an operational, minute-by-minute runbook that covers the production switch from the legacy static host to the AI gateway, follow [`docs/prod-deployment-checklist.md`](docs/prod-deployment-checklist.md).
-
-### Development overrides for CORS
-
-The gateway defaults to allowing requests only from `https://ai.bakhmaro.co`. When you need to test from other origins (for example, `http://localhost:5173` during local UI development), explicitly opt in by setting the relevant environment variables before starting the services:
-
-```dotenv
-# .env
-CORS_ALLOWED_ORIGIN=https://ai.bakhmaro.co
-ALLOWED_ORIGIN=https://ai.bakhmaro.co
-```
-
-Each variable accepts a comma-separated list. The middleware rejects any origin that is not listed, so unconfigured sites receive a CORS error by default. The new unit tests in both workspaces exercise this behaviour to guard against regressions.
+The documentation and tooling in this repository are optimised for Gurulo AI Space. Any references to legacy booking or rental flows should be considered obsolete and reported as defects.
