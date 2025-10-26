@@ -212,10 +212,6 @@ const { requireSuperAdmin } = require('../middleware/admin_guards');
 // Alias for backwards compatibility
 const requireAdminAuth = requireSuperAdmin;
 
-// Notification hooks service
-const NotificationHooksService = require('../services/notificationHooks');
-const notificationHooks = new NotificationHooksService();
-
 // Firebase Admin - optional for development
 let admin;
 try {
@@ -1955,31 +1951,7 @@ router.post('/proposals/:id/apply', requireSuperAdmin, async (req, res) => {
     // Mock successful application
     addTimelineEvent(proposalId, 'apply-completed', 'წინადადება წარმატებით განხორციელდა');
 
-    // Send notification for successful apply with proper error handling
-    const notificationPromise = (async () => {
-      try {
-        if (updatedProposal) {
-          await notificationHooks.notify('applied', {
-            proposalId: updatedProposal.id,
-            title: updatedProposal.title,
-            summary: updatedProposal.summary,
-            risk: updatedProposal.risk,
-            files: updatedProposal.files,
-            impact: updatedProposal.impact,
-            correlationId: updatedProposal.correlationId || `cid_${Date.now()}_${updatedProposal.id}`
-          });
-          console.log(`✅ [NOTIFICATIONS] Applied notification sent for ${proposalId}`);
-        }
-      } catch (error) {
-        console.error(`❌ [NOTIFICATIONS] Failed to send applied notification for ${proposalId}:`, error.message);
-        // Don't let notification failures fail the entire apply operation
-      }
-    })();
-
-    // Don't await notification - let it run in background
-    notificationPromise.catch(err => {
-      console.error(`⚠️ [NOTIFICATIONS] Background notification error for ${proposalId}:`, err.message);
-    });
+    logger.info('🔕 [AUTO-IMPROVE] Notification hooks disabled for applied events');
 
     // Mock implementation for development with proper status tracking
     const response = {
@@ -2067,23 +2039,7 @@ router.post('/:proposalId/rollback', requireSuperAdmin, async (req, res) => {
       console.log('✅ [AUTO-IMPROVE] Development rollback bypass activated');
     }
 
-    // Send notification for rollback completion
-    try {
-      const proposal = mockProposals.find(p => p.id === proposalId); // Assuming proposal data is available
-      if (proposal) {
-        await notificationHooks.notify('rollback_done', {
-          proposalId: proposal.id,
-          title: proposal.title,
-          summary: proposal.summary,
-          risk: proposal.risk,
-          files: proposal.files,
-          impact: proposal.impact,
-          correlationId: `cid_${Date.now()}_${proposal.id}`
-        });
-      }
-    } catch (error) {
-      console.error(`❌ [NOTIFICATIONS] Failed to send rollback_done notification for ${proposalId}:`, error);
-    }
+    console.log('🔕 [AUTO-IMPROVE] Notification hooks disabled for rollback events');
 
     // Mock implementation for development
     res.json({
