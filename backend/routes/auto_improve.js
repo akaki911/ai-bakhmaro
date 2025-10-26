@@ -16,7 +16,7 @@ const {
   startTraceRun,
   appendTraceEvent,
   completeTraceRun
-} = require('../services/ai_trace_hub');
+} = require('../../functions/src/services/ai_trace_hub');
 const {
   recordEvent: persistAutoImproveEvent,
   getEventsSince: getPersistedEventsSince,

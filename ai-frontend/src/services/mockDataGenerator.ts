@@ -245,7 +245,7 @@ export class MockDataGenerator {
     const files = [
       'src/components/ChatPanel.tsx',
       'src/services/aiService.ts',
-      'backend/routes/ai_proxy.js',
+      'functions/src/routes/ai_proxy.js',
       'ai-service/services/groq_service.js',
       'src/hooks/useAuth.ts',
       'src/utils/validation.ts',

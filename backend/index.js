@@ -119,7 +119,7 @@ const PORT = process.env.PORT || 5002; // SOL-311: Fixed port configuration
 
 const { setupGuruloWebSocket } = require('./services/gurulo_ws');
 const versionRoute = require('./routes/version');
-const aiTraceRoutes = require('./routes/ai_trace');
+const aiTraceRoutes = require('../functions/src/routes/ai_trace');
 
 const httpServer = http.createServer(app);
 const shouldDisableHttpListen = process.env.DISABLE_EXPRESS_LISTEN === 'true';
@@ -672,7 +672,7 @@ const passkeyAuthRoutes = require('./routes/passkey_auth');
 const customerAuthRoutes = require('./routes/customer_auth');
 const securityAuditRoutes = require('./routes/security_audit');
 const roleGuards = require('./middleware/role_guards');
-const legacyAiRoutes = require('./routes/ai_legacy');
+const legacyAiRoutes = require('../functions/src/routes/ai_legacy');
 
 // Mount routes
 app.use('/api/health', healthRoutes);
@@ -727,9 +727,9 @@ try {
 
 // Mount AI rollout control routes
 try {
-  const aiRolloutControl = require('./routes/ai_rollout_control');
+  const aiRolloutControl = require('../functions/src/routes/ai_rollout_control');
   app.use('/api/admin/ai-rollout', aiRolloutControl);
-  app.use('/api/admin/ai', require('./routes/ai_diagnostics'));
+  app.use('/api/admin/ai', require('../functions/src/routes/ai_diagnostics'));
   console.log('✅ AI rollout control routes mounted at /api/admin/ai-rollout');
 } catch (error) {
   console.error('❌ Failed to load AI rollout control routes:', error.message);
@@ -740,7 +740,6 @@ const guruloStatusRoutes = require('./routes/gurulo_status');
 const routeFiles = [
   'health',
   'file_tree',
-  'ai_proxy',
   'memory_api',
   'dev_console'
 ];
@@ -951,7 +950,7 @@ app.get('/api/ai/models', authorizeAiMetadataRequest, async (req, res) => {
     console.log('🔍 [AI MODELS] GET /api/ai/models requested from Backend');
 
     // Use AI Rollout Manager for models endpoint
-    const aiRolloutManager = require('./services/ai_rollout_manager');
+    const aiRolloutManager = require('../functions/src/services/ai_rollout_manager');
     const userRole = req.session?.user?.role || req.header('x-user-role') || null;
     const personalId = req.session?.user?.personalId || req.header('x-user-id') || null;
 
@@ -997,8 +996,8 @@ app.get('/api/ai/models', authorizeAiMetadataRequest, async (req, res) => {
 });
 
 // Primary live chat router must be mounted before legacy/proxy handlers
-const aiChatRouter = require('./routes/ai_chat');
-app.use('/api/ai/admin', require('./routes/ai_admin'));
+const aiChatRouter = require('../functions/src/routes/ai_chat');
+app.use('/api/ai/admin', require('../functions/src/routes/ai_admin'));
 app.use('/api/ai/trace', aiTraceRoutes);
 app.use('/api/ai', aiChatRouter);
 
@@ -1009,7 +1008,7 @@ app.use('/api', guruloStatusRoutes);
 app.use('/api/ai', legacyAiRoutes);
 
 // Mount AI proxy routes (if available)
-const aiProxyRoutes = require('./routes/ai_proxy');
+const aiProxyRoutes = require('../functions/src/routes/ai_proxy');
 app.use('/api/ai', aiProxyRoutes);
 
 // Mount file-monitor routes for Live Agent functionality
@@ -1064,7 +1063,7 @@ app.post('/api/ai/intelligent-chat', async (req, res) => {
     }
 
     // Use AI Rollout Manager for Blue/Green deployment
-    const aiRolloutManager = require('./services/ai_rollout_manager');
+    const aiRolloutManager = require('../functions/src/services/ai_rollout_manager');
     const userRole = req.session?.user?.role || null;
 
     const response = await aiRolloutManager.routeRequest('chat', {

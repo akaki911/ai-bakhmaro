@@ -1,15 +1,15 @@
 const express = require('express');
 const fetch = global.fetch || require('node-fetch');
-const { requireSuperAdmin } = require('../middleware/admin_guards');
-const connectionManager = require('../services/groq_connection_manager');
-const performanceMonitor = require('../services/performance_monitoring');
-const streamingService = require('../services/streaming_service');
-const { getVersionInfo } = require('../utils/versionInfo');
-const { createServiceToken, getServiceAuthConfigs } = require('../../shared/serviceToken');
+const { requireSuperAdmin } = require('../../../backend/middleware/admin_guards');
+const connectionManager = require('../../../backend/services/groq_connection_manager');
+const performanceMonitor = require('../../../backend/services/performance_monitoring');
+const streamingService = require('../../../backend/services/streaming_service');
+const { getVersionInfo } = require('../../../backend/utils/versionInfo');
+const { createServiceToken, getServiceAuthConfigs } = require('../../../shared/serviceToken');
 
 let logBuffer;
 try {
-  ({ logBuffer } = require('./dev_console'));
+  ({ logBuffer } = require('../../../backend/routes/dev_console'));
 } catch (error) {
   console.warn('⚠️ [AI DIAGNOSTICS] Unable to attach dev console log buffer:', error.message);
   logBuffer = { entries: [] };

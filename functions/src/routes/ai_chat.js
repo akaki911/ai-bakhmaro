@@ -1,10 +1,10 @@
 const express = require('express');
 const fetch = global.fetch || require('node-fetch');
 
-const streamingService = require('../services/streaming_service');
-const { generateFallbackResponse } = require('../services/fallbackResponder');
-const { sanitizeResponse, flattenStructured } = require('../../ai-service/utils/enhanced_sanitizer');
-const { createServiceToken, getServiceAuthConfigs } = require('../../shared/serviceToken');
+const streamingService = require('../../../backend/services/streaming_service');
+const { generateFallbackResponse } = require('../../../backend/services/fallbackResponder');
+const { sanitizeResponse, flattenStructured } = require('../../../ai-service/utils/enhanced_sanitizer');
+const { createServiceToken, getServiceAuthConfigs } = require('../../../shared/serviceToken');
 
 const router = express.Router();
 
