@@ -1386,7 +1386,7 @@ const AIDeveloperPanel: React.FC = () => {
                     )}
 
                     {activeTab === "chat" && (
-                      <ChatTab isAuthenticated={isAuthenticated} userRole={userRole} />
+                      <ChatTab isAuthenticated={isAuthenticated} />
                     )}
 
                     {activeTab === "autoImprove" && (
