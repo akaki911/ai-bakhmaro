@@ -4,7 +4,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 interface User {
   id: string;
   email: string;
-  role: 'CUSTOMER' | 'PROVIDER' | 'SUPER_ADMIN';
+  role: 'CUSTOMER' | 'ADMIN' | 'SUPER_ADMIN';
   personalId?: string;
   displayName?: string;
 }
@@ -78,7 +78,7 @@ export default async function handler(
       }
     }
 
-    // Check for session cookies (Provider/Customer sessions)
+    // Check for session cookies (Customer sessions)
     const cookies = req.headers.cookie;
     if (cookies) {
       // Parse cookies to find session
@@ -89,9 +89,9 @@ export default async function handler(
         // Mock session validation - in real implementation, verify against your session store
         const mockSessionUser: User = {
           id: 'session-user-id',
-          email: 'provider@bakhmaro.ge',
-          role: 'PROVIDER',
-          displayName: 'Provider User'
+          email: 'customer@bakhmaro.ge',
+          role: 'CUSTOMER',
+          displayName: 'Customer User'
         };
 
         console.log('✅ [General Auth] Session validated:', mockSessionUser.email);

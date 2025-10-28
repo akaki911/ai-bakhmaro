@@ -876,9 +876,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (currentUserRole === 'SUPER_ADMIN') {
         logoutTarget = '/login'; // Redirect SUPER_ADMIN to main login page with admin options
         console.log('🔧 [AUTH] SUPER_ADMIN logout - redirecting to admin login');
-      } else if (currentUserRole === 'PROVIDER') {
-        logoutTarget = '/login/provider';
-        console.log('🔧 [AUTH] PROVIDER logout - redirecting to provider login');
       }
 
       // 8. Reset route advice on logout with role-specific target

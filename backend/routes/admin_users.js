@@ -37,7 +37,7 @@ const createUserRateLimit = rateLimit({
 
 // Validation schema
 const createUserSchema = Joi.object({
-  role: Joi.string().valid('SUPER_ADMIN', 'PROVIDER').required(),
+  role: Joi.string().valid('SUPER_ADMIN').required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(8).required(),
   firstName: Joi.string().when('role', {
@@ -56,21 +56,6 @@ const createUserSchema = Joi.object({
     otherwise: Joi.optional()
   }),
   phone: Joi.string().optional(),
-  companyName: Joi.string().when('role', {
-    is: 'PROVIDER',
-    then: Joi.required(),
-    otherwise: Joi.optional()
-  }),
-  contactName: Joi.string().when('role', {
-    is: 'PROVIDER',
-    then: Joi.required(),
-    otherwise: Joi.optional()
-  }),
-  taxId: Joi.string().when('role', {
-    is: 'PROVIDER',
-    then: Joi.required(),
-    otherwise: Joi.optional()
-  }),
   note: Joi.string().optional()
 });
 

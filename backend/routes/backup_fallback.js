@@ -6,7 +6,7 @@ router.get('/status', (_req, res) => {
   return res.status(200).json({
     success: true,
     enabled: false,
-    provider: null,
+    engine: null,
     lastBackupAt: null,
     nextBackupAt: null,
     items: 0,

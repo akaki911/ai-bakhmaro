@@ -5,15 +5,15 @@ import { cardVariants } from './constants';
 interface FallbackControlCardProps {
   enabled: boolean;
   forced: boolean;
-  provider: string;
+  engine: string;
   isUpdating: boolean;
   onToggle: (enabled: boolean) => void;
 }
 
-export function FallbackControlCard({ enabled, forced, provider, isUpdating, onToggle }: FallbackControlCardProps) {
+export function FallbackControlCard({ enabled, forced, engine, isUpdating, onToggle }: FallbackControlCardProps) {
   const icon = enabled ? <ShieldCheck className="h-6 w-6 text-emerald-400" /> : <ShieldAlert className="h-6 w-6 text-amber-400" />;
   const statusText = enabled ? 'Backup რეჟიმი აქტიურია' : 'Backup რეჟიმი გამორთულია';
-  const providerLabel = provider === 'openai' ? 'OpenAI' : 'ლოკალური';
+  const engineLabel = engine === 'openai' ? 'OpenAI' : 'ლოკალური';
 
   return (
     <motion.section
@@ -29,7 +29,7 @@ export function FallbackControlCard({ enabled, forced, provider, isUpdating, onT
           <div>
             <h3 className="text-lg font-semibold">Use backup mode</h3>
             <p className="text-sm text-[#A0A4AD]">
-              როდესაც backup რეჟიმი ჩართულია, პასუხებს იღებთ {providerLabel} მოდელიდან, რათა გურულოსგან ელოდოთ თანმიმდევრულ პასუხებს Groq-ის შეფერხებების დროს.
+              როდესაც backup რეჟიმი ჩართულია, პასუხებს იღებთ {engineLabel} მოდელიდან, რათა გურულოსგან ელოდოთ თანმიმდევრულ პასუხებს Groq-ის შეფერხებების დროს.
             </p>
             {forced ? (
               <p className="mt-2 text-xs text-amber-300/80">რეჟიმი იძულებით ჩართულია გარემოს პარამეტრით და ვერ გამოირთვება UI-დან.</p>

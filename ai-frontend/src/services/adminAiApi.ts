@@ -75,22 +75,22 @@ export async function triggerRestore(): Promise<void> {
 export interface FallbackStatusResponse {
   backupMode: boolean;
   forced: boolean;
-  provider: string;
+  engine: string;
   updatedAt: string;
 }
 
 export async function fetchFallbackStatus(): Promise<FallbackStatusResponse> {
-  const payload = await request<{ backupMode: boolean; forced: boolean; provider: string; updatedAt: string }>('/fallback');
+  const payload = await request<{ backupMode: boolean; forced: boolean; engine: string; updatedAt: string }>('/fallback');
   return {
     backupMode: Boolean(payload.backupMode),
     forced: Boolean(payload.forced),
-    provider: payload.provider ?? 'offline',
+    engine: payload.engine ?? 'offline',
     updatedAt: payload.updatedAt ?? new Date().toISOString(),
   };
 }
 
 export async function updateFallbackStatus(enabled: boolean): Promise<FallbackStatusResponse> {
-  const payload = await request<{ backupMode: boolean; forced?: boolean; provider?: string; updatedAt?: string }>(
+  const payload = await request<{ backupMode: boolean; forced?: boolean; engine?: string; updatedAt?: string }>(
     '/fallback',
     {
       method: 'POST',
@@ -101,7 +101,7 @@ export async function updateFallbackStatus(enabled: boolean): Promise<FallbackSt
   return {
     backupMode: Boolean(payload.backupMode),
     forced: Boolean(payload.forced),
-    provider: payload.provider ?? 'offline',
+    engine: payload.engine ?? 'offline',
     updatedAt: payload.updatedAt ?? new Date().toISOString(),
   };
 }
