@@ -99,7 +99,6 @@ app.get('/health', (req, res) => {
 const fileTreeRoute = require('./routes/file_tree');
 const fileSaveRoute = require('./routes/file_save');
 const aiProxyRoute = require('../../functions/src/routes/ai_proxy');
-const messagingRoute = require('./routes/messaging');
 const projectStatsRoute = require('./routes/project_stats');
 const performanceRoute = require('./routes/performance_routes');
 const developerPanelRoute = require('./routes/developer_panel');
@@ -118,7 +117,6 @@ app.use('/api/health', healthRoute);
 app.use('/api/files', fileTreeRoute);
 app.use('/api/files', fileSaveRoute);
 app.use('/api/ai', aiProxyRoute);
-app.use('/api/messaging', messagingRoute);
 app.use('/api/stats', projectStatsRoute);
 app.use('/api/performance', performanceRoute);
 app.use('/api/developer', developerPanelRoute);

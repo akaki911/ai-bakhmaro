@@ -111,7 +111,7 @@ export interface AutoImproveSafetyLimits {
   maxFiles: number;
 }
 
-export interface AutoImproveNotificationSettings {
+export interface AutoImproveAlertSettings {
   email: boolean;
   slack: boolean;
   webhooks: string[];
@@ -125,7 +125,7 @@ export interface AutoImproveSettings {
   enabledScopes: string[];
   riskThreshold: 'low' | 'medium' | 'high';
   safety: AutoImproveSafetyLimits;
-  notificationSettings: AutoImproveNotificationSettings;
+  alertSettings: AutoImproveAlertSettings;
 }
 
 export const defaultAutoImproveSettings: AutoImproveSettings = {
@@ -139,7 +139,7 @@ export const defaultAutoImproveSettings: AutoImproveSettings = {
     rateLimit: 0,
     maxFiles: 0
   },
-  notificationSettings: {
+  alertSettings: {
     email: false,
     slack: false,
     webhooks: []

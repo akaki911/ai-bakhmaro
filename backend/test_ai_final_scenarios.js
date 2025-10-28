@@ -83,15 +83,7 @@ const FINAL_TEST_SCENARIOS = [
     description: 'Authentication and authorization flow'
   },
 
-  // 11. შეტყობინებების სისტემა
-  {
-    id: 'messaging_system',
-    query: 'როგორ მუშაობს შეტყობინებების სისტემა ადმინებსა და მომხმარებლებს შორის?',
-    expectedElements: ['MessagingSystem', 'real-time', 'notifications'],
-    description: 'Internal messaging and notification system'
-  },
-
-  // 12. მუქი თემა
+  // 11. მუქი თემა
   {
     id: 'dark_theme',
     query: 'როგორ მუშაობს მუქი/ღია თემების სისტემა?',
@@ -99,7 +91,7 @@ const FINAL_TEST_SCENARIOS = [
     description: 'Dark/light theme system implementation'
   },
 
-  // 13. AI ასისტენტი
+  // 12. AI ასისტენტი
   {
     id: 'ai_assistant_functionality',
     query: 'რას აკეთებს AI ასისტენტი და როგორ მუშაობს?',

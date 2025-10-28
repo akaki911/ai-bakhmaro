@@ -141,13 +141,9 @@ function ensureLocalSecrets(options = {}) {
   ensureValue('GROQ_API_KEY', () => stored.GROQ_API_KEY || 'gsk_local_dev_placeholder_key_please_override');
 
   if (projectId) {
-    const messagingSender = ensureValue(
-      'VITE_FIREBASE_MESSAGING_SENDER_ID',
-      () => stored.VITE_FIREBASE_MESSAGING_SENDER_ID || generateNumericString(12)
-    );
     const appSuffix = ensureValue(
       'VITE_FIREBASE_APP_ID',
-      () => stored.VITE_FIREBASE_APP_ID || `1:${messagingSender}:web:${generateHex(12)}`
+      () => stored.VITE_FIREBASE_APP_ID || `1:${generateNumericString(12)}:web:${generateHex(12)}`
     );
     rememberValue('VITE_FIREBASE_APP_ID', appSuffix);
 
