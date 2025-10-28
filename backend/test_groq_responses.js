@@ -4,23 +4,23 @@ const { askGroq } = require('./services/groq_service');
 const testQuestions = [
   {
     id: 1,
-    question: "რა ფუნქცია აქვს bookingService.ts-ში?",
-    context: "ეს კითხვა ეხება booking service-ის ფუნქციონალს"
+    question: "რა პასუხისმგებლობა აქვს audit_service.js-ში logRouteDecision ფუნქციას?",
+    context: "ეს კითხვა ეხება აუდიტის სერვისის ქცევას"
   },
   {
     id: 2,
-    question: "როგორ მუშაობს BookingModal კომპონენტი?", 
-    context: "ეს კითხვა ეხება React კომპონენტის ლოგიკას"
+    question: "როგორ მუშაობს trusted device ამოცნობის პროცესი backend-ში?",
+    context: "ეს კითხვა ეხება device_service-ის ლოგიკას"
   },
   {
     id: 3,
-    question: "რა ლოგიკაა transport booking სერვისში?",
-    context: "ეს კითხვა ეხება vehicle booking ლოგიკას"
+    question: "რისთვის გამოიყენება secretsScanner სერვისი?",
+    context: "ეს კითხვა ეხება უსაფრთხოების სკანირების ფუნქციებს"
   },
   {
     id: 4,
-    question: "როგორ ითვლება ღამეების ღირებულება?",
-    context: "ეს კითხვა ეხება pricing ლოგიკას"
+    question: "როგორ ეხმარება developer_panel.js დეველოპერებს?",
+    context: "ეს კითხვა ეხება დეველოპერის პანელის შესაძლებლობებს"
   }
 ];
 
