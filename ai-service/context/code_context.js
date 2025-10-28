@@ -17,7 +17,7 @@ function logError(message, error) {
   }
 }
 
-// Bakhmaro Cottages project structure mapping
+// Gurulo AI workspace structure mapping
 const PROJECT_STRUCTURE = {
   // Frontend structure
   frontend: {
@@ -102,7 +102,7 @@ const DEFAULT_SERVICE_CONFIG = [
     name: 'Backend Express API',
     port: 5002,
     command: 'npm run dev:backend',
-    description: 'Node.js + Express API for bookings'
+    description: 'Node.js + Express API for AI workflows'
   },
   {
     id: 'ai-service',
@@ -118,7 +118,7 @@ const ARCHITECTURE_PATTERNS = {
   // Component patterns
   react: {
     hooks: ['useState', 'useEffect', 'useCallback', 'useMemo'],
-    customHooks: ['useAuth', 'useBooking', 'useAPI'],
+    customHooks: ['useAuth', 'useAutomation', 'useAPI'],
     patterns: ['Compound Components', 'Render Props', 'HOC'],
     stateManagement: 'React Query + local state'
   },
@@ -134,7 +134,7 @@ const ARCHITECTURE_PATTERNS = {
   // Security patterns
   security: {
     authentication: ['Firebase Auth JWT', 'WebAuthn for admin'],
-    authorization: 'Role-based (CUSTOMER, PROVIDER, SUPER_ADMIN)',
+    authorization: 'Role-based (DEVELOPER, ADMIN, SUPER_ADMIN)',
     sessionManagement: 'Redis-backed sessions',
     dataValidation: ['Joi schemas', 'Type validation']
   }
@@ -459,7 +459,7 @@ function generateDevelopmentInsights(context = {}) {
   // Georgian specific insights
   insights.georgian.culturalConsiderations.push(
     'Right-to-left text support not needed (Georgian is LTR)',
-    'Date formatting according to Georgian calendar',
+    'Date formatting following Georgian locale conventions',
     'Currency formatting in GEL (Georgian Lari)',
     'Address formatting for Georgian locations'
   );

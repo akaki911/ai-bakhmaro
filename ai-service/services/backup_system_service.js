@@ -165,7 +165,7 @@ class BackupSystemService {
     
     try {
       // Export all collections
-      const collections = ['users', 'cottages', 'bookings', 'reviews', 'activity', 'admin_credentials'];
+      const collections = ['users', 'ai_sessions', 'automation_runs', 'activity', 'admin_credentials'];
       const databaseBackup = {};
 
       for (const collectionName of collections) {

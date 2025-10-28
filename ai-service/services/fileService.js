@@ -280,16 +280,17 @@ class FileService {
 
   expandSearchTerms(term) {
     const georgianTermMap = {
-      'ფასები': ['price', 'pricing', 'cost'],
-      'ბრონირება': ['booking', 'reservation'],
-      'კოტეჯი': ['cottage'],
-      'სასტუმრო': ['hotel'],
-      'მომხმარებელი': ['user', 'customer'],
-      'ადმინი': ['admin'],
-      'ავტომობილი': ['vehicle', 'car'],
-      'კალენდარი': ['calendar'],
-      'გადახდა': ['payment'],
-      'ფორმა': ['form', 'modal']
+      'ავტომატიზაცია': ['automation', 'auto'],
+      'მონიტორინგი': ['monitoring', 'health'],
+      'ასისტენტი': ['assistant', 'ai'],
+      'მეხსიერება': ['memory'],
+      'პრომპტი': ['prompt'],
+      'სერვისი': ['service'],
+      'დეშბორდი': ['dashboard'],
+      'მონაცემი': ['data', 'database'],
+      'კონფიგურაცია': ['config', 'configuration'],
+      'სკრიპტი': ['script'],
+      'დევოპსი': ['devops', 'ops']
     };
 
     let expandedTerms = [term];
@@ -302,11 +303,11 @@ class FileService {
     });
 
     // Add filename patterns
-    if (term.includes('ფასები') || term.includes('price')) {
-      expandedTerms.push('pricing', 'vehiclePricing', 'seasonalPricing');
+    if (term.toLowerCase().includes('ავტომატიზ') || term.toLowerCase().includes('automation')) {
+      expandedTerms.push('repository_automation_service', 'trusted_ops_policy', 'auto_issue_detector');
     }
-    if (term.includes('ბრონირება') || term.includes('booking')) {
-      expandedTerms.push('BookingForm', 'BookingModal', 'bookingService');
+    if (term.toLowerCase().includes('მონიტორინგ') || term.toLowerCase().includes('monitor')) {
+      expandedTerms.push('system_watchdog', 'performance_monitoring', 'health_monitor');
     }
 
     return [...new Set(expandedTerms)];

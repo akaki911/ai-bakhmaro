@@ -243,7 +243,7 @@ class GroqSystemTester {
     
     const georgianTests = [
       'გამარჯობა, როგორ ხარ?',
-      'რა ფუნქცია აქვს BookingService-ს?',
+      'რა ფუნქცია აქვს Gurulo Automation Service-ს?',
       'აგიხსენი, როგორ მუშაობს სისტემა'
     ];
 

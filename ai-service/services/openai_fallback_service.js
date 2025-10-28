@@ -22,7 +22,7 @@ async function requestBackup(messages, { correlationId } = {}) {
   const requestMeta = {
     corrId: correlationId,
     model: FALLBACK_MODEL,
-    provider: 'openai'
+    engine: 'openai'
   };
 
   if (!isAvailable()) {
@@ -48,7 +48,7 @@ async function requestBackup(messages, { correlationId } = {}) {
       },
       latency: Date.now() - startedAt,
       fallback: true,
-      provider: 'offline'
+      engine: 'offline'
     };
   }
 
@@ -79,7 +79,7 @@ async function requestBackup(messages, { correlationId } = {}) {
       model: FALLBACK_MODEL,
       latency,
       fallback: true,
-      provider: 'openai',
+    engine: 'openai',
       content
     };
   } catch (fallbackError) {
@@ -109,7 +109,7 @@ async function requestBackup(messages, { correlationId } = {}) {
       model: 'fallback-error',
       latency,
       fallback: true,
-      provider: 'openai-error',
+      engine: 'openai-error',
       error: fallbackError.message
     };
   }
@@ -120,7 +120,7 @@ function describeStatus() {
   return {
     enabled: Boolean(runtime.backupMode),
     forced: process.env.FORCE_OPENAI_BACKUP === 'true',
-    provider: OPENAI_API_KEY ? 'openai' : 'offline',
+    engine: OPENAI_API_KEY ? 'openai' : 'offline',
     model: FALLBACK_MODEL
   };
 }

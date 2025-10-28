@@ -329,7 +329,7 @@ router.post('/stream', async (req, res) => {
           sendTextChunk(res, 'Codex-მა ცარიელი პასუხი დააბრუნა.', message, streamCollector);
         }
 
-        const codexMeta = { provider: 'codex' };
+        const codexMeta = { engine: 'codex' };
         if (codexResult?.meta && typeof codexResult.meta === 'object') {
           codexMeta.codexMeta = codexResult.meta;
         }
@@ -397,7 +397,7 @@ router.post('/stream', async (req, res) => {
         await new Promise((resolve) => setTimeout(resolve, 120));
       }
 
-      emitCoreMeta('offline-fallback', { provider: 'offline', reason: 'groq_unavailable' });
+      emitCoreMeta('offline-fallback', { engine: 'offline', reason: 'groq_unavailable' });
 
       res.write('event: end\n');
       writeSseData(res, 'complete');
@@ -408,15 +408,14 @@ router.post('/stream', async (req, res) => {
     }
 
     // Georgian system prompt for streaming
-    const systemPrompt = `გამარჯობა! თქვენ ხართ გურულო AI - ბახმაროს გაქირავების პლატფორმის ოფიციალური Developer-ასისტენტი.
-პლატფორმა ეკუთვნის აკაკი ცინცაძეს (კაკი) პირადი ნომრით 01019062020 და თქვენ ზრუნავთ სისტემის ტექნიკურ სიზუსტეზე.
+    const systemPrompt = `გამარჯობა! თქვენ ხართ გურულო AI - ai.bakhmaro.co-ს ოფიციალური დეველოპერული ასისტენტი. პლატფორმა ეკუთვნის აკაკი ცინცაძეს (კაკი) პირადი ნომრით 01019062020 და თქვენ ზრუნავთ სისტემის ტექნიკურ სიზუსტეზე და კოდის ხარისხზე.
 
-**STREAMING MODE ACTIVE** - You are responding with real-time chunks.
+**STREAMING MODE ACTIVE** - მუშაობთ რეალურ დროში.
 
 Language: ყველა პასუხი ქართულ ენაზე 🇬🇪
 Response style: პირდაპირი, ტექნიკური, კონკრეტული
 
-Role: Senior Full-Stack Engineer for ouranos/Bakhmaro platform
+Role: Senior Full-Stack Engineer supporting ai.bakhmaro.co developer operations
 Grammar: თითოეული წინადადება იყოს გრამატიკულად გამართული და ბუნებრივ ქართულ ენაზე.
 File Guidance: თუ კონკრეტული ფაილის ნახვა ვერ ხერხდება, ნათლად აუხსენით შეზღუდვა და სთხოვეთ ზუსტი ბილიკი ან დამატებითი დეტალი.`;
 
@@ -458,7 +457,7 @@ File Guidance: თუ კონკრეტული ფაილის ნა�
         }
       }
 
-      emitCoreMeta(activeMode, { provider: 'groq', responseType: typeof streamResponse });
+      emitCoreMeta(activeMode, { engine: 'groq', responseType: typeof streamResponse });
 
       // Send completion event without leaking forbidden markers
       res.write('event: end\n');
@@ -475,7 +474,7 @@ File Guidance: თუ კონკრეტული ფაილის ნა�
       sendMetaEvent(res, { channel: 'direct-ai', mode: activeMode });
       res.write('event: error\n');
       writeSseData(res, processedError.text || 'Streaming failed');
-      emitCoreMeta('error', { provider: 'groq', error: streamMetadataExtras.error });
+      emitCoreMeta('error', { engine: 'groq', error: streamMetadataExtras.error });
     }
 
     clearInterval(heartbeat);

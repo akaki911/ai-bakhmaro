@@ -40,22 +40,19 @@ const CACHE_TTL = 60000; // 1 minute
 
 // Georgian search term expansions
 const GEORGIAN_SEARCH_EXPANSIONS = {
-  'კალენდარი': ['calendar', 'date', 'datepicker', 'events', 'Calendar.tsx', 'useCalendar', 'CalendarService'],
-  'ჯავშანი': ['booking', 'reservation', 'ჯავშნის', 'BookingModal', 'BookingService', 'BookingForm'],
-  'მომხმარებელი': ['user', 'customer', 'მომხმარებლის', 'კლიენტი', 'UserService', 'UserDashboard'],
-  'სასტუმრო': ['hotel', 'accommodation', 'სასტუმროს', 'HotelCard', 'HotelForm', 'HotelPage'],
-  'კოტეჯი': ['cottage', 'cabin', 'კოტეჯის', 'CottageForm', 'CottagePage', 'CottageCard'],
-  'ფასი': ['price', 'cost', 'pricing', 'ფასების', 'PricingManager', 'PriceTag', 'priceOverride'],
-  'ძებნა': ['search', 'find', 'filter', 'ძიება', 'SearchInput', 'searchInFiles'],
+  'ასისტენტი': ['assistant', 'gurulo', 'AIAssistantEnhanced', 'MessageRenderer'],
+  'ავტომატიზაცია': ['automation', 'auto', 'repository_automation_service', 'trusted_ops_policy'],
+  'მონიტორინგი': ['monitoring', 'SystemMonitoringDashboard', 'system_watchdog', 'performance_monitoring'],
+  'მეხსიერება': ['memory', 'consolidated_memory_service', 'memory_controller'],
+  'პრომპტი': ['prompt', 'prompt_manager', 'system_prompts'],
+  'დეშბორდი': ['dashboard', 'PerformanceDashboard', 'OpsCenter'],
+  'სერვისი': ['service', 'Service.ts', 'services', 'groq_service'],
+  'დიაგნოსტიკა': ['diagnostic', 'diagnostics', 'health_monitor'],
+  'ძებნა': ['search', 'find', 'filter', 'SearchInput', 'searchInFiles'],
   'ავტორიზაცია': ['auth', 'authentication', 'login', 'AuthContext', 'ProtectedRoute'],
-  'ადმინისტრატორი': ['admin', 'administrator', 'ადმინი', 'AdminDashboard', 'AdminLayout'],
-  'მესიჯინგი': ['messaging', 'message', 'შეტყობინება', 'MessagingSystem', 'notificationService'],
-  'ტრანსპორტი': ['vehicle', 'transport', 'VehicleCard', 'VehicleForm', 'VehiclePage'],
-  'ცხენები': ['horse', 'horses', 'HorseCard', 'HorseForm'],
-  'სნოუმობილები': ['snowmobile', 'SnowmobileCard', 'SnowmobileForm'],
-  'დაშბორდი': ['dashboard', 'MainDashboard', 'AdminDashboard', 'UserDashboard'],
+  'ადმინისტრატორი': ['admin', 'administrator', 'AdminDashboard', 'AdminLayout'],
   'კომპონენტი': ['component', 'Component.tsx', 'components'],
-  'სერვისი': ['service', 'Service.ts', 'services']
+  'სკრიპტი': ['script', 'scripts', 'automation']
 };
 
 // Custom error classes
