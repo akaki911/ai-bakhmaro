@@ -13,7 +13,6 @@ const INTEGRATION_SCHEMAS = [
       { key: 'VITE_FIREBASE_AUTH_DOMAIN', apps: ['frontend'], description: 'Firebase auth domain' },
       { key: 'VITE_FIREBASE_PROJECT_ID', apps: ['frontend'], description: 'Firebase project identifier' },
       { key: 'VITE_FIREBASE_STORAGE_BUCKET', apps: ['frontend'], description: 'Firebase storage bucket' },
-      { key: 'VITE_FIREBASE_MESSAGING_SENDER_ID', apps: ['frontend'], description: 'Firebase messaging sender ID' },
       { key: 'VITE_FIREBASE_APP_ID', apps: ['frontend'], description: 'Firebase application ID' },
       { key: 'VITE_FIREBASE_MEASUREMENT_ID', apps: ['frontend'], description: 'Firebase measurement ID' },
       { key: 'FIREBASE_SERVICE_ACCOUNT_KEY', apps: ['backend', 'ai-service'], description: 'Firebase admin credentials' },

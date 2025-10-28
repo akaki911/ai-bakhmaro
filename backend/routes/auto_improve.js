@@ -1951,7 +1951,7 @@ router.post('/proposals/:id/apply', requireSuperAdmin, async (req, res) => {
     // Mock successful application
     addTimelineEvent(proposalId, 'apply-completed', 'წინადადება წარმატებით განხორციელდა');
 
-    logger.info('🔕 [AUTO-IMPROVE] Notification hooks disabled for applied events');
+    logger.info('🔕 [AUTO-IMPROVE] Alert hooks disabled for applied events');
 
     // Mock implementation for development with proper status tracking
     const response = {
@@ -2039,7 +2039,7 @@ router.post('/:proposalId/rollback', requireSuperAdmin, async (req, res) => {
       console.log('✅ [AUTO-IMPROVE] Development rollback bypass activated');
     }
 
-    console.log('🔕 [AUTO-IMPROVE] Notification hooks disabled for rollback events');
+    console.log('🔕 [AUTO-IMPROVE] Alert hooks disabled for rollback events');
 
     // Mock implementation for development
     res.json({

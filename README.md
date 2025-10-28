@@ -17,7 +17,7 @@ The [`docs/architecture.md`](docs/architecture.md) page diagrams component respo
 
 Gurulo AI Space exposes ten modular surfaces that can be toggled per environment:
 
-1. **Console Shell** – authenticated React dashboard with navigation, announcements, and notification center.
+1. **Console Shell** – authenticated React dashboard with navigation, announcements, and status insights.
 2. **Prompt Studio** – versioned prompt management with validation hooks and rollout controls.
 3. **Workflow Builder** – visual node editor that compiles automation graphs executed by Cloud Functions.
 4. **Task Orchestrator** – queue-backed engine that schedules function invocations and monitors retries.

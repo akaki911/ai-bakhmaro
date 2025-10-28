@@ -23,12 +23,6 @@ const testScenarios = [
     question: "როგორ ითვლება ღამეების ღირებულება cottage-ებისთვის?",
     expectedTopics: ["seasonal pricing", "base rate", "utility cost", "additional guests"],
     category: "pricing_logic"
-  },
-  {
-    id: 5,
-    question: "რა არის messaging system-ის ფუნქციონალი?",
-    expectedTopics: ["conversations", "real-time", "notifications", "support"],
-    category: "messaging_features"
   }
 ];
 

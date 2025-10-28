@@ -4,7 +4,7 @@ The AI Space runtime is composed of ten modules. Each module has a single tech o
 
 | # | Module | Description | Owner | SLA |
 | --- | --- | --- | --- | --- |
-| 1 | Console Shell | React shell that frames navigation, announcements, and live notifications. | Frontend Guild | 99.9% UI uptime |
+| 1 | Console Shell | React shell that frames navigation, announcements, and live status banners. | Frontend Guild | 99.9% UI uptime |
 | 2 | Prompt Studio | Versioned prompt library with guardrails, rollout rings, and approval workflows. | AI Tooling Squad | 99.5% |
 | 3 | Workflow Builder | Drag-and-drop graph editor that compiles automations for the Task Orchestrator. | Automation Squad | 99.0% |
 | 4 | Task Orchestrator | Cloud Task-backed execution plane responsible for retries and SLA monitoring. | Automation Squad | 99.95% |

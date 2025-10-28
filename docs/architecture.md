@@ -30,7 +30,7 @@ Functions share a thin Express router that verifies Super Admin approvals before
 
 - WebAuthn relies on Firebase Authentication with multi-device passkey support.
 - Outbound webhooks and integrations originate from Cloud Functions with service accounts restricted through IAM roles.
-- Real-time updates use Firebase Realtime Database fan-out channels for console notifications.
+- Real-time updates use Firebase Realtime Database fan-out channels for console activity indicators.
 
 ## Observability
 

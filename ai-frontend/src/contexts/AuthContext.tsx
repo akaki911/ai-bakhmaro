@@ -366,7 +366,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...(metadata?.lastName && { lastName: metadata.lastName }),
         isActive: true,
         preferences: {
-          notifications: { email: true, sms: !!metadata?.phoneNumber, push: false },
           language: 'ka',
           theme: 'light'
         },

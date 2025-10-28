@@ -431,8 +431,8 @@ class EnhancedErrorHandler {
     }
   }
 
-  // Emit Georgian error notification
-  async emitGeorgianErrorNotification(error) {
+  // Emit Georgian error alert
+  async emitGeorgianErrorAlert(error) {
     const georgianError = {
       ...error,
       georgian_message: this.errorMessages.ka[error.type] || error.message,
