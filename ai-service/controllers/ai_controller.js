@@ -891,11 +891,6 @@ function classifyQuery(message) {
       /(ადმინ|admin).*(დაშბორდ|dashboard|პანელ|panel)/i
     ],
 
-    file_search_messaging: [
-      /(მოძებნე|ძებნა|find|search).*(მესიჯ|message|შეტყობინება)/i,
-      /(მესიჯ|message).*(სისტემ|system)/i
-    ],
-
     label_edit_request: [
       /შეცვალე/, /change/, /დაარქვი/, /rename/, /მაგივრად/, /instead of/,
       /ტექსტის/, /text/, /ლეიბლი/, /label/, /სახელწოდება/, /title/,
@@ -1464,7 +1459,6 @@ async function handleSpecializedFileSearch(message, userId, searchType) {
       memory: ['მეხსიერება', 'memory', 'consolidated_memory_service', 'memory_controller'],
       prompt: ['პრომპტ', 'prompt', 'prompt_manager', 'system_prompts'],
       admin: ['ადმინი', 'admin', 'AdminDashboard', 'AdminLayout', 'AdminUsers', 'administrator'],
-      messaging: ['მესიჯი', 'messaging', 'MessagingSystem', 'message', 'notification']
     };
 
     const searchTerms = searchTermMappings[searchType] || [searchType];

@@ -1122,7 +1122,7 @@ app.use('/api/performance', require('./routes/performance_routes'));
 app.use('/api/project', require('./routes/project_stats'));
 app.use('/api/config', require('./routes/config'));
 
-// User and Notification routes
+// User and GitHub routes
 app.use('/api/user', require('./routes/user_activity'));
 app.use('/api/github', require('./routes/github'));
 
@@ -1236,9 +1236,6 @@ try {
   console.error('❌ Failed to mount logs correlation routes:', error.message);
 }
 app.use('/api/ai/autoimprove', require('./routes/auto_improve'));
-
-// Mount notification hooks routes
-
 
 console.log('[BOOT] All API routes registered successfully');
 

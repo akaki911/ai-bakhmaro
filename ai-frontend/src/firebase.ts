@@ -21,7 +21,6 @@ type EnvKey =
   | 'VITE_FIREBASE_AUTH_DOMAIN'
   | 'VITE_FIREBASE_PROJECT_ID'
   | 'VITE_FIREBASE_STORAGE_BUCKET'
-  | 'VITE_FIREBASE_MESSAGING_SENDER_ID'
   | 'VITE_FIREBASE_APP_ID'
   | 'VITE_FIREBASE_MEASUREMENT_ID';
 
@@ -30,7 +29,6 @@ const FALLBACK_CONFIG: Partial<Record<EnvKey, string>> = {
   VITE_FIREBASE_AUTH_DOMAIN: GURULO_FIREBASE_PUBLIC_CONFIG.authDomain,
   VITE_FIREBASE_PROJECT_ID: GURULO_FIREBASE_PUBLIC_CONFIG.projectId,
   VITE_FIREBASE_STORAGE_BUCKET: GURULO_FIREBASE_PUBLIC_CONFIG.storageBucket,
-  VITE_FIREBASE_MESSAGING_SENDER_ID: GURULO_FIREBASE_PUBLIC_CONFIG.messagingSenderId,
   VITE_FIREBASE_APP_ID: GURULO_FIREBASE_PUBLIC_CONFIG.appId,
   VITE_FIREBASE_MEASUREMENT_ID: GURULO_FIREBASE_PUBLIC_CONFIG.measurementId,
 };
@@ -61,7 +59,6 @@ const firebaseConfig = {
   authDomain: readEnv('VITE_FIREBASE_AUTH_DOMAIN'),
   projectId: readEnv('VITE_FIREBASE_PROJECT_ID'),
   storageBucket: readEnv('VITE_FIREBASE_STORAGE_BUCKET'),
-  messagingSenderId: readEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
   appId: readEnv('VITE_FIREBASE_APP_ID'),
   measurementId: readEnv('VITE_FIREBASE_MEASUREMENT_ID'),
 };
@@ -131,7 +128,6 @@ if (hasRequiredConfig) {
     authDomain: firebaseConfig.authDomain!,
     projectId: firebaseConfig.projectId!,
     storageBucket: firebaseConfig.storageBucket || `${firebaseConfig.projectId}.firebasestorage.app`,
-    messagingSenderId: firebaseConfig.messagingSenderId,
     appId: firebaseConfig.appId!,
     measurementId: firebaseConfig.measurementId,
   };
@@ -140,7 +136,6 @@ if (hasRequiredConfig) {
     projectId: resolvedConfig.projectId,
     authDomain: resolvedConfig.authDomain,
     storageBucket: resolvedConfig.storageBucket,
-    hasMessagingSenderId: Boolean(resolvedConfig.messagingSenderId),
     hasMeasurementId: Boolean(resolvedConfig.measurementId),
   });
 

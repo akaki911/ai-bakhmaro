@@ -69,12 +69,6 @@ const FINAL_TEST_SCENARIOS = [
     description: 'Authentication and authorization flow'
   },
   {
-    id: 'messaging_system',
-    query: 'როგორ მუშაობს შეტყობინებების სისტემა დეველოპერულ გუნდში?',
-    expectedElements: ['MessagingSystem', 'real-time', 'notifications'],
-    description: 'Internal messaging and notification system'
-  },
-  {
     id: 'automation_audit',
     query: 'როგორ ხდება ავტომატიზაციის შედეგების აუდიტი?',
     expectedElements: ['auto_issue_detector', 'proposal_memory_module', 'audit logs'],

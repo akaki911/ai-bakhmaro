@@ -48,7 +48,7 @@ router.post('/update', requireSuperAdmin, async (req, res) => {
     
     aiRolloutManager.updateRollout(strategy, percentage, userGroups);
     
-    console.log('🔕 [Rollout Control] Notification hooks disabled for rollout updates');
+    console.log('🔕 [Rollout Control] Alert hooks disabled for rollout updates');
     
     console.log(`🔧 [Rollout Control] Strategy updated to ${strategy} by ${req.user?.id}`);
     
@@ -114,7 +114,7 @@ router.post('/rollback', requireSuperAdmin, async (req, res) => {
     
     aiRolloutManager.updateRollout('blue', 100);
     
-    console.log('🔕 [Rollout Control] Notification hooks disabled for rollback');
+    console.log('🔕 [Rollout Control] Alert hooks disabled for rollback');
     
     console.log(`🚨 [Rollout Control] Emergency rollback by ${req.user?.id}: ${reason}`);
     
