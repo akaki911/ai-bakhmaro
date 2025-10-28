@@ -292,7 +292,7 @@ describe('sanitizeResponse Function Tests', () => {
             {
               title: 'თბილი მისალმება',
               bullets: ['მთავარი რჩევა', 'დამატებითი დეტალი'],
-              cta: 'გადადით: მენიუ → დაჯავშნები',
+              cta: 'გადადით: მენიუ → ოპერაციები',
             },
           ],
         },
@@ -303,7 +303,7 @@ describe('sanitizeResponse Function Tests', () => {
       expect(result).toContain('თბილი მისალმება');
       expect(result).toContain('მთავარი რჩევა');
       expect(result).toContain('დამატებითი დეტალი');
-      expect(result).toContain('გადადით: მენიუ → დაჯავშნები');
+      expect(result).toContain('გადადით: მენიუ → ოპერაციები');
       expect(result).not.toContain('•');
     });
 
