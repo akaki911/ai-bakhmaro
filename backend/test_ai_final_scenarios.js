@@ -6,41 +6,41 @@ const FINAL_TEST_SCENARIOS = [
   // 1. პლატფორმის მიმოხილვა
   {
     id: 'platform_overview',
-    query: 'მომიყევი Bakhmaro Booking-ის ძირითადი გვერდები',
-    expectedElements: ['კოტეჯები', 'სასტუმროები', 'ავტომობილები', 'ცხენები', 'თოვლმავლები', 'bullet points'],
+    query: 'მომიყევი Bakhmaro backend-ის მთავარ სერვისებზე',
+    expectedElements: ['developer_panel', 'device_recognition', 'audit_service', 'metrics'],
     description: 'Platform overview with structured layout'
   },
 
-  // 2. ჯავშნის პროცესი
+  // 2. უსაფრთხო მოწყობილობები
   {
-    id: 'booking_process',
-    query: 'როგორ მოვძებნოთ კოტეჯი და გავაკეთოთ ჯავშანი?',
-    expectedElements: ['ძებნა', 'კალენდარი', 'გადახდა', 'step-by-step'],
-    description: 'Step-by-step booking process'
+    id: 'device_security',
+    query: 'როგორ ხდება trusted device-ის იდენტიფიკაცია და ავტორიზაცია?',
+    expectedElements: ['trusted_device_store', 'device_service', 'session', 'firestore'],
+    description: 'Trusted device recognition flow'
   },
 
   // 3. ტექნიკური კითხვა
   {
     id: 'technical_components',
-    query: 'რომელი ფაილები და კომპონენტები პასუხისმგებელია კოტეჯების მართვაზე?',
-    expectedElements: ['AdminCottages.tsx', 'CottageForm.tsx', 'CottagePage.tsx', 'firestore'],
-    description: 'Technical file structure for cottage management'
+    query: 'რომელი ფაილები უზრუნველყოფს უსაფრთხოების აუდიტს?',
+    expectedElements: ['audit_service.js', 'security_audit.js', 'logRouteDecision', 'FieldValue'],
+    description: 'Technical file structure for audit logging'
   },
 
-  // 4. სეზონური ფასები
+  // 4. გარემოს შემოწმება
   {
-    id: 'seasonal_pricing',
-    query: 'როგორ მუშაობს სეზონური ფასების სისტემა?',
-    expectedElements: ['seasonPrice', 'offSeasonPrice', 'priceByMonth', 'PriceTag კომპონენტი'],
-    description: 'Seasonal pricing system explanation'
+    id: 'environment_checks',
+    query: 'როგორ ხდება გარემოს კონფიგურაციის შემოწმება verifyEnv სკრიპტით?',
+    expectedElements: ['verifyEnv.js', 'runtimeConfig', 'checks', 'output'],
+    description: 'Environment verification workflow'
   },
 
-  // 5. გადახდის სისტემა
+  // 5. საიდუმლოებების მართვა
   {
-    id: 'payment_system',
-    query: 'როგორ ხდება გადახდების დამუშავება და მომხმარებლის ტიპების განსხვავება?',
-    expectedElements: ['depositAmount', 'totalPrice', 'BookingModal', 'ავანსი'],
-    description: 'Payment processing and user type differences'
+    id: 'secret_management',
+    query: 'როგორ ხდება საიდუმლოებების მართვა და სინქრონიზაცია?',
+    expectedElements: ['secretsScanner', 'secretsVault', 'secretsSyncService', 'alerts'],
+    description: 'Secret management and sync explanation'
   },
 
   // 6. სუპერ ადმინის ფუნქციები
@@ -61,10 +61,10 @@ const FINAL_TEST_SCENARIOS = [
 
   // 8. მობილური რესპონსივობა
   {
-    id: 'mobile_responsive',
-    query: 'რამდენად რესპონსივია საიტი მობილურ მოწყობილობებზე?',
-    expectedElements: ['Tailwind CSS', 'responsive design', 'mobile-first'],
-    description: 'Mobile responsiveness and design approach'
+    id: 'developer_utilities',
+    query: 'რა ხელსაწყოები აქვს დეველოპერის პანელს?',
+    expectedElements: ['bulk download', 'file tree', 'stats', 'health'],
+    description: 'Developer tooling overview'
   },
 
   // 9. შეცდომების მართვა
@@ -85,10 +85,10 @@ const FINAL_TEST_SCENARIOS = [
 
   // 11. მუქი თემა
   {
-    id: 'dark_theme',
-    query: 'როგორ მუშაობს მუქი/ღია თემების სისტემა?',
-    expectedElements: ['ThemeContext', 'dark mode', 'localStorage', 'toggle'],
-    description: 'Dark/light theme system implementation'
+    id: 'observability',
+    query: 'როგორ ხდება სისტემის მონიტორინგი და მეტრიკების შეგროვება?',
+    expectedElements: ['prom-client', 'metrics', 'performance_monitoring', 'uptime'],
+    description: 'Observability and metrics collection'
   },
 
   // 12. AI ასისტენტი
