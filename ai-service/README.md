@@ -1,17 +1,17 @@
 
-# Bakhmaro AI Microservice
+# Gurulo AI Microservice
 
-🤖 **Standalone AI service for the Bakhmaro booking platform**
+🤖 **Standalone AI developer assistant for ai.bakhmaro.co**
 
 ## Overview
 
-This is a fully independent AI microservice that handles all AI-related functionality for the Bakhmaro platform, including:
+This is a fully independent AI microservice that powers Gurulo — the AI developer assistant for the ai.bakhmaro.co workspace. The service focuses on helping engineers understand the codebase, automate common maintenance, and monitor AI-specific health signals. Key capabilities include:
 
 - 💬 AI Chat (`/api/ai/chat`)
 - 🌊 Streaming responses (`/api/ai/stream`)
 - 🏥 Health monitoring (`/api/ai/health`, `/api/ai/status`)
 - 🧠 Memory management
-- 🔍 Code analysis and RAG
+- 🔍 Code analysis and retrieval augmented generation for developer workflows
 - 📊 Performance monitoring
 
 ## Quick Start

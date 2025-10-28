@@ -19,7 +19,7 @@ const {
   buildContactSupportResponse,
   buildTransportResponse,
   buildLocalAttractionsResponse,
-  buildCottageDetailsResponse,
+  buildLegacyFeatureResponse,
   buildOffTopicResponse,
 } = require('../services/gurulo_response_builder');
 
@@ -284,8 +284,8 @@ const handleChatRequest = async (req, res) => {
       return respondWithPayload(buildLocalAttractionsResponse(metadata, builderOptions));
     }
 
-    if (intent.name === 'cottage_details') {
-      return respondWithPayload(buildCottageDetailsResponse(metadata, builderOptions));
+    if (intent.name === 'legacy_feature') {
+      return respondWithPayload(buildLegacyFeatureResponse(metadata, builderOptions));
     }
 
     return respondWithPayload(buildOffTopicResponse(metadata, builderOptions));

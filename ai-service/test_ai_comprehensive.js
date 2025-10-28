@@ -14,24 +14,24 @@ const TEST_SCENARIOS = [
   {
     id: 'platform_overview',
     category: 'platform',
-    query: 'მომიყევი Bakhmaro Booking-ის ძირითადი ფუნქციები',
-    expectedKeywords: ['კოტეჯები', 'სასტუმროები', 'ავტომობილები', 'ჯავშანი', 'ბუკინგი'],
+    query: 'მომიყევი Gurulo AI Workspace-ის ძირითადი შესაძლებლობები',
+    expectedKeywords: ['Automation', 'Monitoring', 'Memory', 'Groq', 'Trusted Ops'],
     complexity: 'medium',
     expectedResponseTime: 8000
   },
   {
     id: 'technical_deep_dive',
     category: 'technical',
-    query: 'როგორ მუშაობს სეზონური ფასების სისტემა კოდის დონეზე?',
-    expectedKeywords: ['seasonPrice', 'PriceTag', 'Firebase', 'კომპონენტი'],
+    query: 'როგორ მუშაობს repository_automation_service კოდის დონეზე?',
+    expectedKeywords: ['repository_automation_service', 'trusted_ops_policy', 'execution', 'logs'],
     complexity: 'high',
     expectedResponseTime: 12000
   },
   {
-    id: 'booking_process',
+    id: 'automation_process',
     category: 'process',
-    query: 'ნაბიჯ-ნაბიჯ აღწერე კოტეჯის ჯავშნის პროცესი',
-    expectedKeywords: ['ძებნა', 'კალენდარი', 'გადახდა', 'დასტური'],
+    query: 'ნაბიჯ-ნაბიჯ აღწერე Gurulo-ს ავტომატიზაციის ნაკადი',
+    expectedKeywords: ['intent router', 'context', 'execution', 'validation'],
     complexity: 'medium',
     expectedResponseTime: 10000
   },
@@ -403,9 +403,9 @@ async function testGeorgianSearchExpansion() {
   try {
     const FileAccessService = require('./file_access_service');
 
-    const expanded = FileAccessService.expandSearchTerms('ჯავშანი');
+    const expanded = FileAccessService.expandSearchTerms('ავტომატიზაცია');
 
-    if (expanded.includes('booking') && expanded.includes('reservation')) {
+    if (expanded.includes('automation') && expanded.includes('repository_automation_service')) {
       console.log('✅ Georgian search expansion works');
     } else {
       console.log('❌ Georgian search expansion failed');
