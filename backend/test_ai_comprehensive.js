@@ -5,50 +5,50 @@ const axios = require('axios');
 const testScenarios = [
   {
     id: 1,
-    question: "მომწერე Bakhmaro booking-ის ძირითადი ფუნქციები",
+    question: "მომწერე Bakhmaro backend-ის ადმინისტრაციული ხელსაწყოები",
     category: "platform_overview",
-    expectedKeywords: ["კოტეჯები", "ბუკინგი", "ბრონირება", "ფასები", "პროვაიდერი"],
+    expectedKeywords: ["დეველოპერი", "პანელი", "სტატისტიკა", "მონიტორინგი", "admin"],
     complexity: "medium"
   },
   {
     id: 2,
-    question: "როგორ ხდება კოტეჯების ჯავშნის გამოთვლა?",
-    category: "pricing_logic",
-    expectedKeywords: ["ღამეების", "ღირებულება", "ფასი", "თარიღი", "pricing"],
+    question: "როგორ მუშაობს trusted device რეგისტრაციის პროცესი?",
+    category: "security",
+    expectedKeywords: ["trusted", "device", "register", "firestore", "session"],
     complexity: "high"
   },
   {
     id: 3,
-    question: "რა როლი აქვს პროვაიდერს admin პანელში?",
-    category: "roles_permissions",
-    expectedKeywords: ["პროვაიდერი", "ადმინ", "როლი", "უფლებები", "მართვა"],
+    question: "რა როლი აქვს audit_service.js-ში route გადაწყვეტილებების ლოგირებას?",
+    category: "audit_logging",
+    expectedKeywords: ["audit", "logRouteDecision", "event", "security", "monitoring"],
     complexity: "medium"
   },
   {
     id: 4,
-    question: "რა ფუნქციებია BookingService.ts-ში?",
-    category: "code_analysis",
-    expectedKeywords: ["createBooking", "updateBooking", "getBookings", "validation"],
+    question: "როგორ ხდება secretsScanner სერვისით საიდუმლოებების პოვნა?",
+    category: "security_scanning",
+    expectedKeywords: ["scanner", "secrets", "regex", "alert", "რეგულარული გამოსახულება"],
     complexity: "high"
   },
   {
     id: 5,
-    question: "როგორ მუშაობს BookingModal კომპონენტი?",
-    category: "component_analysis",
-    expectedKeywords: ["React", "modal", "form", "useState", "validation"],
-    complexity: "high"
+    question: "რა ნაბიჯები გადის runMigration.js WebAuthn საკრედენციოების გადასატანად?",
+    category: "migration",
+    expectedKeywords: ["WebAuthn", "migration", "authCredentials", "transfer", "verify"],
+    complexity: "medium"
   },
   {
     id: 6,
-    question: "რა არის სასტუმროების ბუკინგის პროცესი?",
-    category: "business_process",
-    expectedKeywords: ["სასტუმრო", "hotel", "ბუკინგი", "ნომერი", "ღამე"],
+    question: "როგორ მუშაობს user_service.js-ში მომხმარებლის პროფილის განახლება?",
+    category: "user_management",
+    expectedKeywords: ["user", "profile", "update", "FieldValue", "merge"],
     complexity: "medium"
   },
   {
     id: 7,
     question: "როგორ ემატება ახალი მომხმარებელი სისტემაში?",
-    category: "user_management",
+    category: "user_creation",
     expectedKeywords: ["მომხმარებელი", "რეგისტრაცია", "Firebase", "auth"],
     complexity: "medium"
   },
@@ -61,9 +61,9 @@ const testScenarios = [
   },
   {
     id: 9,
-    question: "რა ტიპის ტრანსპორტია ხელმისაწვდომი?",
-    category: "vehicle_types",
-    expectedKeywords: ["ტრანსპორტი", "vehicle", "მანქანა", "სნოუმობილი"],
+    question: "რა ტიპის ლოგირებაა ხელმისაწვდომი backend-ში?",
+    category: "logging",
+    expectedKeywords: ["console", "audit", "metrics", "logs"],
     complexity: "low"
   },
   {
