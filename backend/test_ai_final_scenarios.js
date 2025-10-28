@@ -19,15 +19,7 @@ const FINAL_TEST_SCENARIOS = [
     description: 'Step-by-step booking process'
   },
 
-  // 3. Provider როლის უფლებები
-  {
-    id: 'provider_permissions',
-    query: 'რა დონის წვდომა აქვს Provider როლს?',
-    expectedElements: ['view_dashboard', 'manage_cottages', 'view_bookings', 'admin პანელი'],
-    description: 'Provider role permissions and access levels'
-  },
-
-  // 4. ტექნიკური კითხვა
+  // 3. ტექნიკური კითხვა
   {
     id: 'technical_components',
     query: 'რომელი ფაილები და კომპონენტები პასუხისმგებელია კოტეჯების მართვაზე?',
@@ -35,7 +27,7 @@ const FINAL_TEST_SCENARIOS = [
     description: 'Technical file structure for cottage management'
   },
 
-  // 5. სეზონური ფასები
+  // 4. სეზონური ფასები
   {
     id: 'seasonal_pricing',
     query: 'როგორ მუშაობს სეზონური ფასების სისტემა?',
@@ -43,7 +35,7 @@ const FINAL_TEST_SCENARIOS = [
     description: 'Seasonal pricing system explanation'
   },
 
-  // 6. გადახდის სისტემა
+  // 5. გადახდის სისტემა
   {
     id: 'payment_system',
     query: 'როგორ ხდება გადახდების დამუშავება და მომხმარებლის ტიპების განსხვავება?',
@@ -51,15 +43,15 @@ const FINAL_TEST_SCENARIOS = [
     description: 'Payment processing and user type differences'
   },
 
-  // 7. სუპერ ადმინის ფუნქციები
+  // 6. სუპერ ადმინის ფუნქციები
   {
     id: 'super_admin_functions',
     query: 'რა შეუძლია SUPER_ADMIN როლს?',
-    expectedElements: ['manage_users', 'manage_roles', 'view_logs', 'commission მართვა'],
+    expectedElements: ['manage_users', 'manage_roles', 'view_logs', 'advanced settings'],
     description: 'Super admin capabilities and permissions'
   },
 
-  // 8. მისალმება და დახმარება
+  // 7. მისალმება და დახმარება
   {
     id: 'greeting_help',
     query: 'გამარჯობა, როგორ შემიძლია დახმარება?',
@@ -67,7 +59,7 @@ const FINAL_TEST_SCENARIOS = [
     description: 'Greeting and help offering'
   },
 
-  // 9. მობილური რესპონსივობა
+  // 8. მობილური რესპონსივობა
   {
     id: 'mobile_responsive',
     query: 'რამდენად რესპონსივია საიტი მობილურ მოწყობილობებზე?',
@@ -75,7 +67,7 @@ const FINAL_TEST_SCENARIOS = [
     description: 'Mobile responsiveness and design approach'
   },
 
-  // 10. შეცდომების მართვა
+  // 9. შეცდომების მართვა
   {
     id: 'error_handling',
     query: 'როგორ ხდება შეცდომების მართვა და მონიტორინგი?',
@@ -83,7 +75,7 @@ const FINAL_TEST_SCENARIOS = [
     description: 'Error handling and monitoring systems'
   },
 
-  // 11. მომხმარებლის ავთენტიფიკაცია
+  // 10. მომხმარებლის ავთენტიფიკაცია
   {
     id: 'user_authentication',
     query: 'როგორ მუშაობს მომხმარებლის ავთენტიფიკაცია და ავტორიზაცია?',
@@ -91,7 +83,7 @@ const FINAL_TEST_SCENARIOS = [
     description: 'Authentication and authorization flow'
   },
 
-  // 12. შეტყობინებების სისტემა
+  // 11. შეტყობინებების სისტემა
   {
     id: 'messaging_system',
     query: 'როგორ მუშაობს შეტყობინებების სისტემა ადმინებსა და მომხმარებლებს შორის?',
@@ -99,15 +91,7 @@ const FINAL_TEST_SCENARIOS = [
     description: 'Internal messaging and notification system'
   },
 
-  // 13. ბანკის ანგარიშების მართვა
-  {
-    id: 'bank_account_management',
-    query: 'როგორ ხდება ბანკის ანგარიშების მართვა პროვაიდერებისთვის?',
-    expectedElements: ['BankAccountManager', 'commission', 'payment routing'],
-    description: 'Bank account management for providers'
-  },
-
-  // 14. მუქი თემა
+  // 12. მუქი თემა
   {
     id: 'dark_theme',
     query: 'როგორ მუშაობს მუქი/ღია თემების სისტემა?',
@@ -115,7 +99,7 @@ const FINAL_TEST_SCENARIOS = [
     description: 'Dark/light theme system implementation'
   },
 
-  // 15. AI ასისტენტი
+  // 13. AI ასისტენტი
   {
     id: 'ai_assistant_functionality',
     query: 'რას აკეთებს AI ასისტენტი და როგორ მუშაობს?',

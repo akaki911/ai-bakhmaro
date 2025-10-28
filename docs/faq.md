@@ -2,7 +2,7 @@
 
 ## How does AI Space handle authentication?
 
-Authentication is WebAuthn-only with Firebase Authentication acting as the identity provider. See [`security.md`](security.md) for details on credential binding and session lifetimes.
+Authentication is WebAuthn-only with Firebase Authentication acting as the identity service. See [`security.md`](security.md) for details on credential binding and session lifetimes.
 
 ## What is the recommended workflow for updating prompts?
 

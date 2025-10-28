@@ -701,7 +701,7 @@ const AIAssistantEnhanced: React.FC = () => {
 
   // AI Assistant Authorization Configuration
   const AUTHORIZED_AI_USERS = ["01019062020"]; // Array of authorized personal IDs
-  const AUTHORIZED_AI_ROLES = ["SUPER_ADMIN", "PROVIDER_ADMIN", "ADMIN"]; // Authorized roles
+  const AUTHORIZED_AI_ROLES = ["SUPER_ADMIN", "ADMIN"]; // Authorized roles
   const guestAccessEnabled = import.meta.env.VITE_ENABLE_PUBLIC_CHAT !== 'false';
 
   // Enhanced authorization check with detailed logging

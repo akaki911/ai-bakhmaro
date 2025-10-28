@@ -395,7 +395,7 @@ guardedPrefixes.forEach((prefix) => {
 // service tokens while still allowing privileged session users in dev setups.
 const authorizeAiMetadataRequest = (req, res, next) => {
   try {
-    const privilegedRoles = new Set(['SUPER_ADMIN', 'ADMIN', 'PROVIDER_ADMIN']);
+    const privilegedRoles = new Set(['SUPER_ADMIN', 'ADMIN']);
     const sessionUser = req.session?.user || req.user || {};
 
     if (sessionUser?.role && privilegedRoles.has(sessionUser.role)) {

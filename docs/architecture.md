@@ -12,7 +12,7 @@ Gurulo AI Space is deployed entirely on Firebase to maximise managed security an
 
 | Function Group | Purpose | Key Dependencies |
 | --- | --- | --- |
-| `api-gateway` | Terminates HTTPS, validates WebAuthn session cookies, and proxies to internal feature modules. | Firebase Auth, Firestore, OpenAI/Bard providers |
+| `api-gateway` | Terminates HTTPS, validates WebAuthn session cookies, and proxies to internal feature modules. | Firebase Auth, Firestore, OpenAI/Bard integrations |
 | `workflow-runner` | Executes compiled automation graphs, tracks job state, and emits telemetry. | Cloud Tasks, Firestore, Cloud Storage |
 | `integration-hooks` | Accepts inbound events from Slack, Gmail, HTTP webhooks, and transforms them into workflow triggers. | Secret Manager, Firestore |
 | `evaluation-suite` | Runs regression scenarios and writes aggregate scores for the Evaluation Lab. | Vertex AI, Firestore |

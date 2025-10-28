@@ -1,6 +1,6 @@
 
 module.exports = function requireAdminSetupToken(req, res, next) {
-  const privilegedRoles = new Set(['SUPER_ADMIN', 'ADMIN', 'PROVIDER_ADMIN']);
+  const privilegedRoles = new Set(['SUPER_ADMIN', 'ADMIN']);
   const sessionUser = req.user || req.session?.user || {};
   const headerRole = req.header('x-user-role');
 

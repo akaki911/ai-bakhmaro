@@ -11,7 +11,7 @@ interface AnalyticsPanelProps {
   fallbackProps: {
     enabled: boolean;
     forced: boolean;
-    provider: string;
+    engine: string;
     isUpdating: boolean;
     onToggle: (enabled: boolean) => void;
   };

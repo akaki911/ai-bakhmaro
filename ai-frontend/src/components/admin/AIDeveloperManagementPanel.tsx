@@ -78,7 +78,7 @@ export default function AIDeveloperManagementPanel({
     | {
         backupMode: boolean;
         forced: boolean;
-        provider: string;
+        engine: string;
         updatedAt: string;
       }
     | null
@@ -418,7 +418,7 @@ export default function AIDeveloperManagementPanel({
           fallbackProps={{
             enabled: fallbackStatus?.backupMode ?? false,
             forced: fallbackStatus?.forced ?? false,
-            provider: fallbackStatus?.provider ?? 'offline',
+            engine: fallbackStatus?.engine ?? 'offline',
             isUpdating: isUpdatingFallback,
             onToggle: handleFallbackToggle,
           }}

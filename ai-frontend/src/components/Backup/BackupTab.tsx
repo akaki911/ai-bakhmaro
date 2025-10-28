@@ -360,7 +360,7 @@ const BackupTab: React.FC<BackupTabProps> = ({ hasDevConsoleAccess = false }) =>
               {t('backup.disabledDescription', 'The backup service is currently unavailable. Actions are disabled.')}
             </p>
             <p className="mt-2 text-xs text-[#7C7F8F]">
-              {t('backup.enableHint', 'Enable the backup provider from Settings to restore automated snapshots.')}
+              {t('backup.enableHint', 'Enable the backup service from Settings to restore automated snapshots.')}
             </p>
           </div>
         </div>

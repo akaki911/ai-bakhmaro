@@ -120,7 +120,7 @@ const ReplitInterface: React.FC = () => {
   const logsContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Preview functionality using unified provider
+  // Preview functionality using unified service
   const {
     openPreview
   } = useFilePreview();
