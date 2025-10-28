@@ -1075,7 +1075,6 @@ function generateFallbackResponse(message) {
 არსებული სერვისები:
 • bookingService.ts - ბრონირების მართვა
 • userService.ts - მომხმარებლების მართვა  
-• notificationService.ts - შეტყობინებები
 • auditService.ts - აუდიტი
 
 ⚠️ Groq API გამორთულია - დეტალური ანალიზი შეუძლებელია.`;

@@ -10,7 +10,6 @@ const requiredSecrets = {
     'VITE_FIREBASE_AUTH_DOMAIN': 'Frontend Firebase Auth Domain',
     'VITE_FIREBASE_PROJECT_ID': 'Frontend Firebase Project ID',
     'VITE_FIREBASE_STORAGE_BUCKET': 'Frontend Firebase Storage Bucket',
-    'VITE_FIREBASE_MESSAGING_SENDER_ID': 'Frontend Firebase Messaging Sender ID',
     'VITE_FIREBASE_APP_ID': 'Frontend Firebase App ID',
     'VITE_FIREBASE_MEASUREMENT_ID': 'Frontend Firebase Measurement ID (optional)'
   },

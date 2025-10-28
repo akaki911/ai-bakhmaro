@@ -202,7 +202,7 @@ const RealTimeErrorMonitor: React.FC<RealTimeErrorMonitorProps> = ({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-300">
-                  {language === 'ka' ? 'ხმის შეტყობინებები' : 'Sound Notifications'}
+                  {language === 'ka' ? 'ხმოვანი სიგნალები' : 'Sound Alerts'}
                 </span>
                 <button
                   onClick={() => setSoundEnabled(!soundEnabled)}
@@ -344,7 +344,7 @@ const RealTimeErrorMonitor: React.FC<RealTimeErrorMonitorProps> = ({
         </div>
       </div>
 
-      {/* Toast Notifications for Critical Errors */}
+      {/* Toast Alerts for Critical Errors */}
       {toastsEnabled && (
         <div className="fixed top-4 right-4 z-50 space-y-2">
           {recentErrors
