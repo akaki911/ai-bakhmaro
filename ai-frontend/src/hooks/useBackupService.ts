@@ -7,6 +7,7 @@ export interface BackupStatus extends Record<string, unknown> {
   state?: string;
   enabled?: boolean;
   disabled?: boolean;
+  engine?: string | null;
   lastBackupAt?: string;
   last_backup_at?: string;
   lastBackup?: string;
@@ -50,7 +51,7 @@ interface ActionState {
 type BackupStatusResponse = BackupStatus & {
   success: boolean;
   enabled: boolean;
-  provider: string | null;
+  engine: string | null;
   lastBackupAt: string | null;
   nextBackupAt: string | null;
   items: number;
@@ -92,7 +93,7 @@ export async function fetchBackupStatus(signal?: AbortSignal): Promise<BackupSta
       ...((typeof data === 'object' && data !== null ? data : {}) as BackupStatus),
       success: true,
       enabled: Boolean((data as any).enabled),
-      provider: (data as any).provider ?? null,
+      engine: (data as any).engine ?? null,
       lastBackupAt: (data as any).lastBackupAt ?? null,
       nextBackupAt: (data as any).nextBackupAt ?? null,
       items: Number((data as any).items ?? 0),
@@ -104,7 +105,7 @@ export async function fetchBackupStatus(signal?: AbortSignal): Promise<BackupSta
       return {
         success: true,
         enabled: false,
-        provider: null,
+        engine: null,
         lastBackupAt: null,
         nextBackupAt: null,
         items: 0,
@@ -115,7 +116,7 @@ export async function fetchBackupStatus(signal?: AbortSignal): Promise<BackupSta
     return {
       success: true,
       enabled: false,
-      provider: null,
+      engine: null,
       lastBackupAt: null,
       nextBackupAt: null,
       items: 0,
