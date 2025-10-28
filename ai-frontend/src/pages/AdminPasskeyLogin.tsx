@@ -29,7 +29,7 @@ const createBackendPostInit = (payload: unknown): RequestInit => {
   return baseInit;
 };
 
-const oauthProviders = [
+const oauthOptions = [
   { name: 'Google', Icon: Chrome },
   { name: 'GitHub', Icon: Github },
 ];
@@ -258,7 +258,7 @@ const AdminPasskeyLogin: React.FC = () => {
             </div>
 
             <div className="flex justify-center gap-3">
-              {oauthProviders.map(({ name, Icon }) => (
+              {oauthOptions.map(({ name, Icon }) => (
                 <button
                   key={name}
                   type="button"

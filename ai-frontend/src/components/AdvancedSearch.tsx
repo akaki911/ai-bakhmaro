@@ -47,7 +47,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onFileSelect, className
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   
-  // Preview functionality using unified provider
+  // Preview functionality using unified service
   const {
     openPreview
   } = useFilePreview();

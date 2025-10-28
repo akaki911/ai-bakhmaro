@@ -3,7 +3,7 @@ const testScenarios = [
   {
     id: 1,
     question: "რა ფუნქცია აქვს bookingService.ts-ში?",
-    expectedTopics: ["getBookingsByUser", "createBooking", "updateBooking", "deleteBooking", "calculateProviderStats"],
+    expectedTopics: ["getBookingsByUser", "createBooking", "updateBooking", "deleteBooking"],
     category: "service_analysis"
   },
   {

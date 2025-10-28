@@ -41,7 +41,7 @@ router.get('/profile', authenticateJWT, (req, res) => {
 });
 
 // Admin-only endpoint example
-router.get('/admin-only', authenticateJWT, requireRole(['SUPER_ADMIN', 'PROVIDER']), (req, res) => {
+router.get('/admin-only', authenticateJWT, requireRole(['SUPER_ADMIN']), (req, res) => {
   res.json({
     success: true,
     message: 'Admin access granted',

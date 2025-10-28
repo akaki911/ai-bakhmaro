@@ -58,7 +58,7 @@ function originGuard(req, res, next) {
 }
 
 const adminSetupGuard = (req, res, next) => {
-  const privilegedRoles = new Set(['ADMIN', 'SUPER_ADMIN', 'PROVIDER_ADMIN']);
+  const privilegedRoles = new Set(['ADMIN', 'SUPER_ADMIN']);
 
   const sessionUser = req.session?.user;
   const requestUser = req.user;

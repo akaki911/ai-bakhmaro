@@ -219,46 +219,7 @@ const BakhmaroLocations = () => {
       difficulty: 'intermediate'
     },
 
-    {
-      platform: 'ქართული ბანკის API ინტეგრაცია',
-      description: 'ლიბერთი ბანკის გადახდის სისტემის ინტეგრაცია',
-      codeExample: `
-// ქართული ბანკის გადახდის სერვისი
-class GeorgianBankPaymentService {
-  constructor(apiKey, environment = 'sandbox') {
-    this.apiKey = apiKey;
-    this.baseURL = environment === 'production' 
-      ? 'https://api.libertybank.ge' 
-      : 'https://sandbox.libertybank.ge';
-  }
-
-  async processPayment(თანხა, ვალუტა = 'GEL', აღწერა) {
-    try {
-      const response = await fetch(\`\${this.baseURL}/payments\`, {
-        method: 'POST',
-        headers: {
-          'Authorization': \`Bearer \${this.apiKey}\`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          amount: თანხა,
-          currency: ვალუტა,
-          description: აღწერა,
-          callback_url: 'https://mysite.ge/payment-callback'
-        })
-      });
-      
-      const result = await response.json();
-      return { წარმატება: true, მონაცემები: result };
-    } catch (error) {
-      return { წარმატება: false, შეცდომა: error.message };
-    }
-  }
-}`,
-      useCase: 'ელექტრონული კომერციის და FinTech აპლიკაციები',
-      georgianContext: 'ქართული ფინანსური ეკოსისტემის ციფრული ტრანსფორმაცია',
-      difficulty: 'advanced'
-    },
+    
 
     {
       platform: 'ქართული ენის NLP სერვისი',

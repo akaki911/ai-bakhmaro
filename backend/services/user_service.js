@@ -17,7 +17,7 @@ class UserService {
         userId,
         personalId: normalizedPersonalId,
         email,
-        role, // SUPER_ADMIN, PROVIDER, CUSTOMER
+        role, // SUPER_ADMIN, CUSTOMER
         status, // active, inactive, suspended
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp()

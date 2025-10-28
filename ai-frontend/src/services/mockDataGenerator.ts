@@ -248,7 +248,6 @@ export class MockDataGenerator {
       'functions/src/routes/ai_proxy.js',
       'ai-service/services/groq_service.js',
       'src/hooks/useAuth.ts',
-      'src/utils/validation.ts',
       'backend/middleware/auth.js',
       'src/components/FileTree.tsx'
     ];
