@@ -15,7 +15,7 @@ describe('TaskManager Integration', () => {
   test('processRequest preserves task planning for file related prompts', async () => {
     const registry = new ToolRegistry();
     const result = await registry.processRequest(
-      'გთხოვ მოძებნე ფაილი bookingService.ts რომ განვაალიზო',
+      'გთხოვ მოძებნე ფაილი repository_automation_service.js რომ განვაალიზო',
       { userId: 'integration-test-user' }
     );
 

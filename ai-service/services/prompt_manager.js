@@ -435,7 +435,7 @@ SOL-202: Use natural responses. Only structure when user explicitly asks for ana
         files: this.processFileContext(fileContext),
         user: this.processUserContext(userContext),
         project: {
-          name: 'Bakhmaro Cottages Platform',
+          name: 'Gurulo AI Developer Workspace',
           stack: 'React + TypeScript + Node.js + Firebase',
           environment: 'Replit Development'
         }
