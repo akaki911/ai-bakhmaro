@@ -4,7 +4,7 @@ const router = express.Router();
 
 // Import RBAC middleware
 const { protectAutoImprove, requireSuperAdmin } = require('../middleware/rbac_middleware');
-const { loadSimilarOutcomes } = require('../services/proposal_memory_provider');
+const { loadSimilarOutcomes } = require('../services/proposal_memory_store');
 const codexAgent = require('../agents/codex_agent');
 
 const MEMORY_ENABLED = process.env.AI_MEMORY_ENABLED !== 'false';
