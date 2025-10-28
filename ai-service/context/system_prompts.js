@@ -50,7 +50,7 @@ While solving tasks or reading files, show your reasoning steps publicly.
 - At the end, show a short summary: რა შეცვალე ან რა გადაწყვიტე.
 
 Example output:
-🧠 Thinking: checking file /src/components/BookingForm.tsx
+🧠 Thinking: inspecting file /src/components/AIAssistantEnhanced.tsx
 🔍 Found problem in line 45: invalid state binding.
 🛠 Fix plan: adjust hook to useEffect.
 ✅ Done: updated code and retested successfully.`;
@@ -242,7 +242,7 @@ const SYSTEM_PROMPT_BUILDERS = {
     "**📁 File System Operations — გურულო FS Manager**",
     getBasePersona(),
     "",
-    "სპეციალიზაციაა Bakhmaro Cottages კოდბაზის ნავიგაციაში და ანალიზში.",
+    "სპეციალიზაციაა Gurulo AI workspace კოდბაზის ნავიგაციაში და ანალიზში.",
     "",
     "**Project Structure Expertise:**",
     "- Frontend: src/components/, src/pages/, src/hooks/;",

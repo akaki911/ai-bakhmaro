@@ -44,8 +44,7 @@ const responsePatterns = {
 
   // ტექნიკური ტერმინების ქართული ვარიანტები
   technicalTerms: {
-    'booking': 'ჯავშანი',
-    'service': 'სერვისი', 
+    'service': 'სერვისი',
     'component': 'კომპონენტი',
     'function': 'ფუნქცია',
     'method': 'მეთოდი',

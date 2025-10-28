@@ -86,20 +86,14 @@ class CodeAnalyzer {
 
   async findThematicModules() {
     const targetModules = [
-      // Core booking modules
-      'BookingForm.tsx', 'BookingModal.tsx', 'HotelBookingForm.tsx', 'VehicleBookingForm.tsx',
-      // Admin modules
-      'AdminCottages.tsx', 'AdminHotels.tsx', 'AdminVehicles.tsx', 'AdminUsers.tsx',
-      // Main pages
-      'MainPage.tsx', 'MainDashboard.tsx', 'UserDashboard.tsx',
-      // Core components
-      'CottagePage.tsx', 'HotelPage.tsx', 'VehiclePage.tsx',
-      // Lists
-      'CottagesList.tsx', 'HotelsList.tsx', 'VehiclesList.tsx',
+      // Core Gurulo modules
+      'AIAssistantEnhanced.tsx', 'AIDeveloperPanel.tsx', 'SystemMonitoringDashboard.tsx',
+      'AutoImprove', 'ConsoleLogger.ts', 'PerformanceDashboard.tsx',
       // Services
-      'bookingService.ts', 'customerService.ts', 'priceCodeService.ts',
-      // Backend
-      'ai_controller.js', 'index.js'
+      'gurulo_intent_router.js', 'prompt_manager.js', 'repository_automation_service.js',
+      'trusted_ops_policy.js', 'system_watchdog.js', 'site_summary.js',
+      // Backend orchestration
+      'ai_controller.js', 'groq_service.js', 'memory_controller.js', 'context/system_prompts.js'
     ];
 
     const foundModules = [];
@@ -161,7 +155,6 @@ class CodeAnalyzer {
 
   determineModuleType(fileName, content) {
     if (fileName.includes('Admin')) return 'Admin Interface';
-    if (fileName.includes('Booking')) return 'Booking System';
     if (fileName.includes('Form')) return 'Form Component';
     if (fileName.includes('Page')) return 'Page Component';
     if (fileName.includes('List')) return 'List Component';
@@ -311,7 +304,7 @@ class CodeAnalyzer {
   }
 
   async generateThematicResponse(query, structuredSummary, conversationHistory) {
-    const systemPrompt = `თქვენ ხართ ბახმაროს ბუკინგ პლატფორმის ექსპერტი. 
+    const systemPrompt = `თქვენ ხართ Gurulo — ai.bakhmaro.co პლატფორმის ექსპერტი.
 
 მოწოდებული თემატური ანალიზის საფუძველზე მიაწოდეთ სრული, სტრუქტურული და გასაგები ახსნა პლატფორმის შესახებ.
 
@@ -385,30 +378,26 @@ ${structuredSummary}
 
   extractKeywords(query) {
     const georgianToEnglish = {
-      'ფას': ['price', 'pricing', 'cost'],
-      'ღირებულებ': ['value', 'worth', 'price'],
-      'ფორმულ': ['formula', 'calculation'],
-      'ღამე': ['night', 'nightly'],
-      'კოტეჯ': ['cottage'],
-      'სასტუმრო': ['hotel'],
-      'ავტომობილ': ['vehicle', 'car'],
-      'ჯავშან': ['booking', 'reservation'],
-      'კალენდარ': ['calendar'],
-      'გადახდ': ['payment', 'deposit'],
-      'შეკვეთ': ['order', 'booking'],
-      'ფანჯარ': ['modal', 'window', 'form'],
-      'ბაზ': ['database', 'data'],
-      'მომხმარებლ': ['user', 'customer'],
-      'ადმინ': ['admin'],
-      'დეშბორდ': ['dashboard'],
+      'ავტომატიზაცი': ['automation', 'automated', 'auto'],
+      'მონიტორინგ': ['monitoring', 'monitor', 'health'],
+      'ასისტენტ': ['assistant', 'ai', 'assistant'],
+      'კოდი': ['code', 'implementation'],
+      'პრომპტ': ['prompt', 'prompting'],
+      'მეხსიერ': ['memory'],
+      'დავალებ': ['task', 'workflow', 'operation'],
+      'დეშბორდ': ['dashboard', 'metrics'],
       'სტრუქტურ': ['structure', 'architecture'],
       'სისტემ': ['system', 'service'],
       'სრული': ['full', 'complete', 'entire'],
-      'ინფორმაცი': ['info', 'information', 'data'],
-      'პლატფორმ': ['platform', 'app', 'application'],
+      'ინფორმაც': ['info', 'information', 'data'],
+      'პლატფორმ': ['platform', 'workspace'],
       'მუშაობ': ['work', 'function', 'operate'],
       'მოწყობ': ['setup', 'structure', 'organization'],
-      'არქიტექტურ': ['architecture', 'structure', 'design']
+      'არქიტექტურ': ['architecture', 'structure', 'design'],
+      'ოპერაცი': ['operations', 'ops'],
+      'დიაგნოსტიკ': ['diagnostic', 'diagnostics'],
+      'გურულო': ['gurulo', 'assistant'],
+      'გროკ': ['groq']
     };
 
     let keywords = [];
@@ -431,9 +420,9 @@ ${structuredSummary}
   isRelevantByContext(file, query) {
     // Key files that are almost always relevant
     const alwaysRelevant = [
-      'pricing.ts', 'vehiclePricing.ts', 'seasonalPricing.ts',
-      'BookingForm.tsx', 'BookingModal.tsx', 'CottageForm.tsx',
-      'AdminCottages.tsx', 'MainPage.tsx', 'ai_controller.js'
+      'ai_controller.js', 'groq_service.js', 'prompt_manager.js',
+      'gurulo_intent_router.js', 'repository_automation_service.js',
+      'system_watchdog.js', 'AIAssistantEnhanced.tsx', 'SystemMonitoringDashboard.tsx'
     ];
 
     const filename = path.basename(file.path);
@@ -538,100 +527,84 @@ ${structuredSummary}
 
     // Boost score for important files
     const filename = path.basename(file.path);
-    if (filename.includes('pricing') || filename.includes('Pricing')) score += 10;
-    if (filename.includes('booking') || filename.includes('Booking')) score += 8;
-    if (filename.includes('cottage') || filename.includes('Cottage')) score += 6;
+    if (filename.includes('automation') || filename.includes('Automation')) score += 8;
+    if (filename.includes('assistant') || filename.includes('Assistant')) score += 8;
+    if (filename.includes('monitor') || filename.includes('Monitor')) score += 6;
+    if (filename.includes('groq') || filename.includes('Groq')) score += 6;
 
     return score;
   }
 
-  // Explain booking system specifically
-  async explainBookingSystem(query) {
+  // Explain Gurulo workspace capabilities
+  async explainWorkspaceOverview(query) {
     try {
-      console.log('📋 [Booking System] Starting targeted analysis...');
+      console.log('📋 [Workspace Overview] Starting targeted analysis...');
 
-      // Hardcoded fallback explanation for booking system
-      const fallbackBookingExplanation = `🎯 **ბრონირების სისტემის დეტალური აღწერა:**
+      const fallbackWorkspaceExplanation = `🎯 **Gurulo AI Development Workspace Overview:**
 
-🔄 **ბრონირების პროცესი ეტაპ-ეტაპად:**
+🔄 **Primary Loops:**
 
-1. **ფორმის შევსება** (BookingForm.tsx/BookingModal.tsx):
-   - მომხმარებელი ირჩევს კატეგორიას (კოტეჯი, სასტუმრო, ტრანსპორტი)
-   - თარიღების მითითება (Check-in/Check-out)
-   - სტუმრების რაოდენობის მითითება
-   - პირადი ინფორმაციის შევსება (სახელი, ტელეფონი)
+1. **Conversation & Context** (ai_controller.js, gurulo_response_builder.js):
+   - Receives developer prompts and recent history
+   - Assembles repository context through semantic search and memory
+   - Routes requests to Groq via adaptive prompts
 
-2. **ვალიდაცია და შემოწმება** (bookingService.ts):
-   - თარიღების ვალიდაცია (არ იყოს წარსული)
-   - ხელმისაწვდომობის რეალ-დროის შემოწმება Firebase-ში
-   - ფასის ავტომატური გაანგარიშება (pricing.ts)
-   - სეზონური ტარიფების გათვალისწინება
+2. **Automation & Trusted Operations** (repository_automation_service.js, trusted_ops_policy.js):
+   - Evaluates whether the assistant can apply code updates automatically
+   - Executes approved file edits and command sequences with safety checks
+   - Records outcomes for follow-up diagnostics
 
-3. **ბრონირების შექმნა** (bookingService.ts):
-   - Firebase Firestore-ში ახალი ჩანაწერის შექმნა
-   - უნიკალური booking ID-ის გენერაცია
-   - სტატუსის დაყენება "pending" (დადასტურების მოლოდინში)
-   - ბრონირების დროის ფიქსაცია
+3. **Monitoring & Analytics** (system_watchdog.js, performance_monitoring.js):
+   - Tracks service health, latency, and queue pressure
+   - Emits structured metrics for dashboards and alerting scripts
+   - Feeds insights back into response generation
 
-4. **შეტყობინებები და ნოტიფიკაციები** (messagingService.ts):
-   - მომხმარებლისთვის დადასტურების SMS/Email
-   - პროვაიდერისთვის ახალი ბრონირების შეტყობინება
-   - Real-time ნოტიფიკაციები ადმინისთვის
-   - ბრონირების სტატუსის განახლებები
+🛠️ **Key Technologies:**
+• Groq LLaMA models with automatic fallback orchestration
+• Node.js + Express service with streaming support
+• Repository-aware context builders and semantic indexing
+• pnpm workspace scripts for diagnostics and builds
 
-5. **გადახდის პროცესი**:
-   - ავანსის გადახდის ლინკის გენერაცია
-   - გადახდის სტატუსის თვალყურდევნება
-   - ბრონირების დადასტურება წარმატებული გადახდის შემდეგ
+📊 **Essential Files:**
+• ai-service/controllers/ai_controller.js — request orchestration layer
+• ai-service/services/groq_service.js — Groq integration and health checks
+• ai-service/services/prompt_manager.js — system/user prompt composition
+• ai-service/services/repository_automation_service.js — trusted execution flow
+• ai-service/services/system_watchdog.js — runtime monitoring core`;
 
-🛠️ **გამოყენებული ტექნოლოგიები:**
-• React Hooks (useState, useEffect) - UI სტეიტის მართვისთვის
-• Firebase Firestore Database - მონაცემების შენახვისთვის
-• Real-time Listeners - მყისიერი განახლებებისთვის
-• TypeScript Validation - მონაცემების ვალიდაციისთვის
-• Calendar Integration - თარიღების მართვისთვის
-
-📊 **ძირითადი ფაილები:**
-• BookingForm.tsx - ბრონირების ძირითადი ფორმა
-• BookingModal.tsx - მოდალური ფანჯარა ბრონირებისთვის
-• bookingService.ts - ბრონირების ყველა ლოგიკა
-• pricing.ts - ფასების გამოთვლის ალგორითმები
-• messagingService.ts - შეტყობინებების სისტემა`;
-
-      const bookingModules = [
-        'src/BookingForm.tsx',
-        'src/components/BookingModal.tsx', 
-        'src/components/BookingAuth.tsx',
-        'src/services/bookingService.ts',
-        'src/utils/pricing.ts',
-        'src/services/messagingService.ts'
+      const workspaceModules = [
+        'ai-service/controllers/ai_controller.js',
+        'ai-service/services/groq_service.js',
+        'ai-service/services/prompt_manager.js',
+        'ai-service/services/repository_automation_service.js',
+        'ai-service/services/system_watchdog.js',
+        'ai-service/services/gurulo_intent_router.js'
       ];
 
-      let foundModules = [];
+      const foundModules = [];
+      const fileService = require('./fileService');
 
-      // Try to read actual modules if available
-      for (const modulePath of bookingModules) {
+      for (const modulePath of workspaceModules) {
         try {
-          const fileService = require('./fileService');
           const content = await fileService.getFileContent(modulePath);
           if (content) {
             foundModules.push(modulePath);
           }
         } catch (error) {
-          console.log(`⚠️ [Booking System] Could not read ${modulePath}`);
+          console.log(`⚠️ [Workspace Overview] Could not read ${modulePath}`);
         }
       }
 
       if (foundModules.length > 0) {
-        console.log(`✅ [Booking System] Found ${foundModules.length} modules: ${foundModules.join(', ')}`);
-        return fallbackBookingExplanation + `\n\n📄 **აღმოჩენილი მოდულები:** ${foundModules.length}/6`;
-      } else {
-        console.log('⚠️ [Booking System] Using hardcoded explanation');
-        return fallbackBookingExplanation + `\n\n⚠️ **შენიშვნა:** გამოიყენება ჩაშენებული აღწერა.`;
+        console.log(`✅ [Workspace Overview] Confirmed modules: ${foundModules.join(', ')}`);
+        return `${fallbackWorkspaceExplanation}\n\n📄 **აღმოჩენილი მოდულები:** ${foundModules.length}/${workspaceModules.length}`;
       }
 
+      console.log('ℹ️ [Workspace Overview] Using fallback description');
+      return `${fallbackWorkspaceExplanation}\n\nℹ️ **შენიშვნა:** გამოიყენება ჩაშენებული აღწერა.`;
+
     } catch (error) {
-      console.error('❌ [Booking System] explainBookingSystem failed:', error);
+      console.error('❌ [Workspace Overview] explainWorkspaceOverview failed:', error);
       return null;
     }
   }
@@ -688,7 +661,7 @@ ${structuredSummary}
   }
 
   async generateCodeExplanation(query, codeContext, conversationHistory) {
-    const systemPrompt = `თქვენ ხართ გამოცდილი დეველოპერი და კოდის ექსპერტი ბახმაროს ბუკინგ პლატფორმისთვის. 
+    const systemPrompt = `თქვენ ხართ გამოცდილი დეველოპერი და კოდის ექსპერტი Gurulo AI Workspace-ში.
 
 მიღებული კოდის ნაწილების საფუძველზე:
 1. უპასუხეთ მომხმარებლის კითხვას დეტალურად და ბუნებრივად
@@ -698,11 +671,11 @@ ${structuredSummary}
 5. იყავით სრული და გასაგები
 
 🔧 **ფოკუსირება:**
-- React კომპონენტების სტრუქტურა
-- TypeScript სერვისების ლოგიკა  
-- Firebase ინტეგრაცია
-- ბრონირების სისტემის მუშაობა
-- ფასების კალკულაცია
+- React/TypeScript კომპონენტების სტრუქტურა
+- AI სერვისების ლოგიკა და კონტექსტის აგება
+- Firebase და Groq ინტეგრაციები
+- ავტომატიზაციის ნაკადები და Trusted Ops
+- მონიტორინგისა და მეტრიკების შეგროვება
 
 პასუხი უნდა იყოს ისეთი, როგორც რეალური სენიორ დეველოპერი უპასუხებდა.`;
 
@@ -781,10 +754,10 @@ function classifyQuery(query) {
     ]
   };
 
-  // Pricing patterns - enhanced
-  const pricingPatterns = [
-    'ფასი', 'ღირებულება', 'ღამე', 'კალკულაცია', 'price',
-    'ფასების სისტემა', 'pricing system', 'cost calculation'
+  // Automation patterns - enhanced
+  const automationPatterns = [
+    'ავტომატიზ', 'automation', 'ops center', 'trusted ops', 'script execution',
+    'task automation', 'auto update'
   ];
 
   // Greeting patterns
@@ -817,8 +790,12 @@ function classifyQuery(query) {
   }
 
   // Check other patterns
-  if (pricingPatterns.some(pattern => lowerQuery.includes(pattern))) {
-    return { category: 'pricing', type: 'pricing_query', requiresSpecificFiles: ['pricing.ts', 'vehiclePricing.ts'] };
+  if (automationPatterns.some(pattern => lowerQuery.includes(pattern))) {
+    return {
+      category: 'automation',
+      type: 'automation_query',
+      requiresSpecificFiles: ['ai-service/services/repository_automation_service.js']
+    };
   }
 
   if (greetingPatterns.some(pattern => lowerQuery.includes(pattern))) {
@@ -903,7 +880,7 @@ async function augmentWithMemoryAndStructure(retrievedData, query) {
   try {
     console.log('🔧 [RAG Augmentation] Building comprehensive context...');
 
-    let augmentedContext = `🏗️ ბახმაროს ბუკინგ პლატფორმის სრული ანალიზი:\n\n`;
+    let augmentedContext = `🏗️ Gurulo AI Development Workspace სრული ანალიზი:\n\n`;
 
     // Add project structure if available
     if (retrievedData.projectStructure) {
@@ -968,15 +945,15 @@ async function generateRAGResponse(query, augmentedContext, conversationHistory)
 
     const { askGroq } = require('./groq_service');
 
-    const systemPrompt = `თქვენ ხართ ბახმაროს ბუკინგ პლატფორმის AI ექსპერტი. 
+    const systemPrompt = `თქვენ ხართ Gurulo — ai.bakhmaro.co პლატფორმის AI დეველოპერი.
 
-მიღებული ინფორმაციის საფუძველზე მომაწოდეთ სრული, დეტალური და სტრუქტურული პასუხი ქართულად.
+მიღებული ინფორმაციის საფუძველზე მოამზადეთ სრული, დეტალური და სტრუქტურული პასუხი ქართულად.
 
 **ინსტრუქციები:**
 1. გამოიყენეთ მხოლოდ მოწოდებული ინფორმაცია
 2. პასუხი იყოს სტრუქტურული და გასაგები
 3. ჩართეთ კონკრეტული მაგალითები კოდიდან
-4. ახსენით როგორ მუშაობს თითოეული კომპონენტი
+4. ახსენით როგორ მუშაობს თითოეული კომპონენტი ან სერვისი
 5. მიუთითეთ ფაილების მდებარეობა და მიზნობრიობა
 
 **კონტექსტი:**
