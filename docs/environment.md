@@ -12,7 +12,6 @@ AI Space relies on Firebase runtime config (`firebase functions:config:set`) and
 | `vite_gurulo_api_base` | Hosting | API base URL injected into the AI console. | On environment rewire |
 | `knowledge.vault.bucket` | Functions | Google Cloud Storage bucket for knowledge embeddings. | Annually |
 | `telemetry.dataset` | Functions | BigQuery dataset name for telemetry exports. | As needed |
-| `integration.slack.token` | Functions | Slack bot token for Integration Hub. | Monthly |
 | `integration.gmail.credentials` | Functions | Encrypted Gmail API credentials. | Quarterly |
 | `ops.runbook.repo` | Functions | Git repo URL housing runbook markdowns. | When repository moves |
 | `eval.vertex.project` | Functions | Vertex AI project ID for evaluation workloads. | On project migration |

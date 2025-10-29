@@ -11,7 +11,6 @@ interface ConnectorDefinition {
 
 const stubConnectors: ConnectorDefinition[] = [
   { id: 'google-oauth', name: 'Google Workspace OAuth', status: 'coming-soon', category: 'oauth' },
-  { id: 'slack-webhook', name: 'Slack Webhook Relay', status: 'draft', category: 'webhook' },
   { id: 'postgres-stream', name: 'PostgreSQL CDC Stream', status: 'coming-soon', category: 'data-stream' },
 ];
 

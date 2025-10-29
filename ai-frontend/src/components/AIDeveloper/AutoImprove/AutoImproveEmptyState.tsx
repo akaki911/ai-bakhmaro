@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { InboxArrowDownIcon } from '@heroicons/react/24/outline';
+import { SparklesIcon } from '@heroicons/react/24/outline';
 
 interface AutoImproveEmptyStateProps {
   offline?: boolean;
@@ -38,7 +38,7 @@ export const AutoImproveEmptyState: React.FC<AutoImproveEmptyStateProps> = ({
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-gray-700 bg-gray-900/40 p-10 text-center text-gray-300">
-      <InboxArrowDownIcon className="h-12 w-12 text-gray-500" aria-hidden="true" />
+      <SparklesIcon className="h-12 w-12 text-gray-500" aria-hidden="true" />
       <h4 className="mt-4 text-lg font-semibold text-gray-100">{title}</h4>
       <p className="mt-2 max-w-sm text-sm text-gray-400">{description}</p>
       {onRetry && (
