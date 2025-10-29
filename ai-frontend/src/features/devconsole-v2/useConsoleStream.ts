@@ -226,7 +226,7 @@ export const useConsoleStream = (filters?: any) => {
       'API request processed',
       'Cache invalidated',
       'File upload completed',
-      'Error in payment processing',
+      'Error in webhook processing',
       'Warning: High memory usage detected',
       'Debug: Query execution time exceeded',
       'System health check passed',

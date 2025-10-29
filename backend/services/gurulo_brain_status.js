@@ -18,8 +18,8 @@ const INCIDENT = {
   mode: 'აღდგენის რეჟიმი',
   headline: '⚠️ ინტეგრაციის ტესტებმა განახლება შეაჩერა',
   status:
-    'Recovery mode: payment-webhook და activity-sync სცენარები ჩავარდა, გურულო აგროვებს ლოგებს.',
-  focus: 'payment-webhook & activity-sync integration tests',
+    'Recovery mode: webhook-delivery და activity-sync სცენარები ჩავარდა, გურულო აგროვებს ლოგებს.',
+  focus: 'webhook-delivery & activity-sync integration tests',
 };
 
 const OSCILLATION_PERIOD_MS = 90_000;

@@ -387,7 +387,6 @@ ${structuredSummary}
       'ღამე': ['night', 'nightly'],
       'ჯავშან': ['booking', 'reservation'],
       'კალენდარ': ['calendar'],
-      'გადახდ': ['payment', 'deposit'],
       'შეკვეთ': ['order', 'booking'],
       'ფანჯარ': ['modal', 'window', 'form'],
       'ბაზ': ['database', 'data'],
@@ -404,6 +403,7 @@ ${structuredSummary}
       'ინფორმაცი': ['info', 'information', 'data'],
       'პლატფორმ': ['platform', 'app', 'application'],
       'მუშაობ': ['work', 'function', 'operate'],
+      'სინქრონიზაცი': ['sync', 'synchronization'],
       'მოწყობ': ['setup', 'structure', 'organization'],
       'არქიტექტურ': ['architecture', 'structure', 'design']
     };
