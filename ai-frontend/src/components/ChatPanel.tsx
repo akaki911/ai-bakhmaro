@@ -971,7 +971,7 @@ export default function ChatPanel({
     // Connect WebSocket and update project context
     connectWebSocket();
     updateContext(
-      'Bakhmaro Cottages Platform',
+      'Bakhmaro AI Operations Platform',
       'Chat სისტემის განვითარება',
       fileContext
     );

@@ -175,7 +175,7 @@ const getRpConfig = (req) => {
     rpID: finalConfig.rpID,
     origin: finalConfig.origin,
     expectedOrigins: [finalConfig.origin],
-    rpName: 'Bakhmaro Cottages - Georgian Rental Platform'
+    rpName: 'Bakhmaro AI Operations Platform'
   });
 
   if (req) {
