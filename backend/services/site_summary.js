@@ -186,7 +186,7 @@ const RESPONSE_TEMPLATES = {
 • vite.config.mts - Frontend build კონფიგურაცია`;
   },
 
-  booking_process: () => {
+  operations_flow: () => {
     return `🧭 **ოპერაციული ნაკადი:**
 
 1️⃣ **კვეთის კლასიფიკაცია** - Gurulo განსაზღვრავს მოთხოვნის ტიპს და ამოარჩევს შესაბამის მოდულს
@@ -327,9 +327,9 @@ module.exports = {
       case 'important_files':
         return templates.key_files_mapping();
 
-      case 'booking_process':
-      case 'booking_system':
-        return templates.booking_process();
+      case 'operations_flow':
+      case 'operations_overview':
+        return templates.operations_flow();
 
       case 'admin_panel':
       case 'admin_features':

@@ -20,7 +20,7 @@ export class MockDataGenerator {
     '⚡ API Request დამუშავდა - Response Time: 180ms',
     '💾 Redis Cache განახლება შესრულებულია',
     '📁 TypeScript ფაილები წარმატებით კომპილირდა',
-    '🚨 Payment Gateway Error - Card Validation Failed',
+    '🚨 Webhook Delivery Error - Signature Validation Failed',
     '⚠️ Memory Usage: 85% - Garbage Collection საჭიროა',
     '🐛 Debug: Request Timeout - 30s exceeded',
     '✅ Database Connection Pool Optimized',

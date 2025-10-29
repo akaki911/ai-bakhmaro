@@ -6,8 +6,6 @@ const {
   extractImprovement,
   createPatchPreview,
   chunkCodexResponse,
-  summarizeForSlack,
-  sanitizeSlackText,
 } = require('../utils/codexHelpers');
 
 const DEFAULT_TIMEOUT_MS = Number(process.env.CODEX_TIMEOUT_MS || 35000);
@@ -16,12 +14,10 @@ const DEFAULT_TEMPERATURE = Number(process.env.CODEX_TEMPERATURE || 0.2);
 const CODEX_MODEL = process.env.CODEX_MODEL || 'gpt-5-codex';
 
 let cachedCodexModule = null;
-let cachedSlackModule = null;
 
 class CodexAgent {
   constructor() {
     this.client = null;
-    this.slackClient = null;
     this.timeoutMs = DEFAULT_TIMEOUT_MS;
     this.defaultMaxTokens = DEFAULT_MAX_TOKENS;
     this.defaultTemperature = DEFAULT_TEMPERATURE;
@@ -31,14 +27,6 @@ class CodexAgent {
 
   isEnabled() {
     return Boolean(process.env.OPENAI_API_KEY);
-  }
-
-  shouldUseSlack() {
-    return process.env.CODEX_SLACK_ENABLED === 'true' && Boolean(process.env.SLACK_BOT_TOKEN);
-  }
-
-  getSlackChannel() {
-    return process.env.CODEX_SLACK_CHANNEL || '#dev-ai';
   }
 
   async ensureClient() {
@@ -68,36 +56,6 @@ class CodexAgent {
 
     this.client = new CodexConstructor({ apiKey: process.env.OPENAI_API_KEY });
     return this.client;
-  }
-
-  ensureSlackClient() {
-    if (!this.shouldUseSlack()) {
-      return null;
-    }
-
-    if (this.slackClient) {
-      return this.slackClient;
-    }
-
-    const token = process.env.SLACK_BOT_TOKEN;
-    if (!cachedSlackModule) {
-      try {
-        // eslint-disable-next-line global-require
-        cachedSlackModule = require('@slack/web-api');
-      } catch (error) {
-        this.logger.warn('Slack SDK not available:', error && error.message ? error.message : error);
-        return null;
-      }
-    }
-
-    const SlackConstructor = cachedSlackModule.WebClient || cachedSlackModule.default;
-    if (!SlackConstructor) {
-      this.logger.warn('Slack WebClient export missing from SDK.');
-      return null;
-    }
-
-    this.slackClient = new SlackConstructor(token);
-    return this.slackClient;
   }
 
   async withTimeout(factory, label) {
@@ -213,26 +171,6 @@ class CodexAgent {
     });
   }
 
-  async postToSlack(command, output, filePath) {
-    const client = this.ensureSlackClient();
-    if (!client) {
-      return;
-    }
-
-    const sanitized = sanitizeSlackText(output);
-    const summary = summarizeForSlack(command, sanitized, filePath);
-    const channel = this.getSlackChannel();
-
-    try {
-      await client.chat.postMessage({
-        channel,
-        text: summary,
-      });
-    } catch (error) {
-      this.logger.warn('Slack notification failed', error && error.message ? error.message : error);
-    }
-  }
-
   async logUsage(entry) {
     if (!(global && global.isFirebaseAvailable)) {
       return;
@@ -314,10 +252,6 @@ class CodexAgent {
       userId: request.userId,
       metadata: request.metadata,
     });
-
-    if (this.shouldUseSlack() && request.metadata && request.metadata.notifySlack) {
-      await this.postToSlack(request.command, result.text, request.filePath);
-    }
 
     return result;
   }
@@ -406,10 +340,6 @@ class CodexAgent {
       metadata: Object.assign({}, request.metadata || {}, { stream: true }),
     });
 
-    if (this.shouldUseSlack() && request.metadata && request.metadata.notifySlack) {
-      await this.postToSlack(request.command, text, request.filePath);
-    }
-
     return { text: text.trim(), usage };
   }
 
@@ -437,10 +367,6 @@ class CodexAgent {
       metadata: Object.assign({}, options.metadata || {}, { mode: 'auto-improve' }),
     });
 
-    if (this.shouldUseSlack() && options.metadata && options.metadata.notifySlack) {
-      await this.postToSlack('auto_improve', improvement.raw, options.filePath);
-    }
-
     return {
       prompt,
       improvedContent,
@@ -450,34 +376,6 @@ class CodexAgent {
     };
   }
 
-  async handleSlackMessage(payload) {
-    if (!this.shouldUseSlack()) {
-      return null;
-    }
-
-    const normalized = (payload.text || '').trim();
-    const commandMatch = normalized.match(/^\/(improve|refactor|explain)\s+/i);
-    const command = commandMatch ? commandMatch[1].toLowerCase() : 'chat';
-    const message = normalized.replace(/^\/[a-zA-Z]+\s+/, '');
-
-    const result = await this.generate({
-      command,
-      message,
-      metadata: { origin: 'slack', channel: payload.channel },
-      userId: payload.user,
-      filePath: payload.filePath,
-    });
-
-    const slackClient = this.ensureSlackClient();
-    if (slackClient && payload.channel) {
-      await slackClient.chat.postMessage({
-        channel: payload.channel,
-        text: sanitizeSlackText(result.text),
-      });
-    }
-
-    return result;
-  }
 }
 
 module.exports = new CodexAgent();

@@ -156,28 +156,11 @@ function chunkCodexResponse(text, chunkSize = DEFAULT_STREAM_CHUNK) {
   return chunks;
 }
 
-function summarizeForSlack(command, result, filePath) {
-  const normalized = (result || '').trim();
-  const preview = normalized.length > 600 ? `${normalized.slice(0, 600)}…` : normalized;
-  const header = `*Codex command:* \`${command}\``;
-  const fileLine = filePath ? `*File:* \`${filePath}\`` : '';
-  return [header, fileLine, '```', preview, '```'].filter(Boolean).join('\n');
-}
-
-function sanitizeSlackText(text) {
-  return (text || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
 module.exports = {
   buildCodexPrompt,
   buildAutoImprovePrompt,
   extractImprovement,
   createPatchPreview,
   chunkCodexResponse,
-  summarizeForSlack,
-  sanitizeSlackText,
 };
 
