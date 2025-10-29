@@ -1250,7 +1250,7 @@ function extractSubjectFromQuery(message) {
   }
 
   // Look for common subjects
-  const subjects = ['ბრონირების', 'ფასების', 'კოტეჯების', 'მომხმარებლების', 'ადმინ', 'სასტუმროების'];
+  const subjects = ['მეხსიერების', 'ავტომატური გაუმჯობესების', 'მონიტორინგის', 'უსაფრთხოების', 'ადმინ', 'ინტეგრაციების'];
   for (const subject of subjects) {
     if (message.includes(subject)) {
       return subject;

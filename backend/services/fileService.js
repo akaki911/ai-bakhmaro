@@ -280,10 +280,8 @@ class FileService {
   expandSearchTerms(term) {
     const georgianTermMap = {
       'ფასები': ['price', 'pricing', 'cost'],
-      'ბრონირება': ['booking', 'reservation'],
-      'მომხმარებელი': ['user', 'customer'],
+      'მომხმარებელი': ['user'],
       'ადმინი': ['admin'],
-      'კალენდარი': ['calendar'],
       'ფორმა': ['form', 'modal']
     };
 
@@ -302,10 +300,6 @@ class FileService {
     if (term.includes('ფასები') || term.includes('price')) {
       expandedTerms.push('pricing', 'billing', 'rate');
     }
-    if (term.includes('ბრონირება') || term.includes('booking')) {
-      expandedTerms.push('BookingForm', 'BookingModal', 'bookingService');
-    }
-
     return [...new Set(expandedTerms)];
   }
 

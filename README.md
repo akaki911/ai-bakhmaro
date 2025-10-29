@@ -8,7 +8,7 @@ The production stack is provisioned on **Firebase Hosting** with dynamic routes 
 
 1. The Vite-built AI console is deployed as a static bundle to Firebase Hosting and cached at the CDN edge.
 2. Hosting rewrites `/api/**` requests to a regional HTTPS Cloud Function that brokers LLM calls, automation jobs, and secure integrations.
-3. Long-running automations dispatch background tasks to Cloud Tasks and persist state in Firestore. Event webhooks from partner tools enter through dedicated HTTPS Functions guarded by WebAuthn service tokens.
+3. Long-running automations dispatch background tasks to Cloud Tasks and persist state in Firestore. Event webhooks from developer tooling enter through dedicated HTTPS Functions guarded by WebAuthn service tokens.
 4. Operations telemetry, evaluation artifacts, and audit trails live in Firestore and Cloud Storage buckets scoped to the AI Space project.
 
 The [`docs/architecture.md`](docs/architecture.md) page diagrams component responsibilities and the deployment topology in detail.
@@ -73,4 +73,4 @@ Environment configuration is centralised in Firebase runtime config. The most cr
 - [`docs/operations.md`](docs/operations.md) – monitoring hooks, on-call rituals, and response templates.
 - [`docs/faq.md`](docs/faq.md) – quick answers for onboarding engineers and administrators.
 
-The documentation and tooling in this repository are optimised for Gurulo AI Space. Any references to legacy booking or rental flows should be considered obsolete and reported as defects.
+The documentation and tooling in this repository are optimised for Gurulo AI Space. Legacy rental or booking flows have been removed; report any reintroduced references as defects.

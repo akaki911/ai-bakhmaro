@@ -62,7 +62,7 @@ const SecurityAuditTab: React.FC = () => {
     'ADMIN_ACCESS'
   ];
 
-  const availableRoles = ['SUPER_ADMIN', 'ADMIN', 'CUSTOMER'];
+  const availableRoles = ['SUPER_ADMIN', 'ADMIN'];
 
   useEffect(() => {
     fetchAuditData();
@@ -183,8 +183,7 @@ const SecurityAuditTab: React.FC = () => {
   const getRoleText = (role: string) => {
     const roleMap: Record<string, string> = {
       'SUPER_ADMIN': 'სუპერ ადმინი',
-      'ADMIN': 'ადმინი',
-      'CUSTOMER': 'მომხმარებელი'
+      'ADMIN': 'ადმინი'
     };
     return roleMap[role] || role;
   };

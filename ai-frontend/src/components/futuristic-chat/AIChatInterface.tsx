@@ -309,7 +309,7 @@ const GURULO_UNAVAILABLE_COPY: Record<'ka' | 'en', UnavailableCopy> = {
 
 const GUARD_FALLBACK = {
   ka: 'მე ვარ ადმინისტრაციული ასისტენტი — ვმუშაობ უსაფრთხოებაზე, ლოგებზე, ინტეგრაციებზე და პარამეტრებზე. ტურისტულ თემებზე ვერ გიპასუხებ.',
-  en: "I'm an administrative assistant focused on security, logs, integrations, and settings. I can't help with rental or travel topics.",
+  en: "I'm an administrative assistant focused on security, logs, integrations, and settings. I can't help with travel or consumer booking topics.",
 } as const;
 
 const GUARD_CTA_FALLBACK = {
@@ -976,7 +976,7 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
 
 export function AIChatInterface() {
   const { user, updateUserPreferences } = useAuth();
-  const userRole = (user?.role ?? 'CUSTOMER') as string;
+  const userRole = (user?.role ?? 'SUPER_ADMIN') as string;
   const activePersonalId = user?.personalId?.trim();
   const isSuperAdmin = userRole === 'SUPER_ADMIN' && activePersonalId === '01019062020';
   const { isLive: isLiveMode } = useAIMode();
@@ -1520,14 +1520,14 @@ export function AIChatInterface() {
               recentContext
                 ? `ℹ️ კონტექსტი: ${recentContext}`
                 : 'ℹ️ კონტექსტი: გამოიყენე ბოლო კითხვა და შენახული ფაქტები.',
-              '📝 სტილი: მოკლე წინადადებები და UI ნაბიჯები (მაგ. "გადადით: მენიუ → კალენდარი → “+”").',
+              '📝 სტილი: მოკლე წინადადებები და UI ნაბიჯები (მაგ. "გადადით: მენიუ → Explorer → “+”").',
             ]
           : [
               'Objective: Deliver one concise actionable recommendation.',
               recentContext
                 ? `Context: ${recentContext}`
                 : 'Context: Lean on the latest question and any key facts.',
-              'Style: Short sentences with UI navigation steps (e.g., "Go to: Menu → Calendar → +").',
+              'Style: Short sentences with UI navigation steps (e.g., "Go to: Menu → Explorer → +").',
             ];
         const formattedHistory = normalizedHistory
           .filter((message) => message.role !== 'system')

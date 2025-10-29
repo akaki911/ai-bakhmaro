@@ -17,15 +17,11 @@ router.get('/', (req, res) => {
     );
 
     if (isAuthenticated && userRole) {
-      let target = '/dashboard';
+      let target = '/admin?tab=dashboard';
       let reason = 'authenticated_user';
 
       if (userRole === 'SUPER_ADMIN') {
-        target = '/admin?tab=dashboard';
         reason = 'authenticated_super_admin';
-      } else if (userRole === 'CUSTOMER') {
-        target = '/dashboard';
-        reason = 'authenticated_customer';
       }
 
       const response = {

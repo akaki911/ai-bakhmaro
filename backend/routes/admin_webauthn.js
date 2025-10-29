@@ -10,7 +10,7 @@ const {
 const { getWebAuthnConfig, validateWebAuthnRequest } = require('../config/webauthn');
 const deviceService = require('../services/device_service');
 const credentialService = require('../services/credential_service');
-const userService = require('../services/user_service');
+const superAdminService = require('../services/super_admin_service');
 const auditService = require('../services/audit_service');
 const {
   originGuard,
@@ -293,7 +293,7 @@ router.post('/register-verify', adminSetupGuard, webauthnVerifyLimiter, async (r
     }
 
     try {
-      await userService.createUser({
+      await superAdminService.createUser({
         userId,
         personalId,
         email,

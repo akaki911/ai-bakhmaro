@@ -116,7 +116,7 @@ const cleanupZombieProcesses = async () => {
 };
 
 const main = async () => {
-    logHeader('ქართული კოტეჯების პლატფორმა - სერვერების გადატვირთვა');
+    logHeader('Gurulo Developer Space - სერვერების გადატვირთვა');
     
     try {
         // 1. Cleanup zombie processes
