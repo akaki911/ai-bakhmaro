@@ -4,6 +4,10 @@
   "private": true,
   "workspaces": [
     "ai-frontend",
+    "backend",
+    "functions",
+    "ai-service",
+    "shared",
     "gateway"
   ],
   "scripts": {

@@ -13,6 +13,20 @@ The production stack is provisioned on **Firebase Hosting** with dynamic routes 
 
 The [`docs/architecture.md`](docs/architecture.md) page diagrams component responsibilities and the deployment topology in detail.
 
+## Repository Layout (AI Space)
+
+- `ai-frontend/` – Vite-powered admin UI for Gurulo AI Developer Space.
+- `backend/` – Express gateway handling auth, routing, and Gurulo REST APIs.
+- `functions/` – Firebase Functions entrypoints for HTTP triggers and background jobs.
+- `ai-service/` – Gurulo microservice exposing AI workflows, memory, and automation runners.
+- `gateway/` – Edge proxy and API surface that fronts Firebase Hosting and backend services.
+- `shared/` – Shared configuration, policy, and token utilities consumed by all services.
+- `scripts/` – Active operational tooling (automation, builds, diagnostics) kept in sync with docs and package scripts.
+- `docs/` – Architecture, operations, and security handbooks for the AI Space platform.
+- `knowledge_source/` – Curated markdown corpus powering knowledge base generation.
+- `artifacts/` – Generated health reports and diagnostic artifacts committed for auditing.
+- `tmp/ai-space/` – Standardised workspace for transient AI Space logs, diagnostics, and phase reports (non-ignored markdown/JSON).
+
 ## Core Modules
 
 Gurulo AI Space exposes ten modular surfaces that can be toggled per environment:

@@ -1,5 +1,9 @@
 packages:
   - ai-frontend
+  - backend
+  - functions
+  - ai-service
+  - shared
   - gateway
 
 onlyBuiltDependencies:
