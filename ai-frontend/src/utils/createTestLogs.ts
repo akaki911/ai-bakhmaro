@@ -64,11 +64,11 @@ export const createTestLogs = async () => {
     );
 
     // API logs with different status codes
-    await logger.logAPI('TestModule', 'GET /api/cottages', 200, undefined, 'test-user-id', 'test@example.com');
+    await logger.logAPI('TestModule', 'GET /api/system/health', 200, undefined, 'test-user-id', 'test@example.com');
     await logger.logAPI('TestModule', 'POST /api/security/audit', 201, undefined, 'test-user-id', 'test@example.com');
     await logger.logAPI('TestModule', 'GET /api/users/999', 404, undefined, 'test-user-id', 'test@example.com');
     await logger.logAPI('TestModule', 'POST /api/auth/login', 401, undefined, 'test-user-id', 'test@example.com');
-    await logger.logAPI('TestModule', 'PUT /api/cottages/1', 500, undefined, 'test-user-id', 'test@example.com');
+    await logger.logAPI('TestModule', 'PUT /api/security/policies/primary', 500, undefined, 'test-user-id', 'test@example.com');
 
     // Debug logs
     await logger.logDebug('AuthContext', 'User authentication state changed', { userId: 'test-user-id', email: 'test@example.com' });
