@@ -60,9 +60,8 @@ class DeviceService {
       const fingerprintHash = this.hashFingerprint(fingerprint);
       const truncatedIP = this.truncateIP(ip);
       
-      // Get user role for role snapshot
-      const userDoc = await this.db.collection('users').doc(userId).get();
-      const userRole = userDoc.exists ? userDoc.data().role : 'CUSTOMER';
+      // Gurulo operates with a single Super Admin profile
+      const userRole = 'SUPER_ADMIN';
       
       const deviceData = {
         deviceId,
@@ -137,7 +136,7 @@ class DeviceService {
         recognized: true,
         device: {
           deviceId: deviceData.deviceId,
-          registeredRole: deviceData.rolesSnapshot[0] || 'CUSTOMER',
+          registeredRole: deviceData.rolesSnapshot[0] || 'SUPER_ADMIN',
           lastSeenAt: deviceData.lastSeenAt,
           trusted: deviceData.trusted,
           hasPasskey: !!deviceData.primaryCredentialIdHash
@@ -220,7 +219,7 @@ class DeviceService {
         devices.push({
           deviceId: doc.id,
           clientId: data.clientId,
-          registeredRole: data.rolesSnapshot?.[0] || 'CUSTOMER',
+          registeredRole: data.rolesSnapshot?.[0] || 'SUPER_ADMIN',
           firstSeenAt: data.firstSeenAt?.toDate() || new Date(),
           lastSeenAt: data.lastSeenAt?.toDate() || new Date(),
           firstSeenIP: data.firstSeenIP || 'N/A',

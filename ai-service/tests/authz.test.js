@@ -145,12 +145,7 @@ describe('Authorization Middleware Tests', () => {
     });
 
     test('should deny access with insufficient role', async () => {
-      app.use((req, res, next) => {
-        req.user.role = 'CUSTOMER';
-        next();
-      });
-
-      app.get('/admin', requireRole(['ADMIN', 'SUPER_ADMIN']), (req, res) => {
+      app.get('/admin', requireRole(['SUPER_ADMIN']), (req, res) => {
         res.json({ success: true });
       });
 

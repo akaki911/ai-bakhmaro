@@ -10,7 +10,7 @@ const GURULO_PLATFORM_INFO = {
   focusAreas: {
     ai_assistant: {
       name: 'Gurulo Assistant',
-      description: 'Conversational AI developer partner that understands the monorepo and automates maintenance tasks.',
+      description: 'Conversational AI developer companion that understands the monorepo and automates maintenance tasks.',
       features: [
         'Context-aware chat with repository introspection',
         'Automatic proposal drafting and task breakdowns',
@@ -57,7 +57,7 @@ const RESPONSE_TEMPLATES = {
   platform_overview: () => {
     return `🧠 **Gurulo AI Development Workspace**\n\n` +
       `• **Purpose:** Full-stack environment dedicated to AI development on ai.bakhmaro.co\n` +
-      `• **Assistant:** Gurulo — repository-aware AI developer partner\n` +
+      `• **Assistant:** Gurulo — repository-aware AI developer companion\n` +
       `• **Focus Areas:** automation toolkit, AI service monitoring, developer experience enhancements\n` +
       `• **Core Capabilities:** semantic search, task automation, diagnostics, AI prompt management\n` +
       `• **Stack:** React/Next.js frontend, Node.js/Express services, Firebase infrastructure, Groq + OpenAI models`;

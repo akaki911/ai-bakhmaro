@@ -445,7 +445,7 @@ const Header: React.FC<HeaderProps> = () => {
                 </div>
               )}
 
-              {user && user.role !== 'CUSTOMER' && (
+              {user && user.role === 'SUPER_ADMIN' && (
                 <Link
                   to="/admin"
                   className={`hidden h-10 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold text-white shadow-sm md:flex ${motionClass}`}
@@ -521,7 +521,7 @@ const Header: React.FC<HeaderProps> = () => {
                     <div className="px-2 py-1 text-xs uppercase tracking-wide" style={{ color: headerTokens.colors.textSecondary }}>
                       {user.email}
                     </div>
-                    {user.role !== 'CUSTOMER' && (
+                    {user.role === 'SUPER_ADMIN' && (
                       <Link
                         to="/admin"
                         role="menuitem"

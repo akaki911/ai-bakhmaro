@@ -6,10 +6,6 @@ const { requireRole, allowSuperAdmin } = require('../utils/jwt');
 
 const requireSuperAdmin = allowSuperAdmin({ action: 'backend.guard.superAdmin' });
 
-const requireCustomer = requireRole(['CUSTOMER'], {
-  action: 'backend.guard.customer',
-});
-
 const requireAnyRole = (allowedRoles, options = {}) =>
   requireRole(allowedRoles, {
     action: 'backend.guard.multiRole',
@@ -47,8 +43,7 @@ const deriveRolePermissions = (user, deviceInfo = null) => {
     role: user.role,
     userId: user.id,
     deviceTrust: false,
-    canAccessAdmin: false,
-    canAccessCustomer: false
+    canAccessAdmin: false
   };
 
   switch (user.role) {
@@ -57,10 +52,6 @@ const deriveRolePermissions = (user, deviceInfo = null) => {
       // SOL-422: deviceTrust მხოლოდ Super Admin + Trusted Device
       permissions.deviceTrust = deviceInfo?.trusted === true;
       break;
-
-    case 'CUSTOMER':
-      permissions.canAccessCustomer = true;
-      break;
   }
 
   return permissions;
@@ -68,7 +59,6 @@ const deriveRolePermissions = (user, deviceInfo = null) => {
 
 module.exports = {
   requireSuperAdmin,
-  requireCustomer,
   requireAnyRole,
   requireAuthentication,
   deriveRolePermissions

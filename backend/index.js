@@ -669,7 +669,6 @@ const healthRoutes = require('./routes/health');
 const adminRoutes = require('./routes/admin_auth');
 const adminWebauthnRoutes = require('./routes/admin_webauthn');
 const passkeyAuthRoutes = require('./routes/passkey_auth');
-const customerAuthRoutes = require('./routes/customer_auth');
 const securityAuditRoutes = require('./routes/security_audit');
 const roleGuards = require('./middleware/role_guards');
 const legacyAiRoutes = require('../functions/src/routes/ai_legacy');
@@ -1205,7 +1204,6 @@ console.log('✅ [ROUTE] Route advice mounted successfully');
 console.log('✅ [AUTH] /api/auth/me endpoint should now be available');
 console.log('🔍 [AUTH] Route verification - checking /me endpoint availability');
 
-app.use('/api/admin/users', require('./routes/admin_users'));
 app.use('/api/admin/setup', require('./routes/admin_setup'));
 app.use('/api/admin/introspection', require('./routes/admin_introspection'));
 app.use('/api/admin/activity', require('./routes/user_activity'));

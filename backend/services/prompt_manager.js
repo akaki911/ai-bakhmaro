@@ -17,12 +17,12 @@ class PromptManager {
     this.prompts = {
       // საიტის მოკლე შეჯამება - bullet point ფორმატში
       site_overview: {
-        system: `შენ ხარ ბახმაროს პლატფორმის ექსპერტი. მიეცი მოკლე, ზუსტი შეჯამება bullet point ფორმატში. მხოლოდ ძირითადი კატეგორიები და ფუნქციები. არაუმეტეს 200 სიტყვისა.`,
+        system: `შენ ხარ Gurulo AI Developer Space-ის ექსპერტი. მიეცი მოკლე, ზუსტი შეჯამება bullet point ფორმატში. მხოლოდ ბირთვული მოდულები და ფუნქციები. არაუმეტეს 200 სიტყვისა.`,
         developer: CORE_DEVELOPER_PROMPT,
-        template: (context) => `აღწერე ბახმაროს პლატფორმა bullet point ფორმატში:
-• კატეგორიები (კოტეჯები, სასტუმროები, ტრანსპორტი)
-• ძირითადი ფუნქციები (ჯავშნა, ფასები, ადმინ პანელი)
-• ტექნოლოგიები
+        template: (context) => `აღწერე Gurulo AI Space bullet point ფორმატში:
+• ბირთვული მოდულები (AI Developer Panel, Explorer, Auto-Improve, Memory, DevTools)
+• ძირითადი ფუნქციები (AI კონტექსტი, rollout კონტროლი, მონიტორინგი)
+• გამოყენებული ტექნოლოგიები
 ${context ? `კონტექსტი: ${context.substring(0, 100)}` : ''}`
       },
 
@@ -43,7 +43,7 @@ ${codeContent ? `კოდი:\n\`\`\`\n${codeContent.substring(0, 1500)}\n\`\`\
 
       // მარტივი მისალმება
       greeting: {
-        system: `შენ ხარ მეგობრული AI ასისტენტი ბახმაროს პლატფორმისთვის. მოკლე, თბილი მისალმება და კითხვა - რით დაეხმარო.`,
+        system: `შენ ხარ მეგობრული AI ასისტენტი Gurulo Developer Space-ში. მოკლე, თბილი მისალმება და კითხვა - რომელი დეველოპერული დავალება შევასრულო.`,
         developer: CORE_DEVELOPER_PROMPT,
         template: (message) => `მისალმება: "${message}"`
       },

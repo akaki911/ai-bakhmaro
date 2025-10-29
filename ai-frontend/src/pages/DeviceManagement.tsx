@@ -108,7 +108,6 @@ const DeviceManagement: React.FC = () => {
     switch (role) {
       case 'SUPER_ADMIN': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'ADMIN': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'CUSTOMER': return 'bg-green-100 text-green-800 border-green-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -257,7 +256,7 @@ const DeviceManagement: React.FC = () => {
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleColor(device.registeredRole)}`}>
                           {device.registeredRole === 'SUPER_ADMIN' ? 'სუპერ ადმინი' :
                            device.registeredRole === 'ADMIN' ? 'ადმინი' :
-                           device.registeredRole === 'CUSTOMER' ? 'მომხმარებელი' : device.registeredRole}
+                           (device.registeredRole || 'უცნობი როლი')}
                         </span>
                         <span className="flex items-center">
                           <Calendar className="h-4 w-4 mr-1" />

@@ -195,7 +195,7 @@ const refreshTokenLogic = async (refreshToken) => {
 
     // In production, verify refresh token against database/Redis
     // For now, generate new tokens
-    const newAccessToken = generateApiToken(decoded.userId, 'CUSTOMER'); // Default role
+    const newAccessToken = generateApiToken(decoded.userId, 'SUPER_ADMIN');
     const newRefreshToken = generateRefreshToken(decoded.userId);
 
     return {
@@ -224,7 +224,7 @@ const generateTokenForRegularAPI = async (req, res) => {
 
     // Mock user validation - replace with actual Firebase/DB check
     const userId = email; // This should be actual user ID
-    const role = 'CUSTOMER'; // This should come from user data
+    const role = 'SUPER_ADMIN';
     
     const accessToken = generateApiToken(userId, role);
     const refreshToken = generateRefreshToken(userId);
