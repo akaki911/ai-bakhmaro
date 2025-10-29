@@ -29,9 +29,8 @@ const errorMessages = {
     
     // Business Logic Errors
     'BookingConflict': 'ბრონირების კონფლიქტი - ეს თარიღი უკვე დაკავებულია',
-    'InsufficientFunds': 'არასაკმარისი თანხა ანგარიშზე',
     'BookingNotAllowed': 'ბრონირება ამ პირობებში შეუძლებელია',
-    'PaymentFailed': 'გადახდა ვერ განხორციელდა',
+    'SyncFailed': 'სინქრონიზაცია ვერ შესრულდა',
     
     // Generic Fallback
     'GenericError': 'მოხდა გაუთვალისწინებელი შეცდომა - სცადეთ ხელახლა',
