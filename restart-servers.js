@@ -2,7 +2,7 @@
 
 /**
  * ხელით სერვერების გადატვირთვის უტილიტი
- * Manual Server Restart Utility for Georgian Cottage Platform
+ * Manual Server Restart Utility for Bakhmaro AI Operations Platform
  */
 
 const { exec } = require('child_process');
