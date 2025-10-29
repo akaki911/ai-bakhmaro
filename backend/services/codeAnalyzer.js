@@ -86,20 +86,16 @@ class CodeAnalyzer {
 
   async findThematicModules() {
     const targetModules = [
-      // Core booking modules
-      'BookingForm.tsx', 'BookingModal.tsx', 'HotelBookingForm.tsx', 'VehicleBookingForm.tsx',
-      // Admin modules
-      'AdminCottages.tsx', 'AdminHotels.tsx', 'AdminVehicles.tsx', 'AdminUsers.tsx',
-      // Main pages
-      'MainPage.tsx', 'MainDashboard.tsx', 'UserDashboard.tsx',
-      // Core components
-      'CottagePage.tsx', 'HotelPage.tsx', 'VehiclePage.tsx',
-      // Lists
-      'CottagesList.tsx', 'HotelsList.tsx', 'VehiclesList.tsx',
-      // Services
-      'bookingService.ts', 'customerService.ts', 'priceCodeService.ts',
-      // Backend
-      'ai_controller.js', 'index.js'
+      // Core AI operations modules
+      'AIAssistantEnhanced.tsx', 'AIChatInterface.tsx', 'AIDashboardShell.tsx', 'AIDeveloperPanel.tsx',
+      // Monitoring and diagnostics
+      'SystemMonitoringDashboard.tsx', 'PerformanceDashboard.tsx', 'PostApplyHealthCheck.tsx',
+      // Administration pages
+      'GurulaManagementPage.tsx', 'DeviceManagement.tsx', 'AdminLogs.tsx',
+      // Collaboration & integrations
+      'GitHubManagement', 'EnterpriseCollaboration.tsx', 'CheckpointManager.tsx',
+      // Backend orchestration
+      'ai_controller.js', 'site_summary.js', 'groq_service.js'
     ];
 
     const foundModules = [];
@@ -271,7 +267,7 @@ class CodeAnalyzer {
   }
 
   async createThematicSummary(moduleAnalysis) {
-    let summary = "🏗️ ბახმაროს ბუკინგ პლატფორმის თემატური ანალიზი:\n\n";
+    let summary = "🏗️ ბახმაროს AI ოპერაციების პლატფორმის თემატური ანალიზი:\n\n";
 
     // Group by module type
     const grouped = {};
@@ -311,7 +307,7 @@ class CodeAnalyzer {
   }
 
   async generateThematicResponse(query, structuredSummary, conversationHistory) {
-    const systemPrompt = `თქვენ ხართ ბახმაროს ბუკინგ პლატფორმის ექსპერტი. 
+    const systemPrompt = `თქვენ ხართ ბახმაროს AI ოპერაციების პლატფორმის ექსპერტი.
 
 მოწოდებული თემატური ანალიზის საფუძველზე მიაწოდეთ სრული, სტრუქტურული და გასაგები ახსნა პლატფორმის შესახებ.
 
@@ -345,7 +341,7 @@ ${structuredSummary}`;
   }
 
   generateFallbackThematicResponse(structuredSummary) {
-    return `🏗️ ბახმაროს ბუკინგ პლატფორმის თემატური შეჯამება:
+    return `🏗️ ბახმაროს AI ოპერაციების პლატფორმის თემატური შეჯამება:
 
 ${structuredSummary}
 
@@ -353,17 +349,17 @@ ${structuredSummary}
 
 🔧 **ძირითადი კომპონენტები:**
 • Frontend: React + TypeScript + Vite
-• Backend: Node.js + Express
-• მონაცემთა ბაზა: Firebase Firestore
-• AI ასისტენტი: Groq API (Llama models)
-• განლაგება: Replit
+• Backend: Node.js + Express + Firebase Admin
+• Observability: SystemMonitoringDashboard, PerformanceDashboard, AutoUpdateMonitoringDashboard
+• AI: Groq API (Llama models) + Gurulo orchestration
+• Deployment: Replit & Firebase
 
 📊 **ფუნქციონალი:**
-• კოტეჯების, სასტუმროების, ავტომობილების ბრონირება
-• ადმინისტრაციული პანელი
-• მომხმარებელთა მართვა
-• ფასების კალკულაცია
-• AI მხარდაჭერა`;
+• AI ოპერაციების და კონტექსტის მართვა
+• მონიტორინგი და health-check-ები
+• უსაფრთხოების კონტროლი (Passkey/WebAuthn, audit logs)
+• ინტეგრაციებისა და GitHub არხების ადმინისტრირება
+• Gurulo-სთვის ავტომატური დაცვა და backup-ები`;
   }
 
   async findRelevantCodeFiles(query) {
@@ -389,9 +385,6 @@ ${structuredSummary}
       'ღირებულებ': ['value', 'worth', 'price'],
       'ფორმულ': ['formula', 'calculation'],
       'ღამე': ['night', 'nightly'],
-      'კოტეჯ': ['cottage'],
-      'სასტუმრო': ['hotel'],
-      'ავტომობილ': ['vehicle', 'car'],
       'ჯავშან': ['booking', 'reservation'],
       'კალენდარ': ['calendar'],
       'გადახდ': ['payment', 'deposit'],
@@ -401,6 +394,10 @@ ${structuredSummary}
       'მომხმარებლ': ['user', 'customer'],
       'ადმინ': ['admin'],
       'დეშბორდ': ['dashboard'],
+      'მონიტორინგ': ['monitor', 'monitoring'],
+      'უსაფრთხოებ': ['security', 'secure'],
+      'ოპერაცი': ['operation', 'operations'],
+      'სესია': ['session', 'sessions'],
       'სტრუქტურ': ['structure', 'architecture'],
       'სისტემ': ['system', 'service'],
       'სრული': ['full', 'complete', 'entire'],
@@ -431,9 +428,10 @@ ${structuredSummary}
   isRelevantByContext(file, query) {
     // Key files that are almost always relevant
     const alwaysRelevant = [
-      'pricing.ts', 'vehiclePricing.ts', 'seasonalPricing.ts',
-      'BookingForm.tsx', 'BookingModal.tsx', 'CottageForm.tsx',
-      'AdminCottages.tsx', 'MainPage.tsx', 'ai_controller.js'
+      'AIAssistantEnhanced.tsx', 'AIChatInterface.tsx', 'AIMemoryManager.tsx',
+      'SystemMonitoringDashboard.tsx', 'PerformanceDashboard.tsx',
+      'GurulaManagementPage.tsx', 'DeviceManagement.tsx',
+      'ai_controller.js', 'site_summary.js'
     ];
 
     const filename = path.basename(file.path);
@@ -537,10 +535,10 @@ ${structuredSummary}
     });
 
     // Boost score for important files
-    const filename = path.basename(file.path);
-    if (filename.includes('pricing') || filename.includes('Pricing')) score += 10;
-    if (filename.includes('booking') || filename.includes('Booking')) score += 8;
-    if (filename.includes('cottage') || filename.includes('Cottage')) score += 6;
+    const filename = path.basename(file.path).toLowerCase();
+    if (filename.includes('monitor')) score += 10;
+    if (filename.includes('assistant') || filename.includes('ai')) score += 8;
+    if (filename.includes('security') || filename.includes('device')) score += 6;
 
     return score;
   }
@@ -597,7 +595,7 @@ ${structuredSummary}
   }
 
   async generateCodeExplanation(query, codeContext, conversationHistory) {
-    const systemPrompt = `თქვენ ხართ გამოცდილი დეველოპერი და კოდის ექსპერტი ბახმაროს ბუკინგ პლატფორმისთვის. 
+    const systemPrompt = `თქვენ ხართ გამოცდილი დეველოპერი და კოდის ექსპერტი ბახმაროს AI ოპერაციების პლატფორმისთვის.
 
 მიღებული კოდის ნაწილების საფუძველზე:
 1. უპასუხეთ მომხმარებლის კითხვას დეტალურად და ბუნებრივად
@@ -756,7 +754,7 @@ async function augmentWithMemoryAndStructure(retrievedData, query) {
   try {
     console.log('🔧 [RAG Augmentation] Building comprehensive context...');
 
-    let augmentedContext = `🏗️ ბახმაროს ბუკინგ პლატფორმის სრული ანალიზი:\n\n`;
+    let augmentedContext = `🏗️ ბახმაროს AI ოპერაციების პლატფორმის სრული ანალიზი:\n\n`;
 
     // Add project structure if available
     if (retrievedData.projectStructure) {
@@ -821,7 +819,7 @@ async function generateRAGResponse(query, augmentedContext, conversationHistory)
 
     const { askGroq } = require('./groq_service');
 
-    const systemPrompt = `თქვენ ხართ ბახმაროს ბუკინგ პლატფორმის AI ექსპერტი. 
+    const systemPrompt = `თქვენ ხართ ბახმაროს AI ოპერაციების პლატფორმის AI ექსპერტი.
 
 მიღებული ინფორმაციის საფუძველზე მომაწოდეთ სრული, დეტალური და სტრუქტურული პასუხი ქართულად.
 
