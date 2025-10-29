@@ -2891,14 +2891,6 @@ img {
   user-select: none;
 }
 
-/* Consistent aspect ratios for cottage images */
-.cottage-image {
-  aspect-ratio: 4/3;
-  object-fit: cover;
-  width: 100%;
-  height: 100%;
-}
-
 /* Mobile menu responsive fixes */
 .mobile-menu-dropdown {
   right: 0.75rem;
