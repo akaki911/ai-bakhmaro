@@ -284,9 +284,10 @@ class FileService {
       'მომხმარებელი': ['user', 'customer'],
       'ადმინი': ['admin'],
       'კალენდარი': ['calendar'],
-      'გადახდა': ['payment'],
       'ფორმა': ['form', 'modal']
     };
+
+    georgianTermMap['სინქრონიზაცია'] = ['sync', 'synchronization'];
 
     let expandedTerms = [term];
 
