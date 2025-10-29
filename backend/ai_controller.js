@@ -120,7 +120,7 @@ router.post('/stream', async (req, res) => {
       try {
         // Natural system prompt for streaming
         const memoryContext = userMemory?.data ? userMemory.data.substring(0, 100) : '';
-        const systemPrompt = `You are an AI assistant for the Bakhmaro booking platform. Answer in natural Georgian. 
+        const systemPrompt = `You are Gurulo, the AI developer operations assistant for the Gurulo Developer Space. Answer in natural Georgian.
 ${memoryContext ? `Previous context: ${memoryContext}` : ''}`;
 
         const groqStream = await askGroq([
@@ -679,10 +679,6 @@ function classifyQuery(message) {
       /overview/, /summary/, /ზოგადი/, /general/
     ],
 
-    booking_help: [
-      /ჯავშანი/, /booking/, /რეზერვაცია/, /reservation/, /ჯავშნა/, /book/
-    ],
-
     pricing_question: [
       /ფასი/, /price/, /ღირებულება/, /cost/, /ფასების/, /pricing/
     ]
@@ -809,7 +805,7 @@ async function generateEnhancedFallback(message, userId) {
     const fileService = require('./services/fileService');
 
     // Try to get some basic project info even without full RAG
-    let fallbackInfo = '🏗️ ბახმაროს ბუკინგ პლატფორმის ინფორმაცია:\n\n';
+    let fallbackInfo = '🏗️ Gurulo AI Developer Space ინფორმაცია:\n\n';
 
     // Search for relevant files
     const searchResults = await fileService.searchInFiles(message);
@@ -898,15 +894,15 @@ async function handleHowItWorksQuery(message, userId) {
   }
 }
 
-function handleGreetingQuery(message) {
-  const greetingResponses = [
-    'გამარჯობა! 👋 როგორ შემიძლია დაგეხმარო?',
-    'გამარჯობათ! მე ვარ ბახმაროს AI ასისტენტი. რითი შეგიძლიათ დავეხმარო?',
-    'სალამი! 🤖 რაში გჭირდებათ დახმარება?'
-  ];
+  function handleGreetingQuery(message) {
+    const greetingResponses = [
+      'გამარჯობა! 👋 Gurulo-ს დეველოპერ ასისტენტი გესალმებათ. რით დაგეხმაროთ?',
+      'გამარჯობათ! 🤖 მზად ვარ DevOps და AI ოპერაციების საკითხებში დასახმარებლად.',
+      'სალამი! 😊 Gurulo Developer Space-ში რა დავალება შევასრულო?'
+    ];
 
-  return greetingResponses[Math.floor(Math.random() * greetingResponses.length)];
-}
+    return greetingResponses[Math.floor(Math.random() * greetingResponses.length)];
+  }
 
 function extractSubjectFromQuery(message) {
   // Extract key terms from "როგორ მუშაობს X" type queries
@@ -987,10 +983,10 @@ function generateProjectStructureFallback() {
 • backend/middleware/ - შუალედური პროგრამები
 
 🔧 **ძირითადი მოდულები:**
-• ბრონირების სისტემა (BookingService)
-• ფასების მენეჯმენტი (PricingService) 
-• მომხმარებლების მართვა (UserService)
-• AI ასისტენტი (AI Controller)
+• AI Developer Panel (AIDashboardShell.tsx)
+• Auto-Improve orchestrator (auto_improve.js)
+• Memory replication pipelines (memory_sync.js)
+• Gurulo AI Controller (backend/ai_controller.js)
 
 ⚠️ სრული ანალიზისთვის Groq API საჭიროა.`;
 }
@@ -1006,34 +1002,13 @@ function generateFallbackResponse(message) {
       /რა\s*(აქვს|არის|მუშაობს|შეიცავს|გვიჩვენებს)/i.test(message)) {
 
     // Detect specific files mentioned
-    if (lowerMessage.includes('bookingservice') || lowerMessage.includes('booking service')) {
-      return `📋 BookingService.ts ძირითადი ფუნქციები:
-• createBooking() - ბრონირების შექმნა
-• updateBooking() - ბრონირების განახლება  
-• cancelBooking() - ბრონირების გაუქმება
-• getBookingsByUser() - მომხმარებლის ბრონირებები
-• validateBookingDates() - თარიღების ვალიდაცია
-
-სრული ანალიზისთვის Groq API საჭიროა.`;
-    }
-
-    if (lowerMessage.includes('bookingmodal') || lowerMessage.includes('booking modal')) {
-      return `🏠 BookingModal.tsx კომპონენტი:
-• useState hooks ფასებისთვის
-• handleSubmit() ფუნქცია
-• ვალიდაცია და ფორმის მართვა
-• Firebase integration
-• TypeScript interfaces
-
-დეტალური ანალიზისთვის Groq API საჭიროა.`;
-    }
-
     return `📁 ფაილის სახელი მითხარი სრული ანალიზისთვის:
 • React კომპონენტები (.tsx)
-• TypeScript სერვისები (.ts) 
+• TypeScript სერვისები (.ts)
 • Backend კონტროლერები (.js)
+• AI ოპერაციების სკრიპტები (.mjs)
 
-მაგალითი: "რა ფუნქციებია userService.ts-ში?"
+მაგალითი: "რა ფუნქციებია autoImproveService.ts-ში?"
 
 ⚠️ Groq API არ მუშაობს - ვიყენებ ძირითად ლოგიკას.`;
   }
@@ -1071,17 +1046,17 @@ function generateFallbackResponse(message) {
     return `⚙️ სერვისების ლოგიკისთვის სრული AI ანალიზი საჭიროა.
 
 არსებული სერვისები:
-• bookingService.ts - ბრონირების მართვა
-• userService.ts - მომხმარებლების მართვა  
-• auditService.ts - აუდიტი
+• autoImproveService.ts - Auto-Improve ოპერაციები
+• memory_sync.js - მეხსიერების სინქრონიზაცია
+• auditService.ts - უსაფრთხოების აუდიტი
 
 ⚠️ Groq API გამორთულია - დეტალური ანალიზი შეუძლებელია.`;
   }
 
   // Simple default response
-  return `ვერ გავიგე რას ამბობ. შემიძლია დაგეხმარო კოდის ანალიზში, ფაილების შემოწმებაში ან ტექნიკურ საკითხებში. 
+  return `ვერ გავიგე რას ამბობ. შემიძლია დაგეხმარო კოდის ანალიზში, ფაილების შემოწმებაში ან ტექნიკურ საკითხებში.
 
-კონკრეტული კითხვა დამისვი - მაგალითად: "რა ფუნქციებია BookingService-ში?" ან "როგორ მუშაობს ბრონირების სისტემა?"`;
+კონკრეტული კითხვა დამისვი - მაგალითად: "რა ფუნქციებია autoImproveService-ში?" ან "როგორ მუშაობს Memory სინქი?"`;
 }
 
 // Simple math calculator

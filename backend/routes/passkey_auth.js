@@ -9,7 +9,7 @@ const {
 } = require('@simplewebauthn/server');
 const { getWebAuthnConfig, validateWebAuthnRequest } = require('../config/webauthn');
 const credentialService = require('../services/credential_service');
-const userService = require('../services/user_service');
+const superAdminService = require('../services/super_admin_service');
 const auditService = require('../services/audit_service');
 const deviceService = require('../services/device_service');
 const { isSuperAdmin } = require('../../shared/gurulo-auth/gurulo.auth.js');
@@ -216,13 +216,13 @@ router.post('/register-verify', verifyLimiter, async (req, res) => {
       });
     }
 
-    const existingUser = await userService.getUser(sessionData.userId).catch(() => null);
+    const existingUser = await superAdminService.getUser(sessionData.userId).catch(() => null);
     if (!existingUser) {
-      await userService.createUser({
+      await superAdminService.createUser({
         userId: sessionData.userId,
         personalId,
         email: sessionData.email,
-        role: 'CUSTOMER',
+        role: 'SUPER_ADMIN',
         status: 'active',
       });
     }
@@ -392,9 +392,9 @@ router.post('/login-verify', verifyLimiter, async (req, res) => {
       }
     }
 
-    const user = await userService.getUser(storedCredential.userId);
+    const user = await superAdminService.getUser(storedCredential.userId);
     const userPersonalId = normalisePersonalId(user?.personalId, credentialPersonalId);
-    const resolvedRole = isSuperAdmin(userPersonalId) ? 'SUPER_ADMIN' : (user?.role || 'CUSTOMER');
+    const resolvedRole = isSuperAdmin(userPersonalId) ? 'SUPER_ADMIN' : (user?.role || 'SUPER_ADMIN');
 
     const resolvedUser = {
       id: storedCredential.userId,
