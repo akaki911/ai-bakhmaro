@@ -59,17 +59,6 @@ AI_OFFLINE_MODE=false        # Force Groq/OpenAI traffic off when true
 DEBUG_MODE=true              # Enable verbose diagnostics locally
 ```
 
-### Codex + Slack
-
-```bash
-CODEX_SLACK_ENABLED=true     # Enable auto-improvement worker
-CODEX_TIMEOUT_MS=35000       # Max Codex call duration
-CODEX_MAX_TOKENS=1024        # Token ceiling for completions
-CODEX_MODEL=gpt-5-codex      # Default model identifier
-SLACK_SIGNING_SECRET=whsec_x # Required for slash commands
-CODEX_SLACK_CHANNEL=#dev-ai  # Where Codex status posts land
-```
-
 ### Backup & OpenAI fallback
 
 ```bash
