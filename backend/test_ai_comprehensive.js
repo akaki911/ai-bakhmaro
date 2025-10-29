@@ -40,16 +40,16 @@ const testScenarios = [
   },
   {
     id: 6,
-    question: "როგორ მუშაობს user_service.js-ში მომხმარებლის პროფილის განახლება?",
-    category: "user_management",
-    expectedKeywords: ["user", "profile", "update", "FieldValue", "merge"],
+    question: "როგორ უზრუნველყოფს super_admin_service.js სუპერ ადმინისტრატორის პროფილს?",
+    category: "super_admin_profile",
+    expectedKeywords: ["Super", "Admin", "profile", "in-memory", "role"],
     complexity: "medium"
   },
   {
     id: 7,
-    question: "როგორ ემატება ახალი მომხმარებელი სისტემაში?",
-    category: "user_creation",
-    expectedKeywords: ["მომხმარებელი", "რეგისტრაცია", "Firebase", "auth"],
+    question: "passkey რეგისტრაციისას როგორ ხდება სუპერ ადმინისტრატორის პროფილის სინქრონიზება?",
+    category: "passkey_profile_sync",
+    expectedKeywords: ["passkey", "registration", "Super", "Admin", "profile"],
     complexity: "medium"
   },
   {
@@ -249,8 +249,8 @@ function analyzeResponse(response, scenario) {
   }
 
   // Relevance and structure (20 points)
-  if (response.includes('ფუნქცია') || response.includes('სისტემა') || 
-      response.includes('პლატფორმა') || response.includes('ბუკინგი')) {
+  if (response.includes('ფუნქცია') || response.includes('სისტემა') ||
+      response.includes('პლატფორმა') || response.includes('დეველოპერი')) {
     score += 10;
   }
   

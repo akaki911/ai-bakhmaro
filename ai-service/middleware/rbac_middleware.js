@@ -26,7 +26,7 @@ const requireSuperAdmin = (req, res, next) => {
         error: 'INSUFFICIENT_PERMISSIONS',
         message: 'Super Admin role required for Auto-Improve operations',
         requiredRole: 'SUPER_ADMIN',
-        userRole: 'CUSTOMER',
+        userRole: 'UNKNOWN',
         timestamp: new Date().toISOString()
       });
     }

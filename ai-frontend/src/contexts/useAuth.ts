@@ -40,11 +40,11 @@ export function useAuth() {
       // Compatibility properties
       id: null,
       email: null,
-      role: 'CUSTOMER',
+      role: 'SUPER_ADMIN',
       isAuthReady: false,
       personalId: undefined,
       firebaseUid: undefined,
-      userRole: 'CUSTOMER',
+      userRole: 'SUPER_ADMIN',
       updateUserRole: () => {},
       checkUserRole: async () => {},
       register: async () => {},

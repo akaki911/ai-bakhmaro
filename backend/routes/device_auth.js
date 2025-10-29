@@ -2,7 +2,6 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const deviceService = require('../services/device_service');
-const userService = require('../services/user_service');
 const { v4: uuidv4 } = require('uuid');
 
 const router = express.Router();

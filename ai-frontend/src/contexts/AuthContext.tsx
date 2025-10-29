@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [authInitialized, setAuthInitialized] = useState(false);
-  const [userRole, setUserRole] = useState<UserRole>('CUSTOMER'); // Default role
+  const [userRole, setUserRole] = useState<UserRole>('SUPER_ADMIN'); // Default role
   const [personalId, setPersonalId] = useState<string | undefined>(undefined);
   const [firebaseUid, setFirebaseUid] = useState<string | undefined>(undefined);
   const [isAuthReady, setIsAuthReady] = useState(false);
@@ -305,7 +305,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const user = {
             id: data.user.id,
             email: data.user.email,
-            role: data.user.role || 'CUSTOMER',
+            role: data.user.role || 'SUPER_ADMIN',
             personalId: data.user.personalId,
             displayName: data.user.displayName,
             authMethod: 'firebase' as const
@@ -333,18 +333,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        return (userData.role as UserRole) || 'CUSTOMER';
+        return (userData.role as UserRole) || 'SUPER_ADMIN';
       }
     } catch (error) {
       console.error('Error fetching user role:', error);
     }
-    return 'CUSTOMER';
+    return 'SUPER_ADMIN';
   };
 
   // Create Firestore user document
   const createUserDocument = async (
     firebaseUser: FirebaseUser,
-    role: UserRole = 'CUSTOMER',
+    role: UserRole = 'SUPER_ADMIN',
     metadata?: RegistrationMetadata
   ) => {
     try {
@@ -502,7 +502,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const newUser = {
                 id: firebaseUser.uid,
                 email: firebaseUser.email!,
-                role: userData.role || 'CUSTOMER',
+                role: userData.role || 'SUPER_ADMIN',
                 displayName: userData.displayName || firebaseUser.displayName || firebaseUser.email?.split('@')[0],
                 personalId: userData.personalId,
                 authMethod: 'firebase' as const
@@ -524,20 +524,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const newUserProfile: User = {
                 id: firebaseUser.uid,
                 email: firebaseUser.email || '',
-                role: 'CUSTOMER',
+                role: 'SUPER_ADMIN',
                 personalId: '',
                 displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
                 authMethod: 'firebase'
               };
               setUser(newUserProfile);
               setIsAuthenticated(true);
-              setUserRole('CUSTOMER');
+              setUserRole('SUPER_ADMIN');
               setPersonalId('');
               setFirebaseUid(newUserProfile.id);
               // Update route advice for new user
               setRouteAdvice(prev => ({
                 ...prev,
-                role: 'CUSTOMER',
+                role: 'SUPER_ADMIN',
                 target: advice?.target || prev.target, // Use advice target if available
                 authenticated: true,
               }));
@@ -549,7 +549,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const fallbackUser = {
               id: firebaseUser.uid,
               email: firebaseUser.email || '',
-              role: 'CUSTOMER' as UserRole,
+              role: 'SUPER_ADMIN' as UserRole,
               personalId: '',
               displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
               authMethod: 'firebase' as const,
@@ -566,13 +566,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             setUser(fallbackUser);
             setIsAuthenticated(true);
-            setUserRole('CUSTOMER');
+            setUserRole('SUPER_ADMIN');
             setPersonalId('');
             setFirebaseUid(fallbackUser.id);
             // Update route advice for offline user
             setRouteAdvice(prev => ({
               ...prev,
-              role: 'CUSTOMER',
+              role: 'SUPER_ADMIN',
               target: advice?.target || prev.target, // Use advice target if available
               authenticated: true, // Assume authenticated for offline access
             }));
@@ -592,7 +592,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } else {
               setUser(null);
               setIsAuthenticated(false);
-              setUserRole('CUSTOMER');
+              setUserRole('SUPER_ADMIN');
               setPersonalId(undefined);
               setFirebaseUid(undefined);
               // Update route advice when logged out
@@ -607,7 +607,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.warn('⚠️ Could not restore offline user');
             setUser(null);
             setIsAuthenticated(false);
-            setUserRole('CUSTOMER');
+            setUserRole('SUPER_ADMIN');
             setPersonalId(undefined);
             setFirebaseUid(undefined);
             // Update route advice on error
@@ -682,7 +682,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (
     email: string,
     password: string,
-    role: UserRole = 'CUSTOMER',
+    role: UserRole = 'SUPER_ADMIN',
     metadata?: RegistrationMetadata
   ) => {
     try {
@@ -846,7 +846,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 5. Clear all local state
       setUser(null);
       setIsAuthenticated(false);
-      setUserRole('CUSTOMER'); // Reset role
+      setUserRole('SUPER_ADMIN'); // Reset role
       setPersonalId(undefined);
       setFirebaseUid(undefined);
       setDeviceRecognition({
@@ -900,7 +900,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Force clear state even if logout calls fail
       setUser(null);
       setIsAuthenticated(false);
-      setUserRole('CUSTOMER');
+      setUserRole('SUPER_ADMIN');
       setPersonalId(undefined);
       setFirebaseUid(undefined);
       

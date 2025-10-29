@@ -45,7 +45,6 @@ function initAdmin() {
   try {
     const app = initAdmin();
     const auth = app.auth();
-    const db = app.firestore();
 
     const TARGET = {
       email: 'akaki.cincadze@gmail.com',
@@ -85,37 +84,10 @@ function initAdmin() {
       personalId: TARGET.personalId,
     });
 
-    // Upsert Firestore user doc (no password)
-    const userRef = db.collection('users').doc(userRecord.uid);
-    const base = {
-      id: userRecord.uid,
-      email: TARGET.email,
-      firstName: TARGET.firstName,
-      lastName: TARGET.lastName,
-      personalId: TARGET.personalId,
-      phoneNumber: TARGET.phoneNumber,
-      role: TARGET.role,
-      isActive: true,
-      registrationStatus: 'active',
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    };
-    const snap = await userRef.get();
-    if (!snap.exists) base.createdAt = admin.firestore.FieldValue.serverTimestamp();
-    await userRef.set(base, { merge: true });
-
-    // Remove plaintext password fields for this email if any
-    const q = await db.collection('users').where('email', '==', TARGET.email).get();
-    for (const d of q.docs) {
-      if (d.get('password') !== undefined) {
-        await d.ref.update({ password: admin.firestore.FieldValue.delete() });
-      }
-    }
-
     console.log('✅ Super Admin ready:', {
       uid: userRecord.uid,
       email: TARGET.email,
       role: TARGET.role,
-      firestoreDocId: userRef.id,
     });
 
     // Cleanly delete the app instance

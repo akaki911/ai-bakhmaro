@@ -41,7 +41,7 @@ router.post('/', (req, res) => {
     }
 
     // Log significant activities
-    if (['authentication_attempt', 'webauthn_flow', 'booking_activity'].includes(action)) {
+    if (['authentication_attempt', 'webauthn_flow', 'ai_operation'].includes(action)) {
       log(`User ${userId} performed: ${action}`, metadata);
     }
 

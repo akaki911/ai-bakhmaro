@@ -18,19 +18,6 @@ export const verifyFirebaseUser = async (userId: string) => {
       return userData;
     }
 
-    // Check customers collection
-    const customerDocRef = doc(db, 'customers', userId);
-    const customerDoc = await getDoc(customerDocRef);
-
-    if (customerDoc.exists()) {
-      const customerData = customerDoc.data();
-      console.log('📊 Firebase customer data:', customerData);
-      console.log('🆔 Firebase customer personalId:', customerData.personalId);
-      console.log('🎯 Target personalId: "01019062020"');
-      console.log('✅ Match?', customerData.personalId === "01019062020");
-      return customerData;
-    }
-
     console.log('❌ No user found in Firebase');
     return null;
   } catch (error) {
