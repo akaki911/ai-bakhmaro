@@ -316,7 +316,6 @@ router.post('/stream', async (req, res) => {
           metadata: {
             ...metadataPayload,
             origin: metadataPayload.origin || 'http-stream',
-            notifySlack: metadataPayload.notifySlack ?? params?.notifySlack === true,
             useCodex: true,
           },
           userId: personalId,

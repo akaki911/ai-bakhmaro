@@ -267,7 +267,7 @@ class SystemWatchdog {
       global.systemAlerts = global.systemAlerts.slice(0, 50);
     }
 
-    // Future: Send to Slack/Email/etc
+    // Future: Send to email or status page integrations
   }
 
   getSystemStatus() {

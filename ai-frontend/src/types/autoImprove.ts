@@ -113,7 +113,6 @@ export interface AutoImproveSafetyLimits {
 
 export interface AutoImproveAlertSettings {
   email: boolean;
-  slack: boolean;
   webhooks: string[];
 }
 
@@ -141,7 +140,6 @@ export const defaultAutoImproveSettings: AutoImproveSettings = {
   },
   alertSettings: {
     email: false,
-    slack: false,
     webhooks: []
   }
 };

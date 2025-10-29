@@ -56,11 +56,11 @@ export const createTestLogs = async () => {
     // UI interaction errors
     await logger.logError(
       'UserInteraction',
-      'Button click handler failed - Cannot process payment | User action: Payment button click\nElement ID: payment-submit-btn',
-      new Error('Payment processing failed: Invalid card number'),
+      'Button click handler failed - Unable to confirm webhook delivery | User action: Sync confirmation click\nElement ID: webhook-confirm-btn',
+      new Error('Webhook confirmation failed: Signature mismatch'),
       'test-user-id',
       'test@example.com',
-      'PaymentButton.tsx'
+      'WebhookButton.tsx'
     );
 
     // API logs with different status codes
@@ -72,7 +72,7 @@ export const createTestLogs = async () => {
 
     // Debug logs
     await logger.logDebug('AuthContext', 'User authentication state changed', { userId: 'test-user-id', email: 'test@example.com' });
-    await logger.logDebug('PaymentFlow', 'Initializing payment process', { userId: 'test-user-id', email: 'test@example.com' });
+    await logger.logDebug('SyncFlow', 'Initializing webhook retry sequence', { userId: 'test-user-id', email: 'test@example.com' });
 
     // System logs
     await logger.logAction('System', 'Database connection established', undefined, undefined);
