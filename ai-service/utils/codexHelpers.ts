@@ -186,18 +186,3 @@ export function chunkCodexResponse(text: string, chunkSize = DEFAULT_STREAM_CHUN
   return chunks;
 }
 
-export function summarizeForSlack(command: CodexCommand, result: string, filePath?: string): string {
-  const normalized = result.trim();
-  const preview = normalized.length > 600 ? `${normalized.slice(0, 600)}…` : normalized;
-  const header = `*Codex command:* \`${command}\``;
-  const fileLine = filePath ? `*File:* \`${filePath}\`` : '';
-  return [header, fileLine, '```', preview, '```'].filter(Boolean).join('\n');
-}
-
-export function sanitizeSlackText(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-

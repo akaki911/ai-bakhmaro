@@ -18,7 +18,7 @@ The Operations Toolkit module provides a unified console for monitoring AI Space
 
 1. **Triage** – Use the console incident panel to assess scope, impacted modules, and latest deployments.
 2. **Stabilise** – Apply runbooks stored in the `ops.runbook.repo` repository referenced in environment config.
-3. **Communicate** – Broadcast updates via Slack integration configured through Integration Hub.
+3. **Communicate** – Broadcast updates via Integration Hub webhooks and status pages.
 4. **Document** – Log incident timeline, root cause, and corrective actions in Operations Toolkit.
 
 ## Tooling Integrations

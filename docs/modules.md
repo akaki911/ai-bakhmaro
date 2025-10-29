@@ -10,7 +10,7 @@ The AI Space runtime is composed of ten modules. Each module has a single tech o
 | 4 | Task Orchestrator | Cloud Task-backed execution plane responsible for retries and SLA monitoring. | Automation Squad | 99.95% |
 | 5 | Knowledge Vault | Document store with vector search, retention, and redaction policies. | Knowledge Team | 99.9% |
 | 6 | Evaluation Lab | Scenario runner for regression evaluation and continuous benchmarking. | QA & Eval Guild | 99.5% |
-| 7 | Integration Hub | Connector catalogue (Slack, Gmail, REST) with per-scope analytics and throttling. | Integrations Pod | 99.9% |
+| 7 | Integration Hub | Connector catalogue (Gmail, REST) with per-scope analytics and throttling. | Integrations Pod | 99.9% |
 | 8 | Telemetry Center | Observability dashboards, alert routing, and BigQuery exports. | Platform Reliability | 99.9% |
 | 9 | Access Management | Role lattice, policy enforcement, and Super Admin review queue. | Security Office | 99.99% |
 | 10 | Operations Toolkit | Runbooks, deployment timeline, and incident collaboration utilities. | Operations Desk | 99.9% |
