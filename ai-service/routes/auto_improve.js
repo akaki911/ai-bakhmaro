@@ -85,7 +85,6 @@ router.post('/codex/auto-improve', protectAutoImprove, requireSuperAdmin, async 
       metadata: {
         ...metadata,
         origin: metadata.origin || 'auto-improve-endpoint',
-        notifySlack: metadata.notifySlack === true,
       },
       userId,
     });

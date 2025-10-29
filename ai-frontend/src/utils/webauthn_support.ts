@@ -258,7 +258,7 @@ export function getWebAuthnErrorMessage(error: any): string {
 
   switch (errorName) {
     case 'NotAllowedError':
-      // Enhanced Windows Hello specific messaging
+      // Enhanced Windows Hello specific guidance
       if (navigator.userAgent.includes('Windows')) {
         return 'Windows Hello-მ დაბლოკა შესვლა. გააქტიურეთ Windows Hello Settings-ში ან გამოიყენეთ PIN კოდი.';
       }

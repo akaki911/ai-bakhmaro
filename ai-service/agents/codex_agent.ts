@@ -6,8 +6,6 @@ import {
   extractImprovement,
   createPatchPreview,
   chunkCodexResponse,
-  summarizeForSlack,
-  sanitizeSlackText,
   type CodexCommand,
   type BuildCodexPromptOptions,
   type AutoImprovePromptOptions,
@@ -15,7 +13,6 @@ import {
 } from '../utils/codexHelpers';
 
 type CodexClientInstance = any;
-type SlackClientInstance = any;
 
 interface CodexCompletionRequest extends Partial<BuildCodexPromptOptions> {
   command: CodexCommand;
@@ -50,11 +47,8 @@ const DEFAULT_TEMPERATURE = Number(process.env.CODEX_TEMPERATURE || 0.2);
 const CODEX_MODEL = process.env.CODEX_MODEL || 'gpt-5-codex';
 
 let cachedCodexModule: any = null;
-let cachedSlackModule: any = null;
-
 export class CodexAgent {
   private client: CodexClientInstance | null = null;
-  private slackClient: SlackClientInstance | null = null;
   private readonly timeoutMs: number;
   private readonly defaultMaxTokens: number;
   private readonly defaultTemperature: number;
@@ -70,14 +64,6 @@ export class CodexAgent {
 
   public isEnabled(): boolean {
     return Boolean(process.env.OPENAI_API_KEY);
-  }
-
-  public shouldUseSlack(): boolean {
-    return process.env.CODEX_SLACK_ENABLED === 'true' && Boolean(process.env.SLACK_BOT_TOKEN);
-  }
-
-  public getSlackChannel(): string {
-    return process.env.CODEX_SLACK_CHANNEL || '#dev-ai';
   }
 
   private async resolveCodexConstructor(): Promise<any> {
@@ -113,36 +99,6 @@ export class CodexAgent {
 
     this.client = new CodexConstructor({ apiKey: process.env.OPENAI_API_KEY as string });
     return this.client;
-  }
-
-  private ensureSlackClient(): SlackClientInstance | null {
-    if (!this.shouldUseSlack()) {
-      return null;
-    }
-
-    if (this.slackClient) {
-      return this.slackClient;
-    }
-
-    const token = process.env.SLACK_BOT_TOKEN as string;
-    if (!cachedSlackModule) {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
-        cachedSlackModule = require('@slack/web-api');
-      } catch (error: any) {
-        this.logger.warn('Slack SDK not available:', error?.message || error);
-        return null;
-      }
-    }
-
-    const SlackConstructor = cachedSlackModule?.WebClient || cachedSlackModule?.default;
-    if (!SlackConstructor) {
-      this.logger.warn('Slack WebClient export missing from SDK.');
-      return null;
-    }
-
-    this.slackClient = new SlackConstructor(token);
-    return this.slackClient;
   }
 
   private async withTimeout<T>(factory: () => Promise<T>, label: string): Promise<T> {
@@ -258,26 +214,6 @@ export class CodexAgent {
     });
   }
 
-  private async postToSlack(command: CodexCommand, output: string, filePath?: string): Promise<void> {
-    const client = this.ensureSlackClient();
-    if (!client) {
-      return;
-    }
-
-    const sanitized = sanitizeSlackText(output);
-    const summary = summarizeForSlack(command, sanitized, filePath);
-    const channel = this.getSlackChannel();
-
-    try {
-      await client.chat.postMessage({
-        channel,
-        text: summary,
-      });
-    } catch (error: any) {
-      this.logger.warn('Slack notification failed', error?.message || error);
-    }
-  }
-
   private async logUsage(entry: {
     prompt: string;
     result: string;
@@ -364,10 +300,6 @@ export class CodexAgent {
       metadata: request.metadata,
     });
 
-    if (this.shouldUseSlack() && request.metadata?.notifySlack) {
-      await this.postToSlack(request.command, result.text, request.filePath);
-    }
-
     return result;
   }
 
@@ -445,10 +377,6 @@ export class CodexAgent {
       metadata: { ...(request.metadata || {}), stream: true },
     });
 
-    if (this.shouldUseSlack() && request.metadata?.notifySlack) {
-      await this.postToSlack(request.command, text, request.filePath);
-    }
-
     return { text: text.trim(), usage };
   }
 
@@ -476,10 +404,6 @@ export class CodexAgent {
       metadata: { ...(options.metadata || {}), mode: 'auto-improve' },
     });
 
-    if (this.shouldUseSlack() && options.metadata?.notifySlack) {
-      await this.postToSlack('auto_improve', improvement.raw, options.filePath);
-    }
-
     return {
       prompt,
       improvedContent,
@@ -489,39 +413,6 @@ export class CodexAgent {
     };
   }
 
-  public async handleSlackMessage(payload: {
-    text: string;
-    channel?: string;
-    user?: string;
-    filePath?: string;
-  }): Promise<CodexCompletionResult | null> {
-    if (!this.shouldUseSlack()) {
-      return null;
-    }
-
-    const normalized = payload.text.trim();
-    const commandMatch = normalized.match(/^\/(improve|refactor|explain)\s+/i);
-    const command = (commandMatch?.[1]?.toLowerCase() as CodexCommand) || 'chat';
-    const message = normalized.replace(/^\/[a-zA-Z]+\s+/, '');
-
-    const result = await this.generate({
-      command,
-      message,
-      metadata: { origin: 'slack', channel: payload.channel },
-      userId: payload.user,
-      filePath: payload.filePath,
-    });
-
-    const slackClient = this.ensureSlackClient();
-    if (slackClient && payload.channel) {
-      await slackClient.chat.postMessage({
-        channel: payload.channel,
-        text: sanitizeSlackText(result.text),
-      });
-    }
-
-    return result;
-  }
 }
 
 const codexAgent = new CodexAgent();

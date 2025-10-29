@@ -23,7 +23,7 @@ Gurulo AI Space exposes ten modular surfaces that can be toggled per environment
 4. **Task Orchestrator** – queue-backed engine that schedules function invocations and monitors retries.
 5. **Knowledge Vault** – Firestore-backed document graph with semantic search and retention policies.
 6. **Evaluation Lab** – scenario runner for regression tests, synthetic data playback, and scoring.
-7. **Integration Hub** – managed connectors (Slack, Gmail, HTTP) with secret rotation and per-scope analytics.
+7. **Integration Hub** – managed connectors (Gmail, HTTP) with secret rotation and per-scope analytics.
 8. **Telemetry Center** – observability dashboards for latency, cost, and quality metrics sourced from BigQuery exports.
 9. **Access Management** – role lattice anchored by Super Admin approval and WebAuthn credential binding.
 10. **Operations Toolkit** – guided runbooks, release timeline, and incident collaboration utilities.

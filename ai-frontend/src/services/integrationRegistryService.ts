@@ -6,7 +6,6 @@ export interface ConnectorSummary {
 
 const connectors: ConnectorSummary[] = [
   { id: 'google-oauth', name: 'Google Workspace OAuth', status: 'coming-soon' },
-  { id: 'slack-webhook', name: 'Slack Webhook Relay', status: 'draft' },
 ];
 
 export const integrationRegistryService = {
