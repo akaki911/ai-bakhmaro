@@ -3815,3 +3815,233 @@ svg {
     color: rgba(226, 232, 240, 0.65);
   }
 }
+
+@keyframes living-ai-ring {
+  0% {
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.35), 0 0 0 0 rgba(129, 140, 248, 0.25);
+  }
+
+  50% {
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.5), 0 0 24px 2px rgba(129, 140, 248, 0.35);
+  }
+
+  100% {
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.35), 0 0 0 0 rgba(129, 140, 248, 0.25);
+  }
+}
+
+@keyframes living-ai-track {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.living-ai-field {
+  position: relative;
+  display: block;
+  border-radius: 18px;
+  border: 1px solid rgba(56, 189, 248, 0.32);
+  background: rgba(10, 10, 20, 0.8);
+  box-shadow: 0 24px 50px rgba(2, 6, 23, 0.45);
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.living-ai-field::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+      140% 140% at 50% 0%,
+      rgba(56, 189, 248, 0.18),
+      rgba(99, 102, 241, 0.12),
+      rgba(10, 10, 20, 0)
+    ),
+    linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(79, 70, 229, 0.06));
+  pointer-events: none;
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
+}
+
+.living-ai-field > * {
+  position: relative;
+  z-index: 1;
+}
+
+.living-ai-field:focus-within {
+  border-color: rgba(129, 140, 248, 0.7);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25), 0 28px 70px rgba(56, 189, 248, 0.22);
+}
+
+.living-ai-field:focus-within::before {
+  opacity: 1;
+}
+
+.living-ai-select {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  background: rgba(13, 23, 42, 0.75);
+  color: #e6faff;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, transform 0.25s ease;
+}
+
+.living-ai-select:hover,
+.living-ai-select:focus-visible {
+  border-color: rgba(129, 140, 248, 0.65);
+  background: rgba(15, 28, 52, 0.95);
+  animation: living-ai-ring 2.4s ease-in-out infinite;
+}
+
+.living-ai-select:focus-visible {
+  outline: none;
+}
+
+.living-ai-select option {
+  background: rgba(6, 11, 27, 0.95);
+  color: #e6faff;
+}
+
+.living-ai-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: rgba(184, 231, 255, 0.92);
+}
+
+.living-ai-toggle input[type='checkbox'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: radial-gradient(circle at 30% 30%, rgba(34, 211, 238, 0.12), rgba(8, 145, 178, 0.1) 45%, rgba(6, 11, 27, 0.95));
+  box-shadow: 0 0 0 1px rgba(2, 132, 199, 0.35), inset 0 0 0 1px rgba(56, 189, 248, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.3s ease, border-color 0.25s ease, background 0.25s ease;
+  cursor: pointer;
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.living-ai-toggle input[type='checkbox']::after {
+  content: '';
+  width: 10px;
+  height: 5px;
+  border: 2px solid transparent;
+  border-left-color: #02131e;
+  border-bottom-color: #02131e;
+  transform: rotate(-45deg) scale(0.6);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.living-ai-toggle input[type='checkbox']:hover {
+  animation: living-ai-ring 2.2s ease-in-out infinite;
+}
+
+.living-ai-toggle input[type='checkbox']:focus-visible {
+  outline: none;
+  animation: living-ai-ring 2.2s ease-in-out infinite;
+}
+
+.living-ai-toggle input[type='checkbox']:checked {
+  border-color: rgba(186, 230, 253, 0.9);
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.88), rgba(129, 140, 248, 0.85));
+  box-shadow: 0 0 0 1px rgba(8, 145, 178, 0.6), 0 0 18px rgba(34, 211, 238, 0.45);
+}
+
+.living-ai-toggle input[type='checkbox']:checked::after {
+  opacity: 1;
+}
+
+.living-ai-toggle input[type='checkbox']:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  box-shadow: none;
+}
+
+.living-ai-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 0.9rem;
+  background: transparent;
+  border-radius: 9999px;
+  position: relative;
+  cursor: pointer;
+}
+
+.living-ai-slider:focus-visible {
+  outline: none;
+}
+
+.living-ai-slider::-webkit-slider-runnable-track {
+  height: 0.9rem;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.5), rgba(129, 140, 248, 0.75), rgba(34, 211, 238, 0.5));
+  background-size: 200% 100%;
+  animation: living-ai-track 5s linear infinite;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  box-shadow: inset 0 0 12px rgba(30, 58, 138, 0.45);
+}
+
+.living-ai-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #f0f9ff, #7dd3fc 40%, #38bdf8 65%, #0f172a 100%);
+  border: 2px solid rgba(224, 242, 254, 0.9);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.6), 0 0 6px rgba(14, 165, 233, 0.7);
+  margin-top: -6.5px;
+  transition: transform 0.2s ease;
+}
+
+.living-ai-slider:active::-webkit-slider-thumb {
+  transform: scale(1.05);
+}
+
+.living-ai-slider::-moz-range-track {
+  height: 0.9rem;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.5), rgba(129, 140, 248, 0.75), rgba(34, 211, 238, 0.5));
+  background-size: 200% 100%;
+  animation: living-ai-track 5s linear infinite;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  box-shadow: inset 0 0 12px rgba(30, 58, 138, 0.45);
+}
+
+.living-ai-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(224, 242, 254, 0.9);
+  background: radial-gradient(circle at 30% 30%, #f0f9ff, #7dd3fc 40%, #38bdf8 65%, #0f172a 100%);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.6), 0 0 6px rgba(14, 165, 233, 0.7);
+}
+
+.living-ai-slider::-moz-range-progress {
+  background: transparent;
+}
+
+.living-ai-slider:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

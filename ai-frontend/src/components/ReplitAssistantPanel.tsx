@@ -195,6 +195,10 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
   const [isArchivedCollapsed, setIsArchivedCollapsed] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [contextDepth, setContextDepth] = useState(3); // 1-10 scale for conversation context
+  const modelSelectId = "replit-assistant-model";
+  const overrideSelectId = "replit-assistant-override";
+  const languageModeSelectId = "replit-assistant-language-mode";
+  const contextDepthSliderId = "replit-assistant-context-depth";
   const [streamingEnabled, setStreamingEnabled] = useState(true);
   const [languageMode, setLanguageMode] = useState<
     "georgian" | "english" | "mixed"
@@ -1288,12 +1292,12 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
           <div className="border-t border-white/10 bg-[rgba(8,12,26,0.45)] backdrop-blur-md p-4 flex-shrink-0">
             {/* Advanced Controls */}
             <div className="mb-3">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="mb-2 flex items-center gap-3">
                 <button
                   onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-                  className="flex items-center gap-2 text-[#00D4FF] text-sm hover:text-[#0969DA] transition-all"
+                  className="group inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-[rgba(10,10,20,0.72)] px-3 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-cyan-200 transition-all hover:border-cyan-200/60 hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/50"
                 >
-                  <Sparkles size={16} />
+                  <Sparkles className="h-4 w-4 text-cyan-300 transition-colors group-hover:text-cyan-100" />
                   <span>Advanced</span>
                   <ChevronDown
                     size={16}
@@ -1301,202 +1305,215 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                   />
                 </button>
 
-                <div className="ml-auto flex items-center gap-2 text-sm text-[#8B949E]">
+                <div className="ml-auto flex items-center gap-2 text-xs font-medium text-cyan-100/70">
                   <span>
-                    {availableModels.find((m) => m.id === selectedModel)
-                      ?.label || "Loading..."}
+                    {availableModels.find((m) => m.id === selectedModel)?.label || "Loading..."}
                   </span>
-                  <div className="w-2 h-2 bg-[#00D4FF] rounded-full"></div>
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-cyan-300"></div>
 
-                  {/* Policy and Model Badge */}
                   {lastResponseMeta.policy && (
-                    <div className="ml-2 flex items-center gap-1 text-xs bg-[#21252B] px-2 py-1 rounded border border-[#3E4450]">
-                      <span className="text-[#00D4FF]">Policy:</span>
-                      <span className="text-[#8B949E]">
-                        {lastResponseMeta.policy}
-                      </span>
-                      <span className="text-[#3E4450]">·</span>
-                      <span className="text-[#00D4FF]">Model:</span>
-                      <span className="text-[#8B949E]">
+                    <div className="ml-3 flex items-center gap-1 rounded-full border border-cyan-400/30 bg-[rgba(10,10,20,0.65)] px-3 py-1 text-[0.65rem] uppercase tracking-wide text-cyan-100/80">
+                      <span className="text-cyan-200">Policy</span>
+                      <span className="text-white/60">{lastResponseMeta.policy}</span>
+                      <span className="text-cyan-200">· Model</span>
+                      <span className="text-white/60">
                         {lastResponseMeta.model} ({lastResponseMeta.modelLabel})
                       </span>
                       {lastResponseMeta.overridden && (
-                        <>
-                          <span className="text-[#3E4450]">·</span>
-                          <span className="text-[#F85149]">OVERRIDE</span>
-                        </>
+                        <span className="ml-1 rounded-full bg-rose-500/20 px-2 py-0.5 text-[0.55rem] font-bold text-rose-200">
+                          Override
+                        </span>
                       )}
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Advanced Dropdown Content */}
               {isAdvancedOpen && (
-                <div className="bg-[#21252B] border border-[#3E4450] rounded-lg p-3 mb-3 space-y-3">
-                  <div>
-                    <label className="block text-sm text-[#8B949E] mb-1">
-                      Model
-                    </label>
-                    <select
-                      value={selectedModel}
-                      onChange={(e) => setSelectedModel(e.target.value)}
-                      className="w-full bg-[#2C313A] border border-[#3E4450] rounded text-[#E6EDF3] text-sm px-3 py-2"
-                    >
-                      {availableModels.length === 0 ? (
-                        <option value="">Loading models...</option>
-                      ) : (
-                        availableModels.map((model) => (
-                          <option key={model.id} value={model.id}>
-                            {model.label} ({model.category})
-                          </option>
-                        ))
-                      )}
-                    </select>
+                <div className="living-ai-field mb-3 space-y-5 p-5">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <label
+                        htmlFor={modelSelectId}
+                        className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/70"
+                      >
+                        Model
+                      </label>
+                      <select
+                        id={modelSelectId}
+                        value={selectedModel}
+                        onChange={(e) => setSelectedModel(e.target.value)}
+                        className="living-ai-select"
+                      >
+                        {availableModels.length === 0 ? (
+                          <option value="">Loading models...</option>
+                        ) : (
+                          availableModels.map((model) => (
+                            <option key={model.id} value={model.id}>
+                              {model.label} ({model.category})
+                            </option>
+                          ))
+                        )}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor={overrideSelectId}
+                        className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/70"
+                      >
+                        Manual Override
+                      </label>
+                      <select
+                        id={overrideSelectId}
+                        value={manualOverride}
+                        onChange={(e) =>
+                          setManualOverride(
+                            e.target.value as "auto" | "small" | "large",
+                          )
+                        }
+                        className="living-ai-select"
+                      >
+                        <option value="auto">Auto (Router Decision)</option>
+                        <option value="small">Force Small Model</option>
+                        <option value="large">Force Large Model</option>
+                      </select>
+                      <p className="text-[0.7rem] text-cyan-100/60">
+                        Override automatic model routing. Auto uses policy-based selection.
+                      </p>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm text-[#8B949E] mb-1">
-                      Manual Override
-                    </label>
-                    <select
-                      value={manualOverride}
-                      onChange={(e) =>
-                        setManualOverride(
-                          e.target.value as "auto" | "small" | "large",
-                        )
-                      }
-                      className="w-full bg-[#2C313A] border border-[#3E4450] rounded text-[#E6EDF3] text-sm px-3 py-2"
+                  <div className="space-y-2">
+                    <label
+                      htmlFor={contextDepthSliderId}
+                      className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/70"
                     >
-                      <option value="auto">Auto (Router Decision)</option>
-                      <option value="small">Force Small Model</option>
-                      <option value="large">Force Large Model</option>
-                    </select>
-                    <p className="text-xs text-[#8B949E] mt-1">
-                      Override automatic model routing. Auto uses policy-based
-                      selection.
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm text-[#8B949E] mb-1">
                       Context Depth
                     </label>
                     <div className="flex items-center gap-3">
                       <input
+                        id={contextDepthSliderId}
                         type="range"
                         min="1"
                         max="10"
                         value={contextDepth}
-                        onChange={(e) =>
-                          setContextDepth(parseInt(e.target.value))
-                        }
-                        className="flex-1 h-2 bg-[#3E4450] rounded-lg appearance-none cursor-pointer"
-                        style={{
-                          background: `linear-gradient(to right, #00D4FF 0%, #00D4FF ${(contextDepth / 10) * 100}%, #3E4450 ${(contextDepth / 10) * 100}%, #3E4450 100%)`,
-                        }}
+                        onChange={(e) => setContextDepth(parseInt(e.target.value))}
+                        className="living-ai-slider flex-1"
                       />
-                      <span className="text-[#E6EDF3] text-sm w-8 text-center">
+                      <span className="w-10 text-center text-sm font-semibold text-cyan-100">
                         {contextDepth}
                       </span>
                     </div>
-                    <p className="text-xs text-[#8B949E] mt-1">
+                    <p className="text-[0.7rem] text-cyan-100/60">
                       Number of previous messages to include (1-10)
                     </p>
                   </div>
 
-                  <div>
-                    <label className="block text-sm text-[#8B949E] mb-1">
+                  <div className="space-y-2">
+                    <label
+                      htmlFor={languageModeSelectId}
+                      className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/70"
+                    >
                       Language Mode
                     </label>
                     <select
+                      id={languageModeSelectId}
                       value={languageMode}
                       onChange={(e) =>
                         setLanguageMode(
                           e.target.value as "georgian" | "english" | "mixed",
                         )
                       }
-                      className="w-full bg-[#2C313A] border border-[#3E4450] rounded text-[#E6EDF3] text-sm px-3 py-2"
+                      className="living-ai-select"
                     >
                       <option value="georgian">🇬🇪 ქართული (Georgian)</option>
                       <option value="english">🇺🇸 English</option>
                       <option value="mixed">🌐 Mixed Languages</option>
                     </select>
-                    <p className="text-xs text-[#8B949E] mt-1">
+                    <p className="text-[0.7rem] text-cyan-100/60">
                       Response language preference
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="stream-output"
-                      checked={streamingEnabled}
-                      onChange={(e) => setStreamingEnabled(e.target.checked)}
-                      className="rounded text-[#00D4FF] focus:ring-[#00D4FF] focus:ring-2"
-                    />
-                    <label
-                      htmlFor="stream-output"
-                      className="text-sm text-[#8B949E]"
-                    >
-                      ⚡ Stream responses (პასუხების ნაკადი)
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="living-ai-toggle text-sm">
+                      <input
+                        type="checkbox"
+                        id="stream-output"
+                        checked={streamingEnabled}
+                        onChange={(e) => setStreamingEnabled(e.target.checked)}
+                      />
+                      <span className="text-cyan-50/80">
+                        ⚡ Stream responses (პასუხების ნაკადი)
+                      </span>
+                    </label>
+
+                    <label className="living-ai-toggle text-sm">
+                      <input
+                        type="checkbox"
+                        id="include-context"
+                        defaultChecked
+                      />
+                      <span className="text-cyan-50/80">
+                        📁 Include project context (პროექტის კონტექსტი)
+                      </span>
                     </label>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="include-context"
-                      className="rounded text-[#00D4FF] focus:ring-[#00D4FF] focus:ring-2"
-                      defaultChecked
-                    />
-                    <label
-                      htmlFor="include-context"
-                      className="text-sm text-[#8B949E]"
-                    >
-                      📁 Include project context (პროექტის კონტექსტი)
-                    </label>
-                  </div>
-
-                  <div className="border-t border-[#3E4450] pt-3">
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2 text-sm font-semibold text-[#E6EDF3]">
-                        <Brain size={16} className="text-[#00D4FF]" /> AI მეხსიერება
+                  <div className="border-t border-white/10 pt-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span className="flex items-center gap-2 text-sm font-semibold text-cyan-100">
+                        <Brain size={18} className="text-[#7DEBFF]" /> AI მეხსიერება
                       </span>
                       <button
                         type="button"
                         onClick={() => memoryControls.refresh()}
-                        className="inline-flex items-center gap-1 rounded border border-[#3E4450] px-2 py-1 text-xs text-[#8B949E] hover:text-[#E6EDF3]"
+                        className="inline-flex items-center gap-1 rounded-full border border-cyan-300/40 px-3 py-1 text-[0.7rem] font-medium uppercase tracking-wide text-cyan-100/80 transition hover:border-cyan-200/70 hover:text-cyan-50"
                         disabled={memoryControls.loading}
                       >
                         <RefreshCw size={12} /> განახლება
                       </button>
                     </div>
-                    <p className="mt-1 text-xs text-[#6E7681]">
+                    <p className="mt-1 text-[0.7rem] text-cyan-100/60">
                       გურულო პასუხებს პერსონალიზებს შენახული მეხსიერების საფუძველზე. საჭიროა მომხმარებლის თანხმობა და მონაცემები ინახება დაშიფრული სახით.
                     </p>
-                    <div className="mt-3 space-y-2 text-sm text-[#8B949E]">
-                      <label className="flex items-center gap-2">
+                    <div className="mt-3 space-y-2 text-sm">
+                      <label className="living-ai-toggle">
                         <input
                           type="checkbox"
                           checked={memoryControls.controls.referenceSavedMemories}
-                          onChange={(event) => memoryControls.toggleFeature('savedMemories', event.target.checked)}
-                          className="rounded text-[#00D4FF] focus:ring-[#00D4FF] focus:ring-2"
+                          onChange={(event) =>
+                            memoryControls.toggleFeature(
+                              'savedMemories',
+                              event.target.checked,
+                            )
+                          }
                           disabled={memoryControls.loading}
                         />
-                        <span title="გურულო გამოიყენებს შენახულ ფაქტებსა და პრეფერენციებს პასუხების გასაუმჯობესებლად.">
+                        <span
+                          className="text-cyan-50/80"
+                          title="გურულო გამოიყენებს შენახულ ფაქტებსა და პრეფერენციებს პასუხების გასაუმჯობესებლად."
+                        >
                           🧠 შენახული მეხსიერებების გამოყენება
                         </span>
                       </label>
-                      <label className="flex items-center gap-2">
+                      <label className="living-ai-toggle">
                         <input
                           type="checkbox"
                           checked={memoryControls.controls.referenceChatHistory}
-                          onChange={(event) => memoryControls.toggleFeature('chatHistory', event.target.checked)}
-                          className="rounded text-[#00D4FF] focus:ring-[#00D4FF] focus:ring-2"
+                          onChange={(event) =>
+                            memoryControls.toggleFeature(
+                              'chatHistory',
+                              event.target.checked,
+                            )
+                          }
                           disabled={memoryControls.loading}
                         />
-                        <span title="გურულო ავტომატურად ჩართავს წინა დიალოგებს დამატებითი კონტექსტისთვის.">
+                        <span
+                          className="text-cyan-50/80"
+                          title="გურულო ავტომატურად ჩართავს წინა დიალოგებს დამატებითი კონტექსტისთვის."
+                        >
                           🗂️ ჩატის ისტორიის ჩართვა
                         </span>
                       </label>
@@ -1506,11 +1523,11 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                     )}
                   </div>
 
-                  <div className="border-t border-[#3E4450] pt-3">
-                    <label className="block text-sm text-[#8B949E] mb-2">
+                  <div className="border-t border-white/10 pt-4">
+                    <label className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/70">
                       📎 File Attachments
                     </label>
-                    <div className="flex items-center gap-2">
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -1521,7 +1538,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                       />
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex-1 bg-[#3E4450] hover:bg-[#4A5568] text-[#8B949E] hover:text-white px-3 py-2 rounded text-sm transition-all flex items-center gap-2"
+                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-cyan-300/40 bg-[rgba(13,23,42,0.75)] px-4 py-2 text-sm font-medium text-cyan-100 transition hover:border-cyan-200/60 hover:text-white"
                       >
                         <Paperclip size={16} />
                         Choose files...
@@ -1529,7 +1546,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                       {selectedFiles.length > 0 && (
                         <button
                           onClick={() => setSelectedFiles([])}
-                          className="px-2 py-2 text-[#F85149] hover:bg-[#3E4450] rounded text-sm transition-all"
+                          className="rounded-full border border-rose-400/40 px-4 py-2 text-sm font-medium text-rose-200 transition hover:border-rose-300/70 hover:text-white"
                           title="Clear selected files"
                         >
                           Clear ({selectedFiles.length})
@@ -1537,13 +1554,13 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                       )}
                     </div>
                     {selectedFiles.length > 0 && (
-                      <div className="mt-2 space-y-1 max-h-20 overflow-y-auto">
+                      <div className="mt-3 max-h-24 space-y-1 overflow-y-auto">
                         {selectedFiles.map((file, index) => (
                           <div
                             key={index}
-                            className="flex items-center justify-between bg-[#21252B] px-2 py-1 rounded text-xs"
+                            className="flex items-center justify-between rounded-lg border border-cyan-300/20 bg-[rgba(10,10,20,0.65)] px-3 py-1 text-xs text-cyan-100"
                           >
-                            <span className="text-[#E6EDF3] truncate">
+                            <span className="truncate">
                               {file}
                             </span>
                             <button
@@ -1552,7 +1569,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                                   prev.filter((_, i) => i !== index),
                                 )
                               }
-                              className="text-[#8B949E] hover:text-[#F85149] ml-2 flex-shrink-0"
+                              className="ml-3 text-cyan-200 transition hover:text-rose-300"
                             >
                               ✕
                             </button>
