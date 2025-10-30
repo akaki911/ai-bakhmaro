@@ -4,6 +4,7 @@ import AIMemoryManager from '../../AIMemoryManager';
 import { useAuth } from '../../../contexts/useAuth';
 import { useMemoryControls } from '../../../hooks/memory/useMemoryControls';
 import MemoryControlsPanel from '../memory/MemoryControlsPanel';
+import type { SavedMemoryEntry } from '../../../types/aimemory';
 
 interface MemoryTabProps {
   isAuthenticated: boolean;
@@ -15,6 +16,28 @@ const MemoryTab: React.FC<MemoryTabProps> = ({ isAuthenticated }) => {
     isAuthenticated ? user?.personalId : null,
   );
   const [showExpandedView, setShowExpandedView] = useState(true);
+
+  const { activeMemories, archivedMemories } = useMemo(() => {
+    const determineArchiveState = (memory: SavedMemoryEntry) => {
+      const normalizedTags = (memory.tags ?? []).map((tag) => tag.toLowerCase());
+      if (normalizedTags.some((tag) => tag.includes('archive'))) {
+        return true;
+      }
+      if (memory.syncStatus === 'error') {
+        return true;
+      }
+      if (memory.userConfirmed === false) {
+        return true;
+      }
+      return false;
+    };
+
+    const archived = memories.filter((memory) => determineArchiveState(memory));
+    const archivedIds = new Set(archived.map((memory) => memory.id));
+    const active = memories.filter((memory) => !archivedIds.has(memory.id));
+
+    return { activeMemories: active, archivedMemories: archived };
+  }, [memories]);
 
   const handleQuickSaveMemory = useCallback(() => {
     const timestamp = new Date();
@@ -51,26 +74,57 @@ const MemoryTab: React.FC<MemoryTabProps> = ({ isAuthenticated }) => {
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-gradient-to-br from-[#0E1116]/90 via-[#1A1533]/90 to-[#351D6A]/90 p-6 text-[#E6E8EC]">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6">
-        <div className="rounded-3xl border border-white/10 bg-[#0F1320]/80 p-6 backdrop-blur-2xl shadow-[0_32px_70px_rgba(5,10,30,0.6)]">
-          <MemoryControlsPanel
-            controls={controls}
-            memories={memories}
-            metrics={metrics}
-            loading={loading}
-            error={error}
-            onToggle={toggleFeature}
-            onRefresh={refresh}
-            onSaveQuickMemory={handleQuickSaveMemory}
-            userDisplayName={user?.displayName || user?.email || user?.personalId}
-            expandedViewEnabled={expandedViewEnabled}
-            onExpandedViewChange={setShowExpandedView}
-          />
+    <div className="h-full overflow-y-auto bg-gradient-to-br from-[#090B16] via-[#1B1340] to-[#2F1D70] px-6 py-8 text-[#E6E8EC]">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
+          <div className="group relative transition-transform duration-300 hover:-translate-y-1 hover:scale-[1.01]">
+            <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-0.5 shadow-[0_28px_80px_rgba(15,12,40,0.45)]">
+              <div className="relative h-full rounded-[25px] bg-gradient-to-br from-[#10162A]/95 via-[#131B34]/90 to-[#1C2350]/90 p-6 backdrop-blur-xl">
+                <MemoryControlsPanel
+                  controls={controls}
+                  memories={activeMemories}
+                  metrics={metrics}
+                  loading={loading}
+                  error={error}
+                  onToggle={toggleFeature}
+                  onRefresh={refresh}
+                  onSaveQuickMemory={handleQuickSaveMemory}
+                  userDisplayName={user?.displayName || user?.email || user?.personalId}
+                  expandedViewEnabled={expandedViewEnabled}
+                  onExpandedViewChange={setShowExpandedView}
+                  variant="active"
+                  title="Active Memory"
+                  accentEmoji="🧠"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="group relative transition-transform duration-300 hover:-translate-y-1 hover:scale-[1.01]">
+            <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-0.5 shadow-[0_28px_80px_rgba(15,12,40,0.35)]">
+              <div className="relative h-full rounded-[25px] bg-gradient-to-br from-[#15152B]/85 via-[#1C1E34]/85 to-[#221F3E]/85 p-6 backdrop-blur-xl">
+                <MemoryControlsPanel
+                  controls={controls}
+                  memories={archivedMemories}
+                  metrics={metrics}
+                  loading={loading}
+                  error={error}
+                  onToggle={toggleFeature}
+                  onRefresh={refresh}
+                  onSaveQuickMemory={handleQuickSaveMemory}
+                  userDisplayName={user?.displayName || user?.email || user?.personalId}
+                  expandedViewEnabled={expandedViewEnabled}
+                  onExpandedViewChange={setShowExpandedView}
+                  variant="archived"
+                  title="Archived"
+                  accentEmoji="📦"
+                />
+              </div>
+            </div>
+          </div>
         </div>
         <div
           id="gurulo-memory-manager"
-          className="rounded-3xl border border-white/10 bg-[#121622]/80 p-4 backdrop-blur-2xl shadow-[0_32px_70px_rgba(5,10,30,0.6)]"
+          className="rounded-[28px] border border-white/10 bg-[#121622]/80 p-4 backdrop-blur-2xl shadow-[0_32px_70px_rgba(5,10,30,0.6)]"
         >
           {isMemoryFeatureEnabled ? (
             expandedViewEnabled ? (
