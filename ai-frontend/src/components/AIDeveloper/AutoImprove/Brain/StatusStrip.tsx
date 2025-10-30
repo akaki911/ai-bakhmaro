@@ -12,11 +12,11 @@ interface StatusStripProps {
 }
 
 const COLOR_CLASS: Record<BrainMachineSnapshot['color'], string> = {
-  green: 'bg-emerald-500/10 text-emerald-200 border-emerald-500/50',
-  yellow: 'bg-amber-500/10 text-amber-200 border-amber-500/50',
-  red: 'bg-rose-500/10 text-rose-200 border-rose-500/50',
-  purple: 'bg-purple-500/10 text-purple-200 border-purple-500/50',
-  slate: 'bg-slate-800/40 text-slate-200 border-slate-700/70',
+  green: 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100 shadow-[0_0_20px_rgba(16,185,129,0.35)]',
+  yellow: 'border-amber-400/60 bg-amber-500/15 text-amber-100 shadow-[0_0_20px_rgba(251,191,36,0.3)]',
+  red: 'border-rose-400/60 bg-rose-500/15 text-rose-100 shadow-[0_0_20px_rgba(244,63,94,0.35)]',
+  purple: 'border-purple-400/60 bg-purple-500/15 text-purple-100 shadow-[0_0_20px_rgba(168,85,247,0.35)]',
+  slate: 'border-white/10 bg-white/5 text-slate-200 shadow-[0_0_18px_rgba(148,163,184,0.25)]',
 };
 
 const formatDuration = (ms?: number | null) => {
@@ -71,7 +71,7 @@ const StatusStrip: React.FC<StatusStripProps> = ({ status, connection, lastHeart
 
   return (
     <div
-      className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-800/60 bg-slate-950/80 p-4 text-sm text-slate-200"
+      className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/10 p-4 text-sm text-slate-200 shadow-[0_25px_80px_rgba(2,6,23,0.45)] backdrop-blur-xl"
       role="status"
       aria-live="polite"
     >

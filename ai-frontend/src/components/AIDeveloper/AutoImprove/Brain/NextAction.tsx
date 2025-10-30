@@ -8,12 +8,13 @@ interface NextActionProps {
 
 const NextAction: React.FC<NextActionProps> = ({ decision, statusPhase }) => {
   return (
-    <div className="rounded-3xl border border-blue-500/30 bg-blue-500/10 p-5 text-sm text-blue-50">
-      <p className="text-xs uppercase tracking-[0.28em] text-blue-200/80">Next Action</p>
-      <p className="mt-3 text-base font-semibold">
+    <div className="rounded-3xl border border-white/10 bg-white/10 p-5 text-sm text-slate-200 shadow-[0_25px_80px_rgba(2,6,23,0.45)] backdrop-blur-xl">
+      <p className="text-xs uppercase tracking-[0.28em] text-sky-200/80">Next Action</p>
+      <div className="living-ai-divider my-4" aria-hidden="true" />
+      <p className="text-base font-semibold text-white">
         {decision?.chosenPath ?? 'Standing by for the next instruction.'}
       </p>
-      <p className="mt-2 text-xs text-blue-100/80">
+      <p className="mt-3 text-xs text-slate-300/80">
         {decision?.reason ??
           (statusPhase ? `Awaiting completion of the ${statusPhase} phase.` : 'Monitoring the pipeline.')}
       </p>
