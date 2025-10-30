@@ -9,9 +9,9 @@ interface HistoryProps {
 }
 
 const toneStyles: Record<BrainHistoryEntry['tone'], string> = {
-  info: 'border-slate-800/60 bg-slate-900/60 text-slate-200',
-  warning: 'border-amber-400/40 bg-amber-500/10 text-amber-100',
-  error: 'border-rose-500/40 bg-rose-500/10 text-rose-100',
+  info: 'border-white/10 bg-white/5 text-slate-200 shadow-[0_18px_55px_rgba(2,6,23,0.35)]',
+  warning: 'border-amber-400/60 bg-amber-500/15 text-amber-100 shadow-[0_18px_55px_rgba(251,191,36,0.28)]',
+  error: 'border-rose-400/60 bg-rose-500/15 text-rose-100 shadow-[0_18px_55px_rgba(244,63,94,0.28)]',
 };
 
 const toneHeadlineClass: Record<BrainHistoryEntry['tone'], string> = {
@@ -29,17 +29,18 @@ const toneDetailClass: Record<BrainHistoryEntry['tone'], string> = {
 const History: React.FC<HistoryProps> = ({ entries, onSelect, onDiffNavigate }) => {
   if (!entries.length) {
     return (
-      <div className="rounded-3xl border border-slate-800/70 bg-slate-950/70 p-5 text-sm text-slate-300">
-        <p className="text-xs uppercase tracking-[0.28em] text-slate-500">History</p>
+      <div className="rounded-3xl border border-white/10 bg-white/10 p-5 text-sm text-slate-300 shadow-[0_25px_80px_rgba(2,6,23,0.45)] backdrop-blur-xl">
+        <p className="text-xs uppercase tracking-[0.28em] text-slate-400/80">History</p>
         <p className="mt-3 text-slate-400">No completed runs yet.</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-3xl border border-slate-800/70 bg-slate-950/70 p-5 text-sm text-slate-200">
-      <p className="text-xs uppercase tracking-[0.28em] text-slate-500">History</p>
-      <ul className="mt-4 space-y-3" role="list">
+    <div className="rounded-3xl border border-white/10 bg-white/10 p-5 text-sm text-slate-200 shadow-[0_25px_80px_rgba(2,6,23,0.45)] backdrop-blur-xl">
+      <p className="text-xs uppercase tracking-[0.28em] text-slate-400/80">History</p>
+      <div className="living-ai-divider my-4" aria-hidden="true" />
+      <ul className="space-y-3" role="list">
         {entries.map((entry) => {
           const diffUrl = entry.diffUrl ?? null;
 
@@ -47,7 +48,7 @@ const History: React.FC<HistoryProps> = ({ entries, onSelect, onDiffNavigate }) 
             <li
               key={entry.runId ?? entry.updatedAt}
               className={classNames(
-                'rounded-2xl border p-4 focus-within:ring-2 focus-within:ring-purple-400',
+                'rounded-2xl border p-4 focus-within:ring-2 focus-within:ring-cyan-400/60 backdrop-blur-xl',
                 toneStyles[entry.tone],
               )}
               role="listitem"
@@ -57,7 +58,8 @@ const History: React.FC<HistoryProps> = ({ entries, onSelect, onDiffNavigate }) 
                   <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
                     Run {entry.runId ?? '—'}
                   </p>
-                  <p className={classNames('mt-1 text-sm', toneHeadlineClass[entry.tone])}>{entry.headline}</p>
+                  <p className={classNames('mt-2 text-sm', toneHeadlineClass[entry.tone])}>{entry.headline}</p>
+                  <div className="living-ai-divider my-3" aria-hidden="true" />
                   {entry.detail ? (
                     <p className={classNames('mt-1 text-xs', toneDetailClass[entry.tone])}>{entry.detail}</p>
                   ) : null}
@@ -68,7 +70,7 @@ const History: React.FC<HistoryProps> = ({ entries, onSelect, onDiffNavigate }) 
                       href={diffUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-full border border-emerald-400/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100 hover:bg-emerald-500/10 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                      className="rounded-full border border-emerald-400/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100 transition hover:border-emerald-300/60 hover:text-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
                       onClick={() => onDiffNavigate?.(entry, diffUrl)}
                     >
                       View Diff
@@ -77,7 +79,7 @@ const History: React.FC<HistoryProps> = ({ entries, onSelect, onDiffNavigate }) 
                   <button
                     type="button"
                     onClick={() => onSelect(entry)}
-                    className="rounded-full border border-purple-400/50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-purple-100 hover:bg-purple-500/10 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    className="rounded-full border border-cyan-400/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100 transition hover:border-cyan-300/60 hover:text-cyan-50 focus:outline-none focus:ring-2 focus:ring-cyan-400"
                   >
                     Inspect Run
                   </button>

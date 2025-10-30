@@ -1,8 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy, deleteDoc, doc } from '@/lib/firebase/firestore';
 import { db } from './firebaseConfig';
-// Authentication hooks removed - unused
 import { motion } from 'framer-motion';
 import {
   FileText,
@@ -14,7 +12,7 @@ import {
   AlertTriangle,
   Clock,
   User,
-  Database
+  Database,
 } from 'lucide-react';
 
 interface Log {
@@ -48,10 +46,10 @@ const AdminLogs: React.FC = () => {
       setLoading(true);
       const q = query(collection(db, 'logs'), orderBy('timestamp', 'desc'));
       const querySnapshot = await getDocs(q);
-      const logsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: doc.data().timestamp?.toDate() || new Date()
+      const logsData = querySnapshot.docs.map((logDoc) => ({
+        id: logDoc.id,
+        ...logDoc.data(),
+        timestamp: logDoc.data().timestamp?.toDate() || new Date(),
       })) as Log[];
       setLogs(logsData);
     } catch (error) {
@@ -74,182 +72,213 @@ const AdminLogs: React.FC = () => {
 
   const getLevelIcon = (level: string) => {
     switch (level) {
-      case 'error': return <AlertCircle className="w-4 h-4" />;
-      case 'warning': return <AlertTriangle className="w-4 h-4" />;
-      case 'success': return <CheckCircle className="w-4 h-4" />;
-      default: return <Info className="w-4 h-4" />;
+      case 'error':
+        return <AlertCircle className="h-4 w-4" aria-hidden="true" />;
+      case 'warning':
+        return <AlertTriangle className="h-4 w-4" aria-hidden="true" />;
+      case 'success':
+        return <CheckCircle className="h-4 w-4" aria-hidden="true" />;
+      default:
+        return <Info className="h-4 w-4" aria-hidden="true" />;
     }
   };
 
-  const getLevelColor = (level: string) => {
+  const getLevelTone = (level: string) => {
     switch (level) {
-      case 'error': return 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300';
-      case 'warning': return 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300';
-      case 'success': return 'bg-green-100 dark:bg-green-900 dark:bg-opacity-20 text-green-800 dark:text-green-300';
-      default: return 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300';
+      case 'error':
+        return 'border border-rose-400/60 bg-rose-500/15 text-rose-200 shadow-[0_0_22px_rgba(244,63,94,0.35)]';
+      case 'warning':
+        return 'border border-amber-400/50 bg-amber-500/15 text-amber-100 shadow-[0_0_22px_rgba(251,191,36,0.3)]';
+      case 'success':
+        return 'border border-emerald-400/50 bg-emerald-500/15 text-emerald-100 shadow-[0_0_22px_rgba(16,185,129,0.35)]';
+      default:
+        return 'border border-sky-400/50 bg-sky-500/15 text-sky-100 shadow-[0_0_22px_rgba(14,165,233,0.3)]';
     }
   };
 
   const getLevelText = (level: string) => {
     switch (level) {
-      case 'error': return 'შეცდომა';
-      case 'warning': return 'გაფრთხილება';
-      case 'success': return 'წარმატება';
-      case 'info': return 'ინფორმაცია';
-      default: return level;
+      case 'error':
+        return 'შეცდომა';
+      case 'warning':
+        return 'გაფრთხილება';
+      case 'success':
+        return 'წარმატება';
+      case 'info':
+        return 'ინფორმაცია';
+      default:
+        return level;
     }
   };
 
   const getResourceIcon = (resource: string) => {
     switch (resource) {
-      case 'system': return '🖥️';
-      case 'integration': return '🔗';
-      case 'security': return '🛡️';
-      case 'user': return '👤';
-      default: return '📄';
+      case 'system':
+        return '🖥️';
+      case 'integration':
+        return '🔗';
+      case 'security':
+        return '🛡️';
+      case 'user':
+        return '👤';
+      default:
+        return '📄';
     }
   };
 
   const getResourceText = (resource: string) => {
     switch (resource) {
-      case 'system': return 'სისტემა';
-      case 'integration': return 'ინტეგრაცია';
-      case 'security': return 'უსაფრთხოება';
-      case 'user': return 'მომხმარებელი';
-      default: return resource;
+      case 'system':
+        return 'სისტემა';
+      case 'integration':
+        return 'ინტეგრაცია';
+      case 'security':
+        return 'უსაფრთხოება';
+      case 'user':
+        return 'მომხმარებელი';
+      default:
+        return resource;
     }
   };
 
-  const filteredLogs = logs.filter(log => {
-    const matchesSearch = log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.action.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredLogs = logs.filter((log) => {
+    const matchesSearch =
+      log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.action.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLevel = levelFilter === 'all' || log.level === levelFilter;
     const matchesResource = resourceFilter === 'all' || log.resource === resourceFilter;
     return matchesSearch && matchesLevel && matchesResource;
   });
 
+  const logContainerClass =
+    viewMode === 'grid'
+      ? 'grid grid-cols-1 gap-5 xl:grid-cols-2 2xl:grid-cols-3'
+      : 'flex flex-col gap-5';
+
+  const errorCount = logs.filter((log) => log.level === 'error').length;
+  const successCount = logs.filter((log) => log.level === 'success').length;
+  const warningCount = logs.filter((log) => log.level === 'warning').length;
+  const totalCount = logs.length;
+
   if (loading) {
     return (
-      <div className="h-full bg-[#0D1117] text-gray-300">
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
-            <p className="text-gray-400 font-medium">ლოგების ჩატვირთვა...</p>
+      <div className="flex h-full items-center justify-center bg-[#05070d] p-6 text-slate-200">
+        <div className="flex flex-col items-center gap-4 rounded-3xl border border-white/10 bg-white/5 px-12 py-10 text-center shadow-[0_35px_120px_rgba(2,6,23,0.6)] backdrop-blur-xl">
+          <div className="relative">
+            <div className="h-12 w-12 animate-spin rounded-full border-2 border-transparent border-t-cyan-400"></div>
+            <div className="absolute inset-1 rounded-full border border-cyan-400/40"></div>
           </div>
+          <p className="font-jetbrains text-xs uppercase tracking-[0.32em] text-slate-400">ლოგების ჩატვირთვა...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full bg-[#0D1117] text-gray-300 p-4 overflow-y-auto">
-      <div className="max-w-full">
-          {/* Header */}
-          <div className="mb-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-              <div className="mb-4 lg:mb-0">
-                <h1 className="text-2xl font-bold text-white flex items-center mb-2">
-                  <div className="p-2 rounded-lg mr-3 bg-gradient-to-r from-blue-600 to-purple-600">
-                    <FileText className="w-6 h-6 text-white" />
-                  </div>
-                  სისტემის ლოგები
-                </h1>
-                <p className="text-sm text-gray-400">მონიტორინგი და აუდიტი</p>
+    <div className="h-full overflow-y-auto bg-[#05070d] p-6 text-slate-100">
+      <div className="mx-auto flex h-full max-w-7xl flex-col gap-10">
+        <div className="rounded-[32px] border border-white/10 bg-white/5 p-8 shadow-[0_45px_120px_rgba(2,6,23,0.65)] backdrop-blur-2xl">
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-sky-500/40 via-fuchsia-500/30 to-emerald-400/40 text-white shadow-[0_20px_60px_rgba(59,130,246,0.35)]">
+                  <FileText className="h-6 w-6" aria-hidden="true" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-tight text-white">სიტემის ლოგები</h1>
+                  <p className="text-sm text-slate-300">მონიტორინგი და აუდიტი</p>
+                </div>
               </div>
             </div>
+            <div className="living-ai-divider" aria-hidden="true" />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-slate-200 shadow-[0_25px_80px_rgba(2,6,23,0.45)] transition-all duration-300 backdrop-blur-xl"
+              >
+                <div className="absolute inset-x-0 top-0 h-px living-ai-divider opacity-70" aria-hidden="true" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.32em] text-rose-200/80">შეცდომები</p>
+                    <p className="mt-2 text-3xl font-jetbrains text-white">{errorCount}</p>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-rose-400/50 bg-rose-500/15 text-rose-100 shadow-[0_0_30px_rgba(244,63,94,0.28)]">
+                    <AlertCircle className="h-6 w-6" aria-hidden="true" />
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-slate-200 shadow-[0_25px_80px_rgba(2,6,23,0.45)] transition-all duration-300 backdrop-blur-xl"
+              >
+                <div className="absolute inset-x-0 top-0 h-px living-ai-divider opacity-70" aria-hidden="true" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-200/80">წარმატება</p>
+                    <p className="mt-2 text-3xl font-jetbrains text-white">{successCount}</p>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-emerald-400/50 bg-emerald-500/15 text-emerald-100 shadow-[0_0_30px_rgba(16,185,129,0.28)]">
+                    <CheckCircle className="h-6 w-6" aria-hidden="true" />
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-slate-200 shadow-[0_25px_80px_rgba(2,6,23,0.45)] transition-all duration-300 backdrop-blur-xl"
+              >
+                <div className="absolute inset-x-0 top-0 h-px living-ai-divider opacity-70" aria-hidden="true" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.32em] text-amber-200/80">გაფრთხილებები</p>
+                    <p className="mt-2 text-3xl font-jetbrains text-white">{warningCount}</p>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-amber-400/50 bg-amber-500/15 text-amber-100 shadow-[0_0_30px_rgba(251,191,36,0.28)]">
+                    <AlertTriangle className="h-6 w-6" aria-hidden="true" />
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-slate-200 shadow-[0_25px_80px_rgba(2,6,23,0.45)] transition-all duration-300 backdrop-blur-xl"
+              >
+                <div className="absolute inset-x-0 top-0 h-px living-ai-divider opacity-70" aria-hidden="true" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.32em] text-indigo-200/80">სულ ლოგები</p>
+                    <p className="mt-2 text-3xl font-jetbrains text-white">{totalCount}</p>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-indigo-400/50 bg-indigo-500/15 text-indigo-100 shadow-[0_0_30px_rgba(99,102,241,0.28)]">
+                    <Database className="h-6 w-6" aria-hidden="true" />
+                  </div>
+                </div>
+              </motion.div>
+            </div>
           </div>
+        </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              className="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:bg-gray-750 transition-all duration-300"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-rose-700 dark:text-rose-300">შეცდომები</p>
-                  <p className="text-3xl font-bold text-rose-900 dark:text-rose-100">
-                    {logs.filter(l => l.level === 'error').length}
-                  </p>
-                </div>
-                <div className="bg-rose-100/80 dark:bg-rose-900/40 p-3 rounded-xl shadow-lg">
-                  <AlertCircle className="w-6 h-6 text-rose-600 dark:text-rose-400" />
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800 dark:to-emerald-900/20 rounded-2xl p-6 shadow-lg border border-emerald-200/50 dark:border-emerald-700/50 backdrop-blur-sm hover:shadow-2xl transition-all duration-300 hover:shadow-emerald-200/50 dark:hover:shadow-emerald-900/50"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">წარმატება</p>
-                  <p className="text-3xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {logs.filter(l => l.level === 'success').length}
-                  </p>
-                </div>
-                <div className="bg-emerald-100/80 dark:bg-emerald-900/40 p-3 rounded-xl shadow-lg">
-                  <CheckCircle className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              className="bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-slate-800 dark:to-indigo-900/20 rounded-2xl p-6 shadow-lg border border-indigo-200/50 dark:border-indigo-700/50 backdrop-blur-sm hover:shadow-2xl transition-all duration-300 hover:shadow-indigo-200/50 dark:hover:shadow-indigo-900/50"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-indigo-700 dark:text-indigo-300">გაფრთხილებები</p>
-                  <p className="text-3xl font-bold text-indigo-900 dark:text-indigo-100">
-                    {logs.filter(l => l.level === 'warning').length}
-                  </p>
-                </div>
-                <div className="bg-indigo-100/80 dark:bg-indigo-900/40 p-3 rounded-xl shadow-lg">
-                  <AlertTriangle className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-slate-800 dark:to-purple-900/20 rounded-2xl p-6 shadow-lg border border-purple-200/50 dark:border-purple-700/50 backdrop-blur-sm hover:shadow-2xl transition-all duration-300 hover:shadow-purple-200/50 dark:hover:shadow-purple-900/50"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-purple-700 dark:text-purple-300">სულ ლოგები</p>
-                  <p className="text-3xl font-bold text-purple-900 dark:text-purple-100">{logs.length}</p>
-                </div>
-                <div className="bg-purple-100/80 dark:bg-purple-900/40 p-3 rounded-xl shadow-lg">
-                  <Database className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                </div>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Filters */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 mb-8">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              {/* Search */}
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <div className="flex-1 rounded-[32px] border border-white/10 bg-white/5 p-6 shadow-[0_45px_120px_rgba(2,6,23,0.6)] backdrop-blur-2xl">
+          <div className="space-y-8">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="relative flex w-full max-w-xl items-center">
+                <Search className="pointer-events-none absolute left-4 h-5 w-5 text-slate-400/80" aria-hidden="true" />
                 <input
                   type="text"
                   placeholder="ძებნა შეტყობინებით, მომხმარებლით ან მოქმედებით..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-brown-500 focus:border-transparent transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-white/10 py-3 pl-12 pr-4 font-jetbrains text-sm text-white placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/40"
                 />
               </div>
 
-              {/* Filters */}
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <select
                   value={levelFilter}
-                  onChange={(e) => setLevelFilter(e.target.value as any)}
-                  className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-brown-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  onChange={(event) => setLevelFilter(event.target.value as typeof levelFilter)}
+                  className="rounded-2xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm text-slate-100 transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/40"
                 >
                   <option value="all">ყველა დონე</option>
                   <option value="info">ინფორმაცია</option>
@@ -260,8 +289,8 @@ const AdminLogs: React.FC = () => {
 
                 <select
                   value={resourceFilter}
-                  onChange={(e) => setResourceFilter(e.target.value as any)}
-                  className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-brown-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  onChange={(event) => setResourceFilter(event.target.value as typeof resourceFilter)}
+                  className="rounded-2xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm text-slate-100 transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/40"
                 >
                   <option value="all">ყველა რესურსი</option>
                   <option value="system">სისტემები</option>
@@ -270,118 +299,139 @@ const AdminLogs: React.FC = () => {
                   <option value="user">მომხმარებლები</option>
                 </select>
 
-                <div className="flex border border-gray-200 dark:border-gray-600 rounded-xl overflow-hidden">
+                <div className="flex overflow-hidden rounded-2xl border border-white/10">
                   <button
+                    type="button"
                     onClick={() => setViewMode('grid')}
-                    className={`px-4 py-3 ${viewMode === 'grid' ? 'bg-brown-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600'} transition-colors`}
+                    className={`flex h-11 w-11 items-center justify-center border transition ${
+                      viewMode === 'grid'
+                        ? 'border-cyan-400/60 bg-cyan-500/20 text-cyan-100 shadow-[0_0_25px_rgba(34,211,238,0.35)]'
+                        : 'border-transparent text-slate-400 hover:border-cyan-400/40 hover:text-cyan-100'
+                    }`}
+                    aria-label="Grid view"
                   >
-                    <div className="grid grid-cols-2 gap-1 w-4 h-4">
-                      <div className="bg-current rounded-sm"></div>
-                      <div className="bg-current rounded-sm"></div>
-                      <div className="bg-current rounded-sm"></div>
-                      <div className="bg-current rounded-sm"></div>
+                    <div className="grid h-4 w-4 grid-cols-2 gap-1 text-current">
+                      <span className="h-2 w-2 rounded-sm bg-current" />
+                      <span className="h-2 w-2 rounded-sm bg-current" />
+                      <span className="h-2 w-2 rounded-sm bg-current" />
+                      <span className="h-2 w-2 rounded-sm bg-current" />
                     </div>
                   </button>
                   <button
+                    type="button"
                     onClick={() => setViewMode('list')}
-                    className={`px-4 py-3 ${viewMode === 'list' ? 'bg-brown-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600'} transition-colors`}
+                    className={`flex h-11 w-11 items-center justify-center border transition ${
+                      viewMode === 'list'
+                        ? 'border-cyan-400/60 bg-cyan-500/20 text-cyan-100 shadow-[0_0_25px_rgba(34,211,238,0.35)]'
+                        : 'border-transparent text-slate-400 hover:border-cyan-400/40 hover:text-cyan-100'
+                    }`}
+                    aria-label="List view"
                   >
-                    <div className="flex flex-col gap-1 w-4 h-4">
-                      <div className="bg-current h-1 rounded-sm"></div>
-                      <div className="bg-current h-1 rounded-sm"></div>
-                      <div className="bg-current h-1 rounded-sm"></div>
+                    <div className="flex h-4 w-4 flex-col justify-center gap-1 text-current">
+                      <span className="h-0.5 rounded-full bg-current" />
+                      <span className="h-0.5 rounded-full bg-current" />
+                      <span className="h-0.5 rounded-full bg-current" />
                     </div>
                   </button>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Logs Grid */}
-          {filteredLogs.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-12 text-center"
-            >
-              <div className="mb-6">
-                <FileText className="w-24 h-24 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">ლოგები ვერ მოიძებნა</h3>
-                <p className="text-gray-600 dark:text-gray-400">შეცვალეთ ძებნის ან ფილტრის პარამეტრები</p>
-              </div>
-            </motion.div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredLogs.map((log, index) => (
-                <motion.div
-                  key={log.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-700 overflow-hidden"
-                >
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center">
-                        <span className="text-2xl mr-3">{getResourceIcon(log.resource)}</span>
-                        <div>
-                          <h3 className="font-semibold text-gray-900 dark:text-white">{log.action}</h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">{getResourceText(log.resource)}</p>
-                        </div>
-                      </div>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getLevelColor(log.level)}`}>
-                        {getLevelIcon(log.level)}
-                        <span className="ml-1">{getLevelText(log.level)}</span>
-                      </span>
-                    </div>
+            <div className="living-ai-divider" aria-hidden="true" />
 
-                    <div className="space-y-3 mb-4">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{log.message}</p>
-                      <div className="flex items-center text-sm">
-                        <User className="w-4 h-4 text-gray-400 mr-2" />
-                        <span className="text-gray-600 dark:text-gray-400">{log.userName}</span>
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <Clock className="w-4 h-4 text-gray-400 mr-2" />
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {log.timestamp.toLocaleString('ka-GE')}
+            {filteredLogs.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-white/10 bg-white/5 p-12 text-center text-slate-300 shadow-[0_35px_110px_rgba(2,6,23,0.55)] backdrop-blur-xl"
+              >
+                <FileText className="h-16 w-16 text-slate-400/70" aria-hidden="true" />
+                <div>
+                  <h3 className="text-lg font-semibold text-white">ლოგები ვერ მოიძებნა</h3>
+                  <p className="mt-2 text-sm text-slate-400">შეცვალეთ ძებნის ან ფილტრის პარამეტრები</p>
+                </div>
+              </motion.div>
+            ) : (
+              <div className={logContainerClass}>
+                {filteredLogs.map((log, index) => (
+                  <motion.article
+                    key={log.id}
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: index * 0.04 }}
+                    className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 text-sm text-slate-200 shadow-[0_35px_120px_rgba(2,6,23,0.6)] backdrop-blur-2xl transition-all duration-300 hover:border-cyan-400/50 hover:shadow-[0_40px_140px_rgba(14,165,233,0.45)]"
+                  >
+                    <div className="absolute inset-x-0 top-0 h-px living-ai-divider opacity-80" aria-hidden="true" />
+                    <div className="flex flex-wrap items-center justify-between gap-4 px-6 pt-5 text-[0.68rem] uppercase tracking-[0.28em] text-slate-400/80">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl" aria-hidden="true">
+                          {getResourceIcon(log.resource)}
+                        </span>
+                        <span className="font-jetbrains text-[0.68rem] tracking-[0.28em] text-slate-300/90">
+                          {getResourceText(log.resource)}
                         </span>
                       </div>
-                      {log.resourceId && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          ID: {log.resourceId}
+                      <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[0.62rem] font-semibold ${getLevelTone(log.level)}`}>
+                        {getLevelIcon(log.level)}
+                        <span>{getLevelText(log.level)}</span>
+                      </span>
+                    </div>
+                    <div className="px-6">
+                      <div className="living-ai-divider my-4" aria-hidden="true" />
+                      <p className="font-jetbrains text-[0.9rem] leading-relaxed text-slate-100/95">{log.message}</p>
+                      <div className="mt-4 flex flex-wrap items-center gap-4 text-[0.7rem] uppercase tracking-[0.24em] text-slate-400/80">
+                        <span className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-slate-400/80" aria-hidden="true" />
+                          {log.timestamp.toLocaleString('ka-GE')}
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-slate-400/80" aria-hidden="true" />
+                          {log.userName}
+                        </span>
+                        {log.resourceId && (
+                          <span className="rounded-full border border-white/10 px-3 py-1 font-jetbrains text-[0.62rem] tracking-[0.2em] text-slate-300/80">
+                            ID: {log.resourceId}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="px-6 pb-5 pt-4">
+                      <div className="living-ai-divider mb-4" aria-hidden="true" />
+                      <div className="flex flex-wrap items-center justify-between gap-3 text-[0.68rem] uppercase tracking-[0.24em] text-slate-400/80">
+                        <span className="font-jetbrains text-slate-300/80">{log.action}</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => deleteLog(log.id)}
+                            className="inline-flex items-center gap-2 rounded-full border border-rose-400/60 bg-rose-500/15 px-3 py-1 text-[0.62rem] font-semibold tracking-[0.24em] text-rose-100 transition hover:border-rose-300/60 hover:text-rose-50"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                            წაშლა
+                          </button>
                         </div>
-                      )}
+                      </div>
                     </div>
+                  </motion.article>
+                ))}
+              </div>
+            )}
 
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => deleteLog(log.id)}
-                        className="px-3 py-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-
-          {/* Load More Button */}
-          {filteredLogs.length > 0 && (
-            <div className="text-center mt-12">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 px-8 py-3 rounded-xl font-medium transition-colors shadow-lg border border-gray-200 dark:border-gray-700"
-              >
-                მეტის ჩატვირთვა
-              </motion.button>
-            </div>
-          )}
+            {filteredLogs.length > 0 && (
+              <div className="flex justify-center">
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/10 px-8 py-3 font-jetbrains text-xs uppercase tracking-[0.28em] text-slate-200 transition hover:border-cyan-400/50 hover:text-cyan-100"
+                >
+                  მეტის ჩატვირთვა
+                </motion.button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+    </div>
   );
 };
 

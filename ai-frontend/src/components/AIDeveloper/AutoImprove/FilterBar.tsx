@@ -36,7 +36,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
   return (
     <div
-      className="flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-900/70 p-3 md:flex-row md:items-center"
+      className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/10 p-4 shadow-[0_20px_70px_rgba(2,6,23,0.45)] backdrop-blur-xl md:flex-row md:items-center"
       role="search"
       aria-label={t('aiImprove.filters.ariaLabel', 'ფილტრები auto-improve ჩანართისთვის')}
       data-testid="ai-imp:filter:container"
@@ -49,7 +49,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           type="search"
           value={searchValue}
           onChange={(event) => onSearchChange(event.target.value)}
-          className="w-full rounded-md border border-slate-800 bg-slate-950/80 py-2 pl-10 pr-4 text-sm text-slate-100 shadow-inner shadow-violet-500/5 placeholder:text-slate-500 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-400/60"
+          className="w-full rounded-xl border border-white/10 bg-white/10 py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
           placeholder={t('aiImprove.filters.searchPlaceholder', 'ძიება მენეჯერებში...')}
           aria-label={t('aiImprove.filters.searchLabel', 'ძიება')}
         />
@@ -59,7 +59,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <span className="sr-only">{t('aiImprove.filters.modelLabel', 'მოდელი')}</span>
         <select
           data-testid="ai-imp:filter:select"
-          className="w-full appearance-none rounded-md border border-slate-800 bg-slate-950/80 py-2 pl-3 pr-8 text-sm text-slate-100 shadow-inner shadow-violet-500/5 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-400/60"
+          className="w-full appearance-none rounded-xl border border-white/10 bg-white/10 py-2.5 pl-3 pr-8 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
           value={selectedModel ?? 'all'}
           onChange={(event) => onModelChange(event.target.value === 'all' ? null : event.target.value)}
           aria-label={t('aiImprove.filters.modelLabel', 'მოდელის შერჩევა')}
@@ -91,7 +91,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         data-testid="ai-imp:filter:refresh"
         onClick={onRefresh}
         className={classNames(
-          'inline-flex items-center justify-center gap-2 rounded-md border border-violet-500/60 bg-violet-500/10 px-4 py-2 text-sm font-medium text-violet-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 disabled:cursor-not-allowed disabled:opacity-70',
+          'inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-400/60 bg-cyan-500/15 px-4 py-2 text-sm font-medium text-cyan-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 disabled:cursor-not-allowed disabled:opacity-70',
           isRefreshing && 'animate-pulse',
         )}
         aria-live="polite"
