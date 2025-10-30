@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback } from 'react';
+import React, { Suspense, useCallback, useId } from 'react';
 import { motion } from 'framer-motion';
 import { RotateCcw, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/useAuth';
@@ -248,23 +248,41 @@ interface SliderFieldProps {
 }
 
 function SliderField({ label, min, max, value, onChange, valueSuffix, tooltip }: SliderFieldProps) {
+  const sliderId = useId();
+  const tooltipId = tooltip ? `${sliderId}-tooltip` : undefined;
+
   return (
-    <label className="block">
-      <span className="flex items-center gap-2 text-sm text-[#A0A4AD]">
-        {label}
+    <div className="living-ai-field p-5">
+      <div className="flex items-center gap-2">
+        <label
+          htmlFor={sliderId}
+          className="flex-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/70"
+        >
+          {label}
+        </label>
         {tooltip ? (
           <span
-            className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/20 text-[10px] text-white/70"
+            id={tooltipId}
+            className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-cyan-400/40 text-[10px] font-semibold uppercase text-cyan-100/80"
             title={tooltip}
           >
             i
           </span>
         ) : null}
-      </span>
-      <input type="range" min={min} max={max} value={value} onChange={(event) => onChange(Number(event.target.value))} className="mt-2 w-full" />
-      <span className="mt-1 inline-block rounded-full border border-[#7C6CFF33] bg-[#1F2435]/80 px-3 py-1 text-xs text-[#E6E8EC]">
+      </div>
+      <input
+        id={sliderId}
+        type="range"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="living-ai-slider mt-4"
+        aria-describedby={tooltipId}
+      />
+      <span className="mt-4 inline-flex min-w-[92px] items-center justify-center rounded-full border border-cyan-400/30 bg-[rgba(13,23,42,0.75)] px-3 py-1 text-xs font-semibold text-cyan-100/80">
         {value} {valueSuffix}
       </span>
-    </label>
+    </div>
   );
 }
