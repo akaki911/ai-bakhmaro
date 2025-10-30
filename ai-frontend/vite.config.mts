@@ -2,21 +2,9 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createRequire } from "node:module";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const require = createRequire(import.meta.url);
-
-const preferTerser = (() => {
-  try {
-    require.resolve("terser");
-    return true;
-  } catch {
-    console.warn("⚠️ Terser not found. Falling back to esbuild minifier.");
-    return false;
-  }
-})();
 
 type HealthState = "CONNECTED" | "DEGRADED" | "UNREACHABLE" | "ERROR" | "TIMEOUT";
 
@@ -423,9 +411,9 @@ export default defineConfig({
       "/api": createServiceProxyConfig("Backend (5002) :: /api", BACKEND_PROXY_TARGET),
     },
   },
-  optimizeDeps: {
-    exclude: ['node_modules'],
-  },
+  // SOL-946 — React bundle initialization order fixed
+  // Re-enable Vite's dependency pre-bundling so shared React modules keep a stable evaluation order.
+  optimizeDeps: {},
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -433,7 +421,8 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 1500,
-    minify: preferTerser ? 'terser' : 'esbuild',
+    // SOL-946 — React bundle initialization order fixed: pin esbuild to avoid CI/local minifier drift.
+    minify: 'esbuild',
     target: 'es2022',
     rollupOptions: {
       onwarn(warning, warn) {
@@ -479,10 +468,7 @@ export default defineConfig({
             return 'vendor-data';
           }
 
-          if (id.includes('react') || id.includes('scheduler')) {
-            return 'vendor-react';
-          }
-
+          // Keep React, ReactDOM, and scheduler grouped with the default vendor chunk to preserve evaluation order.
           return 'vendor';
         },
       },
