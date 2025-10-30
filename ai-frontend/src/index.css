@@ -2578,6 +2578,136 @@ body.admin-theme .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
   animation: fadeInUp 0.6s ease-out forwards;
 }
 
+/* Replit assistant avatar pulse */
+.replit-assistant-avatar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 30% 30%, rgba(126, 182, 255, 0.85), rgba(98, 68, 225, 0.75));
+  box-shadow: 0 0 22px rgba(124, 200, 255, 0.35);
+  overflow: visible;
+  transition: transform 0.3s ease;
+}
+
+.replit-assistant-avatar::after {
+  content: '';
+  position: absolute;
+  inset: -0.55rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(124, 200, 255, 0.35);
+  opacity: 0;
+}
+
+.replit-assistant-avatar__halo {
+  position: absolute;
+  inset: -0.25rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(124, 200, 255, 0.28), rgba(94, 70, 200, 0.12));
+  opacity: 0.8;
+  filter: blur(2px);
+}
+
+.replit-assistant-avatar__core {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.05rem;
+  height: 2.05rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgba(148, 214, 255, 0.95), rgba(120, 92, 255, 0.85));
+  color: rgba(12, 18, 38, 0.9);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@keyframes replitAvatarPulse {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+  60% {
+    transform: scale(1.25);
+    opacity: 0.08;
+  }
+  100% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+}
+
+@keyframes replitAvatarHaloPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  70% {
+    transform: scale(1.2);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+
+.replit-assistant-avatar--pulse::after {
+  animation: replitAvatarPulse 0.9s ease-out;
+}
+
+.replit-assistant-avatar--pulse .replit-assistant-avatar__halo {
+  animation: replitAvatarHaloPulse 0.9s ease-out;
+}
+
+/* Glowing mic/send controls */
+.gurulo-glow-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  width: 2.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(9, 14, 32, 0.65);
+  color: rgba(226, 232, 255, 0.78);
+  transition: background 0.3s ease, box-shadow 0.3s ease, color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 0 0 rgba(124, 200, 255, 0.35);
+  backdrop-filter: blur(8px);
+}
+
+.gurulo-glow-button:hover:not(:disabled),
+.gurulo-glow-button:focus-visible:not(:disabled) {
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(86, 136, 255, 0.35), rgba(161, 108, 255, 0.38));
+  box-shadow: 0 0 18px rgba(124, 200, 255, 0.45), 0 0 12px rgba(168, 106, 255, 0.35);
+}
+
+.gurulo-glow-button:active:not(:disabled) {
+  transform: scale(0.95);
+  box-shadow: 0 0 20px rgba(124, 200, 255, 0.55), 0 0 16px rgba(168, 106, 255, 0.45);
+}
+
+.gurulo-glow-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+  background: rgba(9, 14, 32, 0.4);
+  color: rgba(226, 232, 255, 0.4);
+}
+
+.gurulo-glow-button--active {
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(92, 186, 255, 0.5), rgba(150, 98, 255, 0.52));
+  box-shadow: 0 0 22px rgba(120, 196, 255, 0.65), 0 0 18px rgba(142, 102, 255, 0.55);
+}
+
 .animate-slideInRight {
   animation: slideInRight 0.5s ease-out forwards;
 }
