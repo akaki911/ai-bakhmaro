@@ -33,7 +33,6 @@ export const PlanBuildToggle: FC = () => {
         checked={mode === 'build'}
         onCheckedChange={handleChange}
         aria-label="Toggle assistant plan/build mode"
-        className="data-[state=checked]:bg-emerald-500"
       />
     </div>
   );
