@@ -922,38 +922,38 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
       style={{ height: "100vh" }}
     >
       {/* ===== HEADER TABS ===== */}
-      <div className="bg-[#2C313A] border-b border-[#3E4450] flex items-center px-4">
-        <div className="flex">
+      <div className="living-ai-tabbar w-full px-4">
+        <div className="living-ai-tablist" role="tablist" aria-label="Assistant modes">
           <button
+            type="button"
             onClick={() => setActiveTab("agent")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all ${
-              activeTab === "agent"
-                ? "text-[#00D4FF] border-[#00D4FF]"
-                : "text-[#8B949E] border-transparent hover:text-white"
-            }`}
+            className="living-ai-tab"
+            data-active={activeTab === "agent"}
+            role="tab"
+            aria-selected={activeTab === "agent"}
           >
-            <User size={16} />
-            Agent
+            <User size={16} aria-hidden="true" />
+            <span className="text-[0.75rem] tracking-[0.08em]">Agent</span>
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab("assistant")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all ${
-              activeTab === "assistant"
-                ? "text-[#00D4FF] border-[#00D4FF]"
-                : "text-[#8B949E] border-transparent hover:text-white"
-            }`}
+            className="living-ai-tab"
+            data-active={activeTab === "assistant"}
+            role="tab"
+            aria-selected={activeTab === "assistant"}
           >
-            <Sparkles size={16} />
-            Assistant
+            <Sparkles size={16} aria-hidden="true" />
+            <span className="text-[0.75rem] tracking-[0.08em]">Assistant</span>
           </button>
         </div>
 
         {/* Current File Display */}
         {currentFile && (
-          <div className="ml-4 flex items-center gap-2 text-[#8B949E] text-sm">
-            <div className="w-1 h-1 bg-[#8B949E] rounded-full"></div>
-            <span>{currentFile}</span>
-            <Plus size={16} className="hover:text-white cursor-pointer" />
+          <div className="hidden items-center gap-2 font-jetbrains text-[0.68rem] tracking-[0.24em] text-slate-300/70 md:flex">
+            <div className="h-[6px] w-[6px] rounded-full bg-cyan-400/80"></div>
+            <span className="uppercase">{currentFile}</span>
+            <Plus size={16} className="cursor-pointer text-slate-400 transition hover:text-cyan-200" aria-hidden="true" />
           </div>
         )}
 

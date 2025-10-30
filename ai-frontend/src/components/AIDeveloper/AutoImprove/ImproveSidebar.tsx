@@ -22,9 +22,9 @@ interface ImproveSidebarProps {
 }
 
 const stateTone: Record<'ok' | 'degraded' | 'offline', string> = {
-  ok: 'bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/20',
-  degraded: 'bg-amber-500/10 text-amber-200 ring-1 ring-amber-500/20',
-  offline: 'bg-slate-500/10 text-slate-200 ring-1 ring-slate-500/20',
+  ok: 'border border-emerald-400/60 bg-emerald-500/15 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.35)]',
+  degraded: 'border border-amber-400/60 bg-amber-500/15 text-amber-100 shadow-[0_0_18px_rgba(251,191,36,0.3)]',
+  offline: 'border border-slate-400/40 bg-slate-600/20 text-slate-200 shadow-[0_0_18px_rgba(148,163,184,0.25)]',
 };
 
 export const ImproveSidebar: React.FC<ImproveSidebarProps> = ({
@@ -41,14 +41,14 @@ export const ImproveSidebar: React.FC<ImproveSidebarProps> = ({
       initial={{ width: 60 }}
       animate={{ width: collapsed ? 60 : 250 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="relative flex h-full flex-col border-r border-slate-800/60 bg-slate-950/80 backdrop-blur"
+      className="relative flex h-full flex-col border-r border-white/10 bg-white/5 shadow-[0_35px_120px_rgba(2,6,23,0.55)] backdrop-blur-2xl"
       data-testid="ai-imp:sidebar"
       aria-label={t('aiImprove.sidebar.ariaLabel', 'Auto-Improve გვერდითი ნავიგაცია')}
     >
       <div className="flex items-center justify-between px-3 py-4">
         <button
           type="button"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-700/70 bg-slate-900 text-slate-200 shadow-sm transition hover:border-violet-500/50 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/10 text-slate-200 shadow-[0_15px_45px_rgba(2,6,23,0.4)] transition hover:border-cyan-400/60 hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
           onClick={onToggle}
           aria-label={collapsed ? t('aiImprove.sidebar.expand', 'გახსნა') : t('aiImprove.sidebar.collapse', 'დახურვა')}
           aria-expanded={!collapsed}
@@ -91,8 +91,8 @@ export const ImproveSidebar: React.FC<ImproveSidebarProps> = ({
               onClick={item.onClick}
               data-testid={`ai-imp:sidebar-item:${item.id}`}
               className={classNames(
-                'group flex w-full items-center gap-3 rounded-lg border border-transparent bg-slate-900/70 px-3 py-2 text-sm font-medium text-slate-300 transition hover:border-violet-500/40 hover:bg-slate-900/90 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400',
-                item.active && 'border-violet-500/60 bg-slate-900 text-white shadow-[0_0_0_1px_rgba(168,85,247,0.25)]',
+                'group flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-slate-300 shadow-[0_18px_55px_rgba(2,6,23,0.35)] transition hover:border-cyan-400/60 hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400',
+                item.active && 'border-cyan-400/80 text-white shadow-[0_0_35px_rgba(34,211,238,0.35)]',
                 collapsed && 'justify-center px-0 py-3',
               )}
               aria-current={item.active ? 'true' : undefined}
@@ -102,10 +102,12 @@ export const ImproveSidebar: React.FC<ImproveSidebarProps> = ({
                 {item.icon}
               </span>
               {!collapsed && (
-                <span className="flex-1 truncate text-left">{item.label}</span>
+                <span className="flex-1 truncate text-left font-jetbrains text-[0.85rem] uppercase tracking-[0.16em] text-slate-200">
+                  {item.label}
+                </span>
               )}
               {!collapsed && item.badge !== null && item.badge !== undefined && (
-                <span className="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-slate-800 px-2 py-0.5 text-xs font-semibold text-violet-200">
+                <span className="inline-flex min-w-[1.5rem] items-center justify-center rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-semibold text-cyan-100">
                   {item.badge}
                 </span>
               )}

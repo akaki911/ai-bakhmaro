@@ -21,11 +21,11 @@ const Controls: React.FC<ControlsProps> = ({
   const handleRollback = () => onRollback(currentRunId ?? undefined, undefined);
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-slate-800/70 bg-slate-950/70 p-5 text-sm text-slate-200">
+    <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-white/10 bg-white/10 p-5 text-sm text-slate-200 shadow-[0_25px_80px_rgba(2,6,23,0.45)] backdrop-blur-xl">
       <button
         type="button"
         onClick={isPaused ? onResume : onPause}
-        className="rounded-full border border-purple-500/50 bg-purple-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-purple-100 transition hover:bg-purple-500/20"
+        className="rounded-full border border-purple-400/60 bg-purple-500/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-purple-100 transition hover:border-purple-300/60 hover:text-purple-50"
       >
         {isPaused ? 'Resume Stream' : 'Pause Stream'}
       </button>
@@ -33,7 +33,7 @@ const Controls: React.FC<ControlsProps> = ({
         type="button"
         onClick={handleRetry}
         disabled={isRetrying}
-        className="rounded-full border border-emerald-500/50 bg-emerald-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-100 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+        className="rounded-full border border-emerald-400/60 bg-emerald-500/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-100 transition hover:border-emerald-300/60 hover:text-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isRetrying ? 'Retrying…' : 'Retry Run'}
       </button>
@@ -41,12 +41,12 @@ const Controls: React.FC<ControlsProps> = ({
         type="button"
         onClick={handleRollback}
         disabled={!hasRollbackCheckpoint || isRollingBack}
-        className="rounded-full border border-rose-500/50 bg-rose-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-rose-100 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+        className="rounded-full border border-rose-400/60 bg-rose-500/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-rose-100 transition hover:border-rose-300/60 hover:text-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isRollingBack ? 'Rolling Back…' : 'Rollback'}
       </button>
       {currentRunId ? (
-        <span className="ml-auto text-[11px] uppercase tracking-[0.24em] text-slate-500">
+        <span className="ml-auto font-jetbrains text-[11px] uppercase tracking-[0.24em] text-slate-400/80">
           Focused run: {currentRunId}
         </span>
       ) : null}

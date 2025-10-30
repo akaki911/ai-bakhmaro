@@ -483,7 +483,7 @@ const BrainPage: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="space-y-4 rounded-[32px] border border-purple-500/20 bg-gradient-to-br from-slate-950 via-slate-950 to-black p-6 shadow-[0_40px_120px_rgba(76,29,149,0.35)]">
+      <div className="space-y-6 rounded-[32px] border border-white/10 bg-white/5 p-6 shadow-[0_45px_140px_rgba(2,6,23,0.55)] backdrop-blur-2xl">
         <StatusStrip
           status={status}
           connection={connection}
@@ -491,8 +491,9 @@ const BrainPage: React.FC = () => {
           transport={transport}
           backpressure={backpressure}
         />
-        <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-          <div className="space-y-4">
+        <div className="living-ai-divider" aria-hidden="true" />
+        <div className="grid gap-5 lg:grid-cols-[2fr_1fr]">
+          <div className="space-y-5">
             <ThinkingNow status={status} problem={currentProblem} decision={lastDecision} />
             <div className="grid gap-4 md:grid-cols-2">
               <LastOutcome action={lastAction} diffUrl={lastDiffUrl} transport={transport} />
@@ -500,45 +501,48 @@ const BrainPage: React.FC = () => {
             </div>
             <Metrics metric={metric} />
           </div>
-          <div className="space-y-4">
-            <div className="rounded-3xl border border-purple-500/20 bg-black/40 p-5">
-              <p className="text-xs uppercase tracking-[0.28em] text-purple-200/80">Current Run</p>
-              <dl className="mt-3 space-y-3 text-sm text-slate-200">
-                <div>
+          <div className="space-y-5">
+            <div className="rounded-3xl border border-white/10 bg-white/10 p-5 shadow-[0_25px_80px_rgba(2,6,23,0.45)] backdrop-blur-xl">
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-[0.28em] text-cyan-200/80">Current Run</p>
+                <span className="font-jetbrains text-[0.68rem] uppercase tracking-[0.28em] text-slate-400/70">
+                  {connectionModeLabel}
+                </span>
+              </div>
+              <div className="living-ai-divider my-4" aria-hidden="true" />
+              <dl className="space-y-4 text-sm text-slate-200">
+                <div className="flex items-baseline justify-between gap-3">
                   <dt className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Run ID</dt>
-                  <dd className="mt-1 text-sm font-semibold text-slate-100">{runSummary.runId}</dd>
+                  <dd className="font-jetbrains text-sm text-slate-100">{runSummary.runId}</dd>
                 </div>
-                <div>
+                <div className="flex items-baseline justify-between gap-3">
                   <dt className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Phase</dt>
-                  <dd className="mt-1 text-sm text-slate-100">{runSummary.phase}</dd>
+                  <dd className="font-jetbrains text-sm text-slate-100">{runSummary.phase}</dd>
                 </div>
-                <div>
+                <div className="flex items-baseline justify-between gap-3">
                   <dt className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Focus</dt>
-                  <dd className="mt-1 text-sm text-slate-100">{runSummary.focus}</dd>
+                  <dd className="font-jetbrains text-sm text-slate-100">{runSummary.focus}</dd>
                 </div>
-                <div>
+                <div className="flex items-baseline justify-between gap-3">
                   <dt className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Decision</dt>
-                  <dd className="mt-1 text-sm text-slate-100">{runSummary.decision}</dd>
+                  <dd className="font-jetbrains text-sm text-slate-100">{runSummary.decision}</dd>
                 </div>
               </dl>
             </div>
-            <div className="rounded-3xl border border-purple-500/20 bg-black/40 p-5">
-              <p className="text-xs uppercase tracking-[0.28em] text-purple-200/80">Connection</p>
-              <div className="mt-3 space-y-3 text-sm text-slate-200">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Mode</span>
-                  <span className="text-sm font-semibold text-slate-100">{connectionModeLabel}</span>
-                </div>
+            <div className="rounded-3xl border border-white/10 bg-white/10 p-5 shadow-[0_25px_80px_rgba(2,6,23,0.45)] backdrop-blur-xl">
+              <p className="text-xs uppercase tracking-[0.28em] text-cyan-200/80">Connection</p>
+              <div className="living-ai-divider my-4" aria-hidden="true" />
+              <div className="space-y-3 text-sm text-slate-200">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] uppercase tracking-[0.24em] text-slate-500">State</span>
                   <span
                     className={classNames(
-                      'rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]',
+                      'rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] shadow-[0_0_18px_rgba(59,130,246,0.25)]',
                       connection.isOffline
-                        ? 'border-rose-500/40 bg-rose-500/10 text-rose-100'
+                        ? 'border-rose-400/60 bg-rose-500/15 text-rose-100'
                         : connection.isDegraded
-                          ? 'border-amber-500/40 bg-amber-500/10 text-amber-100'
-                          : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100',
+                          ? 'border-amber-400/60 bg-amber-500/15 text-amber-100'
+                          : 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100',
                     )}
                   >
                     {connectionStateLabel}
@@ -546,11 +550,11 @@ const BrainPage: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Heartbeat</span>
-                  <span className="text-sm text-slate-100">{heartbeatDisplay}</span>
+                  <span className="font-jetbrains text-sm text-slate-100">{heartbeatDisplay}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Live Events</span>
-                  <span className="text-sm text-slate-100">{visibleEventsCount}</span>
+                  <span className="font-jetbrains text-sm text-slate-100">{visibleEventsCount}</span>
                 </div>
               </div>
               <p className="mt-4 text-xs text-slate-500">

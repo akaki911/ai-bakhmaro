@@ -9,13 +9,13 @@ interface LiveFeedProps {
 }
 
 const toneByType: Record<BrainEventRecord['type'], string> = {
-  status: 'border-blue-500/40 bg-blue-500/10 text-blue-100',
-  action: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100',
-  problem: 'border-rose-500/40 bg-rose-500/10 text-rose-100',
-  decision: 'border-purple-500/40 bg-purple-500/10 text-purple-100',
-  log: 'border-slate-700/60 bg-slate-900/80 text-slate-200',
-  metric: 'border-amber-500/40 bg-amber-500/10 text-amber-100',
-  error: 'border-red-500/40 bg-red-500/10 text-red-100',
+  status: 'border-sky-400/60 bg-sky-500/15 text-sky-100 shadow-[0_0_18px_rgba(56,189,248,0.3)]',
+  action: 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.3)]',
+  problem: 'border-rose-400/60 bg-rose-500/15 text-rose-100 shadow-[0_0_18px_rgba(244,63,94,0.3)]',
+  decision: 'border-purple-400/60 bg-purple-500/15 text-purple-100 shadow-[0_0_18px_rgba(168,85,247,0.3)]',
+  log: 'border-white/10 bg-white/5 text-slate-200 shadow-[0_0_18px_rgba(148,163,184,0.25)]',
+  metric: 'border-amber-400/60 bg-amber-500/15 text-amber-100 shadow-[0_0_18px_rgba(251,191,36,0.3)]',
+  error: 'border-rose-500/60 bg-rose-600/15 text-rose-100 shadow-[0_0_18px_rgba(248,113,113,0.3)]',
 };
 
 const LiveFeed: React.FC<LiveFeedProps> = ({ events, activeTypes, onToggleType }) => {
@@ -26,9 +26,9 @@ const LiveFeed: React.FC<LiveFeedProps> = ({ events, activeTypes, onToggleType }
   }));
 
   return (
-    <div className="flex h-full flex-col rounded-3xl border border-slate-800/70 bg-slate-950/70">
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-800/60 px-4 py-3 text-xs text-slate-400">
-        <span className="uppercase tracking-[0.28em] text-slate-500">Live Feed</span>
+    <div className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/10 shadow-[0_25px_80px_rgba(2,6,23,0.45)] backdrop-blur-xl">
+      <div className="flex flex-wrap items-center gap-2 px-4 py-3 text-xs text-slate-400/80">
+        <span className="uppercase tracking-[0.28em] text-cyan-200/80">Live Feed</span>
         <div className="flex flex-wrap items-center gap-2">
           {filters.map((filter) => (
             <button
@@ -38,8 +38,8 @@ const LiveFeed: React.FC<LiveFeedProps> = ({ events, activeTypes, onToggleType }
               className={classNames(
                 'rounded-full border px-2 py-1 transition-colors',
                 filter.active
-                  ? 'border-purple-400/70 bg-purple-500/20 text-purple-100'
-                  : 'border-slate-700/70 bg-transparent text-slate-400 hover:border-purple-400/40 hover:text-purple-100',
+                  ? 'border-cyan-400/60 bg-cyan-500/15 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.35)]'
+                  : 'border-white/10 bg-transparent text-slate-400 hover:border-cyan-400/40 hover:text-cyan-100',
               )}
             >
               {filter.type}
@@ -47,20 +47,22 @@ const LiveFeed: React.FC<LiveFeedProps> = ({ events, activeTypes, onToggleType }
           ))}
         </div>
       </div>
-      <div className="flex-1 space-y-2 overflow-y-auto p-4 text-xs">
+      <div className="mx-4 mb-3 h-px living-ai-divider" aria-hidden="true" />
+      <div className="flex-1 space-y-2 overflow-y-auto px-4 pb-4 text-xs">
         {ordered.length === 0 ? (
           <p className="text-slate-500">No events yet.</p>
         ) : (
           ordered.map((event) => (
             <div
               key={event.id}
-              className={classNames('rounded-2xl border px-3 py-2 shadow-sm backdrop-blur-sm', toneByType[event.type])}
+              className={classNames('rounded-2xl border px-3 py-3 backdrop-blur-xl transition', toneByType[event.type])}
             >
               <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.24em]">
                 <span>{event.type}</span>
                 <span>{event.runId ?? 'no-run'}</span>
               </div>
-              <p className="mt-2 text-xs leading-relaxed text-white/90">
+              <div className="living-ai-divider my-2" aria-hidden="true" />
+              <p className="text-xs leading-relaxed text-white/90">
                 {(() => {
                   switch (event.type) {
                     case 'status':
@@ -81,7 +83,7 @@ const LiveFeed: React.FC<LiveFeedProps> = ({ events, activeTypes, onToggleType }
                   }
                 })()}
               </p>
-              <p className="mt-2 text-[10px] text-white/70">
+              <p className="mt-3 text-[10px] text-white/70">
                 {new Date(event.receivedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </p>
             </div>
