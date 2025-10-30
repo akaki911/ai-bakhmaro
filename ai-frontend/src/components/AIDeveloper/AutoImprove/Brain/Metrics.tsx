@@ -22,17 +22,18 @@ const Metrics: React.FC<MetricsProps> = ({ metric }) => {
   ];
 
   return (
-    <div className="rounded-3xl border border-slate-800/70 bg-slate-950/70 p-5 text-sm text-slate-200">
-      <p className="text-xs uppercase tracking-[0.28em] text-slate-500">Metrics</p>
-      <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-5">
+    <div className="rounded-3xl border border-white/10 bg-white/10 p-5 text-sm text-slate-200 shadow-[0_25px_80px_rgba(2,6,23,0.45)] backdrop-blur-xl">
+      <p className="text-xs uppercase tracking-[0.28em] text-cyan-200/80">Metrics</p>
+      <div className="living-ai-divider my-4" aria-hidden="true" />
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
         {items.map((item) => (
-          <div key={item.label} className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-3">
+          <div key={item.label} className="rounded-2xl border border-white/10 bg-white/5 p-3 shadow-[0_15px_45px_rgba(2,6,23,0.35)]">
             <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">{item.label}</p>
-            <p className="mt-2 text-lg font-semibold text-white">{item.value}</p>
+            <p className="mt-2 font-jetbrains text-lg text-white">{item.value}</p>
           </div>
         ))}
       </div>
-      <p className="mt-4 text-xs text-slate-500">
+      <p className="mt-4 text-xs text-slate-400/80">
         {metric?.timestamp ? `Updated ${new Date(metric.timestamp).toLocaleTimeString()}` : 'Awaiting metrics.'}
       </p>
     </div>
