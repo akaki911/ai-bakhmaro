@@ -10,6 +10,7 @@ import {
   Settings,
   RotateCcw,
   Paperclip,
+  Mic,
   Send,
   ChevronDown,
   User,
@@ -73,6 +74,14 @@ interface ReplitAssistantPanelProps {
   currentFile?: string;
   aiFetch?: (endpoint: string, options?: RequestInit) => Promise<any>;
 }
+
+const ASSISTANT_BUBBLE_CLASS =
+  'relative w-fit max-w-[75%] rounded-2xl border border-white/10 bg-[rgba(255,255,255,0.08)] px-5 py-4 text-[0.95rem] text-white/90 shadow-[0_0_12px_rgba(0,0,0,0.4)] backdrop-blur-lg';
+const USER_BUBBLE_CLASS =
+  'relative w-fit max-w-[70%] rounded-2xl border border-[rgba(105,255,210,0.35)] bg-[rgba(105,255,210,0.12)] px-5 py-3 text-[0.95rem] text-[#E7FFF6] shadow-[0_0_12px_rgba(0,0,0,0.4)] backdrop-blur-lg';
+const LOADING_BUBBLE_CLASS =
+  'relative w-fit max-w-[70%] rounded-2xl border border-white/12 bg-[rgba(255,255,255,0.08)] px-4 py-3 text-sm text-white/80 shadow-[0_0_12px_rgba(0,0,0,0.4)] backdrop-blur-lg';
+const GLOW_BUTTON_CLASS = 'gurulo-glow-button';
 
 const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
   currentFile,
@@ -191,6 +200,8 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
     "georgian" | "english" | "mixed"
   >("georgian");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pulsingMessageId, setPulsingMessageId] = useState<string | null>(null);
+  const [isMicActive, setIsMicActive] = useState(false);
 
   // Phase 4: Checkpoints System State
   const [checkpoints, setCheckpoints] = useState<
@@ -248,6 +259,23 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
   );
   const chatMessages = currentChat?.messages || [];
   const hasActiveChat = chatMessages.length > 0;
+
+  useEffect(() => {
+    if (chatMessages.length === 0) {
+      return;
+    }
+    const lastMessage = chatMessages[chatMessages.length - 1];
+    if (lastMessage?.type === "ai") {
+      setPulsingMessageId(lastMessage.id);
+      const timeout = window.setTimeout(() => {
+        setPulsingMessageId(null);
+      }, 900);
+
+      return () => window.clearTimeout(timeout);
+    }
+    setPulsingMessageId(null);
+    return undefined;
+  }, [chatMessages]);
 
   // Load chat sessions from localStorage on component mount
   useEffect(() => {
@@ -1184,44 +1212,71 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                 scrollBehavior: "smooth",
               }}
             >
-              {chatMessages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.type === "user" ? "justify-end" : "justify-start"} mb-4`}
-                >
-                  {message.type === "user" ? (
-                    // User message (original styling)
-                    <div className="max-w-[80%] p-3 rounded-lg bg-[#0969DA] text-white">
-                      <div className="text-sm whitespace-pre-wrap">
-                        {message.content}
+              {chatMessages.map((message) => {
+                const isAssistant = message.type === "ai";
+                const isPulsing = isAssistant && pulsingMessageId === message.id;
+
+                return (
+                  <div
+                    key={message.id}
+                    className={`flex w-full ${
+                      isAssistant
+                        ? "justify-start items-end gap-3"
+                        : "justify-end gap-0"
+                    } mb-4`}
+                  >
+                    {isAssistant && (
+                      <div
+                        className={`replit-assistant-avatar ${
+                          isPulsing ? "replit-assistant-avatar--pulse" : ""
+                        }`}
+                        aria-hidden="true"
+                      >
+                        <span className="replit-assistant-avatar__halo" />
+                        <span className="replit-assistant-avatar__core">GU</span>
                       </div>
-                    </div>
-                  ) : (
-                    // AI message with Phase 1 SECURED React Component Rendering
-                    <EnhancedMessageRenderer
-                      message={
-                        message.enhanced || {
-                          id: message.id,
-                          content: message.content,
-                          category: message.category || "primary",
-                          hasCodeBlocks: false,
-                          codeBlocks: [],
-                          visualElements: [],
-                          georgianFormatted: false,
-                        }
+                    )}
+
+                    <div
+                      className={
+                        isAssistant ? ASSISTANT_BUBBLE_CLASS : USER_BUBBLE_CLASS
                       }
-                      className="max-w-[85%]"
-                    />
-                  )}
-                </div>
-              ))}
+                    >
+                      {isAssistant ? (
+                        <EnhancedMessageRenderer
+                          message={
+                            message.enhanced || {
+                              id: message.id,
+                              content: message.content,
+                              category: message.category || "primary",
+                              hasCodeBlocks: false,
+                              codeBlocks: [],
+                              visualElements: [],
+                              georgianFormatted: false,
+                            }
+                          }
+                          className="message-enhanced-content"
+                        />
+                      ) : (
+                        <div className="whitespace-pre-wrap text-[0.95rem] leading-relaxed">
+                          {message.content}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
 
               {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-[#3E4450] p-3 rounded-lg">
-                    <div className="flex items-center gap-2 text-[#8B949E]">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#00D4FF]"></div>
-                      <span className="text-sm">Assistant is thinking...</span>
+                <div className="flex w-full items-end gap-3 justify-start">
+                  <div className="replit-assistant-avatar replit-assistant-avatar--pulse" aria-hidden="true">
+                    <span className="replit-assistant-avatar__halo" />
+                    <span className="replit-assistant-avatar__core">GU</span>
+                  </div>
+                  <div className={LOADING_BUBBLE_CLASS}>
+                    <div className="flex items-center gap-2 text-white/80">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#8dd4ff]"></div>
+                      <span className="text-sm tracking-wide">Assistant is thinking...</span>
                     </div>
                   </div>
                 </div>
@@ -1230,7 +1285,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
           )}
 
           {/* ===== BOTTOM INPUT AREA ===== */}
-          <div className="border-t border-[#3E4450] bg-[#2C313A] p-4 flex-shrink-0">
+          <div className="border-t border-white/10 bg-[rgba(8,12,26,0.45)] backdrop-blur-md p-4 flex-shrink-0">
             {/* Advanced Controls */}
             <div className="mb-3">
               <div className="flex items-center gap-2 mb-2">
@@ -1536,7 +1591,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                   }
                 }}
                 placeholder="Ask Assistant, use @ to include specific files..."
-                className="w-full bg-[#21252B] border border-[#3E4450] rounded-lg px-4 py-3 pr-20 text-[#E6EDF3] placeholder-[#8B949E] resize-none focus:outline-none focus:border-[#00D4FF] min-h-[44px] max-h-32"
+                className="w-full rounded-2xl border border-white/12 bg-[rgba(9,14,32,0.6)] px-5 py-3 pr-32 text-[0.95rem] text-white/90 placeholder:text-white/40 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)] backdrop-blur-sm transition-all focus:outline-none focus:border-[rgba(120,196,255,0.45)] focus:ring-2 focus:ring-[rgba(120,196,255,0.25)] min-h-[44px] max-h-32"
                 rows={1}
               />
 
@@ -1551,25 +1606,37 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                 accept=".js,.ts,.jsx,.tsx,.py,.html,.css,.json,.md,.txt"
               />
 
-              <div className="absolute right-2 top-2 flex items-center gap-2">
+              <div className="absolute right-3 top-3 flex items-center gap-2">
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-[#8B949E] hover:text-white p-1 transition-all"
+                  className="text-white/60 hover:text-white transition-colors"
                   title="Attach files"
                 >
                   <Paperclip size={16} />
                 </button>
 
                 {selectedFiles.length > 0 && (
-                  <span className="text-[#8B949E] text-sm">
+                  <span className="text-white/60 text-sm">
                     {selectedFiles.length} files
                   </span>
                 )}
 
                 <button
+                  type="button"
+                  onClick={() => setIsMicActive((prev) => !prev)}
+                  aria-pressed={isMicActive}
+                  className={`${GLOW_BUTTON_CLASS} ${
+                    isMicActive ? 'gurulo-glow-button--active' : ''
+                  }`}
+                  title={isMicActive ? "Stop listening" : "Start voice input"}
+                >
+                  <Mic size={16} />
+                </button>
+
+                <button
                   onClick={sendMessage}
                   disabled={!chatInput.trim() || isLoading}
-                  className="bg-[#0969DA] hover:bg-[#0969DA]/80 disabled:bg-[#3E4450] disabled:cursor-not-allowed text-white p-1 rounded transition-all"
+                  className={GLOW_BUTTON_CLASS}
                 >
                   <Send size={14} />
                 </button>
