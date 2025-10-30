@@ -70,22 +70,29 @@ interface ChatSession {
   isArchived: boolean;
 }
 
+export type EmotionalState = 'idle' | 'thinking' | 'responding';
+
 interface ReplitAssistantPanelProps {
   currentFile?: string;
   aiFetch?: (endpoint: string, options?: RequestInit) => Promise<any>;
+  onEmotionalStateChange?: (state: EmotionalState) => void;
 }
 
 const ASSISTANT_BUBBLE_CLASS =
-  'relative w-fit max-w-[75%] rounded-2xl border border-white/10 bg-[rgba(255,255,255,0.08)] px-5 py-4 text-[0.95rem] text-white/90 shadow-[0_0_12px_rgba(0,0,0,0.4)] backdrop-blur-lg';
+  'relative w-fit max-w-[75%] rounded-[18px] border border-white/10 bg-white/10 px-5 py-4 text-[0.95rem] text-white/90 shadow-[0_22px_48px_rgba(15,23,42,0.45)] backdrop-blur-xl transition-shadow duration-500';
 const USER_BUBBLE_CLASS =
-  'relative w-fit max-w-[70%] rounded-2xl border border-[rgba(105,255,210,0.35)] bg-[rgba(105,255,210,0.12)] px-5 py-3 text-[0.95rem] text-[#E7FFF6] shadow-[0_0_12px_rgba(0,0,0,0.4)] backdrop-blur-lg';
+  'relative w-fit max-w-[70%] rounded-[18px] border border-cyan-300/35 bg-cyan-300/15 px-5 py-3 text-[0.95rem] text-[#E7FFF6] shadow-[0_22px_48px_rgba(14,116,144,0.35)] backdrop-blur-xl transition-shadow duration-500';
 const LOADING_BUBBLE_CLASS =
-  'relative w-fit max-w-[70%] rounded-2xl border border-white/12 bg-[rgba(255,255,255,0.08)] px-4 py-3 text-sm text-white/80 shadow-[0_0_12px_rgba(0,0,0,0.4)] backdrop-blur-lg';
-const GLOW_BUTTON_CLASS = 'gurulo-glow-button';
+  'relative w-fit max-w-[70%] rounded-[18px] border border-white/10 bg-white/10 px-4 py-3 text-sm text-white/80 shadow-[0_18px_40px_rgba(15,23,42,0.38)] backdrop-blur-xl';
+const GLOW_BUTTON_CLASS =
+  'inline-flex h-10 w-10 items-center justify-center rounded-full border border-sky-300/30 bg-gradient-to-br from-sky-500/15 via-indigo-500/15 to-fuchsia-500/15 text-sky-100 transition-all duration-500 hover:shadow-[0_20px_45px_rgba(79,70,229,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/40 disabled:cursor-not-allowed disabled:opacity-50';
+const GLOW_BUTTON_ACTIVE_CLASS =
+  'bg-gradient-to-br from-sky-500/35 via-indigo-500/35 to-fuchsia-500/35 text-white shadow-[0_24px_55px_rgba(56,189,248,0.45)]';
 
 const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
   currentFile,
   aiFetch,
+  onEmotionalStateChange,
 }) => {
   const { user, isAuthenticated, authInitialized } = useAuth();
   const memoryControls = useMemoryControls(isAuthenticated ? user?.personalId : null);
@@ -247,6 +254,19 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const emotionalStateRef = useRef<EmotionalState>('idle');
+  const settleTimeoutRef = useRef<number>();
+
+  const updateEmotionalState = useCallback(
+    (next: EmotionalState) => {
+      if (emotionalStateRef.current === next) {
+        return;
+      }
+      emotionalStateRef.current = next;
+      onEmotionalStateChange?.(next);
+    },
+    [onEmotionalStateChange],
+  );
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -263,6 +283,45 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
   );
   const chatMessages = currentChat?.messages || [];
   const hasActiveChat = chatMessages.length > 0;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (settleTimeoutRef.current) {
+      window.clearTimeout(settleTimeoutRef.current);
+      settleTimeoutRef.current = undefined;
+    }
+
+    if (!isAuthenticated) {
+      updateEmotionalState('idle');
+      return;
+    }
+
+    if (isLoading) {
+      updateEmotionalState('thinking');
+      return;
+    }
+
+    const lastMessage = chatMessages[chatMessages.length - 1];
+    if (lastMessage?.type === 'ai') {
+      updateEmotionalState('responding');
+      settleTimeoutRef.current = window.setTimeout(() => {
+        updateEmotionalState('idle');
+        settleTimeoutRef.current = undefined;
+      }, 2400);
+      return;
+    }
+
+    updateEmotionalState('idle');
+  }, [chatMessages, isAuthenticated, isLoading, updateEmotionalState]);
+
+  useEffect(() => () => {
+    if (typeof window !== 'undefined' && settleTimeoutRef.current) {
+      window.clearTimeout(settleTimeoutRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     if (chatMessages.length === 0) {
@@ -1608,7 +1667,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                   }
                 }}
                 placeholder="Ask Assistant, use @ to include specific files..."
-                className="w-full rounded-2xl border border-white/12 bg-[rgba(9,14,32,0.6)] px-5 py-3 pr-32 text-[0.95rem] text-white/90 placeholder:text-white/40 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)] backdrop-blur-sm transition-all focus:outline-none focus:border-[rgba(120,196,255,0.45)] focus:ring-2 focus:ring-[rgba(120,196,255,0.25)] min-h-[44px] max-h-32"
+                className="w-full rounded-[18px] border border-white/10 bg-white/10 px-5 py-3 pr-32 text-[0.95rem] text-white/90 placeholder:text-white/40 shadow-[0_18px_46px_rgba(15,23,42,0.45)] backdrop-blur-lg transition-all focus:outline-none focus:border-sky-300/50 focus:ring-2 focus:ring-sky-300/30 min-h-[44px] max-h-32"
                 rows={1}
               />
 
@@ -1643,7 +1702,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                   onClick={() => setIsMicActive((prev) => !prev)}
                   aria-pressed={isMicActive}
                   className={`${GLOW_BUTTON_CLASS} ${
-                    isMicActive ? 'gurulo-glow-button--active' : ''
+                    isMicActive ? GLOW_BUTTON_ACTIVE_CLASS : ''
                   }`}
                   title={isMicActive ? "Stop listening" : "Start voice input"}
                 >
@@ -1653,7 +1712,9 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                 <button
                   onClick={sendMessage}
                   disabled={!chatInput.trim() || isLoading}
-                  className={GLOW_BUTTON_CLASS}
+                  className={`${GLOW_BUTTON_CLASS} ${
+                    !chatInput.trim() || isLoading ? '' : GLOW_BUTTON_ACTIVE_CLASS
+                  }`}
                 >
                   <Send size={14} />
                 </button>
