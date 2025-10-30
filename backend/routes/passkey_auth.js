@@ -394,7 +394,7 @@ router.post('/login-verify', verifyLimiter, async (req, res) => {
 
     const user = await superAdminService.getUser(storedCredential.userId);
     const userPersonalId = normalisePersonalId(user?.personalId, credentialPersonalId);
-    const resolvedRole = isSuperAdmin(userPersonalId) ? 'SUPER_ADMIN' : (user?.role || 'SUPER_ADMIN');
+    const resolvedRole = isSuperAdmin(userPersonalId) ? 'SUPER_ADMIN' : (user?.role || 'GUEST');
 
     const resolvedUser = {
       id: storedCredential.userId,
