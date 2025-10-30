@@ -85,7 +85,42 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
   const { user } = useAuth();
   const { isReadOnly, setMode, lastUpdatedAt, lastUpdatedBy, isSyncing, syncError } = useAssistantMode();
   const isPlanMode = isReadOnly;
+  const planSwitchStyle = useMemo<React.CSSProperties | undefined>(() => {
+    if (!isPlanMode) {
+      return undefined;
+    }
+
+    return {
+      '--toggle-track-background-off': 'linear-gradient(140deg, rgba(255, 214, 107, 0.2), rgba(250, 204, 21, 0.38))',
+      '--toggle-track-border-off': 'rgba(251, 191, 36, 0.6)',
+      '--toggle-track-shadow-off': '0 0 18px rgba(250, 204, 21, 0.32)',
+      '--toggle-track-shadow-off-hover': '0 0 24px rgba(250, 204, 21, 0.45)',
+      '--toggle-thumb-shadow-off': '0 4px 12px rgba(250, 204, 21, 0.35), 0 0 12px rgba(253, 224, 71, 0.45)',
+      '--toggle-thumb-shadow-off-hover': '0 6px 18px rgba(250, 204, 21, 0.45), 0 0 16px rgba(253, 224, 71, 0.6)',
+      '--toggle-halo-highlight': 'radial-gradient(circle at 22% 18%, rgba(255, 241, 179, 0.7), rgba(255, 197, 61, 0.12))',
+    } as React.CSSProperties;
+  }, [isPlanMode]);
   const isGitHubEnabled = useFeatureFlag('GITHUB');
+  const gitHubSwitchStyle = useMemo<React.CSSProperties>(() => {
+    if (isGitHubEnabled) {
+      return {
+        '--toggle-track-background-on': 'linear-gradient(140deg, rgba(124, 108, 255, 0.32), rgba(56, 189, 248, 0.28))',
+        '--toggle-track-border-on': 'rgba(124, 108, 255, 0.65)',
+        '--toggle-track-shadow-on': '0 0 24px rgba(124, 108, 255, 0.5), 0 0 38px rgba(99, 102, 241, 0.35)',
+        '--toggle-track-shadow-on-hover': '0 0 30px rgba(124, 108, 255, 0.65), 0 0 44px rgba(99, 102, 241, 0.45)',
+        '--toggle-thumb-shadow-on': '0 4px 16px rgba(129, 140, 248, 0.55), 0 0 14px rgba(196, 181, 253, 0.6)',
+        '--toggle-thumb-shadow-on-hover': '0 6px 20px rgba(129, 140, 248, 0.65), 0 0 18px rgba(196, 181, 253, 0.7)',
+        '--toggle-halo-highlight': 'radial-gradient(circle at 22% 18%, rgba(198, 180, 255, 0.65), rgba(124, 108, 255, 0.15))',
+      } as React.CSSProperties;
+    }
+
+    return {
+      '--toggle-track-border-off': 'rgba(124, 108, 255, 0.35)',
+      '--toggle-track-shadow-off': '0 0 16px rgba(124, 108, 255, 0.25)',
+      '--toggle-track-shadow-off-hover': '0 0 22px rgba(124, 108, 255, 0.35)',
+      '--toggle-halo-highlight': 'radial-gradient(circle at 22% 18%, rgba(124, 108, 255, 0.25), rgba(124, 108, 255, 0.08))',
+    } as React.CSSProperties;
+  }, [isGitHubEnabled]);
   const [agentsGuidelines, setAgentsGuidelines] = useState<string>(AGENTS_GUIDELINES_STUB);
   const defaultAgentRules = useMemo(() => parseAgentsMarkdown(agentsGuidelines), [agentsGuidelines]);
   const [agentRules, setAgentRules] = useState<AgentRule[]>(defaultAgentRules);
@@ -269,7 +304,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
                 checked={!isPlanMode}
                 onCheckedChange={handlePlanModeChange}
                 aria-label="Toggle assistant plan/build mode"
-                className={!isPlanMode ? 'border-emerald-500 bg-emerald-500' : 'border-amber-400 bg-amber-400/70'}
+                style={planSwitchStyle}
               />
             </div>
           </div>
@@ -431,7 +466,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
               checked={isGitHubEnabled}
               onCheckedChange={handleGitHubToggle}
               aria-label="Toggle GitHub integration"
-              className={isGitHubEnabled ? 'border-[#7C6CFF] bg-[#7C6CFF]' : 'border-white/15 bg-white/10'}
+              style={gitHubSwitchStyle}
             />
           </div>
         </div>
