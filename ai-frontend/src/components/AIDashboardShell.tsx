@@ -6,7 +6,7 @@ import { AssistantModeProvider } from '../contexts/AssistantModeContext';
 import { PermissionsProvider } from '../contexts/PermissionsContext';
 import { FilePreviewProvider } from '../contexts/FilePreviewProvider';
 
-const AIDeveloperPanel = lazy(() => import('./AIDeveloperPanel'));
+const AiDeveloperPanel = lazy(() => import('./AiDeveloperPanel'));
 const FilePreview = lazy(() => import('./FilePreview'));
 
 const PanelFallback: React.FC<{ label?: string; detail?: string }> = ({
@@ -36,7 +36,7 @@ const AIDashboardShell: React.FC = () => {
                 <PanelFallback label="AI Developer პანელი" detail="კონტექსტი და ფაილების პრევიუ ინიციალიზდება." />
               }
             >
-              <AIDeveloperPanel />
+              <AiDeveloperPanel />
             </Suspense>
             <Suspense fallback={null}>
               <FilePreview />

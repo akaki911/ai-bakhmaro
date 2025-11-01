@@ -72,7 +72,7 @@ interface ChatSession {
 
 export type EmotionalState = 'idle' | 'thinking' | 'responding';
 
-interface ReplitAssistantPanelProps {
+interface AiDeveloperPanelProps {
   currentFile?: string;
   aiFetch?: (endpoint: string, options?: RequestInit) => Promise<any>;
   onEmotionalStateChange?: (state: EmotionalState) => void;
@@ -89,7 +89,7 @@ const GLOW_BUTTON_CLASS =
 const GLOW_BUTTON_ACTIVE_CLASS =
   'bg-gradient-to-br from-sky-500/35 via-indigo-500/35 to-fuchsia-500/35 text-white shadow-[0_24px_55px_rgba(56,189,248,0.45)]';
 
-const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
+const AiDeveloperPanel: React.FC<AiDeveloperPanelProps> = ({
   currentFile,
   aiFetch,
   onEmotionalStateChange,
@@ -202,10 +202,10 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
   const [isArchivedCollapsed, setIsArchivedCollapsed] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [contextDepth, setContextDepth] = useState(3); // 1-10 scale for conversation context
-  const modelSelectId = "replit-assistant-model";
-  const overrideSelectId = "replit-assistant-override";
-  const languageModeSelectId = "replit-assistant-language-mode";
-  const contextDepthSliderId = "replit-assistant-context-depth";
+  const modelSelectId = "ai-developer-panel-model";
+  const overrideSelectId = "ai-developer-panel-override";
+  const languageModeSelectId = "ai-developer-panel-language-mode";
+  const contextDepthSliderId = "ai-developer-panel-context-depth";
   const [streamingEnabled, setStreamingEnabled] = useState(true);
   const [languageMode, setLanguageMode] = useState<
     "georgian" | "english" | "mixed"
@@ -275,7 +275,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
   }, [isAuthenticated]);
 
   // ===== CHAT PERSISTENCE =====
-  const STORAGE_KEY = "replit_assistant_chats";
+  const STORAGE_KEY = "ai_developer_panel_chats";
 
   // Get current chat messages
   const currentChat = chatSessions.find(
@@ -594,8 +594,8 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
     }
   }, [chatSessions]);
 
-  // Generate Replit-style title from message content
-  const generateReplitTitle = (content: string): string => {
+  // Generate AI Developer-style title from message content
+  const generateAiDeveloperTitle = (content: string): string => {
     // Clean and truncate the content
     const cleanContent = content.trim();
     const words = cleanContent.split(" ");
@@ -674,10 +674,10 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
     setChatSessions((prev) =>
       prev.map((session) => {
         if (session.id === currentSessionId) {
-          // Generate Replit-style title from first user message
+          // Generate AI Developer-style title from first user message
           const title =
             messages.length > 0 && messages[0].type === "user"
-              ? generateReplitTitle(messages[0].content)
+              ? generateAiDeveloperTitle(messages[0].content)
               : "ახალი ჩატი";
 
           return {
@@ -1287,13 +1287,13 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                   >
                     {isAssistant && (
                       <div
-                        className={`replit-assistant-avatar ${
-                          isPulsing ? "replit-assistant-avatar--pulse" : ""
+                        className={`ai-developer-panel-avatar ${
+                          isPulsing ? "ai-developer-panel-avatar--pulse" : ""
                         }`}
                         aria-hidden="true"
                       >
-                        <span className="replit-assistant-avatar__halo" />
-                        <span className="replit-assistant-avatar__core">GU</span>
+                        <span className="ai-developer-panel-avatar__halo" />
+                        <span className="ai-developer-panel-avatar__core">GU</span>
                       </div>
                     )}
 
@@ -1329,9 +1329,9 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
 
               {isLoading && (
                 <div className="flex w-full items-end justify-start gap-4">
-                  <div className="replit-assistant-avatar replit-assistant-avatar--pulse" aria-hidden="true">
-                    <span className="replit-assistant-avatar__halo" />
-                    <span className="replit-assistant-avatar__core">GU</span>
+                  <div className="ai-developer-panel-avatar ai-developer-panel-avatar--pulse" aria-hidden="true">
+                    <span className="ai-developer-panel-avatar__halo" />
+                    <span className="ai-developer-panel-avatar__core">GU</span>
                   </div>
                   <div className={LOADING_BUBBLE_CLASS}>
                     <div className="flex items-center gap-2 text-white/80">
@@ -1725,4 +1725,4 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
   );
 };
 
-export default ReplitAssistantPanel;
+export default AiDeveloperPanel;

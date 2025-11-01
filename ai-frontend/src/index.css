@@ -2689,8 +2689,8 @@ body.admin-theme .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
   animation: fadeInUp 0.6s ease-out forwards;
 }
 
-/* Replit assistant avatar pulse */
-.replit-assistant-avatar {
+/* AI Developer panel avatar pulse */
+.ai-developer-panel-avatar {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -2704,7 +2704,7 @@ body.admin-theme .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
   transition: transform 0.3s ease;
 }
 
-.replit-assistant-avatar::after {
+.ai-developer-panel-avatar::after {
   content: '';
   position: absolute;
   inset: -0.55rem;
@@ -2713,7 +2713,7 @@ body.admin-theme .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
   opacity: 0;
 }
 
-.replit-assistant-avatar__halo {
+.ai-developer-panel-avatar__halo {
   position: absolute;
   inset: -0.25rem;
   border-radius: 9999px;
@@ -2722,7 +2722,7 @@ body.admin-theme .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
   filter: blur(2px);
 }
 
-.replit-assistant-avatar__core {
+.ai-developer-panel-avatar__core {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -2738,7 +2738,7 @@ body.admin-theme .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
   text-transform: uppercase;
 }
 
-@keyframes replitAvatarPulse {
+@keyframes aiDeveloperPanelAvatarPulse {
   0% {
     transform: scale(0.85);
     opacity: 0.55;
@@ -2753,7 +2753,7 @@ body.admin-theme .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
   }
 }
 
-@keyframes replitAvatarHaloPulse {
+@keyframes aiDeveloperPanelAvatarHaloPulse {
   0% {
     transform: scale(1);
     opacity: 0.75;
@@ -2768,12 +2768,12 @@ body.admin-theme .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
   }
 }
 
-.replit-assistant-avatar--pulse::after {
-  animation: replitAvatarPulse 0.9s ease-out;
+.ai-developer-panel-avatar--pulse::after {
+  animation: aiDeveloperPanelAvatarPulse 0.9s ease-out;
 }
 
-.replit-assistant-avatar--pulse .replit-assistant-avatar__halo {
-  animation: replitAvatarHaloPulse 0.9s ease-out;
+.ai-developer-panel-avatar--pulse .ai-developer-panel-avatar__halo {
+  animation: aiDeveloperPanelAvatarHaloPulse 0.9s ease-out;
 }
 
 /* Glowing mic/send controls */
