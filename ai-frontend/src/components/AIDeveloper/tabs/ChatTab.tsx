@@ -1,6 +1,6 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
-import ReplitAssistantPanel from '../../ReplitAssistantPanel';
+import AdminChat from '../../../pages/AdminChat';
 import type { ThemeToggleVisualSignal } from '../../ThemeToggle';
 
 const gradientStyle = {
@@ -269,24 +269,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ isAuthenticated }) => {
     );
   }
 
-  return (
-    <div
-      className="relative h-full text-[#E6E8EC] overflow-hidden"
-      style={gradientStyle}
-    >
-      <div className="absolute inset-0 flex items-center justify-center">
-        <GuruloAvatar />
-      </div>
-      <div className="relative z-10 h-full px-6 pb-6 pt-4">
-        <div className="relative h-full rounded-3xl border border-white/15 bg-[rgba(12,18,38,0.62)] backdrop-blur-[36px] shadow-[0_45px_120px_rgba(5,10,35,0.65)]">
-          <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/4 via-white/2 to-transparent pointer-events-none" />
-          <div className="relative h-full">
-            <ReplitAssistantPanel />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return <AdminChat />;
 };
 
 export default ChatTab;
