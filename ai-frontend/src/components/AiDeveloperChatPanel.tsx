@@ -69,14 +69,18 @@ interface ChatSession {
   isArchived: boolean;
 }
 
+export type EmotionalState = "idle" | "thinking" | "responding";
+
 interface ReplitAssistantPanelProps {
   currentFile?: string;
   aiFetch?: (endpoint: string, options?: RequestInit) => Promise<any>;
+  onEmotionalStateChange?: (state: EmotionalState) => void;
 }
 
 const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
   currentFile,
   aiFetch,
+  onEmotionalStateChange,
 }) => {
   const { user, isAuthenticated, authInitialized } = useAuth();
   const memoryControls = useMemoryControls(isAuthenticated ? user?.personalId : null);
@@ -248,6 +252,25 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
   );
   const chatMessages = currentChat?.messages || [];
   const hasActiveChat = chatMessages.length > 0;
+
+  useEffect(() => {
+    if (!onEmotionalStateChange) {
+      return;
+    }
+
+    if (isInitializing || isLoading) {
+      onEmotionalStateChange("thinking");
+      return;
+    }
+
+    const lastMessage = chatMessages[chatMessages.length - 1];
+    if (lastMessage?.type === "ai") {
+      onEmotionalStateChange("responding");
+      return;
+    }
+
+    onEmotionalStateChange("idle");
+  }, [chatMessages, isInitializing, isLoading, onEmotionalStateChange]);
 
   // Load chat sessions from localStorage on component mount
   useEffect(() => {
