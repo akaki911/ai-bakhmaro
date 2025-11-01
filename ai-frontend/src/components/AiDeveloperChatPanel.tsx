@@ -1,197 +1,158 @@
-// @ts-nocheck
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
+import {
+  Plus,
+  Settings,
+  RotateCcw,
+  Paperclip,
+  Send,
+  ChevronDown,
+  User,
+  Sparkles,
+  Camera,
+  Archive,
+  ArchiveRestore,
+  Clock,
+  ChevronRight,
+  Trash2,
+  X,
+  Brain,
+  RefreshCw,
+} from "lucide-react";
 import { useAuth } from "../contexts/useAuth";
 import {
-  Activity,
-  Brain,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Database,
-  FolderOpen,
-  Github,
-  HardDrive,
-  KeyRound,
-  LayoutDashboard,
-  Megaphone,
-  MessageSquare,
-  Moon,
-  RefreshCcw,
-  ScrollText,
-  Settings,
-  Sparkles,
-  Sun,
-  Terminal,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import ChatTab from "./AIDeveloper/tabs/ChatTab";
-import ConsoleTab from "./AIDeveloper/tabs/ConsoleTab";
-import ExplorerTab from "./AIDeveloper/tabs/ExplorerTab";
-import MemoryTab from "./AIDeveloper/tabs/MemoryTab";
-import LogsTab from "./AIDeveloper/tabs/LogsTab";
-import SettingsTab from "./AIDeveloper/tabs/SettingsTab";
-import AutoImproveTab from "./AIDeveloper/tabs/AutoImproveTab";
-import { SecretsPage } from "./AIDeveloper/tabs/Secrets";
-import GitHubTab from "./AIDeveloper/tabs/GitHubTab";
-import { DevConsoleProvider } from "../contexts/DevConsoleContext";
-import { useAIServiceState } from "@/hooks/useAIServiceState";
-import { useFileOperations } from "../hooks/useFileOperations";
-import { useSystemState } from "../hooks/useSystemState";
-import { useMemoryManagement } from "../hooks/useMemoryManagement";
-import { fetchSecretsTelemetry } from "@/services/secretsAdminApi";
-import { useTheme } from "../contexts/useTheme";
-import { systemCleanerService } from "../services/SystemCleanerService";
+  formatEnhancedMessage,
+  EnhancedMessage,
+} from "../utils/enhancedMessageFormatter";
+import EnhancedMessageRenderer from "./EnhancedMessageRenderer";
+import { singleFlight } from "../lib/singleFlight";
+import { getAdminAuthHeaders } from "../utils/adminToken";
+import { fetchWithDirectAiFallback } from "@/utils/aiFallback";
+import "../styles/enhancedMessages.css";
+import { useMemoryControls } from "../hooks/memory/useMemoryControls";
 
-export type EmotionalState = "idle" | "thinking" | "responding";
+// UPDATE 2024-10-01: Added admin-token Authorization headers for AI fetches and
+// surfaced a UI banner when 401 responses occur so admins can reconfigure the
+// credentials without inspecting the console.
 
-type AiDeveloperChatPanelProps = {
-  onEmotionalStateChange?: (state: EmotionalState) => void;
-};
+// ===== CHAT INTERFACES =====
+interface ChatMessage {
+  id: string;
+  type: "user" | "ai";
+  content: string;
+  timestamp: string;
+  policy?: string;
+  model?: string;
+  modelLabel?: string;
+  // Phase 1: Enhanced message formatting
+  enhanced?: EnhancedMessage;
+  category?: "primary" | "success" | "error" | "warning" | "code" | "info";
+}
 
-type TabKey =
-  | "dashboard"
-  | "chat"
-  | "console"
-  | "explorer"
-  | "autoImprove"
-  | "memory"
-  | "logs"
-  | "secrets"
-  | "github"
-  | "settings";
-
-type AccentTone = "violet" | "blue" | "green" | "pink" | "gold";
-
-type QuickAction = {
-  key: TabKey;
+interface AIModel {
+  id: string;
   label: string;
-  description: string;
-  icon: LucideIcon;
-  accent: AccentTone;
-  disabled?: boolean;
-  badge?: string;
-};
+  category: string;
+}
 
-type DashboardUpdate = {
+interface ChatSession {
   id: string;
   title: string;
-  description: string;
-  timestamp: string | number | Date;
-  icon: LucideIcon;
-  accent: AccentTone;
-  tag?: string;
-};
+  messages: ChatMessage[];
+  lastActivity: string;
+  isActive: boolean;
+  isArchived: boolean;
+}
 
-type StatCard = {
-  id: string;
-  label: string;
-  value: string;
-  description: string;
-  meta: string;
-  icon: LucideIcon;
-  accent: AccentTone;
-  status: "good" | "warning" | "critical" | "neutral";
-};
+interface ReplitAssistantPanelProps {
+  currentFile?: string;
+  aiFetch?: (endpoint: string, options?: RequestInit) => Promise<any>;
+}
 
-const CORE_TABS: TabKey[] = [
-  "dashboard",
-  "chat",
-  "console",
-  "explorer",
-  "autoImprove",
-  "memory",
-  "logs",
-  "secrets",
-  "github",
-  "settings",
-];
-
-const DEFAULT_AI_SERVICE_HEALTH = { status: "ok", port: 5001, lastCheck: Date.now() };
-
-const normalizeTabKey = (value: string | null, validTabs: readonly TabKey[]): TabKey | null => {
-  if (!value) {
-    return null;
-  }
-
-  return (validTabs as readonly string[]).includes(value) ? (value as TabKey) : null;
-};
-
-const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
-  onEmotionalStateChange,
+const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
+  currentFile,
+  aiFetch,
 }) => {
-  const { user: authUser, isAuthenticated, authInitialized, userRole } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { t } = useTranslation();
-  const allowedSuperAdminIds = useMemo(() => ["01019062020"], []);
+  const { user, isAuthenticated, authInitialized } = useAuth();
+  const memoryControls = useMemoryControls(isAuthenticated ? user?.personalId : null);
+  const [authorizationError, setAuthorizationError] = useState<string | null>(null);
 
-  const isSuperAdminUser = useMemo(() => {
-    if (!authUser) {
-      return false;
-    }
-    const personalId = authUser.personalId || authUser.id || null;
-    return (
-      authUser.role === "SUPER_ADMIN" &&
-      Boolean(personalId && allowedSuperAdminIds.includes(personalId))
-    );
-  }, [allowedSuperAdminIds, authUser]);
-
-  const coreTabs = useMemo<TabKey[]>(() => CORE_TABS, []);
-
-  const validTabs = useMemo<readonly TabKey[]>(() => coreTabs, [coreTabs]);
-  const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
-  const [isInitializing, setIsInitializing] = useState(true);
-  const initBarrierRef = useRef(false);
-  const initCleanupRef = useRef(null);
-  const [isRefreshingHealth, setIsRefreshingHealth] = useState(false);
-  const [isRefreshingModels, setIsRefreshingModels] = useState(false);
-
-  useEffect(() => {
-    if (!onEmotionalStateChange) {
-      return;
-    }
-
-    if (isInitializing || isRefreshingHealth || isRefreshingModels) {
-      onEmotionalStateChange("thinking");
-      return;
-    }
-
-    if (activeTab === "chat") {
-      onEmotionalStateChange("responding");
-      return;
-    }
-
-    onEmotionalStateChange("idle");
-  }, [
-    activeTab,
-    isInitializing,
-    isRefreshingHealth,
-    isRefreshingModels,
-    onEmotionalStateChange,
-  ]);
-
-  const aiFetch = useCallback(
+  const fallbackAiFetch = useCallback(
     async (endpoint: string, options: RequestInit = {}) => {
-      if (!authInitialized || !isAuthenticated || !authUser) {
-        console.log("🟡 AI Fetch blocked - authentication not ready");
+      if (!authInitialized || !isAuthenticated || !user) {
+        console.warn(
+          "🟡 [AI FETCH] Authentication not ready - blocking fallback request",
+        );
         throw new Error("Authentication required");
       }
 
-      const url = endpoint.startsWith("/") ? endpoint : `/api/ai/${endpoint}`;
+      const normalizedEndpoint = /^https?:\/\//.test(endpoint)
+        ? endpoint
+        : endpoint.startsWith("/")
+          ? endpoint
+          : `/api/ai/${endpoint}`;
 
       try {
-        const response = await fetch(url, {
-          ...options,
-          headers: {
-            "Content-Type": "application/json",
-            ...(authUser?.personalId && { "X-User-ID": authUser.personalId }),
-            ...(authUser?.role && { "X-User-Role": authUser.role }),
-            ...options.headers,
-          },
-          credentials: "include",
+        const mergeHeaders = (source?: HeadersInit): Record<string, string> => {
+          const result: Record<string, string> = {};
+
+          if (!source) {
+            return result;
+          }
+
+          if (source instanceof Headers) {
+            source.forEach((value, key) => {
+              result[key] = value;
+            });
+            return result;
+          }
+
+          if (Array.isArray(source)) {
+            source.forEach(([key, value]) => {
+              result[key] = value;
+            });
+            return result;
+          }
+
+          Object.assign(result, source as Record<string, string>);
+          return result;
+        };
+
+        const providedHeaders = mergeHeaders(options.headers);
+        const finalHeaders: Record<string, string> = {
+          "Content-Type": "application/json",
+          ...(user.personalId && { "X-User-ID": user.personalId }),
+          ...(user.role && { "X-User-Role": user.role }),
+          ...providedHeaders,
+        };
+
+        const adminHeaders = getAdminAuthHeaders();
+        Object.entries(adminHeaders).forEach(([key, value]) => {
+          finalHeaders[key] = value;
         });
+
+        const { response, usedFallback } = await fetchWithDirectAiFallback(normalizedEndpoint, {
+          ...options,
+          headers: finalHeaders,
+          credentials: options.credentials ?? "include",
+        });
+
+        if (usedFallback) {
+          console.info(`🔁 [AI FETCH] Direct AI fallback used for ${normalizedEndpoint}`);
+        }
+
+        if (response.status === 401) {
+          setAuthorizationError(
+            "🚫 ავტორიზაცია მოთხოვნილია — გთხოვ, გადაამოწმე ადმინისტრატორის ტოკენი.",
+          );
+        } else {
+          setAuthorizationError(null);
+        }
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -199,1249 +160,1427 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
 
         return await response.json();
       } catch (error) {
-        console.error(`AI Service Error (${url}):`, error);
+        console.error("❌ [AI FETCH] Fallback request failed", error);
         throw error;
       }
     },
-    [authInitialized, isAuthenticated, authUser],
+    [authInitialized, isAuthenticated, user],
   );
 
-  const {
-    aiServiceHealth: providedHealth,
-    refreshHealth,
-    loadModels,
-    modelControls,
-    setModelControls,
-    availableModels,
-    selectedModel,
-    setSelectedModel,
-  } = useAIServiceState(isAuthenticated, authUser);
-  const aiServiceHealth = providedHealth ?? DEFAULT_AI_SERVICE_HEALTH;
-
-  const { tree, currentFile, setCurrentFile, loadFileTree, loadFile, saveFile } = useFileOperations(
-    isAuthenticated,
-    authUser,
+  const safeAiFetch = useMemo(
+    () => aiFetch ?? fallbackAiFetch,
+    [aiFetch, fallbackAiFetch],
   );
 
-  const { isDarkMode, setTheme, toggleTheme } = useTheme();
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-
-  const {
-    cleanerEnabled,
-    setCleanerEnabled,
-    isCleaningNow,
-    setIsCleaningNow,
-    lastCleanup,
-    setLastCleanup,
-    telemetryData,
-    setTelemetryData,
-  } = useSystemState();
-
-  const hasDevConsoleAccess = useMemo(() => {
-    const normalizedRole =
-      typeof authUser?.role === "string" ? authUser.role.trim().toLowerCase() : null;
-
-    const personalId = authUser?.personalId || authUser?.id || null;
-    const allowedPersonal = personalId ? allowedSuperAdminIds.includes(personalId) : false;
-
-    return Boolean(
-      authUser &&
-        (allowedPersonal ||
-          normalizedRole === "super_admin" ||
-          authUser.email === "admin@bakhmaro.co" ||
-          (import.meta.env.DEV && isAuthenticated))
-    );
-  }, [allowedSuperAdminIds, authUser, isAuthenticated]);
-
-  useMemoryManagement();
-
-  const numberFormatter = useMemo(() => new Intl.NumberFormat("ka-GE"), []);
-  const percentFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat("ka-GE", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 1,
-      }),
-    [],
+  // ===== STATE =====
+  const [activeTab, setActiveTab] = useState<"agent" | "assistant">(
+    "assistant",
   );
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [chatInput, setChatInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true); // Add initialization state
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+  const [isChatsCollapsed, setIsChatsCollapsed] = useState(false);
+  const [isArchivedCollapsed, setIsArchivedCollapsed] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  const [contextDepth, setContextDepth] = useState(3); // 1-10 scale for conversation context
+  const [streamingEnabled, setStreamingEnabled] = useState(true);
+  const [languageMode, setLanguageMode] = useState<
+    "georgian" | "english" | "mixed"
+  >("georgian");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const sidebarTitle = "Ai გურულო";
-  const userDisplayName = useMemo(() => {
-    if (!authUser) {
-      return "სტუმარი";
+  // Phase 4: Checkpoints System State
+  const [checkpoints, setCheckpoints] = useState<
+    Array<{
+      id: string;
+      name: string;
+      timestamp: string;
+      sessionId: string;
+      messages: ChatMessage[];
+      metadata: { messageCount: number; userActivity: string };
+    }>
+  >([]);
+  const [isCheckpointsVisible, setIsCheckpointsVisible] = useState(false);
+
+  // Dynamic model loading state
+  const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>("");
+  const [manualOverride, setManualOverride] = useState<
+    "auto" | "small" | "large"
+  >("auto");
+  const [lastResponseMeta, setLastResponseMeta] = useState<{
+    policy?: string;
+    model?: string;
+    modelLabel?: string;
+    overridden?: boolean;
+  }>({});
+
+  // Models caching and polling state
+  const modelsCache = useRef<{
+    models: AIModel[];
+    timestamp: number;
+    ttl: number;
+  } | null>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const loadingModelsRef = useRef<boolean>(false);
+  const [pollingActive, setPollingActive] = useState(true);
+  const [backoffDelay, setBackoffDelay] = useState(30000); // Start with 30s
+  const initializationGuardRef = useRef<boolean>(false);
+
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setAuthorizationError(null);
     }
+  }, [isAuthenticated]);
 
-    return (
-      authUser.displayName ||
-      authUser.fullName ||
-      authUser.email ||
-      authUser.personalId ||
-      "სტუმარი"
-    );
-  }, [authUser]);
+  // ===== CHAT PERSISTENCE =====
+  const STORAGE_KEY = "replit_assistant_chats";
 
-  const handleSetDarkMode = useCallback(
-    (dark: boolean) => {
-      setTheme(dark ? "dark" : "light");
-    },
-    [setTheme],
+  // Get current chat messages
+  const currentChat = chatSessions.find(
+    (session) => session.id === currentSessionId,
   );
+  const chatMessages = currentChat?.messages || [];
+  const hasActiveChat = chatMessages.length > 0;
 
-  const handleThemeToggle = useCallback(() => {
-    toggleTheme();
-  }, [toggleTheme]);
-
-  const handleSidebarToggle = useCallback(() => {
-    setIsSidebarCollapsed((previous) => !previous);
-  }, []);
-
-  const formatRelativeTime = useCallback((value: unknown) => {
-    if (!value) {
-      return "განახლება უცნობია";
-    }
-
-    const date = typeof value === "number" ? new Date(value) : new Date(String(value));
-
-    if (Number.isNaN(date.getTime())) {
-      return "განახლება უცნობია";
-    }
-
-    const diff = Date.now() - date.getTime();
-
-    if (diff < 0) {
-      return "დაგეგმილი";
-    }
-
-    const minutes = Math.floor(diff / 60000);
-
-    if (minutes <= 0) {
-      return "ახლახანს";
-    }
-
-    if (minutes < 60) {
-      return `${minutes} წთ წინ`;
-    }
-
-    const hours = Math.floor(minutes / 60);
-
-    if (hours < 24) {
-      return `${hours} სთ წინ`;
-    }
-
-    const days = Math.floor(hours / 24);
-
-    if (days < 7) {
-      return `${days} დღე წინ`;
-    }
-
-    return date.toLocaleDateString("ka-GE", {
-      month: "short",
-      day: "numeric",
-    });
-  }, []);
-
-  const selectedModelLabel = useMemo(() => {
-    if (!selectedModel) {
-      return "ნაგულისხმევი";
-    }
-
-    const model = availableModels?.find((entry) => entry.id === selectedModel);
-
-    return model?.label ?? selectedModel;
-  }, [availableModels, selectedModel]);
-
-  const secretsQueueBadge = useMemo(() => {
-    const queueLength = telemetryData?.secrets?.queueLength ?? 0;
-    if (!Number.isFinite(queueLength) || queueLength <= 0) {
-      return undefined;
-    }
-
-    return numberFormatter.format(queueLength);
-  }, [numberFormatter, telemetryData]);
-
-  const handleToggleCleaner = useCallback(() => {
-    const nextState = !cleanerEnabled;
-
-    try {
-      systemCleanerService.setCleaningEnabled(nextState);
-      setCleanerEnabled(nextState);
-
-      if (nextState) {
-        setLastCleanup(systemCleanerService.getLastCleanupTime());
-      }
-    } catch (error) {
-      console.error("⚠️ Failed to toggle system cleaner", error);
-    }
-  }, [cleanerEnabled, setCleanerEnabled, setLastCleanup]);
-
-  const handleManualCleanup = useCallback(async () => {
-    try {
-      setIsCleaningNow(true);
-      const stats = await systemCleanerService.performManualCleanup();
-      setLastCleanup(stats?.timestamp ?? new Date().toISOString());
-    } catch (error) {
-      console.error("⚠️ Manual cleanup failed", error);
-    } finally {
-      setIsCleaningNow(false);
-    }
-  }, [setIsCleaningNow, setLastCleanup]);
-
-  const statCards = useMemo<StatCard[]>(() => {
-    const {
-      totalRequests = 0,
-      averageLatency = 0,
-      errorRate = 0,
-      fallbackUsage = 0,
-      lastUpdate,
-      secrets: secretsTelemetry = {
-        total: 0,
-        requiredMissing: 0,
-        lastStatus: 'unknown',
-        queueLength: 0,
-        pendingKeys: 0,
-        lastAction: null,
-        lastCompletedAt: null,
-      },
-    } = telemetryData ?? {};
-
-    const safeLatency = Number.isFinite(averageLatency) ? Math.max(0, averageLatency) : 0;
-    const safeRequests = Number.isFinite(totalRequests) ? Math.max(0, totalRequests) : 0;
-    const safeErrorRate = Number.isFinite(errorRate) ? Math.max(0, errorRate) : 0;
-    const safeFallback = Number.isFinite(fallbackUsage) ? Math.max(0, fallbackUsage) : 0;
-
-    const errorValue = safeErrorRate > 1 ? Math.min(safeErrorRate, 100) : Math.min(safeErrorRate * 100, 100);
-    const errorStatus = errorValue <= 1.5 ? "good" : errorValue <= 5 ? "warning" : "critical";
-    const latencyStatus = safeLatency <= 250 ? "good" : safeLatency <= 500 ? "warning" : "critical";
-
-    const cleanerStatus = cleanerEnabled ? "good" : "warning";
-    const cleanerValue = cleanerEnabled ? (isCleaningNow ? "მიმდინარეობს" : "აქტიური") : "გამორთული";
-    const statusDescription =
-      typeof aiServiceHealth?.status === "string" && aiServiceHealth.status.trim().length > 0
-        ? aiServiceHealth.status
-        : aiServiceHealth?.ok
-          ? "OK"
-          : "უცნობია";
-
-    const temperature = Number.isFinite(modelControls?.temperature)
-      ? percentFormatter.format(Math.round((modelControls?.temperature ?? 0) * 10) / 10)
-      : "0";
-    const maxTokens = Number.isFinite(modelControls?.maxTokens)
-      ? numberFormatter.format(Math.max(0, modelControls?.maxTokens ?? 0))
-      : "0";
-
-    const cards: StatCard[] = [
-      {
-        id: "health",
-        label: "AI სერვისის სტატუსი",
-        value: aiServiceHealth?.ok ? "სტაბილური" : "გაფრთხილება",
-        description: `სტატუსი: ${statusDescription}`,
-        meta: `განახლდა: ${formatRelativeTime(aiServiceHealth?.lastChecked)}`,
-        icon: Activity,
-        accent: "violet",
-        status: aiServiceHealth?.ok ? "good" : "warning",
-      },
-      {
-        id: "latency",
-        label: "საშ. ლატენტურობა",
-        value: `${Math.round(safeLatency)} ms`,
-        description: `მოთხოვნები: ${numberFormatter.format(safeRequests)}`,
-        meta: lastUpdate ? `განახლდა: ${formatRelativeTime(lastUpdate)}` : "მონაცემები იხვლება",
-        icon: Clock,
-        accent: "blue",
-        status: latencyStatus,
-      },
-      {
-        id: "errors",
-        label: "შეცდომების მაჩვენებელი",
-        value: `${percentFormatter.format(errorValue)}%`,
-        description: safeFallback > 0 ? `Fallback ჩართვები: ${numberFormatter.format(safeFallback)}` : "Fallback არ გამოიყენება",
-        meta: errorValue <= 1 ? "სტაბილური შესრულება" : errorValue <= 5 ? "გაფრთხილება" : "საჭიროა გამოკვლევა",
-        icon: MessageSquare,
-        accent: "pink",
-        status: errorStatus,
-      },
-      {
-        id: "cleaner",
-        label: "სისტემის მოვლა",
-        value: cleanerValue,
-        description: cleanerEnabled ? "ავტომატური დასუფთავება ჩართულია" : "ავტომატური დასუფთავება გამორთულია",
-        meta: lastCleanup ? `ბოლო: ${formatRelativeTime(lastCleanup)}` : "ჯერ არ შესრულებულა",
-        icon: HardDrive,
-        accent: "green",
-        status: cleanerStatus,
-      },
-      {
-        id: "model",
-        label: "აქტიური მოდელი",
-        value: selectedModelLabel,
-        description: `ტემპერატურა: ${temperature}`,
-        meta: `მაქს. ტოკენები: ${maxTokens}`,
-        icon: Brain,
-        accent: "gold",
-        status: "neutral",
-      },
-    ];
-
-    if (isSuperAdminUser) {
-      const secretsStatusLabel = (() => {
-        switch (secretsTelemetry.lastStatus) {
-          case 'ok':
-            return 'სტაბილური';
-          case 'degraded':
-            return 'გაფრთხილება';
-          case 'rollback':
-            return 'როლბეკი';
-          default:
-            return 'უცნობი';
+  // Load chat sessions from localStorage on component mount
+  useEffect(() => {
+    const loadChatSessions = async () => {
+      setIsInitializing(true);
+      try {
+        const savedChats = localStorage.getItem(STORAGE_KEY);
+        if (savedChats) {
+          try {
+            const parsed = JSON.parse(savedChats); // <--- შესწორებული (JSON.parse)
+            // Remove duplicates and migrate old sessions
+            const uniqueSessions = parsed.filter(
+              (session: any, index: number, array: any[]) =>
+                array.findIndex((s) => s.id === session.id) === index,
+            );
+            const migratedSessions = uniqueSessions.map((session: any) => ({
+              ...session,
+              isArchived: session.isArchived || false,
+            }));
+            setChatSessions(migratedSessions);
+            // Set the last active session as current
+            const activeSession = migratedSessions.find(
+              (session: ChatSession) => session.isActive,
+            );
+            if (activeSession) {
+              setCurrentSessionId(activeSession.id);
+            }
+          } catch (parseError) {
+            console.error("Error parsing chat sessions:", parseError);
+            // Clear corrupted data
+            localStorage.removeItem(STORAGE_KEY);
+          }
         }
-      })();
-
-      const secretsCardStatus =
-        secretsTelemetry.requiredMissing === 0 && secretsTelemetry.lastStatus === 'ok' ? 'good' : 'warning';
-
-      cards.splice(1, 0, {
-        id: 'secrets',
-        label: 'Secrets Vault',
-        value: `${numberFormatter.format(secretsTelemetry.total)} გასაღები`,
-        description:
-          secretsTelemetry.requiredMissing > 0
-            ? `ნაკლული: ${numberFormatter.format(secretsTelemetry.requiredMissing)}`
-            : 'ყველა აუცილებელი შევსებულია',
-        meta: `Sync: ${secretsStatusLabel} • Queue: ${numberFormatter.format(secretsTelemetry.queueLength)}`,
-        icon: KeyRound,
-        accent: secretsCardStatus === 'good' ? 'green' : 'pink',
-        status: secretsCardStatus,
-      });
-    }
-
-    return cards;
-  }, [
-    aiServiceHealth,
-    cleanerEnabled,
-    formatRelativeTime,
-    isCleaningNow,
-    lastCleanup,
-    modelControls,
-    numberFormatter,
-    percentFormatter,
-    selectedModelLabel,
-    telemetryData,
-    isSuperAdminUser,
-  ]);
-
-  const secretsMiniMetrics = useMemo(() => {
-    if (!isSuperAdminUser) {
-      return [] as Array<{
-        id: string;
-        label: string;
-        value: string;
-        hint: string;
-        intent: 'neutral' | 'success' | 'warning' | 'alert';
-      }>;
-    }
-
-    const defaults = {
-      total: 0,
-      requiredMissing: 0,
-      lastStatus: 'unknown',
-      queueLength: 0,
-      pendingKeys: 0,
-      lastAction: null as string | null,
-      lastCompletedAt: null as string | null,
+      } catch (storageError) {
+        console.error("Error accessing localStorage:", storageError);
+      } finally {
+        setIsInitializing(false);
+      }
     };
 
-    const secretsTelemetry = telemetryData?.secrets ?? defaults;
-    const totalValue = Math.max(0, secretsTelemetry.total ?? 0);
-    const missingRequired = Math.max(0, secretsTelemetry.requiredMissing ?? 0);
-    const queueLength = Math.max(0, secretsTelemetry.queueLength ?? 0);
+    loadChatSessions();
+  }, []);
 
-    const statusLabel = (() => {
-      switch ((secretsTelemetry.lastStatus || '').toLowerCase()) {
-        case 'ok':
-          return t('aiDeveloper.secrets.metrics.status.ok', 'OK');
-        case 'degraded':
-          return t('aiDeveloper.secrets.metrics.status.degraded', 'Degraded');
-        case 'rollback':
-          return t('aiDeveloper.secrets.metrics.status.rollback', 'Rollback');
-        default:
-          return t('aiDeveloper.secrets.metrics.status.unknown', 'Unknown');
+  // Load available models with single-flight guard and caching
+  const loadModels = useCallback(async (): Promise<AIModel[]> => {
+    // Check cache first (TTL: 60 seconds minimum)
+    if (modelsCache.current) {
+      const age = Date.now() - modelsCache.current.timestamp;
+      if (age < modelsCache.current.ttl) {
+        console.log("🔄 [MODELS] Using cached models");
+        return modelsCache.current.models;
       }
-    })();
+    }
 
-    const statusIntent: 'neutral' | 'success' | 'warning' | 'alert' = (() => {
-      const status = (secretsTelemetry.lastStatus || '').toLowerCase();
-      if (status === 'ok') {
-        return 'success';
+    console.log("🔍 [MODELS] Loading models from API...");
+    
+    return singleFlight("loadModels", async () => {
+      try {
+        const response = await safeAiFetch("/api/ai/models");
+        if (response.success && Array.isArray(response.models)) {
+          console.log("✅ [MODELS] Loaded models successfully:", response.models);
+          
+          // Cache the models for 120 seconds
+          modelsCache.current = {
+            models: response.models,
+            timestamp: Date.now(),
+            ttl: 120000
+          };
+          
+          // Reset backoff on success
+          setBackoffDelay(30000);
+          setPollingActive(true);
+          
+          return response.models;
+        } else {
+          throw new Error("Failed to load models or format is invalid");
+        }
+      } catch (error: any) {
+        console.error("❌ [MODELS] Error loading models:", error);
+        
+        // Handle 429 rate limiting with exponential backoff
+        if (error.message?.includes('429') || error.message?.includes('Too Many Requests')) {
+          console.warn("🚫 [MODELS] Rate limited, applying exponential backoff");
+          setBackoffDelay(prev => Math.min(prev * 2, 120000)); // Cap at 2 minutes
+          setPollingActive(false);
+          
+          // Re-enable polling after backoff period
+          setTimeout(() => {
+            setPollingActive(true);
+          }, backoffDelay);
+        }
+        
+        // Return cached models if available, even if expired
+        if (modelsCache.current) {
+          console.log("🔄 [MODELS] Using expired cache as fallback");
+          return modelsCache.current.models;
+        }
+        
+        // Return empty array as final fallback
+        return [];
       }
-      if (status === 'degraded') {
-        return 'alert';
+    });
+  }, [safeAiFetch, backoffDelay]);
+
+  // Initialize models loading with StrictMode guard
+  useEffect(() => {
+    const initializeModels = async () => {
+      // StrictMode development guard
+      if (import.meta.env.DEV && initializationGuardRef.current) {
+        console.log("🟡 [MODELS] Skipping duplicate initialization (StrictMode)");
+        return;
       }
-      if (status === 'rollback') {
-        return 'warning';
-      }
-      return 'neutral';
-    })();
+      initializationGuardRef.current = true;
 
-    return [
-      {
-        id: 'total',
-        label: t('aiDeveloper.secrets.metrics.total', 'Secrets total'),
-        value: numberFormatter.format(totalValue),
-        hint: t('aiDeveloper.secrets.metrics.totalHint', 'Keys managed in vault'),
-        intent: 'neutral' as const,
-      },
-      {
-        id: 'required-missing',
-        label: t('aiDeveloper.secrets.metrics.requiredMissing', 'Required missing'),
-        value: numberFormatter.format(missingRequired),
-        hint:
-          missingRequired > 0
-            ? t('aiDeveloper.secrets.metrics.requiredMissingHint', 'Needs placeholders before deployment')
-            : t('aiDeveloper.secrets.metrics.requiredMissingClear', 'All required keys present'),
-        intent: missingRequired > 0 ? ('alert' as const) : ('success' as const),
-      },
-      {
-        id: 'last-status',
-        label: t('aiDeveloper.secrets.metrics.lastStatus', 'Last sync status'),
-        value: statusLabel,
-        hint: secretsTelemetry.lastCompletedAt
-          ? t('aiDeveloper.secrets.metrics.lastStatusHint', 'Updated {{time}}', {
-              time: formatRelativeTime(secretsTelemetry.lastCompletedAt),
-            })
-          : t('aiDeveloper.secrets.metrics.lastStatusPending', 'No sync recorded'),
-        intent: statusIntent,
-      },
-      {
-        id: 'queue-length',
-        label: t('aiDeveloper.secrets.metrics.queueLength', 'Sync queue'),
-        value: numberFormatter.format(queueLength),
-        hint:
-          queueLength > 0
-            ? t('aiDeveloper.secrets.metrics.queueLengthHint', '{{count}} key(s) awaiting sync', {
-                count: queueLength,
-              })
-            : t('aiDeveloper.secrets.metrics.queueLengthClear', 'Queue is empty'),
-        intent: queueLength > 0 ? ('warning' as const) : ('neutral' as const),
-      },
-    ];
-  }, [
-    formatRelativeTime,
-    isSuperAdminUser,
-    numberFormatter,
-    t,
-    telemetryData,
-  ]);
-
-  const handleTabChange = useCallback(
-    (tab: TabKey) => {
-      setActiveTab(tab);
-      const params = new URLSearchParams(location.search);
-
-      if (tab === "dashboard") {
-        params.delete("tab");
-      } else {
-        params.set("tab", tab);
-      }
-
-      navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
-      console.log(`🔄 Switched to tab: ${tab}`);
-    },
-    [location.pathname, location.search, navigate],
-  );
-
-  const handleOpenFileFromActivity = useCallback(
-    async (path: string) => {
-      if (!path) {
+      if (!authInitialized || !isAuthenticated) {
+        console.log("🟡 [MODELS] Skipping model load - authentication not ready");
         return;
       }
 
       try {
-        const file = await loadFile(path);
-        setCurrentFile({
-          path,
-          content: file?.content ?? "",
-          lastModified: new Date().toISOString(),
-        });
-        handleTabChange("explorer");
-      } catch (error) {
-        console.error("⚠️ Failed to open file from activity feed", error);
+        loadingModelsRef.current = true;
+        const models = await loadModels();
+        
+        setAvailableModels(models);
+        const defaultModel = models.find((m: AIModel) => m.category === "small");
+        if (defaultModel && !selectedModel) {
+          setSelectedModel(defaultModel.id);
+        }
+      } finally {
+        loadingModelsRef.current = false;
       }
-    },
-    [handleTabChange, loadFile, setCurrentFile],
-  );
-
-  const handleRefreshHealth = useCallback(async () => {
-    try {
-      setIsRefreshingHealth(true);
-      console.log("🔄 Refreshing AI service health status");
-      await refreshHealth();
-    } catch (error) {
-      console.error("AI service health refresh failed", error);
-    } finally {
-      setIsRefreshingHealth(false);
-    }
-  }, [refreshHealth]);
-
-  const handleReloadModels = useCallback(async () => {
-    try {
-      setIsRefreshingModels(true);
-      console.log("✨ Reloading AI service model catalogue");
-      await loadModels();
-    } catch (error) {
-      console.error("AI model reload failed", error);
-    } finally {
-      setIsRefreshingModels(false);
-    }
-  }, [loadModels]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const tabParam = normalizeTabKey(params.get("tab"), validTabs);
-
-    if (tabParam && tabParam !== activeTab) {
-      setActiveTab(tabParam);
-    }
-  }, [location.search, activeTab, validTabs]);
-
-  const initPanel = useCallback(() => {
-    refreshHealth();
-    loadFileTree();
-    loadModels();
-    setIsInitializing(false);
-
-    return () => {
-      console.log("🧹 [AI_DEV_PANEL] Cleanup on unmount");
     };
-  }, [loadFileTree, loadModels, refreshHealth]);
 
+    initializeModels();
+  }, [authInitialized, isAuthenticated]);  // Remove loadModels, selectedModel dependencies to prevent loops
+
+  // Smart polling with visibility detection
   useEffect(() => {
-    if (!isAuthenticated || !hasDevConsoleAccess) {
+    if (!authInitialized || !isAuthenticated || !pollingActive) {
       return;
     }
 
-    if (initBarrierRef.current) {
-      return initCleanupRef.current || undefined;
-    }
-
-    initBarrierRef.current = true;
-    const cleanup = initPanel();
-    initCleanupRef.current = cleanup;
-
-    return () => {
-      if (typeof cleanup === "function") {
-        cleanup();
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        console.log("🔕 [MODELS] Tab hidden, pausing polling");
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      } else {
+        console.log("👁️ [MODELS] Tab visible, resuming polling");
+        startPolling();
       }
     };
-  }, [hasDevConsoleAccess, initPanel, isAuthenticated]);
 
-  useEffect(() => {
-    if (!isAuthenticated || !hasDevConsoleAccess) {
-      if (typeof initCleanupRef.current === "function") {
-        initCleanupRef.current();
+    const startPolling = () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
       }
-      initCleanupRef.current = null;
-      initBarrierRef.current = false;
-    }
-  }, [hasDevConsoleAccess, isAuthenticated]);
 
-  useEffect(() => {
-    if (!isAuthenticated || !hasDevConsoleAccess) {
-      setIsInitializing(false);
-    }
-  }, [isAuthenticated, hasDevConsoleAccess]);
+      pollingIntervalRef.current = setInterval(async () => {
+        if (!loadingModelsRef.current && !document.hidden) {
+          try {
+            // Check if cache is still fresh (avoid unnecessary API calls)
+            if (modelsCache.current) {
+              const age = Date.now() - modelsCache.current.timestamp;
+              if (age < 60000) { // Cache is fresh, skip polling this round
+                console.log(`⏭️ [MODELS] Skipping poll - cache fresh (${Math.round(age/1000)}s)`);
+                return;
+              }
+            }
+            
+            const models = await loadModels();
+            setAvailableModels(models);
+          } catch (error) {
+            console.warn("🟡 [MODELS] Polling update failed:", error);
+          }
+        }
+      }, Math.max(60000, backoffDelay)); // Minimum 60 seconds, respect backoff
+    };
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (isInitializing) {
-        console.warn("⚠️ AI Developer Panel initialization timeout - switching to fallback mode");
-        setIsInitializing(false);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    if (!document.hidden) {
+      startPolling();
+    }
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
       }
-    }, 20000);
+    };
+  }, [authInitialized, isAuthenticated, pollingActive, backoffDelay]);  // Remove loadModels dependency to prevent loops
 
-    return () => clearTimeout(timeout);
-  }, [isInitializing]);
-
+  // Load checkpoints from localStorage on mount
   useEffect(() => {
-    if (!isSuperAdminUser) {
-      setTelemetryData((prev) => ({
-        ...prev,
-        secrets: {
-          total: 0,
-          requiredMissing: 0,
-          lastStatus: 'unknown',
-          queueLength: 0,
-          pendingKeys: 0,
-          lastAction: null,
-          lastCompletedAt: null,
-        },
-      }));
-      return;
-    }
-
-    const controller = new AbortController();
-    let cancelled = false;
-
-    const loadTelemetry = async () => {
+    const storedCheckpoints = localStorage.getItem("gurulo-checkpoints");
+    if (storedCheckpoints) {
       try {
-        const data = await fetchSecretsTelemetry(controller.signal);
-        if (cancelled) {
-          return;
-        }
-        setTelemetryData((prev) => ({
-          ...prev,
-          secrets: {
-            total: data.totals?.secrets ?? 0,
-            requiredMissing: data.totals?.requiredMissing ?? 0,
-            lastStatus: data.sync?.lastStatus ?? 'unknown',
-            queueLength: data.sync?.queueLength ?? 0,
-            pendingKeys: data.sync?.pendingKeys ?? 0,
-            lastAction: data.sync?.lastAction ?? null,
-            lastCompletedAt: data.sync?.lastCompletedAt ?? null,
-          },
-        }));
+        setCheckpoints(JSON.parse(storedCheckpoints));
       } catch (error) {
-        if ((error instanceof DOMException && error.name === 'AbortError') || error?.name === 'AbortError') {
-          return;
-        }
-        console.error('❌ [SecretsTelemetry] fetch failed', error);
+        console.warn("Failed to load checkpoints:", error);
+        localStorage.removeItem("gurulo-checkpoints");
       }
-    };
+    }
+  }, []);
 
-    loadTelemetry();
-    const interval = window.setInterval(loadTelemetry, 60000);
+  // Save checkpoints to localStorage whenever they change
+  useEffect(() => {
+    if (checkpoints.length > 0) {
+      localStorage.setItem("gurulo-checkpoints", JSON.stringify(checkpoints));
+    }
+  }, [checkpoints]);
 
+  // Cleanup on unmount - clear all intervals and guards
+  useEffect(() => {
     return () => {
-      cancelled = true;
-      controller.abort();
-      window.clearInterval(interval);
-    };
-  }, [isSuperAdminUser, setTelemetryData]);
-
-  type SidebarItem =
-  | {
-        key: string;
-        action: "tab";
-        tabKey: TabKey;
-        icon: LucideIcon;
-        label: string;
-        badge?: string;
-        title?: string;
-        isOff?: boolean;
-        disabled?: boolean;
-        href?: string;
+      console.log("🧹 [CLEANUP] Clearing all intervals and refs");
+      
+      // Clear polling interval
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
       }
-    | {
-        key: string;
-        action: "link";
-        icon: LucideIcon;
-        label: string;
-        title?: string;
-        href: string;
-        disabled?: boolean;
+      
+      // Reset loading state
+      loadingModelsRef.current = false;
+      
+      // Reset initialization guard for next mount
+      initializationGuardRef.current = false;
+      
+      // Clear models cache
+      modelsCache.current = null;
+    };
+  }, []);
+
+  // Save chat sessions to localStorage whenever they change (deduplicated)
+  useEffect(() => {
+    if (chatSessions.length > 0) {
+      // Remove any duplicate sessions before saving
+      const uniqueSessions = chatSessions.filter(
+        (session, index, array) =>
+          array.findIndex((s) => s.id === session.id) === index,
+      );
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(uniqueSessions));
+
+      // Update state if duplicates were found
+      if (uniqueSessions.length !== chatSessions.length) {
+        setChatSessions(uniqueSessions);
+      }
+    }
+  }, [chatSessions]);
+
+  // Generate Replit-style title from message content
+  const generateReplitTitle = (content: string): string => {
+    // Clean and truncate the content
+    const cleanContent = content.trim();
+    const words = cleanContent.split(" ");
+
+    // Take first few meaningful words (2-4 words)
+    const meaningfulWords = words.slice(0, 3).join(" ");
+
+    // Add ellipsis if content is longer
+    const title = words.length > 3 ? `${meaningfulWords}...` : meaningfulWords;
+
+    // Capitalize first letter
+    return title.charAt(0).toUpperCase() + title.slice(1);
+  };
+
+  // Create a new chat session
+  const createNewChatSession = useCallback(() => {
+    const newSessionId = `chat_${Date.now()}`;
+    const newSession: ChatSession = {
+      id: newSessionId,
+      title: "ახალი ჩატი",
+      messages: [],
+      lastActivity: new Date().toISOString(),
+      isActive: true,
+      isArchived: false,
+    };
+
+    setChatSessions((prev) => {
+      // Check if session already exists to prevent duplicates
+      if (prev.some((session) => session.id === newSessionId)) {
+        return prev;
+      }
+      // Mark all other sessions as inactive
+      const updatedSessions = prev.map((session) => ({
+        ...session,
+        isActive: false,
+      }));
+      return [...updatedSessions, newSession];
+    });
+    setCurrentSessionId(newSessionId);
+    setChatInput("");
+  }, [chatSessions]);
+
+  // Auto-create first session if none exist (only once on mount)
+  useEffect(() => {
+    const hasInitialized = sessionStorage.getItem("assistant_initialized");
+    if (!hasInitialized && chatSessions.length === 0 && !currentSessionId) {
+      try {
+        sessionStorage.setItem("assistant_initialized", "true");
+        // Add delay to ensure component is fully mounted
+        setTimeout(() => {
+          createNewChatSession();
+        }, 100);
+      } catch (error) {
+        console.warn("Session storage not available:", error);
+        // Create session without storage dependency
+        createNewChatSession();
+      }
+    }
+  }, [chatSessions, currentSessionId, createNewChatSession]); // Add dependencies for better reactivity
+
+  // Switch to a different chat session
+  const switchToChatSession = (sessionId: string) => {
+    setChatSessions((prev) =>
+      prev.map((session) => ({
+        ...session,
+        isActive: session.id === sessionId,
+      })),
+    );
+    setCurrentSessionId(sessionId);
+  };
+
+  // Update current session messages
+  const updateCurrentSessionMessages = (messages: ChatMessage[]) => {
+    if (!currentSessionId) return;
+
+    setChatSessions((prev) =>
+      prev.map((session) => {
+        if (session.id === currentSessionId) {
+          // Generate Replit-style title from first user message
+          const title =
+            messages.length > 0 && messages[0].type === "user"
+              ? generateReplitTitle(messages[0].content)
+              : "ახალი ჩატი";
+
+          return {
+            ...session,
+            messages,
+            title,
+            lastActivity: new Date().toISOString(),
+          };
+        }
+        return session;
+      }),
+    );
+  };
+
+  // Archive/unarchive a chat session
+  const toggleArchiveSession = (sessionId: string) => {
+    setChatSessions((prev) =>
+      prev.map((session) =>
+        session.id === sessionId
+          ? { ...session, isArchived: !session.isArchived }
+          : session,
+      ),
+    );
+  };
+
+  // ===== PROMPT SUGGESTIONS =====
+  const promptSuggestions = [
+    {
+      text: "შეამოწმე ერორები",
+      action: "inspect-errors",
+    },
+    {
+      text: "გააუმჯობესე ვიზუალური დიზაინი",
+      action: "improve-design",
+    },
+    {
+      text: "გენერირება ახალი ფუნქციების",
+      action: "brainstorm-features",
+    },
+    {
+      text: "დაამატე dark mode ღილაკი",
+      action: "add-dark-mode",
+    },
+    {
+      text: "ოპტიმიზება მობილისთვის",
+      action: "optimize-mobile",
+    },
+    {
+      text: "განმარტე ეს კოდი",
+      action: "explain-code",
+    },
+  ];
+
+  // ===== FILE ATTACHMENT HANDLER =====
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const fileNames = Array.from(files).map((file) => file.name);
+      setSelectedFiles((prev) => [...prev, ...fileNames]);
+
+      // Reset the input to allow re-selecting the same files
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  // ===== PHASE 4: CHECKPOINTS FUNCTIONS =====
+  const createCheckpoint = useCallback(
+    (customName?: string) => {
+      const currentSession = chatSessions.find(
+        (s) => s.id === currentSessionId,
+      );
+      if (!currentSession) return;
+
+      const checkpoint = {
+        id: `checkpoint_${Date.now()}`,
+        name:
+          customName ||
+          `Checkpoint ${new Date().toLocaleTimeString("ka-GE", { hour: "2-digit", minute: "2-digit" })}`,
+        timestamp: new Date().toISOString(),
+        sessionId: currentSession.id,
+        messages: [...currentSession.messages],
+        metadata: {
+          messageCount: currentSession.messages.length,
+          userActivity: new Date().toLocaleString("ka-GE"),
+        },
       };
 
-  const sidebarItems: SidebarItem[] = useMemo(() => {
-    return [
-      {
-        key: "dashboard",
-        action: "tab",
-        tabKey: "dashboard",
-        icon: LayoutDashboard,
-        label: "დეშბორდი",
-        title: "Dashboard",
-        href: "/admin?tab=dashboard",
-      },
-      {
-        key: "chat",
-        action: "tab",
-        tabKey: "chat",
-        icon: MessageSquare,
-        label: "AI ჩატი",
-        title: "AI Chat",
-        href: "/admin?tab=chat",
-      },
-      {
-        key: "console",
-        action: "tab",
-        tabKey: "console",
-        icon: Terminal,
-        label: "კონსოლი",
-        title: "Developer Console",
-        href: "/admin?tab=console",
-      },
-      {
-        key: "explorer",
-        action: "tab",
-        tabKey: "explorer",
-        icon: FolderOpen,
-        label: "ფაილები",
-        title: "File Explorer",
-        href: "/admin?tab=explorer",
-      },
-      {
-        key: "autoImprove",
-        action: "tab",
-        tabKey: "autoImprove",
-        icon: Sparkles,
-        label: "Auto-Improve",
-        title: "Auto-Improve Studio",
-        href: "/admin?tab=autoImprove",
-        isOff: !hasDevConsoleAccess,
-      },
-      {
-        key: "memory",
-        action: "tab",
-        tabKey: "memory",
-        icon: Database,
-        label: "მეხსიერება",
-        title: "Memory Manager",
-        href: "/admin?tab=memory",
-      },
-      {
-        key: "logs",
-        action: "tab",
-        tabKey: "logs",
-        icon: ScrollText,
-        label: "ლოგები",
-        title: "System Logs",
-        href: "/admin?tab=logs",
-        isOff: !hasDevConsoleAccess,
-      },
-      {
-        key: "secrets",
-        action: "tab",
-        tabKey: "secrets",
-        icon: KeyRound,
-        label: "საიდუმლოებები",
-        title: "Secrets Vault",
-        href: "/admin?tab=secrets",
-        badge: secretsQueueBadge,
-        isOff: !isSuperAdminUser,
-      },
-      {
-        key: "github",
-        action: "tab",
-        tabKey: "github",
-        icon: Github,
-        label: "GitHub",
-        title: "GitHub Integration",
-        href: "/admin?tab=github",
-      },
-      {
-        key: "settings",
-        action: "tab",
-        tabKey: "settings",
-        icon: Settings,
-        label: "პარამეტრები",
-        title: "Settings",
-        href: "/admin?tab=settings",
-      },
-    ];
-  }, [hasDevConsoleAccess, isSuperAdminUser, secretsQueueBadge]);
-
-  const activeTabLabel = useMemo(() => {
-    const current = sidebarItems.find(
-      (item): item is Extract<SidebarItem, { action: "tab" }> =>
-        item.action === "tab" && item.tabKey === activeTab,
-    );
-
-    if (current) {
-      return current.label;
-    }
-
-    return t("aiDeveloper.title", "AI დეველოპერის პანელი");
-  }, [activeTab, sidebarItems, t]);
-
-  const dashboardUpdates = useMemo<DashboardUpdate[]>(() => {
-    const healthOk = Boolean(aiServiceHealth?.ok);
-    const healthCheckedAt = aiServiceHealth?.lastChecked ?? Date.now();
-
-    return [
-      {
-        id: "dashboard-launch",
-        title: "ახალი დეშბორდი გაშვებულია",
-        description: "AI Developer-ის მთავარი პანელი ახლა იწყება სრულყოფილი სტატუსებით და სწრაფი ნავიგაციით.",
-        timestamp: "2025-01-05T09:00:00Z",
-        icon: Megaphone,
-        accent: "violet",
-        tag: "ახალი",
-      },
-      {
-        id: "service-health",
-        title: "სერვისის რეალური სტატუსი",
-        description: healthOk
-          ? "AI სერვისი სტაბილურად მუშაობს და მონიტორინგი ავტომატურად მიმდინარეობს."
-          : "სერვისს სჭირდება ყურადღება — გადახედე სტატუსის დეტალებს და კონსოლს.",
-        timestamp: healthCheckedAt,
-        icon: Activity,
-        accent: healthOk ? "green" : "pink",
-        tag: healthOk ? "აქტიური" : "გაფრთხილება",
-      },
-      {
-        id: "explorer-refresh",
-        title: "ფაილების მენეჯერი დახვეწილია",
-        description: "Explorer ტაბი სწრაფი ნავიგაციისთვის და ცვლილებების კონტროლისთვის ოპტიმიზებულია.",
-        timestamp: "2025-01-12T10:00:00Z",
-        icon: FolderOpen,
-        accent: "blue",
-        tag: "განახლება",
-      },
-    ];
-  }, [aiServiceHealth?.lastChecked, aiServiceHealth?.ok]);
-
-  const quickActions = useMemo<QuickAction[]>(
-    () => [
-      {
-        key: "dashboard",
-        label: "Dashboard",
-        description: "Review health, telemetry, and rollout updates",
-        icon: LayoutDashboard,
-        accent: "violet",
-      },
-      {
-        key: "chat",
-        label: "AI Chat",
-        description: "Collaborate with Gurulo for live coding guidance",
-        icon: MessageSquare,
-        accent: "blue",
-      },
-      {
-        key: "console",
-        label: "Console",
-        description: "Monitor services and run automation jobs",
-        icon: Terminal,
-        accent: "green",
-      },
-      {
-        key: "explorer",
-        label: "File Explorer",
-        description: "Browse, edit, and preview repository files",
-        icon: FolderOpen,
-        accent: "gold",
-      },
-      {
-        key: "autoImprove",
-        label: "Auto-Improve",
-        description: "Audit Gurulo brain metrics and rollout automations",
-        icon: Sparkles,
-        accent: "pink",
-        disabled: !hasDevConsoleAccess,
-      },
-      {
-        key: "memory",
-        label: "Memory",
-        description: "Tune saved context, notes, and recall preferences",
-        icon: Database,
-        accent: "blue",
-      },
-      {
-        key: "logs",
-        label: "Logs",
-        description: "Inspect realtime activity across services",
-        icon: ScrollText,
-        accent: "violet",
-        disabled: !hasDevConsoleAccess,
-      },
-      {
-        key: "secrets",
-        label: "Secrets Vault",
-        description: "Audit, sync, and roll back environment secrets",
-        icon: KeyRound,
-        accent: "violet",
-        disabled: !isSuperAdminUser,
-        badge: secretsQueueBadge,
-      },
-      {
-        key: "github",
-        label: "GitHub",
-        description: "Connect repos, inspect diffs, and push changes",
-        icon: Github,
-        accent: "green",
-      },
-      {
-        key: "settings",
-        label: "Settings",
-        description: "Configure Gurulo behavior, models, and cleanup",
-        icon: Settings,
-        accent: "gold",
-      },
-    ],
-    [hasDevConsoleAccess, isSuperAdminUser, secretsQueueBadge],
+      setCheckpoints((prev) => [checkpoint, ...prev].slice(0, 10)); // Keep last 10 checkpoints
+      console.log("📸 [CHECKPOINT] Created:", checkpoint.name);
+    },
+    [currentSessionId, chatSessions],
   );
 
+  const rollbackToCheckpoint = useCallback(
+    (checkpointId: string) => {
+      const checkpoint = checkpoints.find((c) => c.id === checkpointId);
+      if (!checkpoint) {
+        console.error("Checkpoint not found:", checkpointId);
+        return;
+      }
+
+      // Restore messages to the checkpoint state
+      setChatSessions((prev) =>
+        prev.map((session) =>
+          session.id === checkpoint.sessionId
+            ? {
+                ...session,
+                messages: [...checkpoint.messages],
+                lastActivity: new Date().toISOString(),
+              }
+            : session,
+        ),
+      );
+
+      console.log("⏪ [ROLLBACK] Restored to checkpoint:", checkpoint.name);
+    },
+    [checkpoints],
+  );
+
+  const deleteCheckpoint = useCallback((checkpointId: string) => {
+    setCheckpoints((prev) => prev.filter((c) => c.id !== checkpointId));
+  }, []);
+
+  // ===== CHAT FUNCTIONS =====
+  const sendMessage = async () => {
+    if (!chatInput.trim()) return;
+
+    // Create new session if none exists and return without sending
+    if (!currentSessionId) {
+      createNewChatSession();
+      return; // Don't send message immediately, wait for user to click again
+    }
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: "user",
+      content: chatInput,
+      timestamp: new Date().toISOString(),
+    };
+
+    const updatedMessages = [...chatMessages, userMessage];
+    updateCurrentSessionMessages(updatedMessages);
+
+    const currentInput = chatInput;
+    setChatInput("");
+    setIsLoading(true);
+
+    try {
+      // This part is modified based on the provided context and solution
+      let enhancedQuery = currentInput;
+      // Check if this is a file system related query
+      if (
+        enhancedQuery.toLowerCase().includes("file") ||
+        enhancedQuery.toLowerCase().includes("ფაილ")
+      ) {
+        // Use backend file API
+        try {
+          const fileContext = await safeAiFetch("/api/files/tree", {
+            credentials: "include",
+          });
+          if (fileContext?.files) {
+            enhancedQuery += `\n\nCurrent file structure: ${JSON.stringify(fileContext.files).substring(0, 500)}...`;
+          }
+        } catch (error) {
+          console.error("Failed to fetch file context:", error);
+        }
+      }
+
+      // Use intelligent-chat endpoint for dynamic model routing
+      const requestBody: any = {
+        message: enhancedQuery, // Use the potentially enhanced query
+        personalId: user?.personalId || "anonymous",
+        // Pass conversation history for context (dynamic depth)
+        conversationHistory: chatMessages
+          .map((m) => ({
+            role: m.type === "ai" ? "assistant" : "user",
+            content: m.content,
+          }))
+          .slice(-contextDepth), // Dynamic context depth
+        attachedFiles: selectedFiles.length > 0 ? selectedFiles : undefined,
+        streamingEnabled,
+        languageMode,
+        audience: "admin_dev",
+        metadata: {
+          audience: "admin_dev",
+        },
+      };
+
+      // Add model selection and manual override
+      if (selectedModel) {
+        requestBody.selectedModel = selectedModel;
+      }
+      if (manualOverride !== "auto") {
+        requestBody.modelOverride = manualOverride;
+      }
+
+      const data = await safeAiFetch("/api/ai/intelligent-chat", {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+      });
+
+      // Extract response content from intelligent-chat format
+      const responseContent =
+        typeof data.response === "string"
+          ? data.response
+          : data.response?.content || data.response || "No response received";
+
+      // Update last response metadata for badge display
+      if (data.policy && data.model) {
+        setLastResponseMeta({
+          policy: data.policy,
+          model: data.model,
+          modelLabel: data.modelLabel || "Unknown Model",
+          overridden: data.overridden,
+        });
+      }
+
+      // Phase 1: Enhanced Message Formatting
+      const enhancedMessage = formatEnhancedMessage(responseContent);
+
+      const aiResponse: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: "ai",
+        content: enhancedMessage.content,
+        timestamp: new Date().toISOString(),
+        policy: data.policy,
+        model: data.model,
+        modelLabel: data.modelLabel,
+        // Phase 1: Enhanced formatting integration
+        enhanced: enhancedMessage,
+        category: enhancedMessage.category,
+      };
+
+      const finalMessages = [...updatedMessages, aiResponse];
+      updateCurrentSessionMessages(finalMessages);
+
+      // Auto-create checkpoint after AI response
+      setTimeout(() => createCheckpoint(), 500);
+    } catch (error: any) {
+      // Phase 1: Enhanced Error Message Formatting
+      const errorContent = `❌ **შეცდომა:** ${error.message}`;
+      const enhancedErrorMessage = formatEnhancedMessage(errorContent);
+
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: "ai",
+        content: enhancedErrorMessage.content,
+        timestamp: new Date().toISOString(),
+        // Phase 1: Enhanced formatting for errors
+        enhanced: enhancedErrorMessage,
+        category: "error",
+      };
+      const errorMessages = [...updatedMessages, errorMessage];
+      updateCurrentSessionMessages(errorMessages);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion: (typeof promptSuggestions)[0]) => {
+    setChatInput(suggestion.text);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  // ===== AUTO-SCROLL =====
+  // Only scroll when AI responds, not when user types
+  useEffect(() => {
+    if (chatContainerRef.current && chatMessages.length > 0) {
+      // Only auto-scroll if the last message is from AI
+      const lastMessage = chatMessages[chatMessages.length - 1];
+      if (lastMessage?.type === "ai") {
+        setTimeout(() => {
+          if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop =
+              chatContainerRef.current.scrollHeight;
+          }
+        }, 100); // Small delay to ensure message is rendered
+      }
+    }
+  }, [chatMessages]);
+
+  // Show loading indicator while initializing
   if (isInitializing) {
     return (
-      <div className="ai-dev-panel full-width ai-dev-panel--state">
-        <div className="ai-dev-panel__state-card" role="status" aria-live="polite">
-          <div className="ai-dev-panel__state-indicator ai-dev-panel__state-indicator--loading">
-            <div className="ai-dev-panel__state-spinner" />
-          </div>
-          <h2>პანელი იტვირთება…</h2>
-          <p>თუ დიდხანს გაგრძელდა, განაახლე გვერდი ან გადაამოწმე კავშირი.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!hasDevConsoleAccess) {
-    return (
-      <div className="ai-dev-panel full-width ai-dev-panel--state">
-        <div className="ai-dev-panel__state-card" role="alert">
-          <div className="ai-dev-panel__state-indicator ai-dev-panel__state-indicator--locked">🔒</div>
-          <h2>წვდომა შეზღუდულია</h2>
-          <p>ეს პანელი ხელმისაწვდომია მხოლოდ SUPER_ADMIN მომხმარებლებისთვის.</p>
+      <div className="h-full w-full bg-[#21252B] flex flex-col items-center justify-center">
+        <div className="flex items-center gap-3 text-[#8B949E]">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#00D4FF]"></div>
+          <span>Loading Gurulo Assistant...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <DevConsoleProvider>
-      <div className="ai-dev-panel full-width">
-        <div className="ai-dev-shell">
-          <aside
-            className={["ai-dev-sidebar", isSidebarCollapsed ? "ai-dev-sidebar--collapsed" : ""]
-              .filter(Boolean)
-              .join(" ")}
-            aria-label="AI Developer პანელის ნავიგაცია"
+    <div
+      className="h-full w-full bg-[#21252B] flex flex-col max-h-[100vh] overflow-hidden"
+      style={{ height: "100vh" }}
+    >
+      {/* ===== HEADER TABS ===== */}
+      <div className="bg-[#2C313A] border-b border-[#3E4450] flex items-center px-4">
+        <div className="flex">
+          <button
+            onClick={() => setActiveTab("agent")}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all ${
+              activeTab === "agent"
+                ? "text-[#00D4FF] border-[#00D4FF]"
+                : "text-[#8B949E] border-transparent hover:text-white"
+            }`}
           >
-            <div className="ai-dev-sidebar__header">
+            <User size={16} />
+            Agent
+          </button>
+          <button
+            onClick={() => setActiveTab("assistant")}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all ${
+              activeTab === "assistant"
+                ? "text-[#00D4FF] border-[#00D4FF]"
+                : "text-[#8B949E] border-transparent hover:text-white"
+            }`}
+          >
+            <Sparkles size={16} />
+            Assistant
+          </button>
+        </div>
+
+        {/* Current File Display */}
+        {currentFile && (
+          <div className="ml-4 flex items-center gap-2 text-[#8B949E] text-sm">
+            <div className="w-1 h-1 bg-[#8B949E] rounded-full"></div>
+            <span>{currentFile}</span>
+            <Plus size={16} className="hover:text-white cursor-pointer" />
+          </div>
+        )}
+
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => createCheckpoint()}
+            className="text-[#8B949E] hover:text-white p-1"
+            title="📸 Create Checkpoint"
+          >
+            <Camera size={16} />
+          </button>
+          <button
+            onClick={() => {
+              const lastCheckpoint = checkpoints.find(
+                (c) => c.sessionId === currentSessionId,
+              );
+              if (lastCheckpoint) rollbackToCheckpoint(lastCheckpoint.id);
+            }}
+            className="text-[#8B949E] hover:text-white p-1"
+            title="⏪ Rollback to Last Checkpoint"
+          >
+            <RotateCcw size={16} />
+          </button>
+          <button
+            onClick={() => setIsCheckpointsVisible(!isCheckpointsVisible)}
+            className={`p-1 ${isCheckpointsVisible ? "text-[#00D4FF]" : "text-[#8B949E] hover:text-white"}`}
+            title="🔄 View Checkpoints"
+          >
+            <Clock size={16} />
+          </button>
+          <button className="text-[#8B949E] hover:text-white p-1">
+            <Settings size={16} />
+          </button>
+        </div>
+      </div>
+
+      {authorizationError && (
+        <div className="bg-[#3A1F1F] border-b border-[#FF6B6B]/40 text-[#FFB4B4] px-4 py-2 text-sm">
+          {authorizationError}
+        </div>
+      )}
+
+      <div className="flex-1 flex">
+        {/* ===== LEFT SIDEBAR ===== */}
+        <div className="w-60 bg-[#2C313A] border-r border-[#3E4450] flex flex-col min-h-0">
+          <div className="p-3">
+            <button
+              onClick={createNewChatSession}
+              className="w-full flex items-center gap-2 bg-[#21252B] hover:bg-[#3E4450] text-[#8B949E] hover:text-white px-3 py-2 rounded-lg text-sm transition-all"
+            >
+              <Plus size={16} />
+              New chat
+            </button>
+          </div>
+
+          {/* Chat History with Collapsible Sections */}
+          <div className="flex-1 px-3 overflow-y-auto min-h-0 console-scrollbar">
+            {/* Chats Section */}
+            <div className="mb-4">
               <div
-                className="ai-dev-sidebar__logo"
-                title={`${sidebarTitle} — ${userDisplayName}`}
-                aria-label={`${sidebarTitle} (${userDisplayName})`}
+                onClick={() => setIsChatsCollapsed(!isChatsCollapsed)}
+                className="flex items-center justify-between text-[#8B949E] text-xs font-medium mb-2 cursor-pointer hover:text-[#E6EDF3] transition-colors"
               >
-                <span className="ai-dev-sidebar__logo-icon">Ai</span>
+                <span>Chats</span>
+                <div
+                  className={`transform transition-transform ${isChatsCollapsed ? "rotate-0" : "rotate-90"}`}
+                >
+                  <svg
+                    width="8"
+                    height="8"
+                    viewBox="0 0 8 8"
+                    fill="currentColor"
+                  >
+                    <path d="M3 0L6 4L3 8V0Z" />
+                  </svg>
+                </div>
               </div>
-              {!isSidebarCollapsed && (
-                <div className="ai-dev-sidebar__meta">
-                  <span className="ai-dev-sidebar__brand">{sidebarTitle}</span>
-                  <span className="ai-dev-sidebar__user">{userDisplayName}</span>
+
+              {!isChatsCollapsed && (
+                <div className="space-y-1">
+                  {chatSessions
+                    .filter((session) => !session.isArchived)
+                    .sort(
+                      (a, b) =>
+                        new Date(b.lastActivity).getTime() -
+                        new Date(a.lastActivity).getTime(),
+                    )
+                    .map((session) => (
+                      <div
+                        key={session.id}
+                        className={`relative group text-sm px-3 py-2 rounded-lg cursor-pointer transition-all ${
+                          session.id === currentSessionId
+                            ? "bg-[#0969DA] text-white"
+                            : "bg-[#3E4450] text-[#E6EDF3] hover:bg-[#4A5568]"
+                        }`}
+                      >
+                        <div onClick={() => switchToChatSession(session.id)}>
+                          <div className="truncate pr-6">{session.title}</div>
+                          <div className="text-xs opacity-75">
+                            {session.messages.length} წერილი •{" "}
+                            {new Date(session.lastActivity).toLocaleDateString(
+                              "ka-GE",
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Archive button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleArchiveSession(session.id);
+                          }}
+                          className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 text-xs px-1 py-0.5 bg-[#2D3748] rounded hover:bg-[#4A5568] transition-all"
+                        >
+                          📦
+                        </button>
+                      </div>
+                    ))}
+
+                  {chatSessions.filter((session) => !session.isArchived)
+                    .length === 0 && (
+                    <div className="text-[#8B949E] text-xs text-center py-4">
+                      No recent chats
+                    </div>
+                  )}
                 </div>
               )}
-              <button
-                type="button"
-                className="ai-dev-sidebar__theme-toggle"
-                onClick={handleThemeToggle}
-                aria-label={isDarkMode ? "გათენება" : "დაუბნელება"}
-                title={isDarkMode ? "ღია თემა" : "მუქი თემა"}
-              >
-                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
             </div>
 
-            <div className="ai-dev-sidebar__items">
-              {sidebarItems.map((item) => {
-                const isTab = item.action === "tab";
-                const isActive = isTab && activeTab === item.tabKey;
-                const isMuted = isTab ? item.isOff ?? false : false;
-                const isDisabled = Boolean(item.disabled || isMuted);
-                const itemClasses = [
-                  "ai-dev-sidebar__item",
-                  isActive ? "is-active" : "",
-                  isMuted || isDisabled ? "is-muted" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ");
-                const buttonClasses = [
-                  "ai-dev-sidebar__button",
-                  isSidebarCollapsed ? "is-icon-only" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ");
-
-                const handleItemClick = () => {
-                  if (isDisabled) {
-                    return;
-                  }
-
-                  if (item.action === "tab") {
-                    handleTabChange(item.tabKey);
-                  } else {
-                    navigate(item.href);
-                  }
-                };
-
-                return (
-                  <div key={item.key} className={itemClasses}>
-                    <span className="ai-dev-sidebar__glow" aria-hidden="true" />
-                    <button
-                      type="button"
-                      onClick={handleItemClick}
-                      className={buttonClasses}
-                      title={item.title ?? item.label}
-                      aria-pressed={isActive}
-                      aria-disabled={isDisabled}
-                      disabled={isDisabled}
+            {/* Archived Section */}
+            {chatSessions.some((session) => session.isArchived) && (
+              <div className="mb-4">
+                <div
+                  onClick={() => setIsArchivedCollapsed(!isArchivedCollapsed)}
+                  className="flex items-center justify-between text-[#8B949E] text-xs font-medium mb-2 cursor-pointer hover:text-[#E6EDF3] transition-colors"
+                >
+                  <span>Archived</span>
+                  <div
+                    className={`transform transition-transform ${isArchivedCollapsed ? "rotate-0" : "rotate-90"}`}
+                  >
+                    <svg
+                      width="8"
+                      height="8"
+                      viewBox="0 0 8 8"
+                      fill="currentColor"
                     >
-                      <span className="ai-dev-sidebar__icon">
-                        <item.icon size={20} />
+                      <path d="M3 0L6 4L3 8V0Z" />
+                    </svg>
+                  </div>
+                </div>
+
+                {!isArchivedCollapsed && (
+                  <div className="space-y-1">
+                    {chatSessions
+                      .filter((session) => session.isArchived)
+                      .sort(
+                        (a, b) =>
+                          new Date(b.lastActivity).getTime() -
+                          new Date(a.lastActivity).getTime(),
+                      )
+                      .map((session) => (
+                        <div
+                          key={session.id}
+                          className={`relative group text-sm px-3 py-2 rounded-lg cursor-pointer transition-all ${
+                            session.id === currentSessionId
+                              ? "bg-[#0969DA] text-white"
+                              : "bg-[#3E4450] text-[#E6EDF3] hover:bg-[#4A5568]"
+                          }`}
+                        >
+                          <div onClick={() => switchToChatSession(session.id)}>
+                            <div className="truncate pr-6 opacity-75">
+                              {session.title}
+                            </div>
+                            <div className="text-xs opacity-50">
+                              {session.messages.length} წერილი •{" "}
+                              {new Date(
+                                session.lastActivity,
+                              ).toLocaleDateString("ka-GE")}
+                            </div>
+                          </div>
+
+                          {/* Unarchive button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleArchiveSession(session.id);
+                            }}
+                            className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 text-xs px-1 py-0.5 bg-[#2D3748] rounded hover:bg-[#4A5568] transition-all"
+                          >
+                            📤
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar Bottom Actions */}
+          <div className="p-3 border-t border-[#3E4450] space-y-2">
+            <button
+              onClick={() => alert("Checkpoints ფუნქციონალი მალე დაემატება!")}
+              className="w-full flex items-center gap-2 text-[#8B949E] hover:text-white text-sm py-2 transition-all"
+            >
+              <RotateCcw size={16} />
+              Checkpoints
+            </button>
+            <button
+              onClick={() => alert("Settings ფუნქციონალი მალე დაემატება!")}
+              className="w-full flex items-center gap-2 text-[#8B949E] hover:text-white text-sm py-2 transition-all"
+            >
+              <Settings size={16} />
+              Settings
+            </button>
+          </div>
+        </div>
+
+        {/* ===== MAIN CONTENT ===== */}
+        <div className="flex-1 flex flex-col min-h-0 max-h-[calc(100vh-120px)] overflow-hidden">
+          {!hasActiveChat ? (
+            // ===== WELCOME SCREEN =====
+            <div className="flex-1 flex flex-col items-center justify-center p-8 min-h-0">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-[#3E4450] rounded-lg flex items-center justify-center mb-4 mx-auto">
+                  <div className="w-8 h-8 border-2 border-dashed border-[#8B949E] rounded flex items-center justify-center">
+                    <Plus size={16} className="text-[#8B949E]" />
+                  </div>
+                </div>
+                <h2 className="text-2xl font-semibold text-white mb-2">
+                  New chat with Assistant
+                </h2>
+                <p className="text-[#8B949E] text-lg">
+                  Assistant answers questions, refines code, and
+                  <br />
+                  makes precise edits.
+                </p>
+              </div>
+
+              {/* ===== PROMPT SUGGESTIONS ===== */}
+              <div className="grid grid-cols-3 gap-3 mb-8 max-w-2xl">
+                {promptSuggestions.map((suggestion, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    className="bg-[#3E4450] hover:bg-[#4A5568] text-[#8B949E] hover:text-white px-4 py-3 rounded-lg text-sm transition-all text-center"
+                  >
+                    {suggestion.text}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            // ===== CHAT MESSAGES =====
+            <div
+              ref={chatContainerRef}
+              className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 console-scrollbar"
+              style={{
+                maxHeight: "calc(100vh - 180px)",
+                scrollBehavior: "smooth",
+              }}
+            >
+              {chatMessages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.type === "user" ? "justify-end" : "justify-start"} mb-4`}
+                >
+                  {message.type === "user" ? (
+                    // User message (original styling)
+                    <div className="max-w-[80%] p-3 rounded-lg bg-[#0969DA] text-white">
+                      <div className="text-sm whitespace-pre-wrap">
+                        {message.content}
+                      </div>
+                    </div>
+                  ) : (
+                    // AI message with Phase 1 SECURED React Component Rendering
+                    <EnhancedMessageRenderer
+                      message={
+                        message.enhanced || {
+                          id: message.id,
+                          content: message.content,
+                          category: message.category || "primary",
+                          hasCodeBlocks: false,
+                          codeBlocks: [],
+                          visualElements: [],
+                          georgianFormatted: false,
+                        }
+                      }
+                      className="max-w-[85%]"
+                    />
+                  )}
+                </div>
+              ))}
+
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-[#3E4450] p-3 rounded-lg">
+                    <div className="flex items-center gap-2 text-[#8B949E]">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#00D4FF]"></div>
+                      <span className="text-sm">Assistant is thinking...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ===== BOTTOM INPUT AREA ===== */}
+          <div className="border-t border-[#3E4450] bg-[#2C313A] p-4 flex-shrink-0">
+            {/* Advanced Controls */}
+            <div className="mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <button
+                  onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
+                  className="flex items-center gap-2 text-[#00D4FF] text-sm hover:text-[#0969DA] transition-all"
+                >
+                  <Sparkles size={16} />
+                  <span>Advanced</span>
+                  <ChevronDown
+                    size={16}
+                    className={`transition-transform ${isAdvancedOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                <div className="ml-auto flex items-center gap-2 text-sm text-[#8B949E]">
+                  <span>
+                    {availableModels.find((m) => m.id === selectedModel)
+                      ?.label || "Loading..."}
+                  </span>
+                  <div className="w-2 h-2 bg-[#00D4FF] rounded-full"></div>
+
+                  {/* Policy and Model Badge */}
+                  {lastResponseMeta.policy && (
+                    <div className="ml-2 flex items-center gap-1 text-xs bg-[#21252B] px-2 py-1 rounded border border-[#3E4450]">
+                      <span className="text-[#00D4FF]">Policy:</span>
+                      <span className="text-[#8B949E]">
+                        {lastResponseMeta.policy}
                       </span>
-                      {!isSidebarCollapsed && (
-                        <span className="ai-dev-sidebar__label">{item.label}</span>
+                      <span className="text-[#3E4450]">·</span>
+                      <span className="text-[#00D4FF]">Model:</span>
+                      <span className="text-[#8B949E]">
+                        {lastResponseMeta.model} ({lastResponseMeta.modelLabel})
+                      </span>
+                      {lastResponseMeta.overridden && (
+                        <>
+                          <span className="text-[#3E4450]">·</span>
+                          <span className="text-[#F85149]">OVERRIDE</span>
+                        </>
                       )}
-                    </button>
-                    {item.action === "tab" && item.badge && (
-                      <span className="ai-dev-sidebar__badge">{item.badge}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Advanced Dropdown Content */}
+              {isAdvancedOpen && (
+                <div className="bg-[#21252B] border border-[#3E4450] rounded-lg p-3 mb-3 space-y-3">
+                  <div>
+                    <label className="block text-sm text-[#8B949E] mb-1">
+                      Model
+                    </label>
+                    <select
+                      value={selectedModel}
+                      onChange={(e) => setSelectedModel(e.target.value)}
+                      className="w-full bg-[#2C313A] border border-[#3E4450] rounded text-[#E6EDF3] text-sm px-3 py-2"
+                    >
+                      {availableModels.length === 0 ? (
+                        <option value="">Loading models...</option>
+                      ) : (
+                        availableModels.map((model) => (
+                          <option key={model.id} value={model.id}>
+                            {model.label} ({model.category})
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-[#8B949E] mb-1">
+                      Manual Override
+                    </label>
+                    <select
+                      value={manualOverride}
+                      onChange={(e) =>
+                        setManualOverride(
+                          e.target.value as "auto" | "small" | "large",
+                        )
+                      }
+                      className="w-full bg-[#2C313A] border border-[#3E4450] rounded text-[#E6EDF3] text-sm px-3 py-2"
+                    >
+                      <option value="auto">Auto (Router Decision)</option>
+                      <option value="small">Force Small Model</option>
+                      <option value="large">Force Large Model</option>
+                    </select>
+                    <p className="text-xs text-[#8B949E] mt-1">
+                      Override automatic model routing. Auto uses policy-based
+                      selection.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-[#8B949E] mb-1">
+                      Context Depth
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min="1"
+                        max="10"
+                        value={contextDepth}
+                        onChange={(e) =>
+                          setContextDepth(parseInt(e.target.value))
+                        }
+                        className="flex-1 h-2 bg-[#3E4450] rounded-lg appearance-none cursor-pointer"
+                        style={{
+                          background: `linear-gradient(to right, #00D4FF 0%, #00D4FF ${(contextDepth / 10) * 100}%, #3E4450 ${(contextDepth / 10) * 100}%, #3E4450 100%)`,
+                        }}
+                      />
+                      <span className="text-[#E6EDF3] text-sm w-8 text-center">
+                        {contextDepth}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#8B949E] mt-1">
+                      Number of previous messages to include (1-10)
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-[#8B949E] mb-1">
+                      Language Mode
+                    </label>
+                    <select
+                      value={languageMode}
+                      onChange={(e) =>
+                        setLanguageMode(
+                          e.target.value as "georgian" | "english" | "mixed",
+                        )
+                      }
+                      className="w-full bg-[#2C313A] border border-[#3E4450] rounded text-[#E6EDF3] text-sm px-3 py-2"
+                    >
+                      <option value="georgian">🇬🇪 ქართული (Georgian)</option>
+                      <option value="english">🇺🇸 English</option>
+                      <option value="mixed">🌐 Mixed Languages</option>
+                    </select>
+                    <p className="text-xs text-[#8B949E] mt-1">
+                      Response language preference
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="stream-output"
+                      checked={streamingEnabled}
+                      onChange={(e) => setStreamingEnabled(e.target.checked)}
+                      className="rounded text-[#00D4FF] focus:ring-[#00D4FF] focus:ring-2"
+                    />
+                    <label
+                      htmlFor="stream-output"
+                      className="text-sm text-[#8B949E]"
+                    >
+                      ⚡ Stream responses (პასუხების ნაკადი)
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="include-context"
+                      className="rounded text-[#00D4FF] focus:ring-[#00D4FF] focus:ring-2"
+                      defaultChecked
+                    />
+                    <label
+                      htmlFor="include-context"
+                      className="text-sm text-[#8B949E]"
+                    >
+                      📁 Include project context (პროექტის კონტექსტი)
+                    </label>
+                  </div>
+
+                  <div className="border-t border-[#3E4450] pt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-2 text-sm font-semibold text-[#E6EDF3]">
+                        <Brain size={16} className="text-[#00D4FF]" /> AI მეხსიერება
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => memoryControls.refresh()}
+                        className="inline-flex items-center gap-1 rounded border border-[#3E4450] px-2 py-1 text-xs text-[#8B949E] hover:text-[#E6EDF3]"
+                        disabled={memoryControls.loading}
+                      >
+                        <RefreshCw size={12} /> განახლება
+                      </button>
+                    </div>
+                    <p className="mt-1 text-xs text-[#6E7681]">
+                      გურულო პასუხებს პერსონალიზებს შენახული მეხსიერების საფუძველზე. საჭიროა მომხმარებლის თანხმობა და მონაცემები ინახება დაშიფრული სახით.
+                    </p>
+                    <div className="mt-3 space-y-2 text-sm text-[#8B949E]">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={memoryControls.controls.referenceSavedMemories}
+                          onChange={(event) => memoryControls.toggleFeature('savedMemories', event.target.checked)}
+                          className="rounded text-[#00D4FF] focus:ring-[#00D4FF] focus:ring-2"
+                          disabled={memoryControls.loading}
+                        />
+                        <span title="გურულო გამოიყენებს შენახულ ფაქტებსა და პრეფერენციებს პასუხების გასაუმჯობესებლად.">
+                          🧠 შენახული მეხსიერებების გამოყენება
+                        </span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={memoryControls.controls.referenceChatHistory}
+                          onChange={(event) => memoryControls.toggleFeature('chatHistory', event.target.checked)}
+                          className="rounded text-[#00D4FF] focus:ring-[#00D4FF] focus:ring-2"
+                          disabled={memoryControls.loading}
+                        />
+                        <span title="გურულო ავტომატურად ჩართავს წინა დიალოგებს დამატებითი კონტექსტისთვის.">
+                          🗂️ ჩატის ისტორიის ჩართვა
+                        </span>
+                      </label>
+                    </div>
+                    {memoryControls.error && (
+                      <p className="mt-2 text-xs text-[#F85149]">❌ {memoryControls.error}</p>
                     )}
                   </div>
-                );
-              })}
-            </div>
 
-            <div className="ai-dev-sidebar__footer">
-              <button
-                type="button"
-                className="ai-dev-sidebar__collapse"
-                onClick={handleSidebarToggle}
-                aria-label={isSidebarCollapsed ? "მენიუს გახსნა" : "მენიუს შეკვეცა"}
-              >
-                {isSidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-                {!isSidebarCollapsed && (
-                  <span className="ai-dev-sidebar__footer-label">მენიუს შეკვეცა</span>
-                )}
-              </button>
-            </div>
-          </aside>
-
-          <div className="ai-dev-main">
-            <header className="ai-dev-topbar">
-              <div className="ai-dev-topbar__title">
-                <span>{sidebarTitle}</span>
-                <h1>{activeTabLabel}</h1>
-              </div>
-
-              <div className="ai-dev-topbar__chips">
-                <span className={`ai-dev-chip ${aiServiceHealth?.ok ? "is-success" : "is-warning"}`}>
-                  <Sparkles size={14} />
-                  {aiServiceHealth?.ok ? "სერვისი აქტიურია" : "საჭიროა შემოწმება"}
-                </span>
-                <span className="ai-dev-chip is-neutral">
-                  <Terminal size={14} />
-                  მოდელი: {selectedModelLabel}
-                </span>
-                <span className="ai-dev-chip is-neutral">
-                  <Clock size={14} />
-                  {formatRelativeTime(aiServiceHealth?.lastChecked)}
-                </span>
-              </div>
-
-              <div className="ai-dev-topbar__actions">
-                <button
-                  type="button"
-                  onClick={handleRefreshHealth}
-                  className="ai-dev-button"
-                  disabled={isRefreshingHealth}
-                  aria-busy={isRefreshingHealth}
-                >
-                  <RefreshCcw
-                    size={16}
-                    className={`ai-dev-button__icon ${isRefreshingHealth ? "is-rotating" : ""}`}
-                  />
-                  <span>{isRefreshingHealth ? "განახლება..." : "სტატუსის განახლება"}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleReloadModels}
-                  className="ai-dev-button ai-dev-button--ghost"
-                  disabled={isRefreshingModels}
-                  aria-busy={isRefreshingModels}
-                >
-                  <Sparkles
-                    size={16}
-                    className={`ai-dev-button__icon ${isRefreshingModels ? "is-rotating" : ""}`}
-                  />
-                  <span>{isRefreshingModels ? "იტვირთება..." : "მოდელების რეფრეში"}</span>
-                </button>
-              </div>
-            </header>
-
-            <main className="ai-dev-content">
-              {activeTab === "dashboard" && (
-                <>
-                  <section className="ai-dev-stats-grid" aria-label="სისტემური მაჩვენებლები">
-                    {statCards.map((card) => (
-                      <article
-                        key={card.id}
-                        className={`ai-dev-stat-card ai-dev-stat-card--${card.accent} ai-dev-stat-card--${card.status}`}
+                  <div className="border-t border-[#3E4450] pt-3">
+                    <label className="block text-sm text-[#8B949E] mb-2">
+                      📎 File Attachments
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        accept=".js,.ts,.jsx,.tsx,.py,.html,.css,.json,.md,.txt"
+                      />
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex-1 bg-[#3E4450] hover:bg-[#4A5568] text-[#8B949E] hover:text-white px-3 py-2 rounded text-sm transition-all flex items-center gap-2"
                       >
-                        <div className="ai-dev-stat-card__layer" aria-hidden="true" />
-                        <div className="ai-dev-stat-card__content">
-                          <div className="ai-dev-stat-card__header">
-                            <span className="ai-dev-stat-card__icon">
-                              <card.icon size={18} />
-                            </span>
-                            <span className="ai-dev-stat-card__label">{card.label}</span>
-                          </div>
-                          <div className="ai-dev-stat-card__value">{card.value}</div>
-                          <p className="ai-dev-stat-card__description">{card.description}</p>
-                          <span className="ai-dev-stat-card__meta">{card.meta}</span>
-                        </div>
-                      </article>
-                    ))}
-                  </section>
-
-                  {quickActions.length > 0 && (
-                    <section className="ai-dev-quick-actions" aria-label="სწრაფი მოქმედებები">
-                      {quickActions.map((item) => {
-                        const isActive = activeTab === item.key;
-                        const quickClasses = [
-                          "ai-dev-quick-card",
-                          `ai-dev-quick-card--${item.accent}`,
-                          isActive ? "is-active" : "",
-                          item.disabled ? "is-disabled" : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ");
-
-                        return (
-                          <button
-                            key={item.key}
-                            type="button"
-                            onClick={() => !item.disabled && handleTabChange(item.key)}
-                            className={quickClasses}
-                            disabled={item.disabled}
-                            aria-pressed={isActive}
-                          >
-                            <span className="ai-dev-quick-card__glow" aria-hidden="true" />
-                            <span className="ai-dev-quick-card__icon">
-                              <item.icon size={18} />
-                            </span>
-                            <span className="ai-dev-quick-card__title">{item.label}</span>
-                            <span className="ai-dev-quick-card__description">{item.description}</span>
-                            {item.badge && <span className="ai-dev-quick-card__badge">{item.badge}</span>}
-                          </button>
-                        );
-                      })}
-                    </section>
-                  )}
-                </>
-              )}
-
-              <section className="ai-dev-tab-panel" aria-live="polite">
-                <div className="ai-dev-tab-panel__surface">
-                  <div className="ai-dev-tab-panel__content">
-                    {activeTab === "dashboard" && (
-                      <div className="ai-dev-dashboard-feed">
-                        <div className="ai-dev-updates__header">
-                          <div>
-                            <p className="ai-dev-updates__eyebrow">რა არის ახალი</p>
-                            <h2 className="ai-dev-updates__title">უახლესი განახლებები</h2>
-                          </div>
-                          <span className="ai-dev-updates__meta">პანელი ავტომატურად განახლდება მონიტორინგის საფუძველზე</span>
-                        </div>
-
-                        {isSuperAdminUser && secretsMiniMetrics.length > 0 && (
+                        <Paperclip size={16} />
+                        Choose files...
+                      </button>
+                      {selectedFiles.length > 0 && (
+                        <button
+                          onClick={() => setSelectedFiles([])}
+                          className="px-2 py-2 text-[#F85149] hover:bg-[#3E4450] rounded text-sm transition-all"
+                          title="Clear selected files"
+                        >
+                          Clear ({selectedFiles.length})
+                        </button>
+                      )}
+                    </div>
+                    {selectedFiles.length > 0 && (
+                      <div className="mt-2 space-y-1 max-h-20 overflow-y-auto">
+                        {selectedFiles.map((file, index) => (
                           <div
-                            className="ai-dev-secrets-metrics"
-                            aria-label={t('aiDeveloper.secrets.metrics.sectionLabel', 'Secrets telemetry')}
+                            key={index}
+                            className="flex items-center justify-between bg-[#21252B] px-2 py-1 rounded text-xs"
                           >
-                            {secretsMiniMetrics.map((metric) => (
-                              <div
-                                key={metric.id}
-                                className={`ai-dev-secrets-metric ai-dev-secrets-metric--${metric.intent}`}
-                              >
-                                <span className="ai-dev-secrets-metric__label">{metric.label}</span>
-                                <span className="ai-dev-secrets-metric__value">{metric.value}</span>
-                                {metric.hint && (
-                                  <span className="ai-dev-secrets-metric__hint">{metric.hint}</span>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        <div className="ai-dev-updates__grid">
-                          {dashboardUpdates.map((update) => (
-                            <article
-                              key={update.id}
-                              className={`ai-dev-update-card ai-dev-update-card--${update.accent}`}
+                            <span className="text-[#E6EDF3] truncate">
+                              {file}
+                            </span>
+                            <button
+                              onClick={() =>
+                                setSelectedFiles((prev) =>
+                                  prev.filter((_, i) => i !== index),
+                                )
+                              }
+                              className="text-[#8B949E] hover:text-[#F85149] ml-2 flex-shrink-0"
                             >
-                              <div className="ai-dev-update-card__header">
-                                <span className="ai-dev-update-card__icon">
-                                  <update.icon size={18} />
-                                </span>
-                                <div className="ai-dev-update-card__heading">
-                                  <h3>{update.title}</h3>
-                                  <span className="ai-dev-update-card__time">{formatRelativeTime(update.timestamp)}</span>
-                                </div>
-                                {update.tag && <span className="ai-dev-update-card__tag">{update.tag}</span>}
-                              </div>
-                              <p className="ai-dev-update-card__description">{update.description}</p>
-                            </article>
-                          ))}
-                        </div>
+                              ✕
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
-
-                    {activeTab === "chat" && (
-                      <ChatTab isAuthenticated={isAuthenticated} />
-                    )}
-
-                    {activeTab === "autoImprove" && (
-                      <AutoImproveTab
-                        hasDevConsoleAccess={hasDevConsoleAccess}
-                        isAuthenticated={isAuthenticated}
-                        userRole={userRole ?? ""}
-                        openFileFromActivity={handleOpenFileFromActivity}
-                      />
-                    )}
-
-                    {activeTab === "console" && (
-                      <ConsoleTab hasDevConsoleAccess={hasDevConsoleAccess} />
-                    )}
-
-                    {activeTab === "explorer" && (
-                      <ExplorerTab
-                        tree={tree ?? []}
-                        currentFile={currentFile}
-                        setCurrentFile={setCurrentFile}
-                        aiFetch={aiFetch}
-                        loadFile={loadFile}
-                        saveFile={saveFile}
-                      />
-                    )}
-
-                    {activeTab === "memory" && (
-                      <MemoryTab isAuthenticated={isAuthenticated} />
-                    )}
-
-                    {activeTab === "logs" && (
-                      <LogsTab hasDevConsoleAccess={hasDevConsoleAccess} />
-                    )}
-
-                    {activeTab === "secrets" && <SecretsPage variant="panel" />}
-
-                    {activeTab === "github" && (
-                      <GitHubTab hasDevConsoleAccess={hasDevConsoleAccess} />
-                    )}
-
-                    {activeTab === "settings" && (
-                      <SettingsTab
-                        isDarkMode={isDarkMode}
-                        setIsDarkMode={handleSetDarkMode}
-                        cleanerEnabled={cleanerEnabled}
-                        isCleaningNow={isCleaningNow}
-                        lastCleanup={lastCleanup}
-                        onToggleCleaner={handleToggleCleaner}
-                        onManualCleanup={handleManualCleanup}
-                        modelControls={modelControls}
-                        setModelControls={setModelControls}
-                        availableModels={availableModels ?? []}
-                        selectedModel={selectedModel}
-                        setSelectedModel={setSelectedModel}
-                        telemetryData={telemetryData}
-                      />
-                    )}
                   </div>
                 </div>
-              </section>
-            </main>
+              )}
+            </div>
+
+            {/* Input Field - Fixed positioning with viewport height calculation */}
+            <div className="relative flex-shrink-0 mt-auto">
+              <textarea
+                ref={inputRef}
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+                onFocus={() => {
+                  // Prevent auto-scroll when user is typing
+                  if (chatContainerRef.current) {
+                    const container = chatContainerRef.current;
+                    const isAtBottom =
+                      container.scrollTop + container.clientHeight >=
+                      container.scrollHeight - 10;
+                    if (!isAtBottom) {
+                      // If not at bottom, don't force scroll
+                      return;
+                    }
+                  }
+                }}
+                placeholder="Ask Assistant, use @ to include specific files..."
+                className="w-full bg-[#21252B] border border-[#3E4450] rounded-lg px-4 py-3 pr-20 text-[#E6EDF3] placeholder-[#8B949E] resize-none focus:outline-none focus:border-[#00D4FF] min-h-[44px] max-h-32"
+                rows={1}
+              />
+
+              {/* Input Controls */}
+              {/* Hidden File Input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+                accept=".js,.ts,.jsx,.tsx,.py,.html,.css,.json,.md,.txt"
+              />
+
+              <div className="absolute right-2 top-2 flex items-center gap-2">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-[#8B949E] hover:text-white p-1 transition-all"
+                  title="Attach files"
+                >
+                  <Paperclip size={16} />
+                </button>
+
+                {selectedFiles.length > 0 && (
+                  <span className="text-[#8B949E] text-sm">
+                    {selectedFiles.length} files
+                  </span>
+                )}
+
+                <button
+                  onClick={sendMessage}
+                  disabled={!chatInput.trim() || isLoading}
+                  className="bg-[#0969DA] hover:bg-[#0969DA]/80 disabled:bg-[#3E4450] disabled:cursor-not-allowed text-white p-1 rounded transition-all"
+                >
+                  <Send size={14} />
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
-    </DevConsoleProvider>
+    </div>
   );
 };
 
-export default AiDeveloperChatPanel;
+export default ReplitAssistantPanel;
