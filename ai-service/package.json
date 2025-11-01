@@ -1,4 +1,11 @@
 {
+  "name": "ai-service",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node -r dotenv/config server.js",
+    "dev": "NODE_ENV=development node -r dotenv/config server.js"
+  },
   "dependencies": {
     "@openai/codex": "^0.3.0",
     "@opentelemetry/api": "^1.7.0",
@@ -21,6 +28,5 @@
     "jsonwebtoken": "^9.0.2",
     "prom-client": "^15.0.0",
     "zod": "^3.22.4"
-  },
-  "version": "1.0.0"
+  }
 }
