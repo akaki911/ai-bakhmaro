@@ -202,9 +202,9 @@ export const getMessageCategoryClasses = (category: MessageCategory): string => 
 };
 
 /**
- * 🎯 Integration Helper for ReplitAssistantPanel
+ * 🎯 Integration Helper for AiDeveloperPanel
  */
-export const integrateWithReplitAssistant = (
+export const integrateWithAiDeveloperPanel = (
   message: string
 ): EnhancedMessage => {
   return formatEnhancedMessage(message);
