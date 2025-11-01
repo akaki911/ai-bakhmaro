@@ -1,7 +1,6 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
-import AdminChatSurface from '../../AdminChatSurface';
-import AIChatInterface from '../../futuristic-chat/AIChatInterface';
+import AdminChat from '../../../pages/AdminChat';
 import type { ThemeToggleVisualSignal } from '../../ThemeToggle';
 
 const gradientStyle = {
@@ -270,15 +269,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ isAuthenticated }) => {
     );
   }
 
-  return (
-    <AdminChatSurface className="h-full" contentClassName="h-full">
-      {({ onEmotionalStateChange }) => (
-        <div className="relative flex h-full w-full">
-          <AIChatInterface onEmotionalStateChange={onEmotionalStateChange} />
-        </div>
-      )}
-    </AdminChatSurface>
-  );
+  return <AdminChat />;
 };
 
 export default ChatTab;
