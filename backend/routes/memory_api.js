@@ -15,14 +15,15 @@ const {
 // Memory data directory
 const MEMORY_DATA_DIR = path.join(__dirname, '../memory_data');
 
-const firestore = (() => {
+const resolveFirestore = () => {
   try {
-    return admin.firestore();
+    const instance = admin.__devFirestoreInstance ? admin.__devFirestoreInstance : admin.firestore();
+    return instance;
   } catch (error) {
     console.warn('⚠️ Firestore unavailable in memory_api:', error.message);
     return null;
   }
-})();
+};
 
 // Define a counter for API versions, to be incremented for each new version.
 let versionCounter = 1;
@@ -34,6 +35,11 @@ router.get('/list', async (req, res) => {
       req.user?.id ||
       req.session?.userId ||
       ''
+  );
+
+  const firestore = resolveFirestore();
+  console.log(
+    `[Memory API] list requested for ${userId || 'anonymous'} (stub=${firestore?.__isDevFirestoreStub ? 'yes' : 'no'})`
   );
 
   if (!userId) {
@@ -95,6 +101,11 @@ router.post('/save', async (req, res) => {
       ''
   );
 
+  const firestore = resolveFirestore();
+  console.log(
+    `[Memory API] save requested for ${userId || 'anonymous'} (stub=${firestore?.__isDevFirestoreStub ? 'yes' : 'no'})`
+  );
+
   if (!userId || !memory) {
     return res.status(400).json({ success: false, error: 'userId and memory payload are required' });
   }
@@ -123,6 +134,7 @@ router.post('/toggle', async (req, res) => {
   }
 
   try {
+    const firestore = resolveFirestore();
     const controls = await toggleMemoryUsage(userId, feature, Boolean(enabled), { firestore });
     res.json({ success: true, controls });
   } catch (error) {
