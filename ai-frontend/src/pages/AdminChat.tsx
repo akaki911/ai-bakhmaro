@@ -2,9 +2,9 @@
 import { useState, type CSSProperties } from 'react';
 import { motion } from 'framer-motion';
 
-import AiDeveloperChatPanel, {
+import AiDeveloperPanel, {
   type EmotionalState,
-} from '../components/AiDeveloperChatPanel';
+} from '../components/AiDeveloperPanel';
 
 const animationKeyframes = `
 @keyframes gradient-wave {
@@ -96,7 +96,7 @@ const AdminChat = () => {
         <div className="relative flex h-full w-full flex-col overflow-hidden rounded-[28px] border border-white/10 bg-slate-900/30 shadow-[0_35px_120px_rgba(6,12,30,0.65)] backdrop-blur-[36px]">
           <div className="pointer-events-none absolute inset-0 rounded-[28px] border border-white/5" />
           <div className="relative z-10 flex h-full flex-col">
-            <AiDeveloperChatPanel onEmotionalStateChange={handleStateChange} />
+            <AiDeveloperPanel onEmotionalStateChange={handleStateChange} />
           </div>
         </div>
       </main>
