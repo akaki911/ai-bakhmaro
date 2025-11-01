@@ -1,14 +1,6 @@
 // SOL-947 — Emotional Gurulo Chat UI
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Terminal,
-  FolderTree,
-  Sparkles,
-  ScrollText,
-  Github,
-  SlidersHorizontal,
-} from 'lucide-react';
 
 import ReplitAssistantPanel, {
   type EmotionalState,
@@ -36,15 +28,6 @@ const animationKeyframes = `
   0%, 100% { opacity: 0.55; filter: blur(120px); }
   50% { opacity: 0.85; filter: blur(140px); }
 }`;
-
-const NAV_ITEMS = [
-  { label: 'Console', icon: Terminal },
-  { label: 'Files', icon: FolderTree },
-  { label: 'Auto-Improve', icon: Sparkles },
-  { label: 'Logs', icon: ScrollText },
-  { label: 'GitHub', icon: Github },
-  { label: 'Parameters', icon: SlidersHorizontal },
-];
 
 const gradientStyles: Record<EmotionalState, CSSProperties> = {
   // Calm idle = deep purple to navy gradient, Thinking = teal/pink waves, Responding = blue/violet pulse.
@@ -75,14 +58,6 @@ const auroraGradient =
 
 const AdminChat = () => {
   const [emotionalState, setEmotionalState] = useState<EmotionalState>('idle');
-
-  const sidebarTone = useMemo(
-    () =>
-      emotionalState === 'idle'
-        ? 'bg-white/5'
-        : 'bg-gradient-to-br from-white/20 via-white/10 to-transparent',
-    [emotionalState],
-  );
 
   const handleStateChange = (state: EmotionalState) => {
     setEmotionalState(state);
@@ -117,45 +92,7 @@ const AdminChat = () => {
         />
       </motion.div>
 
-      <aside
-        className={`relative z-10 flex w-56 flex-col gap-4 border-r border-white/10 px-6 py-10 backdrop-blur-xl transition-[background,box-shadow] duration-[600ms] ease-in-out ${
-          emotionalState === 'idle'
-            ? 'bg-slate-950/35 shadow-[0_10px_60px_rgba(8,11,30,0.35)]'
-            : 'bg-slate-950/55 shadow-[0_22px_65px_rgba(40,24,94,0.45)]'
-        }`}
-      >
-        <div className="space-y-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-300/70">
-            Gurulo Ops
-          </span>
-          <p className="text-lg font-semibold text-slate-100/90">Control Surface</p>
-          <p className="text-sm text-slate-300/70">
-            Emotional tone synced with Gurulo&apos;s current focus.
-          </p>
-        </div>
-
-        <nav className="mt-6 flex flex-col gap-3">
-          {NAV_ITEMS.map(({ label, icon: Icon }) => (
-            <button
-              key={label}
-              type="button"
-              className={`group flex items-center justify-between rounded-2xl border border-white/10 px-4 py-3 text-sm font-medium text-slate-200/80 shadow-[0_12px_30px_rgba(6,11,26,0.35)] transition-all duration-[600ms] ease-in-out hover:-translate-y-[2px] hover:border-white/30 hover:text-white hover:shadow-[0_22px_48px_rgba(88,63,233,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${sidebarTone} ${
-                emotionalState !== 'idle' ? 'text-left' : ''
-              }`}
-            >
-              <span className="flex items-center gap-3">
-                <Icon className="h-4 w-4 text-slate-200/70 transition-colors group-hover:text-white" />
-                {label}
-              </span>
-              <span className="text-[10px] uppercase tracking-[0.32em] text-slate-300/60 group-hover:text-white/80">
-                LIVE
-              </span>
-            </button>
-          ))}
-        </nav>
-      </aside>
-
-      <main className="relative z-10 flex flex-1 flex-col overflow-hidden px-6 py-8">
+      <main className="relative z-10 flex min-h-screen flex-1 flex-col overflow-hidden px-6 py-8">
         <div className="relative flex h-full w-full flex-col overflow-hidden rounded-[28px] border border-white/10 bg-slate-900/30 shadow-[0_35px_120px_rgba(6,12,30,0.65)] backdrop-blur-[36px]">
           <div className="pointer-events-none absolute inset-0 rounded-[28px] border border-white/5" />
           <div className="relative z-10 flex h-full flex-col">
