@@ -87,7 +87,7 @@ class CodeAnalyzer {
   async findThematicModules() {
     const targetModules = [
       // Core AI operations modules
-      'AIAssistantEnhanced.tsx', 'AIChatInterface.tsx', 'AIDashboardShell.tsx', 'AIDeveloperPanel.tsx',
+      'AIAssistantEnhanced.tsx', 'AIChatInterface.tsx', 'AIDashboardShell.tsx', 'AiDeveloperPanel.tsx',
       // Monitoring and diagnostics
       'SystemMonitoringDashboard.tsx', 'PerformanceDashboard.tsx', 'PostApplyHealthCheck.tsx',
       // Administration pages
