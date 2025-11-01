@@ -256,7 +256,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
           return {
             ...route,
             route: '/admin?tab=dashboard',
-            file: 'src/components/AIDeveloperPanel.tsx',
+            file: 'src/components/AiDeveloperPanel.tsx',
             type: 'frontend'
           } as RouteMapping;
         }
@@ -264,7 +264,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
         if (route.route === '/admin' && /MainDashboard/i.test(route.file)) {
           return {
             ...route,
-            file: 'src/components/AIDeveloperPanel.tsx',
+            file: 'src/components/AiDeveloperPanel.tsx',
             type: 'frontend'
           } as RouteMapping;
         }
@@ -273,7 +273,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
           return {
             ...route,
             route: '/admin?tab=dashboard',
-            file: 'src/components/AIDeveloperPanel.tsx',
+            file: 'src/components/AiDeveloperPanel.tsx',
             type: 'frontend'
           } as RouteMapping;
         }
@@ -289,8 +289,8 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ onBackToLogs }) => {
       // Admin-first fallback: surface AI Developer entry points instead of legacy marketing pages
       setRouteMappings([
         { route: '/login', file: 'src/Login.tsx', type: 'frontend' },
-        { route: '/admin', file: 'src/components/AIDeveloperPanel.tsx', type: 'frontend' },
-        { route: '/admin?tab=dashboard', file: 'src/components/AIDeveloperPanel.tsx', type: 'frontend' },
+        { route: '/admin', file: 'src/components/AiDeveloperPanel.tsx', type: 'frontend' },
+        { route: '/admin?tab=dashboard', file: 'src/components/AiDeveloperPanel.tsx', type: 'frontend' },
         { route: '/api/ai/version-control/diff', file: 'functions/src/routes/ai_proxy.js', method: 'POST', type: 'backend' }
       ]);
     } finally {
