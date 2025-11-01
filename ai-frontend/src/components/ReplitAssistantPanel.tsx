@@ -81,7 +81,7 @@ interface ReplitAssistantPanelProps {
 const ASSISTANT_BUBBLE_CLASS =
   'relative w-fit max-w-[75%] rounded-[18px] border border-white/10 bg-white/10 px-5 py-4 text-[0.95rem] text-white/90 shadow-[0_22px_48px_rgba(15,23,42,0.45)] backdrop-blur-xl transition-shadow duration-500';
 const USER_BUBBLE_CLASS =
-  'relative w-fit max-w-[70%] rounded-[18px] border border-cyan-300/35 bg-cyan-300/15 px-5 py-3 text-[0.95rem] text-[#E7FFF6] shadow-[0_22px_48px_rgba(14,116,144,0.35)] backdrop-blur-xl transition-shadow duration-500';
+  'relative w-fit max-w-[70%] rounded-[18px] border border-cyan-300/35 bg-cyan-300/15 px-5 py-3 text-[0.95rem] text-emerald-50 shadow-[0_22px_48px_rgba(14,116,144,0.35)] backdrop-blur-xl transition-shadow duration-500';
 const LOADING_BUBBLE_CLASS =
   'relative w-fit max-w-[70%] rounded-[18px] border border-white/10 bg-white/10 px-4 py-3 text-sm text-white/80 shadow-[0_18px_40px_rgba(15,23,42,0.38)] backdrop-blur-xl';
 const GLOW_BUTTON_CLASS =
@@ -966,22 +966,19 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
   // Show loading indicator while initializing
   if (isInitializing) {
     return (
-      <div className="h-full w-full bg-[#21252B] flex flex-col items-center justify-center">
-        <div className="flex items-center gap-3 text-[#8B949E]">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#00D4FF]"></div>
-          <span>Loading Gurulo Assistant...</span>
+      <div className="flex h-full w-full items-center justify-center rounded-[28px] bg-slate-950/40 text-slate-200 backdrop-blur-2xl">
+        <div className="flex items-center gap-3 text-slate-300/80">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-500/40 border-t-transparent" />
+          <span className="text-sm tracking-[0.28em] uppercase">Loading Gurulo Assistant...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div
-      className="h-full w-full bg-[#21252B] flex flex-col max-h-[100vh] overflow-hidden"
-      style={{ height: "100vh" }}
-    >
+    <div className="flex h-full max-h-[100vh] w-full flex-col overflow-hidden text-slate-100">
       {/* ===== HEADER TABS ===== */}
-      <div className="living-ai-tabbar w-full px-4">
+      <div className="living-ai-tabbar relative w-full px-6 py-4 !bg-transparent backdrop-blur-2xl border-b border-white/10 shadow-[0_18px_48px_rgba(8,14,40,0.55)]">
         <div className="living-ai-tablist" role="tablist" aria-label="Assistant modes">
           <button
             type="button"
@@ -1016,10 +1013,10 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
           </div>
         )}
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-3 text-slate-300/80">
           <button
             onClick={() => createCheckpoint()}
-            className="text-[#8B949E] hover:text-white p-1"
+            className="rounded-full p-2 transition-all hover:bg-white/10 hover:text-white"
             title="📸 Create Checkpoint"
           >
             <Camera size={16} />
@@ -1031,50 +1028,54 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
               );
               if (lastCheckpoint) rollbackToCheckpoint(lastCheckpoint.id);
             }}
-            className="text-[#8B949E] hover:text-white p-1"
+            className="rounded-full p-2 transition-all hover:bg-white/10 hover:text-white"
             title="⏪ Rollback to Last Checkpoint"
           >
             <RotateCcw size={16} />
           </button>
           <button
             onClick={() => setIsCheckpointsVisible(!isCheckpointsVisible)}
-            className={`p-1 ${isCheckpointsVisible ? "text-[#00D4FF]" : "text-[#8B949E] hover:text-white"}`}
+            className={`rounded-full p-2 transition-all hover:bg-white/10 ${
+              isCheckpointsVisible ? "text-sky-300" : "text-slate-300/70 hover:text-white"
+            }`}
             title="🔄 View Checkpoints"
           >
             <Clock size={16} />
           </button>
-          <button className="text-[#8B949E] hover:text-white p-1">
+          <button className="rounded-full p-2 text-slate-300/70 transition-all hover:bg-white/10 hover:text-white">
             <Settings size={16} />
           </button>
         </div>
       </div>
 
       {authorizationError && (
-        <div className="bg-[#3A1F1F] border-b border-[#FF6B6B]/40 text-[#FFB4B4] px-4 py-2 text-sm">
+        <div className="border-b border-rose-500/30 bg-rose-500/15 px-6 py-2 text-sm text-rose-100">
           {authorizationError}
         </div>
       )}
 
-      <div className="flex-1 flex">
+      <div className="flex flex-1 overflow-hidden">
         {/* ===== LEFT SIDEBAR ===== */}
-        <div className="w-60 bg-[#2C313A] border-r border-[#3E4450] flex flex-col min-h-0">
-          <div className="p-3">
+        <div className="flex w-60 min-h-0 flex-col border-r border-white/10 bg-white/5 backdrop-blur-2xl shadow-[0_28px_80px_rgba(8,13,31,0.45)]">
+          <div className="px-4 py-4">
             <button
               onClick={createNewChatSession}
-              className="w-full flex items-center gap-2 bg-[#21252B] hover:bg-[#3E4450] text-[#8B949E] hover:text-white px-3 py-2 rounded-lg text-sm transition-all"
+              className="group flex w-full items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-slate-200/80 transition-all duration-500 hover:-translate-y-[2px] hover:border-white/40 hover:text-white hover:shadow-[0_22px_48px_rgba(88,63,233,0.45)]"
             >
-              <Plus size={16} />
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-white/80 transition-colors group-hover:bg-white/20">
+                <Plus size={16} />
+              </span>
               New chat
             </button>
           </div>
 
           {/* Chat History with Collapsible Sections */}
-          <div className="flex-1 px-3 overflow-y-auto min-h-0 console-scrollbar">
+          <div className="flex-1 overflow-y-auto px-4 pb-6 pt-1 console-scrollbar">
             {/* Chats Section */}
             <div className="mb-4">
               <div
                 onClick={() => setIsChatsCollapsed(!isChatsCollapsed)}
-                className="flex items-center justify-between text-[#8B949E] text-xs font-medium mb-2 cursor-pointer hover:text-[#E6EDF3] transition-colors"
+                className="mb-2 flex items-center justify-between text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-slate-300/70 transition-colors hover:text-white"
               >
                 <span>Chats</span>
                 <div
@@ -1092,7 +1093,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
               </div>
 
               {!isChatsCollapsed && (
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {chatSessions
                     .filter((session) => !session.isArchived)
                     .sort(
@@ -1103,20 +1104,19 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                     .map((session) => (
                       <div
                         key={session.id}
-                        className={`relative group text-sm px-3 py-2 rounded-lg cursor-pointer transition-all ${
+                        className={`group relative cursor-pointer rounded-2xl border px-4 py-3 text-sm transition-all duration-500 ${
                           session.id === currentSessionId
-                            ? "bg-[#0969DA] text-white"
-                            : "bg-[#3E4450] text-[#E6EDF3] hover:bg-[#4A5568]"
+                            ? "border-white/40 bg-white/15 text-white shadow-[0_20px_45px_rgba(88,63,233,0.45)]"
+                            : "border-white/10 bg-white/5 text-slate-200/80 hover:-translate-y-[1px] hover:border-white/25 hover:bg-white/10 hover:text-white hover:shadow-[0_18px_40px_rgba(56,33,159,0.45)]"
                         }`}
+                        onClick={() => switchToChatSession(session.id)}
                       >
-                        <div onClick={() => switchToChatSession(session.id)}>
-                          <div className="truncate pr-6">{session.title}</div>
-                          <div className="text-xs opacity-75">
-                            {session.messages.length} წერილი •{" "}
-                            {new Date(session.lastActivity).toLocaleDateString(
-                              "ka-GE",
-                            )}
-                          </div>
+                        <div className="truncate pr-8 font-medium tracking-wide">
+                          {session.title}
+                        </div>
+                        <div className="mt-1 text-[0.65rem] uppercase tracking-[0.28em] text-slate-200/60">
+                          {session.messages.length} წერილი ·{" "}
+                          {new Date(session.lastActivity).toLocaleDateString("ka-GE")}
                         </div>
 
                         {/* Archive button */}
@@ -1125,16 +1125,15 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                             e.stopPropagation();
                             toggleArchiveSession(session.id);
                           }}
-                          className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 text-xs px-1 py-0.5 bg-[#2D3748] rounded hover:bg-[#4A5568] transition-all"
+                          className="absolute right-2 top-2 rounded-full bg-white/10 px-2 py-1 text-[0.6rem] text-slate-100 opacity-0 shadow-[0_12px_24px_rgba(22,14,56,0.45)] transition-all duration-300 group-hover:opacity-100 hover:bg-white/20"
                         >
                           📦
                         </button>
                       </div>
                     ))}
 
-                  {chatSessions.filter((session) => !session.isArchived)
-                    .length === 0 && (
-                    <div className="text-[#8B949E] text-xs text-center py-4">
+                  {chatSessions.filter((session) => !session.isArchived).length === 0 && (
+                    <div className="py-6 text-center text-[0.7rem] uppercase tracking-[0.3em] text-slate-300/60">
                       No recent chats
                     </div>
                   )}
@@ -1147,7 +1146,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
               <div className="mb-4">
                 <div
                   onClick={() => setIsArchivedCollapsed(!isArchivedCollapsed)}
-                  className="flex items-center justify-between text-[#8B949E] text-xs font-medium mb-2 cursor-pointer hover:text-[#E6EDF3] transition-colors"
+                  className="mb-2 flex items-center justify-between text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-slate-300/70 transition-colors hover:text-white"
                 >
                   <span>Archived</span>
                   <div
@@ -1165,7 +1164,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                 </div>
 
                 {!isArchivedCollapsed && (
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {chatSessions
                       .filter((session) => session.isArchived)
                       .sort(
@@ -1176,22 +1175,19 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                       .map((session) => (
                         <div
                           key={session.id}
-                          className={`relative group text-sm px-3 py-2 rounded-lg cursor-pointer transition-all ${
+                          className={`group relative cursor-pointer rounded-2xl border px-4 py-3 text-sm transition-all duration-500 ${
                             session.id === currentSessionId
-                              ? "bg-[#0969DA] text-white"
-                              : "bg-[#3E4450] text-[#E6EDF3] hover:bg-[#4A5568]"
+                              ? "border-white/40 bg-white/15 text-white shadow-[0_20px_45px_rgba(88,63,233,0.45)]"
+                              : "border-white/10 bg-white/5 text-slate-200/70 hover:-translate-y-[1px] hover:border-white/25 hover:bg-white/10 hover:text-white hover:shadow-[0_18px_40px_rgba(56,33,159,0.45)]"
                           }`}
+                          onClick={() => switchToChatSession(session.id)}
                         >
-                          <div onClick={() => switchToChatSession(session.id)}>
-                            <div className="truncate pr-6 opacity-75">
-                              {session.title}
-                            </div>
-                            <div className="text-xs opacity-50">
-                              {session.messages.length} წერილი •{" "}
-                              {new Date(
-                                session.lastActivity,
-                              ).toLocaleDateString("ka-GE")}
-                            </div>
+                          <div className="truncate pr-8 text-sm font-medium tracking-wide text-slate-100/80">
+                            {session.title}
+                          </div>
+                          <div className="mt-1 text-[0.65rem] uppercase tracking-[0.28em] text-slate-200/50">
+                            {session.messages.length} წერილი ·{" "}
+                            {new Date(session.lastActivity).toLocaleDateString("ka-GE")}
                           </div>
 
                           {/* Unarchive button */}
@@ -1200,7 +1196,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                               e.stopPropagation();
                               toggleArchiveSession(session.id);
                             }}
-                            className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 text-xs px-1 py-0.5 bg-[#2D3748] rounded hover:bg-[#4A5568] transition-all"
+                            className="absolute right-2 top-2 rounded-full bg-white/10 px-2 py-1 text-[0.6rem] text-slate-100 opacity-0 shadow-[0_12px_24px_rgba(22,14,56,0.45)] transition-all duration-300 group-hover:opacity-100 hover:bg-white/20"
                           >
                             📤
                           </button>
@@ -1213,52 +1209,54 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
           </div>
 
           {/* Sidebar Bottom Actions */}
-          <div className="p-3 border-t border-[#3E4450] space-y-2">
+          <div className="space-y-2 border-t border-white/10 px-4 py-4">
             <button
               onClick={() => alert("Checkpoints ფუნქციონალი მალე დაემატება!")}
-              className="w-full flex items-center gap-2 text-[#8B949E] hover:text-white text-sm py-2 transition-all"
+              className="group flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-slate-200/70 transition-all duration-300 hover:border-white/30 hover:bg-white/10 hover:text-white"
             >
-              <RotateCcw size={16} />
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-sky-200 transition group-hover:bg-white/20 group-hover:text-white">
+                <RotateCcw size={16} />
+              </span>
               Checkpoints
             </button>
             <button
               onClick={() => alert("Settings ფუნქციონალი მალე დაემატება!")}
-              className="w-full flex items-center gap-2 text-[#8B949E] hover:text-white text-sm py-2 transition-all"
+              className="group flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-slate-200/70 transition-all duration-300 hover:border-white/30 hover:bg-white/10 hover:text-white"
             >
-              <Settings size={16} />
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-slate-200 transition group-hover:bg-white/20 group-hover:text-white">
+                <Settings size={16} />
+              </span>
               Settings
             </button>
           </div>
         </div>
 
         {/* ===== MAIN CONTENT ===== */}
-        <div className="flex-1 flex flex-col min-h-0 max-h-[calc(100vh-120px)] overflow-hidden">
+        <div className="relative flex flex-1 flex-col overflow-hidden">
           {!hasActiveChat ? (
             // ===== WELCOME SCREEN =====
-            <div className="flex-1 flex flex-col items-center justify-center p-8 min-h-0">
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-[#3E4450] rounded-lg flex items-center justify-center mb-4 mx-auto">
-                  <div className="w-8 h-8 border-2 border-dashed border-[#8B949E] rounded flex items-center justify-center">
-                    <Plus size={16} className="text-[#8B949E]" />
+            <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-10 px-12 py-12 text-center">
+              <div className="space-y-4">
+                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-white/15 bg-white/10 shadow-[0_26px_60px_rgba(22,18,56,0.55)]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-dashed border-white/40 text-white/70">
+                    <Plus size={18} />
                   </div>
                 </div>
-                <h2 className="text-2xl font-semibold text-white mb-2">
+                <h2 className="text-3xl font-semibold tracking-tight text-white">
                   New chat with Assistant
                 </h2>
-                <p className="text-[#8B949E] text-lg">
-                  Assistant answers questions, refines code, and
-                  <br />
-                  makes precise edits.
+                <p className="text-base text-slate-200/70">
+                  Assistant answers questions, refines code, and makes precise edits.
                 </p>
               </div>
 
               {/* ===== PROMPT SUGGESTIONS ===== */}
-              <div className="grid grid-cols-3 gap-3 mb-8 max-w-2xl">
+              <div className="grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {promptSuggestions.map((suggestion, index) => (
                   <button
                     key={index}
                     onClick={() => handleSuggestionClick(suggestion)}
-                    className="bg-[#3E4450] hover:bg-[#4A5568] text-[#8B949E] hover:text-white px-4 py-3 rounded-lg text-sm transition-all text-center"
+                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200/70 transition-all duration-300 hover:-translate-y-[2px] hover:border-white/30 hover:bg-white/10 hover:text-white"
                   >
                     {suggestion.text}
                   </button>
@@ -1269,9 +1267,8 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
             // ===== CHAT MESSAGES =====
             <div
               ref={chatContainerRef}
-              className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 console-scrollbar"
+              className="console-scrollbar flex-1 space-y-4 overflow-y-auto px-6 py-6"
               style={{
-                maxHeight: "calc(100vh - 180px)",
                 scrollBehavior: "smooth",
               }}
             >
@@ -1282,10 +1279,10 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                 return (
                   <div
                     key={message.id}
-                    className={`flex w-full ${
+                    className={`flex w-full gap-4 ${
                       isAssistant
-                        ? "justify-start items-end gap-3"
-                        : "justify-end gap-0"
+                        ? "items-end justify-start"
+                        : "justify-end"
                     } mb-4`}
                   >
                     {isAssistant && (
@@ -1331,14 +1328,14 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
               })}
 
               {isLoading && (
-                <div className="flex w-full items-end gap-3 justify-start">
+                <div className="flex w-full items-end justify-start gap-4">
                   <div className="replit-assistant-avatar replit-assistant-avatar--pulse" aria-hidden="true">
                     <span className="replit-assistant-avatar__halo" />
                     <span className="replit-assistant-avatar__core">GU</span>
                   </div>
                   <div className={LOADING_BUBBLE_CLASS}>
                     <div className="flex items-center gap-2 text-white/80">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#8dd4ff]"></div>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-sky-200/60 border-t-transparent"></div>
                       <span className="text-sm tracking-wide">Assistant is thinking...</span>
                     </div>
                   </div>
@@ -1348,13 +1345,13 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
           )}
 
           {/* ===== BOTTOM INPUT AREA ===== */}
-          <div className="border-t border-white/10 bg-[rgba(8,12,26,0.45)] backdrop-blur-md p-4 flex-shrink-0">
+          <div className="flex-shrink-0 border-t border-white/10 bg-white/5 px-6 py-5 backdrop-blur-2xl shadow-[0_-18px_48px_rgba(8,14,40,0.45)]">
             {/* Advanced Controls */}
             <div className="mb-3">
               <div className="mb-2 flex items-center gap-3">
                 <button
                   onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-                  className="group inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-[rgba(10,10,20,0.72)] px-3 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-cyan-200 transition-all hover:border-cyan-200/60 hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/50"
+                  className="group inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-white/5 px-3 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-cyan-200 transition-all hover:border-cyan-200/60 hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/50"
                 >
                   <Sparkles className="h-4 w-4 text-cyan-300 transition-colors group-hover:text-cyan-100" />
                   <span>Advanced</span>
@@ -1523,7 +1520,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                   <div className="border-t border-white/10 pt-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <span className="flex items-center gap-2 text-sm font-semibold text-cyan-100">
-                        <Brain size={18} className="text-[#7DEBFF]" /> AI მეხსიერება
+                        <Brain size={18} className="text-cyan-200" /> AI მეხსიერება
                       </span>
                       <button
                         type="button"
@@ -1578,7 +1575,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                       </label>
                     </div>
                     {memoryControls.error && (
-                      <p className="mt-2 text-xs text-[#F85149]">❌ {memoryControls.error}</p>
+                      <p className="mt-2 text-xs text-rose-400">❌ {memoryControls.error}</p>
                     )}
                   </div>
 
