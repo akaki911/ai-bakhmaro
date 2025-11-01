@@ -324,7 +324,13 @@ function getFirestoreInstance(provided) {
   }
 
   if (firestoreInstance) {
-    return firestoreInstance;
+    const wantsStub = process.env.FIREBASE_ADMIN_USING_STUB === 'true';
+    const isStub = firestoreInstance && firestoreInstance.__isDevFirestoreStub;
+    if (wantsStub && !isStub) {
+      firestoreInstance = null;
+    } else {
+      return firestoreInstance;
+    }
   }
 
   try {
@@ -333,6 +339,9 @@ function getFirestoreInstance(provided) {
       admin.initializeApp({ projectId });
     }
     firestoreInstance = admin.firestore();
+    if (firestoreInstance && firestoreInstance.__isDevFirestoreStub) {
+      console.log('🧪 [Memory] Using development Firestore stub instance');
+    }
   } catch (error) {
     console.warn('⚠️ Firestore initialization skipped in user_preferences:', error.message);
     firestoreInstance = null;

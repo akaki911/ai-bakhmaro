@@ -15,8 +15,11 @@ const generateNumericString = (digits = 12) => {
 };
 
 const buildLocalServiceAccount = (projectId) => {
-  const privateKeyBody = crypto.randomBytes(64).toString('base64');
-  const privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKeyBody}\n-----END PRIVATE KEY-----\n`;
+  const { privateKey } = crypto.generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
+  });
   const privateKeyId = generateHex(16);
   const clientId = generateNumericString(21);
   const clientEmail = `firebase-adminsdk-local@${projectId}.iam.gserviceaccount.com`;
@@ -121,6 +124,40 @@ function ensureLocalSecrets(options = {}) {
     rememberValue('FIREBASE_PROJECT_ID', projectId);
   }
 
+  const serviceAccountFilePath = path.join(configDir, 'firebase-service-account.local.json');
+
+  const synchroniseServiceAccountArtifacts = (serviceAccountString) => {
+    if (!serviceAccountString) {
+      return;
+    }
+
+    try {
+      ensureDirectory(configDir);
+      const existing = fs.existsSync(serviceAccountFilePath)
+        ? fs.readFileSync(serviceAccountFilePath, 'utf8')
+        : null;
+
+      if (existing !== serviceAccountString) {
+        fs.writeFileSync(serviceAccountFilePath, `${serviceAccountString}\n`, 'utf8');
+        if (!silent) {
+          console.log(
+            `💾 [dev-secrets] Wrote Firebase service account JSON to ${path.relative(cwd, serviceAccountFilePath)}`,
+          );
+        }
+      }
+
+      const b64 = Buffer.from(serviceAccountString, 'utf8').toString('base64');
+      process.env.FIREBASE_SERVICE_ACCOUNT_KEY_FILE = serviceAccountFilePath;
+      rememberValue('FIREBASE_SERVICE_ACCOUNT_KEY_FILE', serviceAccountFilePath);
+      process.env.FIREBASE_SERVICE_ACCOUNT_KEY_BASE64 = b64;
+      rememberValue('FIREBASE_SERVICE_ACCOUNT_KEY_BASE64', b64);
+    } catch (error) {
+      if (!silent) {
+        console.warn('⚠️  [dev-secrets] Failed to synchronise Firebase service account artefacts:', error.message);
+      }
+    }
+  };
+
   const sessionSecret = ensureValue('SESSION_SECRET', () => generateToken(48));
   let internalToken = ensureValue('AI_INTERNAL_TOKEN', () => generateToken(48));
   if (internalToken === DEFAULT_DEV_TOKEN) {
@@ -173,6 +210,8 @@ function ensureLocalSecrets(options = {}) {
     );
 
     if (serviceAccount) {
+      synchroniseServiceAccountArtifacts(serviceAccount);
+
       try {
         const parsed = JSON.parse(serviceAccount);
         ensureValue('FIREBASE_CLIENT_EMAIL', () => parsed.client_email, { persist: true });
