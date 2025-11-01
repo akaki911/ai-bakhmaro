@@ -16,6 +16,18 @@ function looksLikeFilePath(value) {
   return value.includes('/') || value.includes('\\') || value.endsWith('.json') || value.endsWith('.txt');
 }
 
+function looksLikeJsonObject(value) {
+  if (!hasValue(value)) {
+    return false;
+  }
+
+  const trimmed = value.trim();
+  return (
+    (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+    (trimmed.startsWith('[') && trimmed.endsWith(']'))
+  );
+}
+
 const ENV_VAR_PATTERN = /\$(?:\{([^}]+)\}|([A-Za-z_][A-Za-z0-9_]*))/g;
 
 function expandEnvVariables(rawPath) {
@@ -230,7 +242,7 @@ function resolveFirebaseServiceAccount() {
   let rawValue = directCandidate ? directCandidate.value : null;
   let source = directCandidate ? `env:${directCandidate.key}` : null;
 
-  if (rawValue && looksLikeFilePath(rawValue)) {
+  if (rawValue && !looksLikeJsonObject(rawValue) && looksLikeFilePath(rawValue)) {
     const filePath = rawValue;
     const fileContents = readFileIfExists(filePath);
     if (hasValue(fileContents)) {
@@ -248,7 +260,7 @@ function resolveFirebaseServiceAccount() {
       'GOOGLE_APPLICATION_CREDENTIALS'
     ]);
 
-    if (fileCandidate) {
+    if (fileCandidate && !looksLikeJsonObject(fileCandidate.value)) {
       const fileContents = readFileIfExists(fileCandidate.value);
       if (hasValue(fileContents)) {
         rawValue = fileContents;

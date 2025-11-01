@@ -1007,8 +1007,12 @@ app.use('/api', guruloStatusRoutes);
 app.use('/api/ai', legacyAiRoutes);
 
 // Mount AI proxy routes (if available)
-const aiProxyRoutes = require('../functions/src/routes/ai_proxy');
-app.use('/api/ai', aiProxyRoutes);
+if (process.env.DISABLE_AI_PROXY_ROUTES === 'true') {
+  console.warn('⚠️ AI proxy routes disabled via DISABLE_AI_PROXY_ROUTES');
+} else {
+  const aiProxyRoutes = require('../functions/src/routes/ai_proxy');
+  app.use('/api/ai', aiProxyRoutes);
+}
 
 // Mount file-monitor routes for Live Agent functionality
 app.get('/api/file-monitor/events', (req, res) => {
