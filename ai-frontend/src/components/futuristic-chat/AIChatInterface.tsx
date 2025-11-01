@@ -14,6 +14,12 @@ import kaTranslations from '../../i18n/locales/ka.json';
 import enTranslations from '../../i18n/locales/en.json';
 import { adaptGuruloCorePayload, parseGuruloCoreCandidate } from '../../utils/guruloCoreAdapter';
 
+type EmotionalState = 'idle' | 'thinking' | 'responding';
+
+type AIChatInterfaceProps = {
+  onEmotionalStateChange?: (state: EmotionalState) => void;
+};
+
 type BrowserSpeechRecognitionAlternative = {
   transcript: string;
   confidence: number;
@@ -974,7 +980,7 @@ const LANGUAGE_LABEL = {
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
-export function AIChatInterface() {
+export function AIChatInterface({ onEmotionalStateChange }: AIChatInterfaceProps = {}) {
   const { user, updateUserPreferences } = useAuth();
   const userRole = (user?.role ?? 'SUPER_ADMIN') as string;
   const activePersonalId = user?.personalId?.trim();
@@ -1046,6 +1052,34 @@ export function AIChatInterface() {
   const [heartbeatTimestamp, setHeartbeatTimestamp] = useState(() => Date.now());
   const lastRequestRef = useRef<number>(0);
   const rateLimitUntilRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!onEmotionalStateChange) {
+      return;
+    }
+
+    if (isLoading) {
+      onEmotionalStateChange('thinking');
+      return;
+    }
+
+    if (messages.length > 0) {
+      onEmotionalStateChange('responding');
+      return;
+    }
+
+    onEmotionalStateChange('idle');
+  }, [isLoading, messages.length, onEmotionalStateChange]);
+
+  useEffect(() => {
+    if (!onEmotionalStateChange) {
+      return;
+    }
+
+    return () => {
+      onEmotionalStateChange('idle');
+    };
+  }, [onEmotionalStateChange]);
 
   useEffect(() => {
     const preferred = user?.preferences?.language;
