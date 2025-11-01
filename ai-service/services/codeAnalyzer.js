@@ -87,7 +87,7 @@ class CodeAnalyzer {
   async findThematicModules() {
     const targetModules = [
       // Core Gurulo modules
-      'AIAssistantEnhanced.tsx', 'AIDeveloperPanel.tsx', 'SystemMonitoringDashboard.tsx',
+      'AIAssistantEnhanced.tsx', 'AiDeveloperPanel.tsx', 'SystemMonitoringDashboard.tsx',
       'AutoImprove', 'ConsoleLogger.ts', 'PerformanceDashboard.tsx',
       // Services
       'gurulo_intent_router.js', 'prompt_manager.js', 'repository_automation_service.js',
