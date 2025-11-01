@@ -72,7 +72,7 @@ interface ChatSession {
 
 export type EmotionalState = 'idle' | 'thinking' | 'responding';
 
-interface ReplitAssistantPanelProps {
+interface AiDeveloperPanelProps {
   currentFile?: string;
   aiFetch?: (endpoint: string, options?: RequestInit) => Promise<any>;
   onEmotionalStateChange?: (state: EmotionalState) => void;
@@ -89,7 +89,7 @@ const GLOW_BUTTON_CLASS =
 const GLOW_BUTTON_ACTIVE_CLASS =
   'bg-gradient-to-br from-sky-500/35 via-indigo-500/35 to-fuchsia-500/35 text-white shadow-[0_24px_55px_rgba(56,189,248,0.45)]';
 
-const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
+const AiDeveloperPanel: React.FC<AiDeveloperPanelProps> = ({
   currentFile,
   aiFetch,
   onEmotionalStateChange,
@@ -1725,4 +1725,4 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
   );
 };
 
-export default ReplitAssistantPanel;
+export default AiDeveloperPanel;
