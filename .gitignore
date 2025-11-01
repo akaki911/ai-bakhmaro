@@ -10,6 +10,8 @@ backend/.env.*.bak
 ai-service/.env
 ai-service/.env.*.bak
 config/local-secrets.json
+config/firebase-service-account.local.json
+backend/tmp/
 
 # Logs
 logs/
