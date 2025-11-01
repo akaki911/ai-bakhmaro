@@ -35,7 +35,7 @@ router.get('/memory/:userId', async (req, res) => {
             programmingLanguages: ["TypeScript", "React", "Node.js"],
             codeStyle: "strict, typed",
             currentProject: "GPT-პანელი",
-            openFiles: ["AIDeveloperPanel.tsx", "Layout.tsx"]
+            openFiles: ["AiDeveloperPanel.tsx", "Layout.tsx"]
           },
           savedRules: [
             {
