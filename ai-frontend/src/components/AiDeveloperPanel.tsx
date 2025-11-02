@@ -121,27 +121,95 @@ const normalizeTabKey = (value: string | null, validTabs: readonly TabKey[]): Ta
 const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
   onEmotionalStateChange,
 }) => {
-  const { user: authUser, isAuthenticated, authInitialized, userRole } = useAuth();
+  const {
+    user: authUser,
+    isAuthenticated,
+    authInitialized,
+    userRole,
+    routeAdvice,
+    deviceRecognition,
+    deviceTrust,
+  } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const allowedSuperAdminIds = useMemo(() => ["01019062020"], []);
 
-  const isSuperAdminUser = useMemo(() => {
-    if (!authUser) {
+  const verifiedPersonalId = useMemo(() => {
+    if (!authUser?.personalId) {
       return false;
     }
 
-    const personalId = authUser.personalId || authUser.id || null;
-    const normalizedRole =
-      typeof authUser.role === "string" ? authUser.role.trim().toUpperCase() : null;
-
-    return Boolean(
-      personalId &&
-        allowedSuperAdminIds.includes(personalId) &&
-        normalizedRole === "SUPER_ADMIN",
-    );
+    const normalizedPersonalId = authUser.personalId.trim();
+    return allowedSuperAdminIds.includes(normalizedPersonalId);
   }, [allowedSuperAdminIds, authUser]);
+
+  const normalizedAuthRole = useMemo(() => {
+    if (!authUser?.role) {
+      return null;
+    }
+
+    return typeof authUser.role === "string"
+      ? authUser.role.trim().toUpperCase()
+      : null;
+  }, [authUser]);
+
+  const recognizedByAuthRole = useMemo(
+    () => Boolean(isAuthenticated && normalizedAuthRole === "SUPER_ADMIN"),
+    [isAuthenticated, normalizedAuthRole],
+  );
+
+  const recognizedByContextRole = useMemo(
+    () => Boolean(isAuthenticated && userRole === "SUPER_ADMIN"),
+    [isAuthenticated, userRole],
+  );
+
+  const recognizedByRouteAdvice = useMemo(
+    () => Boolean(routeAdvice?.authenticated && routeAdvice?.role === "SUPER_ADMIN"),
+    [routeAdvice?.authenticated, routeAdvice?.role],
+  );
+
+  const recognizedByDevice = useMemo(() => {
+    if (!deviceRecognition?.isRecognizedDevice) {
+      return false;
+    }
+
+    return (
+      deviceRecognition.currentDevice?.registeredRole === "SUPER_ADMIN" &&
+      (deviceTrust || recognizedByRouteAdvice)
+    );
+  }, [deviceRecognition, deviceTrust, recognizedByRouteAdvice]);
+
+  const isSuperAdminUser = useMemo(() => {
+    if (!authInitialized) {
+      return false;
+    }
+
+    return (
+      verifiedPersonalId ||
+      recognizedByDevice ||
+      recognizedByRouteAdvice ||
+      recognizedByAuthRole ||
+      recognizedByContextRole
+    );
+  }, [
+    authInitialized,
+    recognizedByAuthRole,
+    recognizedByContextRole,
+    recognizedByDevice,
+    recognizedByRouteAdvice,
+    verifiedPersonalId,
+  ]);
+
+  useEffect(() => {
+    if (!authInitialized || !isSuperAdminUser || verifiedPersonalId) {
+      return;
+    }
+
+    console.warn(
+      "⚠️ [ACCESS] SUPER_ADMIN privileges granted without verified personalId. Check user profile setup.",
+    );
+  }, [authInitialized, isSuperAdminUser, verifiedPersonalId]);
 
   const coreTabs = useMemo<TabKey[]>(() => CORE_TABS, []);
 
@@ -243,8 +311,8 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
   } = useSystemState();
 
   const hasDevConsoleAccess = useMemo(
-    () => Boolean(authUser && isSuperAdminUser),
-    [authUser, isSuperAdminUser],
+    () => Boolean(isSuperAdminUser),
+    [isSuperAdminUser],
   );
 
   useMemoryManagement();
