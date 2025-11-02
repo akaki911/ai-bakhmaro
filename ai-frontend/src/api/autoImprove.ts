@@ -1,17 +1,75 @@
 // @ts-nocheck
 
+import { buildAdminHeaders, getAdminSetupToken } from '../utils/adminToken';
 import { APIResponse, Proposal } from '../types/aimemory';
+
+interface AutoImproveAuthContext {
+  serviceToken?: string;
+  personalId: string;
+}
 
 class AutoImproveAPI {
   private baseURL = '/api/ai/autoimprove';
 
+  private authContext: AutoImproveAuthContext;
+
+  constructor(authContext?: AutoImproveAuthContext) {
+    this.authContext = {
+      personalId: '01019062020',
+      serviceToken: getAdminSetupToken(),
+      ...authContext,
+    };
+  }
+
+  setAuthContext(authContext: AutoImproveAuthContext): void {
+    if (!authContext?.personalId) {
+      throw new Error('AutoImproveAPI requires a personalId to authorise requests.');
+    }
+
+    this.authContext = {
+      personalId: authContext.personalId,
+      serviceToken: authContext.serviceToken || this.authContext?.serviceToken || getAdminSetupToken(),
+    };
+  }
+
+  private getAuthContext(): AutoImproveAuthContext {
+    if (!this.authContext) {
+      this.authContext = {
+        personalId: '01019062020',
+        serviceToken: getAdminSetupToken(),
+      };
+    }
+
+    return this.authContext;
+  }
+
+  private buildHeaders(headers: HeadersInit = {}): Headers {
+    const normalized = new Headers(headers);
+
+    if (!normalized.has('Content-Type')) {
+      normalized.set('Content-Type', 'application/json');
+    }
+
+    const adminHeaders = buildAdminHeaders(normalized);
+    const merged = new Headers(adminHeaders);
+    const { serviceToken, personalId } = this.getAuthContext();
+
+    if (serviceToken) {
+      merged.set('x-internal-token', serviceToken);
+      merged.set('Authorization', `Bearer ${serviceToken}`);
+    }
+
+    if (personalId) {
+      merged.set('x-personal-id', personalId);
+    }
+
+    return merged;
+  }
+
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const response = await fetch(`${this.baseURL}${endpoint}`, {
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers: this.buildHeaders(options.headers),
       ...options,
     });
 
@@ -103,6 +161,17 @@ class AutoImproveAPI {
     return this.request(`/progress/${sessionId}`);
   }
 
+  async autoImproveFile(payload: { filePath: string; content: string; instructions?: string | string[]; [key: string]: any }): Promise<any> {
+    if (!payload?.filePath || !payload?.content) {
+      throw new Error('autoImproveFile requires filePath and content.');
+    }
+
+    return this.request('/codex/auto-improve', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
   // AI Guard endpoints
   async validateGuard(filePath: string, operation: string = 'modify'): Promise<any> {
     return this.request('/guard/validate', {
@@ -120,7 +189,10 @@ class AutoImproveAPI {
   }
 }
 
-export const autoImproveAPI = new AutoImproveAPI();
+export const autoImproveAPI = new AutoImproveAPI({
+  personalId: '01019062020',
+  serviceToken: getAdminSetupToken(),
+});
 export const autoImproveApi = autoImproveAPI;
 
 // Export types
