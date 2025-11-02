@@ -205,31 +205,48 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
     }
 
     return allowedSuperAdminIds.includes(candidatePersonalId);
-  }, [allowedSuperAdminIds, authUser, superAdminOverrideId]);
+  }, [allowedSuperAdminIds, authUser?.personalId, superAdminOverrideId]);
 
-  const normalizedAuthRole = useMemo(() => {
-    if (!authUser?.role) {
+  const normalizeRole = useCallback((role: unknown) => {
+    if (typeof role !== "string") {
       return null;
     }
 
-    return typeof authUser.role === "string"
-      ? authUser.role.trim().toUpperCase()
-      : null;
-  }, [authUser]);
+    const normalized = role.trim().toUpperCase();
+    return normalized || null;
+  }, []);
+
+  const normalizedAuthRole = useMemo(() => normalizeRole(authUser?.role), [authUser?.role, normalizeRole]);
+  const normalizedContextRole = useMemo(() => normalizeRole(userRole), [normalizeRole, userRole]);
+  const normalizedRouteRole = useMemo(
+    () => normalizeRole(routeAdvice?.role),
+    [normalizeRole, routeAdvice?.role],
+  );
+
+  const recognizedByRouteAdvice = useMemo(() => {
+    if (normalizedRouteRole !== "SUPER_ADMIN") {
+      return false;
+    }
+
+    return Boolean(routeAdvice?.authenticated || routeAdvice?.deviceTrust || deviceTrust);
+  }, [deviceTrust, normalizedRouteRole, routeAdvice?.authenticated, routeAdvice?.deviceTrust]);
 
   const recognizedByAuthRole = useMemo(
-    () => Boolean(isAuthenticated && normalizedAuthRole === "SUPER_ADMIN"),
-    [isAuthenticated, normalizedAuthRole],
+    () =>
+      Boolean(
+        normalizedAuthRole === "SUPER_ADMIN" &&
+          (isAuthenticated || recognizedByRouteAdvice || deviceTrust),
+      ),
+    [deviceTrust, isAuthenticated, normalizedAuthRole, recognizedByRouteAdvice],
   );
 
   const recognizedByContextRole = useMemo(
-    () => Boolean(isAuthenticated && userRole === "SUPER_ADMIN"),
-    [isAuthenticated, userRole],
-  );
-
-  const recognizedByRouteAdvice = useMemo(
-    () => Boolean(routeAdvice?.authenticated && routeAdvice?.role === "SUPER_ADMIN"),
-    [routeAdvice?.authenticated, routeAdvice?.role],
+    () =>
+      Boolean(
+        normalizedContextRole === "SUPER_ADMIN" &&
+          (isAuthenticated || recognizedByRouteAdvice || deviceTrust),
+      ),
+    [deviceTrust, isAuthenticated, normalizedContextRole, recognizedByRouteAdvice],
   );
 
   const recognizedByDevice = useMemo(() => {
@@ -237,61 +254,17 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
       return false;
     }
 
-    return (
-      deviceRecognition.currentDevice?.registeredRole === "SUPER_ADMIN" &&
-      (deviceTrust || recognizedByRouteAdvice)
+    const deviceRole = normalizeRole(deviceRecognition.currentDevice?.registeredRole);
+
+    return Boolean(
+      deviceRole === "SUPER_ADMIN" && (deviceTrust || recognizedByRouteAdvice),
     );
-  }, [deviceRecognition, deviceTrust, recognizedByRouteAdvice]);
+  }, [deviceRecognition, deviceTrust, normalizeRole, recognizedByRouteAdvice]);
 
   const recognizedByOverride = useMemo(
     () => Boolean(superAdminOverrideId && allowedSuperAdminIds.includes(superAdminOverrideId)),
     [allowedSuperAdminIds, superAdminOverrideId],
   );
-
-  const verifiedPersonalId = useMemo(() => {
-    if (!authUser?.personalId) {
-      return false;
-    }
-
-    const normalizedPersonalId = authUser.personalId.trim();
-    return allowedSuperAdminIds.includes(normalizedPersonalId);
-  }, [allowedSuperAdminIds, authUser]);
-
-  const normalizedAuthRole = useMemo(() => {
-    if (!authUser?.role) {
-      return null;
-    }
-
-    return typeof authUser.role === "string"
-      ? authUser.role.trim().toUpperCase()
-      : null;
-  }, [authUser]);
-
-  const recognizedByAuthRole = useMemo(
-    () => Boolean(isAuthenticated && normalizedAuthRole === "SUPER_ADMIN"),
-    [isAuthenticated, normalizedAuthRole],
-  );
-
-  const recognizedByContextRole = useMemo(
-    () => Boolean(isAuthenticated && userRole === "SUPER_ADMIN"),
-    [isAuthenticated, userRole],
-  );
-
-  const recognizedByRouteAdvice = useMemo(
-    () => Boolean(routeAdvice?.authenticated && routeAdvice?.role === "SUPER_ADMIN"),
-    [routeAdvice?.authenticated, routeAdvice?.role],
-  );
-
-  const recognizedByDevice = useMemo(() => {
-    if (!deviceRecognition?.isRecognizedDevice) {
-      return false;
-    }
-
-    return (
-      deviceRecognition.currentDevice?.registeredRole === "SUPER_ADMIN" &&
-      (deviceTrust || recognizedByRouteAdvice)
-    );
-  }, [deviceRecognition, deviceTrust, recognizedByRouteAdvice]);
 
   const isSuperAdminUser = useMemo(() => {
     if (!authInitialized) {
