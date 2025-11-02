@@ -130,7 +130,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
         const providedHeaders = mergeHeaders(options.headers);
         const finalHeaders: Record<string, string> = {
           "Content-Type": "application/json",
-          ...(user.personalId && { "X-User-ID": user.personalId }),
+          ...(user.personalId && { "x-personal-id": user.personalId }),
           ...(user.role && { "X-User-Role": user.role }),
           ...providedHeaders,
         };
