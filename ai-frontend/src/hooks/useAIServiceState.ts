@@ -70,7 +70,7 @@ const buildAuthHeaders = (authUser: any) => {
   };
 
   if (authUser?.personalId) {
-    headers['X-User-ID'] = authUser.personalId;
+    headers['x-personal-id'] = authUser.personalId;
   }
 
   if (authUser?.role) {
