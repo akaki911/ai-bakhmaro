@@ -558,6 +558,47 @@ const mapAiServiceKpis = (aiServiceResponse = {}) => {
   };
 };
 
+router.post('/codex/auto-improve', requireSuperAdmin, async (req, res) => {
+  try {
+    const superAdminPersonalId = req.session?.user?.personalId || null;
+    if (!superAdminPersonalId) {
+      return res.status(403).json({
+        success: false,
+        error: 'SUPER_ADMIN_SESSION_REQUIRED'
+      });
+    }
+
+    const { filePath, content, ...metadata } = req.body || {};
+
+    if (typeof filePath !== 'string' || typeof content !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: 'INVALID_PAYLOAD',
+        message: 'filePath and content are required'
+      });
+    }
+
+    const aiResponse = await fetchFromAIService('/api/auto-improve/codex/auto-improve', {
+      method: 'POST',
+      body: JSON.stringify({
+        filePath,
+        content,
+        ...metadata,
+        superAdminPersonalId
+      })
+    });
+
+    res.json(aiResponse);
+  } catch (error) {
+    console.error('❌ [AUTO-IMPROVE] Codex auto-improve error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: 'CODEX_AUTO_IMPROVE_FAILED',
+      message: error.message
+    });
+  }
+});
+
 router.get('/monitor/status', bypassRateLimit, async (req, res) => {
   const isSuperAdmin = hasSuperAdminAccess(req);
   try {

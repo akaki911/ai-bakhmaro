@@ -131,10 +131,15 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
     if (!authUser) {
       return false;
     }
+
     const personalId = authUser.personalId || authUser.id || null;
-    return (
-      authUser.role === "SUPER_ADMIN" &&
-      Boolean(personalId && allowedSuperAdminIds.includes(personalId))
+    const normalizedRole =
+      typeof authUser.role === "string" ? authUser.role.trim().toUpperCase() : null;
+
+    return Boolean(
+      personalId &&
+        allowedSuperAdminIds.includes(personalId) &&
+        normalizedRole === "SUPER_ADMIN",
     );
   }, [allowedSuperAdminIds, authUser]);
 
@@ -186,7 +191,7 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
           ...options,
           headers: {
             "Content-Type": "application/json",
-            ...(authUser?.personalId && { "X-User-ID": authUser.personalId }),
+            ...(authUser?.personalId && { "x-personal-id": authUser.personalId }),
             ...(authUser?.role && { "X-User-Role": authUser.role }),
             ...options.headers,
           },
@@ -237,21 +242,10 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
     setTelemetryData,
   } = useSystemState();
 
-  const hasDevConsoleAccess = useMemo(() => {
-    const normalizedRole =
-      typeof authUser?.role === "string" ? authUser.role.trim().toLowerCase() : null;
-
-    const personalId = authUser?.personalId || authUser?.id || null;
-    const allowedPersonal = personalId ? allowedSuperAdminIds.includes(personalId) : false;
-
-    return Boolean(
-      authUser &&
-        (allowedPersonal ||
-          normalizedRole === "super_admin" ||
-          authUser.email === "admin@bakhmaro.co" ||
-          (import.meta.env.DEV && isAuthenticated))
-    );
-  }, [allowedSuperAdminIds, authUser, isAuthenticated]);
+  const hasDevConsoleAccess = useMemo(
+    () => Boolean(authUser && isSuperAdminUser),
+    [authUser, isSuperAdminUser],
+  );
 
   useMemoryManagement();
 
