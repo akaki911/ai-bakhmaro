@@ -248,6 +248,51 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
     [allowedSuperAdminIds, superAdminOverrideId],
   );
 
+  const verifiedPersonalId = useMemo(() => {
+    if (!authUser?.personalId) {
+      return false;
+    }
+
+    const normalizedPersonalId = authUser.personalId.trim();
+    return allowedSuperAdminIds.includes(normalizedPersonalId);
+  }, [allowedSuperAdminIds, authUser]);
+
+  const normalizedAuthRole = useMemo(() => {
+    if (!authUser?.role) {
+      return null;
+    }
+
+    return typeof authUser.role === "string"
+      ? authUser.role.trim().toUpperCase()
+      : null;
+  }, [authUser]);
+
+  const recognizedByAuthRole = useMemo(
+    () => Boolean(isAuthenticated && normalizedAuthRole === "SUPER_ADMIN"),
+    [isAuthenticated, normalizedAuthRole],
+  );
+
+  const recognizedByContextRole = useMemo(
+    () => Boolean(isAuthenticated && userRole === "SUPER_ADMIN"),
+    [isAuthenticated, userRole],
+  );
+
+  const recognizedByRouteAdvice = useMemo(
+    () => Boolean(routeAdvice?.authenticated && routeAdvice?.role === "SUPER_ADMIN"),
+    [routeAdvice?.authenticated, routeAdvice?.role],
+  );
+
+  const recognizedByDevice = useMemo(() => {
+    if (!deviceRecognition?.isRecognizedDevice) {
+      return false;
+    }
+
+    return (
+      deviceRecognition.currentDevice?.registeredRole === "SUPER_ADMIN" &&
+      (deviceTrust || recognizedByRouteAdvice)
+    );
+  }, [deviceRecognition, deviceTrust, recognizedByRouteAdvice]);
+
   const isSuperAdminUser = useMemo(() => {
     if (!authInitialized) {
       return false;
