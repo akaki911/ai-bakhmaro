@@ -1,13 +1,93 @@
 
 const express = require('express');
+const fs = require('fs').promises;
+const path = require('path');
+const { parsePatch, applyPatch } = require('diff');
 const router = express.Router();
 
 // Import RBAC middleware
 const { protectAutoImprove, requireSuperAdmin } = require('../middleware/rbac_middleware');
 const { loadSimilarOutcomes } = require('../services/proposal_memory_store');
 const codexAgent = require('../agents/codex_agent');
+const { ToolRegistry } = require('../core/tool_registry');
 
 const MEMORY_ENABLED = process.env.AI_MEMORY_ENABLED !== 'false';
+
+const ensureProposalStore = () => {
+  if (!global.autoImproveProposalStore) {
+    global.autoImproveProposalStore = new Map();
+  }
+  return global.autoImproveProposalStore;
+};
+
+const rememberProposal = (proposal) => {
+  if (!proposal || typeof proposal !== 'object' || !proposal.id) {
+    return;
+  }
+
+  const store = ensureProposalStore();
+  const storedEntry = {
+    ...proposal,
+    storedAt: new Date().toISOString(),
+  };
+
+  store.set(proposal.id, storedEntry);
+
+  if (store.size > 50) {
+    const oldestKey = store.keys().next().value;
+    if (oldestKey) {
+      store.delete(oldestKey);
+    }
+  }
+};
+
+const getStoredProposal = (proposalId) => {
+  const store = ensureProposalStore();
+  return store.get(proposalId);
+};
+
+const updateStoredProposal = (proposalId, updates) => {
+  const store = ensureProposalStore();
+  if (!store.has(proposalId)) {
+    return;
+  }
+
+  const existing = store.get(proposalId);
+  store.set(proposalId, {
+    ...existing,
+    ...updates,
+    storedAt: existing?.storedAt || new Date().toISOString(),
+  });
+};
+
+const strictPatchProvider = (() => {
+  if (!global.autoImproveStrictPatchProvider) {
+    const registry = new ToolRegistry();
+    global.autoImproveStrictPatchProvider = {
+      registry,
+      strictPatch: registry.strictPatch,
+    };
+  }
+  return global.autoImproveStrictPatchProvider;
+})();
+
+const getNormalizedPatchPath = (patchEntry) => {
+  if (!patchEntry) {
+    return null;
+  }
+
+  const { newFileName, oldFileName } = patchEntry;
+  const candidate =
+    (newFileName && newFileName !== '/dev/null' && newFileName !== 'undefined')
+      ? newFileName
+      : oldFileName;
+
+  if (!candidate || candidate === '/dev/null') {
+    return null;
+  }
+
+  return candidate.replace(/^a\//, '').replace(/^b\//, '');
+};
 
 /**
  * AI Service Auto-Improve Routes
@@ -158,12 +238,12 @@ router.post('/generate-proposals', protectAutoImprove, async (req, res) => {
         files: proposal.evidence.map(e => ({
           path: e.file,
           lines: e.line,
-        rule: e.rule,
-        note: e.note,
-        action: 'modify'
-      })),
-      patch: proposal.patch,
-      rollbackPlan: proposal.rollbackPlan,
+          rule: e.rule,
+          note: e.note,
+          action: 'modify'
+        })),
+        patch: proposal.patch,
+        rollbackPlan: proposal.rollbackPlan,
         aiGenerated: true,
         guardValidated: false,
         status: 'pending',
@@ -176,6 +256,8 @@ router.post('/generate-proposals', protectAutoImprove, async (req, res) => {
         memoryContext
       };
     });
+
+    formattedProposals.forEach(rememberProposal);
 
     console.log(`✅ [AI AUTO-IMPROVE] Generated ${formattedProposals.length} real proposals`);
 
@@ -314,44 +396,303 @@ router.get('/proposals', protectAutoImprove, async (req, res) => {
 
 // Apply proposal - SUPER_ADMIN only  
 router.post('/proposals/:id/apply', protectAutoImprove, async (req, res) => {
+  const startedAt = Date.now();
+  const requestId = req.body?.requestId || `auto_apply_${Date.now()}`;
+
+  let actionExecutorService;
+
   try {
     const { id } = req.params;
-    console.log(`⚡ [AI AUTO-IMPROVE] Applying proposal ${id}`);
-    
-    // Import ActionExecutorService
-    const { actionExecutorService } = require('../services/action_executor_service');
-    
-    // Initialize if not already done
+    console.log(`⚡ [AI AUTO-IMPROVE] Applying proposal ${id} (request: ${requestId})`);
+
+    if (req.body?.proposal) {
+      rememberProposal(req.body.proposal);
+    }
+
+    const storedProposal = getStoredProposal(id);
+    const patchCandidates = [];
+    const registerPatchCandidate = (value, source) => {
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed) {
+          patchCandidates.push({ value, source });
+        }
+      }
+    };
+
+    registerPatchCandidate(req.body?.patch, 'request.patch');
+    registerPatchCandidate(req.body?.diff, 'request.diff');
+    registerPatchCandidate(req.body?.proposal?.patch, 'request.proposal.patch');
+    registerPatchCandidate(req.body?.proposal?.diff, 'request.proposal.diff');
+
+    if (Array.isArray(req.body?.files)) {
+      req.body.files.forEach((file, index) => {
+        registerPatchCandidate(file?.patch, `request.files[${index}].patch`);
+        registerPatchCandidate(file?.diff, `request.files[${index}].diff`);
+      });
+    }
+
+    if (storedProposal) {
+      registerPatchCandidate(storedProposal.patch, 'store.patch');
+      registerPatchCandidate(storedProposal.diff, 'store.diff');
+
+      if (Array.isArray(storedProposal.files)) {
+        storedProposal.files.forEach((file, index) => {
+          registerPatchCandidate(file?.patch, `store.files[${index}].patch`);
+          registerPatchCandidate(file?.diff, `store.files[${index}].diff`);
+        });
+      }
+    }
+
+    if (patchCandidates.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'PATCH_NOT_FOUND',
+        message: 'No patch or diff data was provided for the proposal.',
+        proposalId: id,
+        requestId,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const patchInfo = patchCandidates[0];
+    const normalizedPatch = patchInfo.value.replace(/\r\n/g, '\n');
+
+    let parsedPatches;
+    try {
+      parsedPatches = parsePatch(normalizedPatch);
+    } catch (parseError) {
+      return res.status(400).json({
+        success: false,
+        error: 'PATCH_PARSE_ERROR',
+        message: `Failed to parse patch data: ${parseError.message}`,
+        proposalId: id,
+        requestId,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    if (!Array.isArray(parsedPatches) || parsedPatches.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'PATCH_EMPTY',
+        message: 'Patch data did not contain any file changes.',
+        proposalId: id,
+        requestId,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const { actionExecutorService: executor } = require('../services/action_executor_service');
+    actionExecutorService = executor;
+
     if (!actionExecutorService.isInitialized) {
       await actionExecutorService.initialize();
     }
-    
-    // For now, simulate application
-    // In a real implementation, this would parse the proposal and execute the changes
-    const result = {
-      success: true,
+
+    const strictPatch = strictPatchProvider?.strictPatch;
+    if (!strictPatch || typeof strictPatch.applyStrictPatch !== 'function') {
+      throw new Error('StrictPatchMode is not available');
+    }
+
+    console.log(`🧩 [AI AUTO-IMPROVE] Patch source: ${patchInfo.source}; files detected: ${parsedPatches.length}`);
+
+    const successes = [];
+    const failures = [];
+
+    for (const patchEntry of parsedPatches) {
+      const fileStart = Date.now();
+      const targetPath = getNormalizedPatchPath(patchEntry);
+
+      if (!targetPath) {
+        const message = 'Patch entry did not specify a valid target file.';
+        failures.push({ filePath: null, error: message });
+        actionExecutorService.logExecution(
+          'applyProposalPatch',
+          { proposalId: id, requestId, filePath: null, reason: 'invalid_target' },
+          false,
+          message,
+          Date.now() - fileStart
+        );
+        continue;
+      }
+
+      let safePath;
+      try {
+        safePath = actionExecutorService.validateSafePath(targetPath);
+      } catch (validationError) {
+        const message = `Unsafe file path rejected: ${validationError.message}`;
+        failures.push({ filePath: targetPath, error: message });
+        actionExecutorService.logExecution(
+          'applyProposalPatch',
+          { proposalId: id, requestId, filePath: targetPath, reason: 'unsafe_path' },
+          false,
+          message,
+          Date.now() - fileStart
+        );
+        continue;
+      }
+
+      let originalContent = '';
+      try {
+        originalContent = await fs.readFile(safePath, 'utf8');
+      } catch (readError) {
+        if (readError.code === 'ENOENT') {
+          const message = 'Target file not found for patch application.';
+          failures.push({ filePath: targetPath, error: message });
+          actionExecutorService.logExecution(
+            'applyProposalPatch',
+            { proposalId: id, requestId, filePath: targetPath, reason: 'missing_file' },
+            false,
+            message,
+            Date.now() - fileStart
+          );
+          continue;
+        }
+
+        const message = `Failed to read target file: ${readError.message}`;
+        failures.push({ filePath: targetPath, error: message });
+        actionExecutorService.logExecution(
+          'applyProposalPatch',
+          { proposalId: id, requestId, filePath: targetPath, reason: 'read_error' },
+          false,
+          message,
+          Date.now() - fileStart
+        );
+        continue;
+      }
+
+      const patchedContent = applyPatch(originalContent, patchEntry);
+      if (patchedContent === false) {
+        const message = 'Patch could not be applied to the current file content.';
+        failures.push({ filePath: targetPath, error: message });
+        actionExecutorService.logExecution(
+          'applyProposalPatch',
+          { proposalId: id, requestId, filePath: targetPath, reason: 'apply_failed' },
+          false,
+          message,
+          Date.now() - fileStart
+        );
+        continue;
+      }
+
+      try {
+        const patchResult = await strictPatch.applyStrictPatch(
+          safePath,
+          originalContent,
+          patchedContent,
+          {
+            allowLargeChanges: true,
+            requestId,
+            metadata: {
+              proposalId: id,
+              patchSource: patchInfo.source,
+            },
+          }
+        );
+
+        const relativePath = path.relative(actionExecutorService.PROJECT_ROOT, safePath) || targetPath;
+        const successEntry = {
+          filePath: relativePath.startsWith('..') ? targetPath : relativePath,
+          patchId: patchResult.patchId,
+          linesChanged: patchResult.linesChanged,
+          queueWaitTime: patchResult.queueWaitTime,
+          executionTime: patchResult.executionTime,
+          verification: patchResult.verification,
+          backupId: patchResult.backupId,
+        };
+
+        successes.push(successEntry);
+
+        actionExecutorService.logExecution(
+          'applyProposalPatch',
+          {
+            proposalId: id,
+            requestId,
+            filePath: targetPath,
+            patchId: patchResult.patchId,
+            linesChanged: patchResult.linesChanged,
+          },
+          true,
+          `Patch applied to ${targetPath}`,
+          Date.now() - fileStart
+        );
+      } catch (patchError) {
+        const message = patchError.message || 'Strict patch application failed.';
+        failures.push({ filePath: targetPath, error: message });
+        actionExecutorService.logExecution(
+          'applyProposalPatch',
+          { proposalId: id, requestId, filePath: targetPath, reason: 'strict_patch_failed' },
+          false,
+          message,
+          Date.now() - fileStart
+        );
+      }
+    }
+
+    const applied = successes.length > 0 && failures.length === 0;
+    const timestamp = new Date().toISOString();
+
+    if (storedProposal) {
+      updateStoredProposal(id, {
+        status: applied ? 'applied' : storedProposal.status,
+        appliedAt: applied ? timestamp : storedProposal.appliedAt,
+        lastExecution: {
+          success: applied,
+          timestamp,
+          requestId,
+          appliedFiles: successes.map(entry => entry.filePath),
+          failedFiles: failures.map(entry => entry.filePath),
+        },
+      });
+    }
+
+    console.log(`✅ [AI AUTO-IMPROVE] Proposal ${id} patch processing completed. Successes: ${successes.length}, Failures: ${failures.length}`);
+
+    const responsePayload = {
+      success: applied,
       proposalId: id,
-      appliedAt: new Date().toISOString(),
-      changes: ['Simulated file modification'],
-      executionTime: 1500
+      message: applied
+        ? `Applied ${successes.length} file ${successes.length === 1 ? 'change' : 'changes'} successfully.`
+        : failures.length === 0
+          ? 'No changes were applied from the provided patch.'
+          : `Applied with ${failures.length} issue${failures.length === 1 ? '' : 's'}.`,
+      requestId,
+      parsedFiles: parsedPatches.length,
+      appliedFiles: successes,
+      failedFiles: failures,
+      patchSource: patchInfo.source,
+      history: actionExecutorService.getExecutionHistory(10),
+      timestamp,
+      durationMs: Date.now() - startedAt,
     };
-    
-    console.log(`✅ [AI AUTO-IMPROVE] Proposal ${id} applied successfully`);
-    
-    res.json({
-      success: true,
-      result,
-      message: 'Proposal applied successfully',
-      timestamp: new Date().toISOString()
-    });
+
+    const statusCode = applied ? 200 : 207; // 207 Multi-Status for partial failures
+    return res.status(statusCode).json(responsePayload);
 
   } catch (error) {
     console.error(`❌ [AI AUTO-IMPROVE] Failed to apply proposal ${req.params.id}:`, error);
+
+    if (actionExecutorService?.logExecution) {
+      actionExecutorService.logExecution(
+        'applyProposalPatch',
+        {
+          proposalId: req.params.id,
+          requestId,
+          reason: 'exception',
+        },
+        false,
+        error.message,
+        Date.now() - startedAt
+      );
+    }
+
     res.status(500).json({
       success: false,
       error: 'PROPOSAL_APPLY_ERROR',
       message: `Failed to apply proposal: ${error.message}`,
-      timestamp: new Date().toISOString()
+      requestId,
+      timestamp: new Date().toISOString(),
     });
   }
 });
