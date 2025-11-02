@@ -18,6 +18,12 @@
       "label": "Mixtral 8x7B",
       "category": "large",
       "enabled": false
+    },
+    {
+      "id": "codex",
+      "label": "OpenAI Codex",
+      "category": "large",
+      "enabled": true
     }
   ]
 }
