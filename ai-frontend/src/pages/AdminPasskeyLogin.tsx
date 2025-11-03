@@ -34,10 +34,24 @@ const oauthOptions = [
   { name: 'GitHub', Icon: Github },
 ];
 
+const fallbackReasonOptions: Array<{ value: string; label: string }> = [
+  { value: 'device_lost', label: 'მოწყობილობა დაიკარგა' },
+  { value: 'device_malfunction', label: 'ბიომეტრიული მოწყობილობა დაზიანდა' },
+  { value: 'webauthn_unavailable', label: 'Passkey სერვისი მიუწვდომელია' },
+];
+
 const AdminPasskeyLogin: React.FC = () => {
   const navigate = useNavigate();
   const auth = useAuth();
-  const { login, authInitialized, isAuthenticated, getAutoRouteTarget } = auth;
+  const {
+    login,
+    authInitialized,
+    isAuthenticated,
+    getAutoRouteTarget,
+    generateFallbackCode,
+    verifyFallbackCode,
+    fallbackAuth,
+  } = auth;
   const refreshUserRole = 'refreshUserRole' in auth ? auth.refreshUserRole : undefined;
 
   const [email, setEmail] = useState('');
@@ -46,6 +60,10 @@ const AdminPasskeyLogin: React.FC = () => {
   const [banner, setBanner] = useState<{ tone: 'error' | 'success'; message: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [showFallbackPanel, setShowFallbackPanel] = useState(false);
+  const [fallbackReason, setFallbackReason] = useState('');
+  const [fallbackCode, setFallbackCode] = useState('');
+  const [fallbackError, setFallbackError] = useState('');
 
   useEffect(() => {
     document.title = 'შესვლა – ai.bakhmaro.co';
@@ -59,6 +77,29 @@ const AdminPasskeyLogin: React.FC = () => {
     const target = getAutoRouteTarget?.() ?? '/admin?tab=dashboard';
     navigate(target, { replace: true });
   }, [authInitialized, getAutoRouteTarget, isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (fallbackAuth?.status === 'error' && fallbackAuth?.error) {
+      setFallbackError(fallbackAuth.error);
+    } else if (fallbackAuth?.status === 'generated') {
+      setFallbackError('');
+      setFallbackCode('');
+    } else if (fallbackAuth?.status === 'authenticated') {
+      setFallbackError('');
+      setFallbackCode('');
+      setShowFallbackPanel(false);
+    }
+  }, [fallbackAuth]);
+
+  const isGeneratingFallback = fallbackAuth?.status === 'generating';
+  const isVerifyingFallback = fallbackAuth?.status === 'verifying';
+  const fallbackAttemptsLeft = typeof fallbackAuth?.attemptsLeft === 'number' ? fallbackAuth.attemptsLeft : null;
+  const fallbackRetries = fallbackAuth?.retries ?? 0;
+  const fallbackMessage = fallbackAuth?.message ?? '';
+  const fallbackDevCode = fallbackAuth?.fallbackCode ?? '';
+  const fallbackExpiresLabel = fallbackAuth?.expiresAt
+    ? new Date(fallbackAuth.expiresAt).toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' })
+    : null;
 
   const handleEmailPasswordLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -171,6 +212,48 @@ const AdminPasskeyLogin: React.FC = () => {
       setBanner({ tone: 'error', message: getWebAuthnErrorMessage(error) });
     } finally {
       setPasskeyLoading(false);
+    }
+  };
+
+  const handleGenerateFallbackCode = async () => {
+    if (!generateFallbackCode || isGeneratingFallback) {
+      return;
+    }
+
+    if (!fallbackReason.trim()) {
+      setFallbackError('გთხოვთ აირჩიოთ fallback მიზეზი');
+      return;
+    }
+
+    try {
+      setFallbackError('');
+      await generateFallbackCode(fallbackReason);
+    } catch (error: any) {
+      setFallbackError(error?.message || 'Fallback კოდის გენერაცია ვერ მოხერხდა');
+    }
+  };
+
+  const handleVerifyFallbackCode = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!verifyFallbackCode || isVerifyingFallback) {
+      return;
+    }
+
+    if (!fallbackReason.trim()) {
+      setFallbackError('გთხოვთ აირჩიოთ fallback მიზეზი');
+      return;
+    }
+
+    if (!fallbackCode.trim()) {
+      setFallbackError('შეიყვანეთ fallback კოდი');
+      return;
+    }
+
+    try {
+      setFallbackError('');
+      await verifyFallbackCode(fallbackReason, fallbackCode);
+    } catch (error: any) {
+      setFallbackError(error?.message || 'Fallback კოდის ვერიფიკაცია ვერ მოხერხდა');
     }
   };
 
@@ -289,6 +372,126 @@ const AdminPasskeyLogin: React.FC = () => {
                 </>
               )}
             </button>
+
+            <div className="rounded-2xl border border-white/15 bg-white/5 p-4 shadow-inner shadow-[#0F0624]/30">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-white">Passkey არ მუშაობს?</p>
+                  <p className="text-xs text-white/60">
+                    გამოიყენეთ fallback კოდი სუპერ ადმინისტრატორისთვის დროებითი დაშვებისას.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowFallbackPanel((previous) => !previous)}
+                  className="rounded-full border border-white/20 px-3 py-1 text-xs font-semibold text-white/80 transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30"
+                >
+                  {showFallbackPanel ? 'დახურვა' : 'Fallback კოდი'}
+                </button>
+              </div>
+
+              {showFallbackPanel ? (
+                <div className="mt-4 space-y-4">
+                  <div className="space-y-1 text-left">
+                    <label htmlFor="fallback-reason" className="text-xs font-medium text-white/80">
+                      Fallback მიზეზი
+                    </label>
+                    <select
+                      id="fallback-reason"
+                      value={fallbackReason}
+                      onChange={(event) => setFallbackReason(event.target.value)}
+                      className="w-full rounded-xl border border-white/15 bg-black/40 px-4 py-2 text-sm text-white placeholder-white/40 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#7B1DFF]"
+                    >
+                      <option value="">აირჩიეთ მიზეზი</option>
+                      {fallbackReasonOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleGenerateFallbackCode}
+                    disabled={isGeneratingFallback}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-purple-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-purple-500/20 focus:outline-none focus:ring-2 focus:ring-purple-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isGeneratingFallback ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        გენერაცია...
+                      </>
+                    ) : (
+                      'Fallback კოდის გენერაცია'
+                    )}
+                  </button>
+
+                  {fallbackMessage ? (
+                    <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/15 px-3 py-2 text-xs text-emerald-100">
+                      {fallbackMessage}
+                    </div>
+                  ) : null}
+
+                  {fallbackDevCode ? (
+                    <div className="rounded-xl border border-white/20 bg-black/40 px-3 py-2 text-xs text-white/80">
+                      <span className="font-semibold text-white/90">DEV კოდი:</span> {fallbackDevCode}
+                    </div>
+                  ) : null}
+
+                  {fallbackExpiresLabel ? (
+                    <p className="text-xs text-white/60">კოდი იწურება {fallbackExpiresLabel}-ზე</p>
+                  ) : null}
+
+                  <form className="space-y-3" onSubmit={handleVerifyFallbackCode}>
+                    <div className="space-y-1 text-left">
+                      <label htmlFor="fallback-code" className="text-xs font-medium text-white/80">
+                        Fallback კოდი
+                      </label>
+                      <input
+                        id="fallback-code"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        value={fallbackCode}
+                        onChange={(event) => setFallbackCode(event.target.value.replace(/[^0-9]/g, ''))}
+                        maxLength={6}
+                        className="w-full rounded-xl border border-white/15 bg-black/40 px-4 py-2 text-sm tracking-[0.4em] text-white placeholder-white/40 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#7B1DFF]"
+                        placeholder="000000"
+                      />
+                    </div>
+
+                    {fallbackError ? (
+                      <div className="rounded-xl border border-rose-400/30 bg-rose-500/20 px-3 py-2 text-xs text-rose-100">
+                        {fallbackError}
+                      </div>
+                    ) : null}
+
+                    <div className="flex flex-wrap items-center gap-3 text-[11px] text-white/60">
+                      {fallbackAttemptsLeft !== null ? (
+                        <span>დარჩენილი მცდელობა: {fallbackAttemptsLeft}</span>
+                      ) : null}
+                      {fallbackRetries > 0 ? <span>ცდების რაოდენობა: {fallbackRetries}</span> : null}
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isVerifyingFallback}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isVerifyingFallback ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          ვერიფიკაცია...
+                        </>
+                      ) : (
+                        'Fallback კოდის ვერიფიკაცია'
+                      )}
+                    </button>
+                  </form>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>

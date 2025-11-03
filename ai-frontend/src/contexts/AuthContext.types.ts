@@ -23,6 +23,17 @@ export interface RegistrationMetadata extends Partial<Pick<User, 'firstName' | '
   [key: string]: unknown;
 }
 
+export interface FallbackAuthState {
+  status: 'idle' | 'generating' | 'generated' | 'verifying' | 'authenticated' | 'error';
+  reason: string | null;
+  message: string | null;
+  error: string | null;
+  fallbackCode: string | null;
+  expiresAt: number | null;
+  attemptsLeft: number | null;
+  retries: number;
+}
+
 export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -33,7 +44,8 @@ export interface AuthContextType {
   loginWithPasskey: (trustDevice?: boolean) => Promise<void>;
   registerPasskey: () => Promise<void>;
   generateFallbackCode: (reason: string) => Promise<void>;
-  verifyFallbackCode: (fallbackCode: string) => Promise<void>;
+  verifyFallbackCode: (reason: string, fallbackCode: string) => Promise<void>;
+  fallbackAuth: FallbackAuthState;
   logout: () => Promise<void>;
   refreshUserRole: () => Promise<void>;
   loginWithPhoneAndPassword: (phone: string, password: string) => Promise<void>;
