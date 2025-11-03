@@ -11,13 +11,41 @@ const {
   requireRole: guruloRequireRole,
   allowSuperAdmin: guruloAllowSuperAdmin,
 } = require('../../shared/gurulo-auth');
+const { runtimeSummary } = require('../config/runtimeConfig');
+
+const BACKEND_URL_MISSING_ERROR = 'BACKEND_BASE_URL_MISSING';
+
+const normalizeUrl = (value) => (typeof value === 'string' ? value.trim() : '');
+
+function resolveBackendBaseUrl() {
+  const envUrl = normalizeUrl(process.env.BACKEND_INTERNAL_URL);
+  const runtimeUrl = normalizeUrl(runtimeSummary?.endpoints?.backend);
+
+  if (envUrl) {
+    return envUrl;
+  }
+
+  if (runtimeUrl) {
+    return runtimeUrl;
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    return 'http://localhost:5002';
+  }
+
+  const error = new Error(
+    'BACKEND_INTERNAL_URL is required in production. Set BACKEND_INTERNAL_URL or configure runtimeSummary.endpoints.backend.'
+  );
+  error.code = BACKEND_URL_MISSING_ERROR;
+  throw error;
+}
 
 /**
  * Check backend session for authenticated user
  */
-async function checkBackendSession(req) {
+async function checkBackendSession(req, baseUrl = resolveBackendBaseUrl()) {
   try {
-    const response = await fetch('http://localhost:5002/api/admin/auth/me', {
+    const response = await fetch(new URL('/api/admin/auth/me', baseUrl), {
       method: 'GET',
       headers: {
         'Cookie': req.headers.cookie || '',
@@ -40,6 +68,9 @@ async function checkBackendSession(req) {
     }
     return null;
   } catch (error) {
+    if (error?.code === BACKEND_URL_MISSING_ERROR) {
+      throw error;
+    }
     console.error('❌ [AUTHZ] Backend session check failed:', error.message);
     return null;
   }
@@ -87,7 +118,22 @@ async function requireAssistantAuth(req, res, next) {
     }
 
     // Fallback to session authentication
-    const sessionUser = await checkBackendSession(req);
+    let sessionUser;
+    try {
+      sessionUser = await checkBackendSession(req);
+    } catch (configError) {
+      if (configError?.code === BACKEND_URL_MISSING_ERROR) {
+        console.error('❌ [AUTHZ] Backend base URL missing for production:', configError.message);
+        return res.status(500).json({
+          error: 'BackendConfigurationError',
+          message: configError.message,
+          hint: 'Set BACKEND_INTERNAL_URL or provide runtimeSummary.endpoints.backend',
+          timestamp: new Date().toISOString(),
+        });
+      }
+      throw configError;
+    }
+
     if (sessionUser) {
       req.user = sessionUser;
       console.log('✅ [AUTHZ] Session authentication successful:', req.user.id);
