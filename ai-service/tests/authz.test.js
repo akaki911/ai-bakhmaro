@@ -4,14 +4,20 @@
  * SOL-211 Security Hardening
  */
 
+const originalNodeEnv = process.env.NODE_ENV;
+const originalBackendInternalUrl = process.env.BACKEND_INTERNAL_URL;
+
+process.env.NODE_ENV = 'production';
+process.env.BACKEND_INTERNAL_URL = 'http://backend.internal.test';
+
 const request = require('supertest');
 const express = require('express');
-const { 
-  requireAssistantAuth, 
-  requireRole, 
+const {
+  requireAssistantAuth,
+  requireRole,
   requirePermission,
   assistantRateLimit,
-  auditLog 
+  auditLog
 } = require('../middleware/authz');
 
 // Mock JWT utilities
@@ -32,6 +38,15 @@ describe('Authorization Middleware Tests', () => {
     app = express();
     app.use(express.json());
     jest.clearAllMocks();
+  });
+
+  afterAll(() => {
+    process.env.NODE_ENV = originalNodeEnv;
+    if (typeof originalBackendInternalUrl === 'undefined') {
+      delete process.env.BACKEND_INTERNAL_URL;
+    } else {
+      process.env.BACKEND_INTERNAL_URL = originalBackendInternalUrl;
+    }
   });
 
   describe('requireAssistantAuth', () => {

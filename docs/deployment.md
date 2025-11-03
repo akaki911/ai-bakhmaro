@@ -7,6 +7,8 @@ This guide covers the staged release process for Gurulo AI Space across developm
 - Firebase CLI authenticated with the project service account.
 - `.runtimeconfig.json` populated via `firebase functions:config:get > .runtimeconfig.json` for the target environment.
 - Super Admin approval recorded in the Operations Toolkit, referencing the release ticket ID.
+- `BACKEND_INTERNAL_URL` exported for the AI Service to target the internal Backend load balancer (production deployments **must**
+  use the private network address, not localhost).
 
 ## Build Steps
 
