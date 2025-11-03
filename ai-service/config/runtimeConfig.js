@@ -9,6 +9,7 @@ const {
   readEnvBoolean,
   readEnvNumber,
   readEnvString,
+  readEnvUrl,
 } = require('../../shared/config/envReader');
 
 const envState = validateEnv({ serviceName: 'ai-service' });
@@ -32,6 +33,9 @@ const DEFAULT_CONFIG = {
       ],
     },
   },
+  endpoints: {
+    backend: readEnvUrl('BACKEND_INTERNAL_URL', { defaultValue: '', allowEmpty: true }) || null,
+  },
 };
 
 const formatIssue = (key, reason, severity = 'error') => ({ key, reason, severity });
@@ -51,6 +55,10 @@ const mergeWithDefaults = (overrides = {}) => {
         ...DEFAULT_CONFIG.modelStrategy.largeModel,
         ...(overrides.modelStrategy?.largeModel || {}),
       },
+    },
+    endpoints: {
+      ...DEFAULT_CONFIG.endpoints,
+      ...(overrides.endpoints || {}),
     },
   };
 
@@ -103,6 +111,10 @@ const updateRuntimeConfig = (patch = {}) => {
     modelStrategy: {
       ...getRuntimeConfig().modelStrategy,
       ...(patch.modelStrategy || {}),
+    },
+    endpoints: {
+      ...getRuntimeConfig().endpoints,
+      ...(patch.endpoints || {}),
     },
   });
 
@@ -193,6 +205,16 @@ const buildRuntimeConfig = () => {
 
   const runtime = getRuntimeConfig();
 
+  const backendEndpoint =
+    typeof runtime.endpoints?.backend === 'string' && runtime.endpoints.backend.trim()
+      ? runtime.endpoints.backend.trim()
+      : null;
+
+  if (!backendEndpoint) {
+    const severity = isProduction ? 'fatal' : 'warn';
+    issues.push(formatIssue('BACKEND_INTERNAL_URL', 'missing', severity));
+  }
+
   return Object.freeze({
     env: {
       nodeEnv,
@@ -210,6 +232,9 @@ const buildRuntimeConfig = () => {
     },
     security: {
       internalToken: internalTokenDescriptor,
+    },
+    endpoints: {
+      backend: backendEndpoint,
     },
   });
 };
