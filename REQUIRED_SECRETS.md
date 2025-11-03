@@ -12,6 +12,7 @@ GROQ_API_KEY=your_groq_api_key
 FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account",...}
 FIREBASE_PROJECT_ID=your_firebase_project_id
 ALLOWED_BACKEND_IPS=127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+BACKEND_INTERNAL_URL=https://backend-internal.yourdomain.tld
 ```
 
 | Secret | სად გამოიყენება | რეფერენსი |
@@ -20,6 +21,7 @@ ALLOWED_BACKEND_IPS=127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
 | `GROQ_API_KEY` | Groq მოდელებთან დასაკავშირებლად AI Service-ში. | [`ai-service/config/runtimeConfig.js`](ai-service/config/runtimeConfig.js) 【F:ai-service/config/runtimeConfig.js†L131-L213】, [`ai-service/services/groq_service.js`](ai-service/services/groq_service.js) 【F:ai-service/services/groq_service.js†L1-L23】 |
 | `FIREBASE_SERVICE_ACCOUNT_KEY`, `FIREBASE_PROJECT_ID` | Firebase Admin SDK-ის ინიციალიზაცია. | [`shared/secretResolver.js`](shared/secretResolver.js) 【F:shared/secretResolver.js†L223-L240】 |
 | `ALLOWED_BACKEND_IPS` | Backend-ის IP-ების allowlist AI Service-ზე. | [`backend/services/secretsRequiredService.js`](backend/services/secretsRequiredService.js) 【F:backend/services/secretsRequiredService.js†L38-L40】 |
+| `BACKEND_INTERNAL_URL` | Production-ში Backend session შემოწმებისთვის გამოყენებული შიდა მისამართი. | [`ai-service/middleware/authz.js`](ai-service/middleware/authz.js) 【F:ai-service/middleware/authz.js†L1-L115】, [`ai-service/config/runtimeConfig.js`](ai-service/config/runtimeConfig.js) 【F:ai-service/config/runtimeConfig.js†L1-L213】 |
 
 ## Backend
 ```

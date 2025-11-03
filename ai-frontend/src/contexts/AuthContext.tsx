@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { toast } from 'react-hot-toast';
 import { auth, db, firebaseEnabled } from '../firebase';
 import {
   collection,
@@ -21,8 +22,8 @@ import {
 import { singleFlight } from '../lib/singleFlight';
 import { getDeviceInfo, logDeviceInfo, isDeviceFingerprintingSupported } from '../utils/deviceFingerprint';
 import { AuthContext } from './AuthContextObject';
-import type { AuthContextType, RegistrationMetadata, User, UserRole } from './AuthContext.types';
-export type { UserRole, AuthContextType, RegistrationMetadata, User } from './AuthContext.types';
+import type { AuthContextType, RegistrationMetadata, User, UserRole, FallbackAuthState } from './AuthContext.types';
+export type { UserRole, AuthContextType, RegistrationMetadata, User, FallbackAuthState } from './AuthContext.types';
 import {
   authenticateWithPasskey,
   registerPasskey as performPasskeyRegistration,
@@ -42,6 +43,36 @@ interface DeviceRecognitionState {
 
 const normalizeAuthMethod = (method: unknown): DeviceRecognitionState['suggestedAuthMethod'] => {
   return method === 'passkey' || method === 'email' ? method : 'standard';
+};
+
+const INITIAL_FALLBACK_AUTH_STATE: FallbackAuthState = {
+  status: 'idle',
+  reason: null,
+  message: null,
+  error: null,
+  fallbackCode: null,
+  expiresAt: null,
+  attemptsLeft: null,
+  retries: 0,
+};
+
+const readResponsePayload = async (response: Response) => {
+  try {
+    const text = await response.text();
+    if (!text) {
+      return { data: null, raw: '' };
+    }
+
+    try {
+      return { data: JSON.parse(text), raw: text };
+    } catch (error) {
+      console.warn('⚠️ [Auth] Unable to parse fallback auth response as JSON', error);
+      return { data: null, raw: text };
+    }
+  } catch (error) {
+    console.warn('⚠️ [Auth] Failed to read fallback auth response body', error);
+    return { data: null, raw: '' };
+  }
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -70,6 +101,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Device trust level
   const [deviceTrust, setDeviceTrust] = useState<boolean>(false);
+
+  const [fallbackAuthState, setFallbackAuthState] = useState<FallbackAuthState>(INITIAL_FALLBACK_AUTH_STATE);
 
   // Device recognition functionality
   const performDeviceRecognition = async () => {
@@ -786,13 +819,265 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const generateFallbackCode = async (reason: string): Promise<void> => {
-    // Implement fallback code generation
-    throw new Error('Fallback code generation not implemented');
+    const normalizedReason = (reason || '').trim();
+    if (!normalizedReason) {
+      const message = 'აირჩიეთ fallback მიზეზი';
+      setFallbackAuthState(prev => ({
+        ...prev,
+        status: 'error',
+        error: message,
+        message: null,
+      }));
+      toast.error(message);
+      throw new Error(message);
+    }
+
+    const resolvedPersonalId = (personalId || user?.personalId || '01019062020').trim();
+    if (!resolvedPersonalId) {
+      const message = 'Fallback კოდის გენერაციისთვის საჭიროა პირადი ნომერი';
+      setFallbackAuthState(prev => ({
+        ...prev,
+        status: 'error',
+        error: message,
+        message: null,
+      }));
+      toast.error(message);
+      throw new Error(message);
+    }
+
+    setFallbackAuthState(prev => ({
+      ...prev,
+      status: 'generating',
+      reason: normalizedReason,
+      message: null,
+      error: null,
+      fallbackCode: null,
+      expiresAt: null,
+    }));
+
+    let response: Response;
+    try {
+      response = await fetch('/api/auth/fallback/generate', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          personalId: resolvedPersonalId,
+          reason: normalizedReason,
+        }),
+      });
+    } catch (error) {
+      console.error('❌ [Auth] Fallback code generation network error:', error);
+      const message = 'Fallback კოდის გენერაცია ვერ მოხერხდა';
+      setFallbackAuthState(prev => ({
+        ...prev,
+        status: 'error',
+        error: message,
+        message: null,
+      }));
+      toast.error(message);
+      throw new Error(message);
+    }
+
+    const { data, raw } = await readResponsePayload(response);
+
+    if (!response.ok) {
+      const message = data?.error || 'Fallback კოდის გენერაცია ვერ მოხერხდა';
+      console.warn('❌ [Auth] Fallback code generation failed:', {
+        status: response.status,
+        body: raw || null,
+      });
+      setFallbackAuthState(prev => ({
+        ...prev,
+        status: 'error',
+        error: message,
+        message: null,
+        fallbackCode: null,
+        expiresAt: null,
+      }));
+      toast.error(message);
+      throw new Error(message);
+    }
+
+    const expiresAt = typeof data?.expiresIn === 'number'
+      ? Date.now() + data.expiresIn * 1000
+      : null;
+    const message = data?.message || 'Fallback კოდი გენერირებულია';
+    const fallbackCode = typeof data?.fallbackCode === 'string' ? data.fallbackCode : null;
+
+    setFallbackAuthState(prev => ({
+      ...prev,
+      status: 'generated',
+      reason: normalizedReason,
+      message,
+      error: null,
+      fallbackCode,
+      expiresAt,
+      attemptsLeft: data?.attemptsLeft ?? prev.attemptsLeft ?? null,
+      retries: 0,
+    }));
+
+    toast.success(message);
   };
 
-  const verifyFallbackCode = async (fallbackCode: string): Promise<void> => {
-    // Implement fallback code verification
-    throw new Error('Fallback code verification not implemented');
+  const verifyFallbackCode = async (reason: string, fallbackCode: string): Promise<void> => {
+    const normalizedReason = (reason || '').trim();
+    if (!normalizedReason) {
+      const message = 'Fallback ვერიფიკაციისთვის აირჩიეთ მიზეზი';
+      setFallbackAuthState(prev => ({
+        ...prev,
+        status: 'error',
+        error: message,
+        message: null,
+      }));
+      toast.error(message);
+      throw new Error(message);
+    }
+
+    const normalizedCode = (fallbackCode || '').trim();
+    if (!normalizedCode) {
+      const message = 'შეიყვანეთ fallback კოდი';
+      setFallbackAuthState(prev => ({
+        ...prev,
+        status: 'error',
+        error: message,
+        message: null,
+      }));
+      toast.error(message);
+      throw new Error(message);
+    }
+
+    const resolvedPersonalId = (personalId || user?.personalId || '01019062020').trim();
+    if (!resolvedPersonalId) {
+      const message = 'Fallback ვერიფიკაციისთვის საჭიროა პირადი ნომერი';
+      setFallbackAuthState(prev => ({
+        ...prev,
+        status: 'error',
+        error: message,
+        message: null,
+      }));
+      toast.error(message);
+      throw new Error(message);
+    }
+
+    setFallbackAuthState(prev => ({
+      ...prev,
+      status: 'verifying',
+      reason: normalizedReason,
+      error: null,
+      message: null,
+    }));
+    setIsLoading(true);
+
+    let response: Response;
+    try {
+      response = await fetch('/api/auth/fallback/verify', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          personalId: resolvedPersonalId,
+          reason: normalizedReason,
+          fallbackCode: normalizedCode,
+        }),
+      });
+    } catch (error) {
+      console.error('❌ [Auth] Fallback verification network error:', error);
+      const message = 'Fallback კოდის ვერიფიკაცია ვერ მოხერხდა';
+      setFallbackAuthState(prev => ({
+        ...prev,
+        status: 'error',
+        error: message,
+        message: null,
+        retries: prev.retries + 1,
+      }));
+      setIsLoading(false);
+      toast.error(message);
+      throw new Error(message);
+    }
+
+    const { data, raw } = await readResponsePayload(response);
+
+    if (!response.ok || data?.ok !== true) {
+      const message = data?.error || 'Fallback კოდის ვერიფიკაცია ვერ მოხერხდა';
+      const attemptsLeft = typeof data?.attemptsLeft === 'number' ? data.attemptsLeft : null;
+      console.warn('❌ [Auth] Fallback verification failed:', {
+        status: response.status,
+        body: raw || null,
+        attemptsLeft,
+      });
+      setFallbackAuthState(prev => ({
+        ...prev,
+        status: 'error',
+        error: message,
+        message: null,
+        attemptsLeft,
+        retries: prev.retries + 1,
+      }));
+      setIsLoading(false);
+      if (attemptsLeft !== null) {
+        toast.error(`${message} · დარჩენილია ${attemptsLeft} მცდელობა`);
+      } else {
+        toast.error(message);
+      }
+      throw new Error(message);
+    }
+
+    const fallbackUser = data?.user || {};
+    const normalizedUser: User = {
+      id: fallbackUser.id || '01019062020',
+      email: fallbackUser.email || 'admin@bakhmaro.co',
+      role: (fallbackUser.role || 'SUPER_ADMIN') as UserRole,
+      personalId: fallbackUser.personalId || resolvedPersonalId,
+      displayName: fallbackUser.displayName || 'სუპერ ადმინისტრატორი',
+      authMethod: 'fallback',
+    };
+
+    setUser(normalizedUser);
+    setIsAuthenticated(true);
+    setUserRole(normalizedUser.role);
+    setPersonalId(normalizedUser.personalId);
+    setFirebaseUid(normalizedUser.id);
+    setAuthInitialized(true);
+    setIsAuthReady(true);
+
+    const successMessage = data?.message || 'Fallback ავტორიზაცია წარმატებით დასრულდა';
+    setFallbackAuthState({
+      status: 'authenticated',
+      reason: normalizedReason,
+      message: successMessage,
+      error: null,
+      fallbackCode: null,
+      expiresAt: null,
+      attemptsLeft: null,
+      retries: 0,
+    });
+
+    try {
+      const advice = await fetchRouteAdvice();
+      setRouteAdvice(prev => ({
+        ...prev,
+        role: normalizedUser.role,
+        target: advice?.target || prev.target,
+        authenticated: true,
+      }));
+    } catch (error) {
+      console.warn('⚠️ [Auth] Unable to refresh route advice after fallback verification', error);
+      setRouteAdvice(prev => ({
+        ...prev,
+        role: normalizedUser.role,
+        authenticated: true,
+      }));
+    }
+
+    setIsLoading(false);
+    toast.success(successMessage);
   };
 
   // Logout - synchronized across all services
@@ -855,6 +1140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         suggestedAuthMethod: 'standard'
       });
       setDeviceTrust(false);
+      setFallbackAuthState(INITIAL_FALLBACK_AUTH_STATE);
 
       // 6. Store last user role for better UX, then clear localStorage
       try {
@@ -1301,6 +1587,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     registerPasskey,
     generateFallbackCode,
     verifyFallbackCode,
+    fallbackAuth: fallbackAuthState,
     logout,
     refreshUserRole,
     loginWithPhoneAndPassword,
@@ -1329,9 +1616,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user, isAuthenticated, isLoading, authInitialized, deviceRecognition, deviceTrust,
     userRole, isAuthReady, personalId, firebaseUid,
     login, logout, registerCurrentDevice, setDeviceTrustMethod,
+    generateFallbackCode, verifyFallbackCode,
     routeAdvice, // Include routeAdvice in dependencies
     retryPreflightChecks,
     updateUserPreferences,
+    fallbackAuthState,
   ]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
