@@ -1,8 +1,6 @@
-// @ts-nocheck
 import compression from 'compression';
 import cors from 'cors';
-import express from 'express';
-import type { NextFunction, Request, RequestHandler, Response } from 'express-serve-static-core';
+import express, { type NextFunction, type Request, type RequestHandler, type Response } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import path from 'node:path';
@@ -10,8 +8,9 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import jwt from 'jsonwebtoken';
-import { createProxyMiddleware, type Options } from 'http-proxy-middleware';
-import type { ClientRequest } from 'http';
+import { createProxyMiddleware } from 'http-proxy-middleware';
+import type { LegacyOptions } from 'http-proxy-middleware/dist/legacy';
+import type { ClientRequest, IncomingMessage } from 'http';
 import { getEnv } from './env.js';
 import { createCookieNormaliser, createSessionCookieChecker } from './cookies.js';
 import { buildAllowedOriginsSet, createCorsOriginValidator } from './cors.js';
@@ -26,8 +25,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const staticRoot = path.resolve(__dirname, env.STATIC_ROOT);
 const logLevel = env.NODE_ENV === 'production' ? 'warn' : 'debug';
 
-const defaultCspDirectives = helmet.contentSecurityPolicy.getDefaultDirectives();
-const buildDirectiveSet = (values: string[] = []): Set<string> => new Set(values);
+type HelmetWithContentSecurityPolicy = typeof helmet & {
+  contentSecurityPolicy: {
+    getDefaultDirectives: () => Record<string, Iterable<string>>;
+  };
+};
+
+const helmetWithCsp = helmet as HelmetWithContentSecurityPolicy;
+const defaultCspDirectives = helmetWithCsp.contentSecurityPolicy.getDefaultDirectives();
+const buildDirectiveSet = (values: Iterable<string> = []): Set<string> => new Set(values);
 
 const scriptSrc = buildDirectiveSet(defaultCspDirectives['script-src'] ?? ["'self'"]);
 env.CSP_SCRIPT_SRC.forEach((origin) => {
@@ -225,7 +231,7 @@ const resolveWebAuthnPolicy = (req: Request) => {
   };
 };
 
-const applyForwardedHeaders = (proxyReq: ClientRequest, req: Request) => {
+const applyForwardedHeaders = (proxyReq: ClientRequest, req: Request): void => {
   const originalHost = getFirstHeaderValue(req.headers['x-forwarded-host']) ?? req.headers.host;
   if (originalHost) {
     proxyReq.setHeader('x-forwarded-host', originalHost);
@@ -291,7 +297,7 @@ const createServiceJwt = (audience: ServiceAudience, req: Request): string => {
   return jwt.sign(payload, env.JWT_SECRET, { algorithm: 'HS256' });
 };
 
-const applyServiceAuth = (audience: ServiceAudience) => (proxyReq: ClientRequest, req: Request) => {
+const applyServiceAuth = (audience: ServiceAudience) => (proxyReq: ClientRequest, req: Request): void => {
   try {
     const token = createServiceJwt(audience, req);
     proxyReq.setHeader('authorization', `Bearer ${token}`);
@@ -313,10 +319,19 @@ export const normaliseCookie = createCookieNormaliser({
   hardenedCookieNames: sessionCookieNameSet,
 });
 
-const createProxy = (target: string, audience: ServiceAudience, extra: Options = {}) => {
+type GatewayProxyOptions = LegacyOptions<Request, Response> & { target: string };
+type ExtraProxyOptions =
+  Partial<Omit<GatewayProxyOptions, 'target' | 'onProxyReq' | 'onProxyRes'>> &
+  Pick<Partial<GatewayProxyOptions>, 'onProxyReq' | 'onProxyRes'>;
+
+const createExpressProxyMiddleware = createProxyMiddleware as unknown as (
+  options: GatewayProxyOptions,
+) => RequestHandler;
+
+const createProxy = (target: string, audience: ServiceAudience, extra: ExtraProxyOptions = {}): RequestHandler => {
   const { onProxyReq: upstreamOnProxyReq, onProxyRes: upstreamOnProxyRes, ...rest } = extra;
 
-  return createProxyMiddleware({
+  const options: GatewayProxyOptions = {
     target,
     changeOrigin: true,
     secure: false,
@@ -325,34 +340,37 @@ const createProxy = (target: string, audience: ServiceAudience, extra: Options =
     proxyTimeout: 30_000,
     timeout: 30_000,
     xfwd: true,
-    onProxyReq(proxyReq, req, res) {
-      applyServiceAuth(audience)(proxyReq, req as Request);
-      applyForwardedHeaders(proxyReq, req as Request);
+    ...rest,
+    onProxyReq(proxyReq: ClientRequest, req: Request, res: Response) {
+      applyServiceAuth(audience)(proxyReq, req);
+      applyForwardedHeaders(proxyReq, req);
       if (typeof upstreamOnProxyReq === 'function') {
         upstreamOnProxyReq(proxyReq, req, res);
       }
     },
-    onError(err, req, res) {
+    onError(err: Error, req: Request, res: Response) {
       console.error(`❌ Proxy error for ${audience} (${req.method} ${req.url}) → ${target}:`, err);
       if (!res.headersSent) {
-        res.writeHead?.(502, { 'Content-Type': 'application/json' });
+        res.writeHead(502, { 'Content-Type': 'application/json' });
       }
-      res.end?.(JSON.stringify({ error: 'Bad gateway', code: 'UPSTREAM_UNAVAILABLE' }));
+      res.end(JSON.stringify({ error: 'Bad gateway', code: 'UPSTREAM_UNAVAILABLE' }));
     },
-    onProxyRes(proxyRes, req, res) {
-      const header = proxyRes.headers['set-cookie'];
+    onProxyRes(proxyRes: IncomingMessage, req: Request, res: Response) {
+      const headers = proxyRes.headers;
+      const header = headers['set-cookie'];
       if (Array.isArray(header)) {
-        proxyRes.headers['set-cookie'] = header.map((value) => normaliseCookie(value));
+        headers['set-cookie'] = header.map((value) => normaliseCookie(value));
       } else if (typeof header === 'string') {
-        proxyRes.headers['set-cookie'] = normaliseCookie(header);
+        headers['set-cookie'] = [normaliseCookie(header)];
       }
 
       if (typeof upstreamOnProxyRes === 'function') {
         upstreamOnProxyRes(proxyRes, req, res);
       }
     },
-    ...rest,
-  });
+  };
+
+  return createExpressProxyMiddleware(options);
 };
 
 const sendIndexHtml = (res: Response, next: NextFunction) => {
@@ -363,7 +381,7 @@ const sendIndexHtml = (res: Response, next: NextFunction) => {
   });
 };
 
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   const host = req.headers.host?.toLowerCase();
   if (host === 'bakhmaro.co') {
     res.redirect(301, `https://ai.bakhmaro.co${req.originalUrl}`);
@@ -395,18 +413,18 @@ app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
-app.get('/health', (_req, res) => {
+app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok' });
 });
 
-app.get('/api/auth/webauthn/policy', (req, res) => {
+app.get('/api/auth/webauthn/policy', (req: Request, res: Response) => {
   const policy = resolveWebAuthnPolicy(req);
   res.setHeader('cache-control', 'no-store, no-cache, must-revalidate');
   res.json({ success: true, policy });
 });
 
-const siteMapping = env.SITE_MAPPING_GITHUB || {};
-app.use('/api/sites/:siteId/github', (req, res, next) => {
+const siteMapping: Record<string, string> = env.SITE_MAPPING_GITHUB;
+app.use('/api/sites/:siteId/github', (req: Request, res: Response, next: NextFunction) => {
   const repo = siteMapping[req.params.siteId];
   if (!repo) {
     res.status(404).json({ error: 'Unknown site', siteId: req.params.siteId });
@@ -432,20 +450,20 @@ const ensureAuth: RequestHandler = (req, res, next) => {
   next();
 };
 
-app.get(env.LOGIN_PATH, (req, res, next) => {
+app.get(env.LOGIN_PATH, (_req: Request, res: Response, next: NextFunction) => {
   sendIndexHtml(res, next);
 });
 
-app.get('/', ensureAuth, (req, res, next) => {
+app.get('/', ensureAuth, (_req: Request, res: Response, next: NextFunction) => {
   sendIndexHtml(res, next);
 });
 
-app.get('/index.html', ensureAuth, (req, res, next) => {
+app.get('/index.html', ensureAuth, (_req: Request, res: Response, next: NextFunction) => {
   sendIndexHtml(res, next);
 });
 
-app.use((req, res, next) => {
-  if (req.method.toUpperCase() !== 'GET') {
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if ((req.method ?? '').toUpperCase() !== 'GET') {
     next();
     return;
   }
