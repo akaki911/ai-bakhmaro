@@ -43,6 +43,7 @@ import { useMemoryManagement } from "../hooks/useMemoryManagement";
 import { fetchSecretsTelemetry } from "@/services/secretsAdminApi";
 import { useTheme } from "../contexts/useTheme";
 import { systemCleanerService } from "../services/SystemCleanerService";
+import { resolveServiceUrl } from "@/lib/serviceUrl";
 
 export type EmotionalState = "idle" | "thinking" | "responding";
 
@@ -108,7 +109,7 @@ const CORE_TABS: TabKey[] = [
   "settings",
 ];
 
-const DEFAULT_AI_SERVICE_HEALTH = { status: "ok", port: 5001, lastCheck: Date.now() };
+const DEFAULT_AI_SERVICE_HEALTH = { status: "ok", lastCheck: Date.now() };
 
 const normalizeTabKey = (value: string | null, validTabs: readonly TabKey[]): TabKey | null => {
   if (!value) {
@@ -354,7 +355,8 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
         throw new Error("Authentication required");
       }
 
-      const url = endpoint.startsWith("/") ? endpoint : `/api/ai/${endpoint}`;
+      const baseEndpoint = endpoint.startsWith("/") ? endpoint : `/api/ai/${endpoint}`;
+      const url = resolveServiceUrl(baseEndpoint);
 
       try {
         const response = await fetch(url, {

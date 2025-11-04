@@ -1,55 +1,61 @@
-const API_PATH = '/api';
-
 const stripTrailingSlashes = (value) => value.replace(/\/+$/, '');
 
-const HOST_BACKEND_OVERRIDES = new Map([
-  ['ai.bakhmaro.co', 'https://backend.ai.bakhmaro.co/api'],
-  ['ai-bakhmaro.web.app', 'https://backend.ai.bakhmaro.co/api'],
-  ['ai-bakhmaro.firebaseapp.com', 'https://backend.ai.bakhmaro.co/api'],
-]);
+const ensureLeadingSlash = (value) => (value.startsWith('/') ? value : `/${value}`);
 
-const normalizeHostname = (value) => {
-  if (typeof value !== 'string') {
-    return undefined;
-  }
-
-  const trimmed = value.trim().toLowerCase();
-  return trimmed === '' ? undefined : trimmed;
-};
-
-const resolveHostOverride = (hostname) => {
-  const normalized = normalizeHostname(hostname);
-  if (!normalized) {
-    return undefined;
-  }
-
-  const override = HOST_BACKEND_OVERRIDES.get(normalized);
-  return override ? stripTrailingSlashes(override) : undefined;
-};
-
-export const getApiBaseRaw = () => {
-  const configuredBase = import.meta?.env?.VITE_API_BASE?.trim?.();
-
-  if (configuredBase) {
-    return stripTrailingSlashes(configuredBase);
-  }
-
-  if (typeof window !== 'undefined' && window.location) {
-    const override = resolveHostOverride(window.location.hostname);
-    if (override) {
-      console.info('ℹ️ [APIBase] Using hostname override for API base URL:', override);
-      return override;
+const stripPrefix = (value, prefixes = []) => {
+  for (const prefix of prefixes) {
+    if (value.startsWith(prefix)) {
+      return value.slice(prefix.length);
     }
+  }
+  return value;
+};
 
-    const origin = `${window.location.protocol}//${window.location.host}`;
-    return `${stripTrailingSlashes(origin)}${API_PATH}`;
+const normalizeBase = (value) => {
+  if (typeof value !== 'string') {
+    return '';
   }
 
-  return API_PATH;
+  const trimmed = value.trim();
+  return trimmed === '' ? '' : stripTrailingSlashes(trimmed);
 };
 
-export const buildApiUrlRaw = (path) => {
-  const base = getApiBaseRaw();
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${stripTrailingSlashes(base)}${normalizedPath}`;
+const buildUrlWithBase = (base, path = '', prefixes = []) => {
+  const normalizedBase = normalizeBase(base);
+  if (!normalizedBase) {
+    return path;
+  }
+
+  const rawPath = stripPrefix(path, prefixes);
+  if (!rawPath) {
+    return normalizedBase;
+  }
+
+  return `${normalizedBase}${ensureLeadingSlash(rawPath)}`;
 };
+
+const getEnvValue = (key) => import.meta?.env?.[key]?.trim?.() ?? '';
+
+export const getApiBaseRaw = () => normalizeBase(getEnvValue('VITE_API_BASE'));
+
+export const buildApiUrlRaw = (path = '') => buildUrlWithBase(getApiBaseRaw(), path, ['/api']);
+
+export const getAiBaseRaw = () => normalizeBase(getEnvValue('VITE_AI_BASE'));
+
+export const buildAiUrlRaw = (path = '') =>
+  buildUrlWithBase(getAiBaseRaw(), path, ['/api/ai', '/ai']);
+
+export const getAuthBaseRaw = () => normalizeBase(getEnvValue('VITE_AUTH_BASE'));
+
+export const buildAuthUrlRaw = (path = '') =>
+  buildUrlWithBase(getAuthBaseRaw(), path, ['/api/admin/auth', '/admin/auth']);
+
+export const getFilesBaseRaw = () => normalizeBase(getEnvValue('VITE_FILES_BASE'));
+
+export const buildFilesUrlRaw = (path = '') =>
+  buildUrlWithBase(getFilesBaseRaw(), path, ['/api/files', '/files']);
+
+export const getConfigBaseRaw = () => normalizeBase(getEnvValue('VITE_CONFIG_BASE'));
+
+export const buildConfigUrlRaw = (path = '') =>
+  buildUrlWithBase(getConfigBaseRaw(), path, ['/api/config', '/config']);

@@ -77,7 +77,7 @@ const AIServiceStatus: React.FC<AIServiceStatusProps> = ({ onStatusChange }) => 
       case 'degraded':
         return 'AI სერვისი ნაწილობრივ მუშაობს';
       case 'offline':
-        return 'AI სერვისი მიუწვდომელია';
+        return 'AI სერვისი მიუწვდომელია სერვერზე';
     }
   };
 

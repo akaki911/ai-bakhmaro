@@ -35,8 +35,8 @@ export const runSystemHealthCheck = async () => {
   // 3. Microservices Health Check
   const checkMicroservices = async () => {
     const services = [
-      { name: 'AI Service', url: 'http://localhost:5001/health' },
-      { name: 'Backend', url: 'http://localhost:5002/health' }
+      { name: 'AI Service', url: resolveServiceUrl('/api/ai/health') },
+      { name: 'Backend', url: resolveServiceUrl('/api/health') }
     ];
 
     const results = await Promise.allSettled(
@@ -119,3 +119,4 @@ window.clearPendingMutations = () => {
 window.runSystemHealthCheck = runSystemHealthCheck;
 
 export default runSystemHealthCheck;
+import { resolveServiceUrl } from '@/lib/serviceUrl';
