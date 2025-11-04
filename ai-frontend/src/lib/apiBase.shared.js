@@ -36,11 +36,22 @@ const buildUrlWithBase = (base, path = '', prefixes = []) => {
 
 const getEnvValue = (key) => import.meta?.env?.[key]?.trim?.() ?? '';
 
+const getFirstEnvValue = (keys = []) => {
+  for (const key of keys) {
+    const value = getEnvValue(key);
+    if (value) {
+      return value;
+    }
+  }
+  return '';
+};
+
 export const getApiBaseRaw = () => normalizeBase(getEnvValue('VITE_API_BASE'));
 
 export const buildApiUrlRaw = (path = '') => buildUrlWithBase(getApiBaseRaw(), path, ['/api']);
 
-export const getAiBaseRaw = () => normalizeBase(getEnvValue('VITE_AI_BASE'));
+export const getAiBaseRaw = () =>
+  normalizeBase(getFirstEnvValue(['VITE_AI_BASE', 'VITE_AI_SERVICE_URL']));
 
 export const buildAiUrlRaw = (path = '') =>
   buildUrlWithBase(getAiBaseRaw(), path, ['/api/ai', '/ai']);
