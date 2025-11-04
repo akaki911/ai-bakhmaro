@@ -1,2 +1,10 @@
 export declare const getApiBaseRaw: () => string;
-export declare const buildApiUrlRaw: (path: string) => string;
+export declare const buildApiUrlRaw: (path?: string) => string;
+export declare const getAiBaseRaw: () => string;
+export declare const buildAiUrlRaw: (path?: string) => string;
+export declare const getAuthBaseRaw: () => string;
+export declare const buildAuthUrlRaw: (path?: string) => string;
+export declare const getFilesBaseRaw: () => string;
+export declare const buildFilesUrlRaw: (path?: string) => string;
+export declare const getConfigBaseRaw: () => string;
+export declare const buildConfigUrlRaw: (path?: string) => string;

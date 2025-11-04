@@ -4,7 +4,7 @@ import { bootstrapEnv } from '../../../scripts/bootstrapEnv';
 
 bootstrapEnv({ silent: true });
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://0.0.0.0:5001';
+const AI_SERVICE_URL = (process.env.AI_SERVICE_URL || 'https://api.ai.bakhmaro.co/api/ai').replace(/\/+$/, '');
 
 // Rate limiting
 const rateLimitMap = new Map<string, number>();
@@ -49,7 +49,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const targetUrl = `${AI_SERVICE_URL}/api/ai/${apiPath}`;
+    const normalisedPath = apiPath?.replace(/^\/+/, '') ?? '';
+    const targetUrl = `${AI_SERVICE_URL}/${normalisedPath}`;
     console.log(`🔄 [API Proxy] ${req.method} ${req.url} -> ${targetUrl}`);
 
     const requestOptions: RequestInit = {

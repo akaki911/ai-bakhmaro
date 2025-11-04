@@ -19,7 +19,7 @@ test('uses the current window origin when available', () => {
     },
   };
 
-  assert.equal(buildServiceOrigin(5001), 'https://console.example.dev:5001');
+  assert.equal(buildServiceOrigin(5100), 'https://console.example.dev:5100');
   restoreWindow();
 });
 
@@ -37,6 +37,6 @@ test('omits default HTTPS port when targeting 443', () => {
 test('falls back to the default host when window is unavailable', () => {
   delete globalThis.window;
 
-  assert.equal(buildServiceOrigin(5002), 'http://localhost:5002');
+  assert.equal(buildServiceOrigin(6100), 'https://ai.bakhmaro.co:6100');
   restoreWindow();
 });

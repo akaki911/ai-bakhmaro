@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { fetchWithDirectAiFallback } from '@/utils/aiFallback';
+import { resolveServiceUrl } from '@/lib/serviceUrl';
 import { 
   Activity, 
   AlertTriangle, 
@@ -72,7 +73,7 @@ const SystemMonitoringDashboard: React.FC = () => {
 
   const fetchSystemLogs = useCallback(async () => {
     try {
-      const response = await fetch('/api/dev/console/tail?limit=50');
+      const response = await fetch(resolveServiceUrl('/api/dev/console/tail?limit=50'));
       if (response.ok) {
         const data = await response.json();
         setLogs(data.entries || []);
@@ -90,7 +91,7 @@ const SystemMonitoringDashboard: React.FC = () => {
       const healthCheckTimeout = 5000; // 5 second timeout
       
       const [backendHealth, aiHealth] = await Promise.allSettled([
-        fetch('/api/health', {
+        fetch(resolveServiceUrl('/api/health'), {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           cache: 'no-cache',

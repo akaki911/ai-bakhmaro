@@ -3,6 +3,7 @@ import useSWR from 'swr';
 import { getAdminAuthHeaders } from '@/utils/adminToken';
 import { rateLimitedJsonFetch } from '@/utils/rateLimitedFetch';
 import { rateLimitManager } from '@/utils/rateLimitHandler';
+import { buildAiUrl, buildApiUrl } from '@/lib/apiBase';
 
 const AI_HEALTH_RATE_KEY = 'ai:health';
 const AI_MODELS_RATE_KEY = 'ai:models';
@@ -312,7 +313,7 @@ export const useAIServiceState = (isAuthenticated?: boolean, authUser?: any) => 
 
   const fetchHealth = useCallback(async () => {
     try {
-      const payload = await rateLimitedJsonFetch<any>('/api/ai/health', {
+      const payload = await rateLimitedJsonFetch<any>(buildAiUrl('/api/ai/health'), {
         key: AI_HEALTH_RATE_KEY,
         credentials: 'include',
         headers: buildAuthHeaders(authUser),
@@ -416,7 +417,7 @@ export const useAIServiceState = (isAuthenticated?: boolean, authUser?: any) => 
       models?: unknown;
       message?: string;
       error?: string;
-    }>('/api/ai/models', {
+    }>(buildAiUrl('/api/ai/models'), {
       key: AI_MODELS_RATE_KEY,
       headers: {
         ...buildAuthHeaders(authUser),
@@ -472,7 +473,7 @@ export const useAIServiceState = (isAuthenticated?: boolean, authUser?: any) => 
 
   const fetchGuruloStatus = useCallback(async () => {
     try {
-      const data = await rateLimitedJsonFetch('/api/gurulo-status', {
+      const data = await rateLimitedJsonFetch(buildApiUrl('/api/gurulo-status'), {
         key: GURULO_STATUS_RATE_KEY,
         headers: buildAuthHeaders(authUser),
         credentials: 'include',
@@ -517,7 +518,7 @@ export const useAIServiceState = (isAuthenticated?: boolean, authUser?: any) => 
 
   const fetchGuruloBrainStatus = useCallback(async () => {
     try {
-      const data = await rateLimitedJsonFetch('/api/gurulo-brain-status', {
+      const data = await rateLimitedJsonFetch(buildApiUrl('/api/gurulo-brain-status'), {
         key: GURULO_BRAIN_RATE_KEY,
         headers: buildAuthHeaders(authUser),
         credentials: 'include',
