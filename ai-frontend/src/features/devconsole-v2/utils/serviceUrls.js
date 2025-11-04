@@ -1,12 +1,21 @@
 import { getApiBaseRaw } from '../../../lib/apiBase.shared.js';
 
-const FALLBACK_BASE = 'http://localhost';
+const FALLBACK_BASE = () => {
+  const envBase = import.meta?.env?.VITE_APP_URL?.trim?.();
+  if (envBase) {
+    return envBase;
+  }
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin;
+  }
+  return 'https://ai.bakhmaro.co';
+};
 
 const createUrl = (value) => {
   try {
     return new URL(value);
   } catch {
-    return new URL(value, `${FALLBACK_BASE}/`);
+    return new URL(value, `${FALLBACK_BASE()}/`);
   }
 };
 

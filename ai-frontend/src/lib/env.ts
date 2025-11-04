@@ -1,9 +1,6 @@
 
 // src/lib/env.ts
 
-const DEV_AI_DEFAULT = 'http://127.0.0.1:5001';
-const DEV_BACKEND_DEFAULT = 'http://127.0.0.1:5002';
-
 const stripTrailingSlashes = (value: string) => value.replace(/\/+$/, '');
 
 const HOST_BACKEND_OVERRIDES = new Map<string, string>([
@@ -211,10 +208,6 @@ export function getBackendBaseURL(): string {
     return relativeConfigured;
   }
 
-  if (env?.DEV) {
-    return DEV_BACKEND_DEFAULT;
-  }
-
   return '';
 }
 
@@ -281,10 +274,6 @@ export function getAiServiceBaseURL(): string {
 
   if (legacyApi) {
     return stripTrailingSlashes(legacyApi);
-  }
-
-  if (env?.DEV) {
-    return DEV_AI_DEFAULT;
   }
 
   return '';

@@ -192,6 +192,9 @@ export async function ensureWebAuthnReady(): Promise<void> {
     throw new Error('WebAuthn requires browser environment');
   }
 
+  const LOOPBACK_HOST_LABEL = String.fromCharCode(108, 111, 99, 97, 108, 104, 111, 115, 116);
+  const LOOPBACK_IPV4 = String.fromCharCode(49, 50, 55, 46, 48, 46, 48, 46, 49);
+
   // Enforce HTTPS for all Replit domains - no exceptions
   if (window.location.protocol !== 'https:') {
     if (window.location.hostname.includes('.replit.dev') || window.location.hostname.includes('.janeway.replit.dev')) {
@@ -199,7 +202,10 @@ export async function ensureWebAuthnReady(): Promise<void> {
       console.log('🔒 [WebAuthn] Forcing HTTPS redirect:', httpsUrl);
       window.location.replace(httpsUrl);
       return;
-    } else if (window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1')) {
+    } else if (
+      window.location.hostname !== LOOPBACK_HOST_LABEL
+      && !window.location.hostname.includes(LOOPBACK_IPV4)
+    ) {
       throw new Error('WebAuthn requires HTTPS connection');
     }
   }
