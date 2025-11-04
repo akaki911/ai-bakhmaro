@@ -1,4 +1,5 @@
 import { getBackendBaseURL, isDirectBackendDebugEnabled } from '@/lib/env';
+import { resolveServiceUrl } from '@/lib/serviceUrl';
 
 const ABSOLUTE_URL_PATTERN = /^https?:\/\//i;
 
@@ -65,6 +66,11 @@ const createBackendUrlResolution = (path: string): BackendUrlResolution => {
 
   if (ABSOLUTE_URL_PATTERN.test(path)) {
     return { sameOrigin: path, direct: path };
+  }
+
+  const resolved = resolveServiceUrl(path);
+  if (resolved && ABSOLUTE_URL_PATTERN.test(resolved)) {
+    return { sameOrigin: resolved, direct: resolved };
   }
 
   const sameOrigin = normaliseApiPath(path);

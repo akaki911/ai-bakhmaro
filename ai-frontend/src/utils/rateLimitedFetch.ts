@@ -3,6 +3,7 @@ import { rateLimitManager } from './rateLimitHandler';
 import { fetchWithDirectAiFallback } from './aiFallback';
 import { getAdminAuthHeaders } from './adminToken';
 import { mergeHeaders } from './httpHeaders';
+import { resolveServiceUrl } from '@/lib/serviceUrl';
 
 interface RateLimitedFetchOptions extends RequestInit {
   /**
@@ -64,7 +65,8 @@ export const rateLimitedJsonFetch = async <T = unknown>(
       headers: mergeHeaders({ Accept: 'application/json' }, getAdminAuthHeaders(), init.headers),
     };
 
-    const { response } = await fetchWithDirectAiFallback(url, requestInit);
+    const targetUrl = resolveServiceUrl(url);
+    const { response } = await fetchWithDirectAiFallback(targetUrl, requestInit);
 
     if (response.status === 429) {
       throw attachRateLimitMetadata(new Error('HTTP 429: Too Many Requests'), response);
