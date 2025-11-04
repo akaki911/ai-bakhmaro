@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getBackendBaseURL } from '@/lib/env';
+import { resolveServiceUrl } from '@/lib/serviceUrl';
 import { useAuth } from '../contexts/useAuth';
 import { useDarkMode } from '../hooks/useDarkMode';
 
@@ -62,10 +62,8 @@ const PerformanceDashboard: React.FC = () => {
   const isAuthorized = user?.personalId === '01019062020';
 
   const getApiEndpoint = useCallback(() => {
-    const isProduction = import.meta.env.PROD || window.location.protocol === 'https:';
-    const baseURL = isProduction ? window.location.origin : getBackendBaseURL() || 'http://127.0.0.1:5002';
-
-    return `${baseURL}/api/performance`;
+    const baseURL = resolveServiceUrl('/api/performance');
+    return baseURL.replace(/\/+$/, '');
   }, []);
 
   // Fetch real-time metrics

@@ -2,6 +2,7 @@ import { getAiServiceBaseURL } from '@/lib/env';
 import { analyzeNetworkError, enhanceWithNetworkMetadata } from './networkErrorDetection';
 import { getAdminAuthHeaders } from './adminToken';
 import { mergeHeaders } from './httpHeaders';
+import { resolveServiceUrl } from '@/lib/serviceUrl';
 
 type HttpMethod = RequestInit['method'];
 
@@ -92,6 +93,7 @@ export const fetchWithDirectAiFallback = async (
   url: string,
   init: RequestInit = {},
 ): Promise<DirectAiFetchResult> => {
+  const resolvedUrl = resolveServiceUrl(url);
   const initWithHeaders: RequestInit = {
     ...init,
     headers: mergeHeaders({ Accept: 'application/json' }, getAdminAuthHeaders(), init.headers),
@@ -103,12 +105,12 @@ export const fetchWithDirectAiFallback = async (
       : { ...initWithHeaders, credentials: 'include' as RequestCredentials };
 
   const candidates: Array<{ target: string; usedFallback: boolean }> = [
-    { target: url, usedFallback: false },
+    { target: resolvedUrl, usedFallback: false },
   ];
 
-  if (shouldUseDirectAiFallback(url, init)) {
-    const directUrl = buildDirectAiUrl(url);
-    if (directUrl && directUrl !== url) {
+  if (shouldUseDirectAiFallback(resolvedUrl, init)) {
+    const directUrl = buildDirectAiUrl(resolvedUrl);
+    if (directUrl && directUrl !== resolvedUrl) {
       candidates.push({ target: directUrl, usedFallback: true });
     }
   }
@@ -128,7 +130,7 @@ export const fetchWithDirectAiFallback = async (
       }
 
       if (candidate.usedFallback) {
-        console.info(`🔁 [AI Fallback] Direct AI service served ${normalizePath(url)}`);
+        console.info(`🔁 [AI Fallback] Direct AI service served ${normalizePath(resolvedUrl)}`);
       }
 
       return { response, usedFallback: candidate.usedFallback };
