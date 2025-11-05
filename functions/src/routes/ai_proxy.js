@@ -221,7 +221,7 @@ router.post('/github/fetch', requireGithubToken, async (req, res) => {
   );
 });
 
-router.post('/github/push', requireToken, async (req, res) => {
+router.post('/github/push', requireGithubToken, async (req, res) => {
   const sessionKey = resolveSessionKey(req);
   respondSafe(res, 'push')(
     gitCommands.push({ branch: req.body?.branch || 'main', remote: req.body?.remote || 'origin', token: process.env.GITHUB_TOKEN })
