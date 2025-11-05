@@ -352,37 +352,7 @@ const resolveCorsOptions = (req, resolvedOrigin) => {
   };
 };
 
-app.use((req, res, next) => {
-  try {
-    const origin = determineAllowedOrigin(req);
-    if (origin) {
-      const options = resolveCorsOptions(req, origin);
-      applyCorsHeaders(res, options);
-    } else if (req.header('Origin')) {
-      console.warn(`🚫 [CORS] Blocked response header for origin: ${req.header('Origin')}`);
-    }
-  } catch (error) {
-    console.error('⚠️ [CORS] Failed to resolve origin header:', error.message);
-  }
-  next();
-});
-
-const corsOptionsDelegate = (req, callback) => {
-  const allowedOrigin = determineAllowedOrigin(req);
-  if (!allowedOrigin) {
-    const requestOrigin = req.header('Origin');
-    if (requestOrigin) {
-      console.warn(`🚫 CORS blocked origin: ${requestOrigin}`);
-    }
-    return callback(new Error('Not allowed by CORS'));
-  }
-
-  const options = resolveCorsOptions(req, allowedOrigin);
-  callback(null, options);
-};
-
-app.options('*', cors(corsOptionsDelegate));
-app.use(cors(corsOptionsDelegate));
+app.use(cors());
 
 app.use(buildModeGuard);
 
