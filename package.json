@@ -21,7 +21,7 @@
     "health-check": "node system-health-check.js",
     "test:integration": "./scripts/run-integration-tests.sh",
     "check:secrets-required": "node check-secrets.js",
-    "lint-staged": "node scripts/run-lint-staged.js",
+    "lint-staged": "node scripts/run-lint-staged.js"
 
   },
   "devDependencies": {
