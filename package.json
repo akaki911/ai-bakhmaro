@@ -22,7 +22,7 @@
     "test:integration": "./scripts/run-integration-tests.sh",
     "check:secrets-required": "node check-secrets.js",
     "lint-staged": "node scripts/run-lint-staged.js",
-    "prepare": "node scripts/setup-git-hooks.js"
+
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
