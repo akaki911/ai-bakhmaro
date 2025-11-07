@@ -71,7 +71,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npx vite --port 5000 --host 0.0.0.0 & PORT=5002 npm run start:backend & cd ai-service && PORT=5001 node server.js & wait"
+args = "cd ai-frontend && npx vite --port 5000 --host 0.0.0.0 & PORT=5002 npm run start & cd ai-service && PORT=5001 node server.js & wait"
 waitForPort = 5000
 
 [workflows.workflow.metadata]
