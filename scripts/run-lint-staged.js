@@ -22,10 +22,6 @@ function getStagedFiles() {
 }
 
 function detectRunner() {
-  const pnpmCheck = spawnSync('pnpm', ['--version'], { stdio: 'ignore' });
-  if (pnpmCheck.status === 0) {
-    return { command: 'pnpm', args: ['exec', 'eslint'] };
-  }
   return { command: 'npx', args: ['eslint'] };
 }
 

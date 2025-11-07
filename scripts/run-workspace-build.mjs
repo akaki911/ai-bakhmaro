@@ -1,8 +1,8 @@
 import { spawn } from 'node:child_process';
 
 const child = spawn(
-  'pnpm',
-  ['-r', '--if-present', 'run', 'build'],
+  'npm',
+  ['run', 'build', '--workspaces', '--if-present'],
   {
     stdio: 'inherit',
     shell: process.platform === 'win32',
