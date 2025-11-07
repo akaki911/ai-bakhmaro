@@ -352,7 +352,39 @@ const resolveCorsOptions = (req, resolvedOrigin) => {
   };
 };
 
-app.use(cors());
+const corsMiddleware = (req, res, next) => {
+  const requestOrigin = req.headers.origin;
+  console.log('CORS Middleware: Request Origin:', requestOrigin);
+
+  const resolvedOrigin = determineAllowedOrigin(req);
+  console.log('CORS Middleware: Resolved Origin:', resolvedOrigin);
+
+  // If there's an Origin header but it's not in our allowlist, reject the request.
+  if (requestOrigin && !resolvedOrigin) {
+    console.warn('CORS Middleware: Origin not allowed, blocking request.');
+    return res.status(403).json({
+        success: false,
+        error: 'CORS_NOT_ALLOWED',
+        message: 'Origin is not permitted'
+    });
+  }
+
+  const corsOptions = resolveCorsOptions(req, resolvedOrigin);
+  console.log('CORS Middleware: corsOptions.origin:', corsOptions.origin);
+
+  applyCorsHeaders(res, corsOptions);
+
+  // End preflight requests here
+  if (req.method === 'OPTIONS') {
+    console.log('CORS Middleware: Handling OPTIONS preflight request.');
+    res.status(204).send();
+    return;
+  }
+
+  next();
+};
+
+app.use(corsMiddleware);
 
 app.use(buildModeGuard);
 
