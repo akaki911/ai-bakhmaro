@@ -9,7 +9,7 @@
     "build:types": "tsc -b",
     "build:client": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview --port 5000 --host 0.0.0.0",
+    "preview": "vite preview --port $PORT --host 0.0.0.0",
     "test": "node --test tests",
     "type-check": "tsc --noEmit"
   },
