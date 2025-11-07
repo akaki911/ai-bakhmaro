@@ -30,10 +30,6 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 5001
-externalPort = 4200
-
-[[ports]]
 localPort = 5002
 externalPort = 3002
 
@@ -66,7 +62,7 @@ args = "All-Services-Correct-Ports"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Development-Environment"
+args = "All-Services"
 
 [[workflows.workflow]]
 name = "All-Services-Correct-Ports"
@@ -80,21 +76,21 @@ waitForPort = 5000
 [workflows.workflow.metadata]
 outputType = "webview"
 
+[[workflows.workflow]]
+name = "All-Services"
+author = "agent"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd ai-frontend && npx vite --port 5000 --host 0.0.0.0 & cd backend && PORT=5002 npm run start & cd ai-service && PORT=5001 node server.js & wait"
+args = "(cd ai-frontend && npx vite --port 5000 --host 0.0.0.0) & (cd backend && PORT=5002 npm start) & (cd ai-service && PORT=5001 node server.js) & wait"
 waitForPort = 5000
-
-[[workflows.workflow]]
-name = "Development-Environment"
-author = "agent"
 
 [workflows.workflow.metadata]
 outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "bash scripts/start-all-services.sh"
+args = "cd ai-frontend && npx vite --port 5000 --host 0.0.0.0 & cd backend && PORT=5002 npm run start & cd ai-service && PORT=5001 node server.js & wait"
 waitForPort = 5000
 
 [unitTest]
