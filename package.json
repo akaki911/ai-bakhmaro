@@ -22,7 +22,6 @@
     "test:integration": "./scripts/run-integration-tests.sh",
     "check:secrets-required": "node check-secrets.js",
     "lint-staged": "node scripts/run-lint-staged.js"
-
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -31,5 +30,11 @@
   "engines": {
     "node": ">=18 <=22"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "dependencies": {
+    "pino": "^10.1.0",
+    "pino-pretty": "^13.1.2",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
+  }
 }
