@@ -229,38 +229,9 @@ app.use((error, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 5002;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Backend running on http://0.0.0.0:${PORT}`);
-
-  // Test AI service connection with better error handling
-  setTimeout(async () => {
-    try {
-      const fetch = (await import('node-fetch')).default;
-      const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://0.0.0.0:5001';
-      console.log(`🔧 [Backend] Testing AI Service at: ${aiServiceUrl}/health`);
-
-      const response = await fetch(`${aiServiceUrl}/health`, {
-        timeout: 5000,
-        headers: { 'User-Agent': 'Backend-Health-Check' }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ AI Service connection verified:', data.service, 'on port', data.port);
-      } else {
-        console.warn('⚠️ AI Service health check failed:', response.status, response.statusText);
-      }
-    } catch (error) {
-      console.warn('⚠️ AI Service not available - this is normal during startup:', error.code || error.message);
-    }
-  }, 3000); // Give AI service time to start
-
-// Backend-specific initialization
-console.log('✅ Backend initialization completed');
-  console.log(`📡 AI Chat endpoint available at: /api/ai/chat`);
-  console.log(`🤖 AI Health endpoint: http://0.0.0.0:${PORT}/api/ai/health`);
-});
+// LEGACY CODE - Server startup moved to backend/index.js
+// This file is kept for backwards compatibility but no longer starts its own server
+console.log('⚠️ [Legacy] backend/backend/index.js loaded - server startup is handled by backend/index.js');
 
 // Test route
 app.get('/test', (req, res) => {
