@@ -16,7 +16,6 @@ requiredFiles = [".replit", "replit.nix"]
 run = ["npm", "run", "start"]
 build = ["npm", "run", "build"]
 deploymentTarget = "autoscale"
-publicDir = "dist"
 
 [[ports]]
 localPort = 3001
