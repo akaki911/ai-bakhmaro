@@ -31,10 +31,6 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 5001
-externalPort = 3002
-
-[[ports]]
 localPort = 5002
 externalPort = 4200
 
@@ -65,6 +61,10 @@ author = "agent"
 task = "workflow.run"
 args = "All-Services-Correct-Ports"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Development-Environment"
+
 [[workflows.workflow]]
 name = "All-Services-Correct-Ports"
 author = "agent"
@@ -81,6 +81,18 @@ outputType = "webview"
 task = "shell.exec"
 args = "cd ai-frontend && npx vite --port 5000 --host 0.0.0.0 & cd backend && PORT=5002 npm run start & cd ai-service && PORT=5001 node server.js & wait"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Development-Environment"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "(cd ai-frontend && npm run dev) & (cd backend && npm run start) & (cd ai-service && node server.js) & wait"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [unitTest]
 language = "nodejs"

@@ -454,6 +454,15 @@ app.get(env.LOGIN_PATH, (_req: Request, res: Response, next: NextFunction) => {
   sendIndexHtml(res, next);
 });
 
+app.get('/health', (_req: Request, res: Response) => {
+  res.status(200).json({
+    status: 'ok',
+    service: 'gateway',
+    timestamp: new Date().toISOString(),
+    port: env.PORT
+  });
+});
+
 app.get('/', ensureAuth, (_req: Request, res: Response, next: NextFunction) => {
   sendIndexHtml(res, next);
 });
@@ -492,7 +501,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 if (env.NODE_ENV !== 'test') {
   const port = env.PORT;
-  app.listen(port, () => {
+  app.listen(port, '0.0.0.0', () => {
     console.log(`🌐 Gateway listening on port ${port}`);
   });
 }
