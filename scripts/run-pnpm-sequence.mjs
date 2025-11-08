@@ -16,7 +16,7 @@ const runTask = (index) => {
   }
 
   const task = tasks[index];
-  const child = spawn('pnpm', ['run', task], {
+  const child = spawn('npm', ['run', task], {
     stdio: 'inherit',
     shell,
     env: {
