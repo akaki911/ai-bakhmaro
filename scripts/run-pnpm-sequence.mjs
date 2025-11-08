@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 const tasks = process.argv.slice(2);
 
 if (tasks.length === 0) {
-  console.error('No pnpm scripts provided. Usage: node run-pnpm-sequence.mjs <script> [script...]');
+  console.error('No npm scripts provided. Usage: node run-pnpm-sequence.mjs <script> [script...]');
   process.exit(1);
 }
 
