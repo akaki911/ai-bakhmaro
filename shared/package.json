@@ -1,6 +1,10 @@
 {
-  "name": "@gurulo/shared",
-  "private": true,
+  "name": "ai-bakhmaro-shared",
   "version": "1.0.0",
-  "type": "commonjs"
+  "private": true,
+  "main": "index.js",
+  "dependencies": {
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {}
 }
