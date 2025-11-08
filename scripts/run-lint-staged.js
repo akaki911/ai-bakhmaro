@@ -22,6 +22,7 @@ function getStagedFiles() {
 }
 
 function detectRunner() {
+  
   return { command: 'npx', args: ['eslint'] };
 }
 
