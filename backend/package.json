@@ -3,14 +3,16 @@
   "version": "1.0.0",
   "description": "Backend server for Bakhmaro AI operations platform",
   "main": "index.js",
-  "scripts": {
-    "superadmin:create": "node scripts/createSuperAdmin.js",
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "env:verify": "node scripts/verifyEnv.js",
-    "test": "jest",
-    "migrate:webauthn": "node scripts/runMigration.js"
-  },
+ "scripts": {
+  "superadmin:create": "node scripts/createSuperAdmin.js",
+  "start": "node index.js",
+  "dev": "nodemon index.js",
+  "env:verify": "node scripts/verifyEnv.js",
+  "test": "jest",
+  "migrate:webauthn": "node scripts/runMigration.js",
+  "build": "echo 'No build step required for backend'"
+ }
+
   "dependencies": {
     "@opentelemetry/api": "^1.7.0",
     "@opentelemetry/exporter-jaeger": "^1.18.0",
