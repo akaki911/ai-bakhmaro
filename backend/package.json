@@ -4,6 +4,7 @@
   "description": "Backend server for Bakhmaro AI operations platform",
   "main": "index.js",
   "scripts": {
+    "build": "echo 'Backend build completed - no build step required for Node.js'",
     "superadmin:create": "node scripts/createSuperAdmin.js",
     "start": "node index.js",
     "dev": "nodemon index.js",
