@@ -354,14 +354,23 @@ const resolveCorsOptions = (req, resolvedOrigin) => {
 
 const corsMiddleware = (req, res, next) => {
   const requestOrigin = req.headers.origin;
-  console.log('CORS Middleware: Request Origin:', requestOrigin);
+  
+  // Allow healthcheck and monitoring requests without Origin header
+  const isHealthCheck = req.path === '/health' || 
+                        req.path === '/api/health' ||
+                        req.path === '/' ||
+                        req.path.startsWith('/health');
+  
+  if (isHealthCheck && !requestOrigin) {
+    console.log('🏥 CORS Middleware: Healthcheck request without Origin - allowing');
+    return next();
+  }
 
   const resolvedOrigin = determineAllowedOrigin(req);
-  console.log('CORS Middleware: Resolved Origin:', resolvedOrigin);
 
   // If there's an Origin header but it's not in our allowlist, reject the request.
   if (requestOrigin && !resolvedOrigin) {
-    console.warn('CORS Middleware: Origin not allowed, blocking request.');
+    console.warn('🚫 CORS Middleware: Origin not allowed:', requestOrigin);
     return res.status(403).json({
         success: false,
         error: 'CORS_NOT_ALLOWED',
@@ -370,15 +379,11 @@ const corsMiddleware = (req, res, next) => {
   }
 
   const corsOptions = resolveCorsOptions(req, resolvedOrigin);
-  console.log('CORS Middleware: corsOptions.origin:', corsOptions.origin);
-
   applyCorsHeaders(res, corsOptions);
 
   // End preflight requests here
   if (req.method === 'OPTIONS') {
-    console.log('CORS Middleware: Handling OPTIONS preflight request.');
-    res.status(204).send();
-    return;
+    return res.status(204).send();
   }
 
   next();
