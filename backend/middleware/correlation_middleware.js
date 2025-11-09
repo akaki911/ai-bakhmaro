@@ -1,5 +1,5 @@
 
-const { v4: uuidv4 } = require('uuid');
+
 
 // Correlation ID middleware
 const correlationMiddleware = (req, res, next) => {
