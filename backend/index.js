@@ -355,14 +355,14 @@ const resolveCorsOptions = (req, resolvedOrigin) => {
 const corsMiddleware = (req, res, next) => {
   const requestOrigin = req.headers.origin;
   
-  // Allow healthcheck and monitoring requests without Origin header
+  // Allow healthcheck and monitoring requests, regardless of Origin header
   const isHealthCheck = req.path === '/health' || 
                         req.path === '/api/health' ||
                         req.path === '/' ||
                         req.path.startsWith('/health');
   
-  if (isHealthCheck && !requestOrigin) {
-    console.log('🏥 CORS Middleware: Healthcheck request without Origin - allowing');
+  if (isHealthCheck) {
+    console.log('🏥 CORS Middleware: Healthcheck request detected - allowing.');
     return next();
   }
 
