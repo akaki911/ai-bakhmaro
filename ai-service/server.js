@@ -138,57 +138,100 @@ allowedOrigins.push(/^https:\/\/.*\.repl\.co$/);
 allowedOrigins.push(/^https:\/\/.*\.sisko\.replit\.dev$/);
 allowedOrigins.push(/^https:\/\/.*\.riker\.replit\.dev$/);
 
-// SOL-203: CORS credentials:true + headers passthrough + auto-improve support
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (e.g., mobile apps, Postman)
-    if (!origin) {
-      return callback(null, true);
-    }
+// Helper functions for CORS middleware
+const determineAllowedOrigin = (req) => {
+  const requestOrigin = req.headers.origin;
+  if (!requestOrigin) return null; // No origin, no check needed
 
-    // In development, be more permissive
-    if (process.env.NODE_ENV !== 'production') {
-      if (origin.includes('replit.dev') || origin.includes('repl.co') || origin.includes('localhost')) {
-        return callback(null, true);
-      }
+  const isAllowed = allowedOrigins.some(allowedOrigin => {
+    if (typeof allowedOrigin === 'string') {
+      return requestOrigin === allowedOrigin;
     }
+    if (allowedOrigin instanceof RegExp) {
+      return allowedOrigin.test(requestOrigin);
+    }
+    return false;
+  });
 
-    const isAllowed = allowedOrigins.some(allowedOrigin => {
-      if (typeof allowedOrigin === 'string') {
-        return origin === allowedOrigin;
-      }
-      if (allowedOrigin instanceof RegExp) {
-        return allowedOrigin.test(origin);
-      }
-      return false;
+  return isAllowed ? requestOrigin : null;
+};
+
+const resolveCorsOptions = (req, resolvedOrigin) => {
+  // In development, be more permissive if an origin is provided but not strictly matched
+  const origin = (process.env.NODE_ENV !== 'production' && resolvedOrigin) || resolvedOrigin;
+  return {
+    origin: origin || '*', // Fallback to '*' if no origin is resolved (e.g., for allowed healthchecks)
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Accept',
+      'Origin',
+      'X-Requested-With',
+      'X-Correlation-ID',
+      'Cache-Control',
+      'Cookie'
+    ],
+    exposedHeaders: [
+      'Set-Cookie',
+      'X-Correlation-ID'
+    ],
+    credentials: true,
+    optionsSuccessStatus: 200
+  };
+};
+
+const applyCorsHeaders = (res, corsOptions) => {
+  res.setHeader('Access-Control-Allow-Origin', corsOptions.origin);
+  res.setHeader('Access-Control-Allow-Methods', corsOptions.methods.join(', '));
+  res.setHeader('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
+  if (corsOptions.credentials) {
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  // Exposed headers are handled by the actual response, not preflight
+};
+
+const corsMiddleware = (req, res, next) => {
+  const requestOrigin = req.headers.origin;
+
+  // Allow healthcheck and monitoring requests without Origin header
+  const isHealthCheck = req.path === '/health' ||
+                        req.path === '/api/health' ||
+                        req.path === '/api/ai/health' ||
+                        req.path === '/' ||
+                        req.path.startsWith('/health');
+
+  if (isHealthCheck && !requestOrigin) {
+    console.log('🏥 CORS Middleware: Healthcheck request without Origin - allowing');
+    return next();
+  }
+
+  const resolvedOrigin = determineAllowedOrigin(req);
+
+  // If there's an Origin header but it's not in our allowlist, reject the request.
+  if (requestOrigin && !resolvedOrigin) {
+    console.warn('🚫 CORS Middleware: Origin not allowed:', requestOrigin);
+    return res.status(403).json({
+        success: false,
+        error: 'CORS_NOT_ALLOWED',
+        message: 'Origin is not permitted'
     });
+  }
 
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      console.warn(`🚫 AI Service CORS blocked origin: ${origin}`);
-      // Allow in development for debugging
-      callback(null, process.env.NODE_ENV !== 'production');
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'Accept',
-    'Origin',
-    'X-Requested-With',
-    'X-Correlation-ID',
-    'Cache-Control',
-    'Cookie'
-  ],
-  exposedHeaders: [
-    'Set-Cookie',
-    'X-Correlation-ID'
-  ],
-  credentials: true,     // SOL-203 requirement
-  optionsSuccessStatus: 200
-}));
+  const corsOptions = resolveCorsOptions(req, resolvedOrigin);
+  applyCorsHeaders(res, corsOptions);
+
+  // End preflight requests here
+  if (req.method === 'OPTIONS') {
+    return res.status(204).send();
+  }
+
+  next();
+};
+
+
+// SOL-203: CORS credentials:true + headers passthrough + auto-improve support
+app.use(corsMiddleware); // Use the custom middleware
 app.use(express.json({ limit: '50mb' }));
 
 // Correlation ID middleware for request tracking
@@ -228,7 +271,7 @@ const memorySync = require('./routes/memory_sync');
 const memoryRecovery = require('./routes/memory_recovery');
 const aiModelsRoute = require('./routes/ai_models');
 
-// Import auto-improve routes (if they exist)
+// Import routes for auto-improve
 let autoImproveRoute = null;
 try {
   autoImproveRoute = require('./routes/auto_improve');
