@@ -1088,7 +1088,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
       <div className="h-full w-full bg-[#21252B] flex flex-col items-center justify-center">
         <div className="flex items-center gap-3 text-[#8B949E]">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#00D4FF]"></div>
-          <span>Loading Gurulo Assistant...</span>
+          <span>გურულო ასისტენტი იტვირთება...</span>
         </div>
       </div>
     );
@@ -1111,7 +1111,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
             }`}
           >
             <User size={16} />
-            Agent
+            აგენტი
           </button>
           <button
             onClick={() => setActiveTab("assistant")}
@@ -1122,7 +1122,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
             }`}
           >
             <Sparkles size={16} />
-            Assistant
+            ასისტენტი
           </button>
         </div>
 
@@ -1183,7 +1183,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
               className="w-full flex items-center gap-2 bg-[#21252B] hover:bg-[#3E4450] text-[#8B949E] hover:text-white px-3 py-2 rounded-lg text-sm transition-all"
             >
               <Plus size={16} />
-              New chat
+              ახალი ჩატი
             </button>
           </div>
 
@@ -1195,7 +1195,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                 onClick={() => setIsChatsCollapsed(!isChatsCollapsed)}
                 className="flex items-center justify-between text-[#8B949E] text-xs font-medium mb-2 cursor-pointer hover:text-[#E6EDF3] transition-colors"
               >
-                <span>Chats</span>
+                <span>ჩატები</span>
                 <div
                   className={`transform transition-transform ${isChatsCollapsed ? "rotate-0" : "rotate-90"}`}
                 >
@@ -1254,7 +1254,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                   {chatSessions.filter((session) => !session.isArchived)
                     .length === 0 && (
                     <div className="text-[#8B949E] text-xs text-center py-4">
-                      No recent chats
+                      არ არის ბოლოდროინდელი ჩატები
                     </div>
                   )}
                 </div>
@@ -1268,7 +1268,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                   onClick={() => setIsArchivedCollapsed(!isArchivedCollapsed)}
                   className="flex items-center justify-between text-[#8B949E] text-xs font-medium mb-2 cursor-pointer hover:text-[#E6EDF3] transition-colors"
                 >
-                  <span>Archived</span>
+                  <span>არქივირებული</span>
                   <div
                     className={`transform transition-transform ${isArchivedCollapsed ? "rotate-0" : "rotate-90"}`}
                   >
@@ -1338,14 +1338,14 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
               className="w-full flex items-center gap-2 text-[#8B949E] hover:text-white text-sm py-2 transition-all"
             >
               <RotateCcw size={16} />
-              Checkpoints
+              საკონტროლო წერტილები
             </button>
             <button
               onClick={() => alert("Settings ფუნქციონალი მალე დაემატება!")}
               className="w-full flex items-center gap-2 text-[#8B949E] hover:text-white text-sm py-2 transition-all"
             >
               <Settings size={16} />
-              Settings
+              პარამეტრები
             </button>
           </div>
         </div>
@@ -1362,12 +1362,12 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                   </div>
                 </div>
                 <h2 className="text-2xl font-semibold text-white mb-2">
-                  New chat with Assistant
+                  ახალი ჩატი ასისტენტთან
                 </h2>
                 <p className="text-[#8B949E] text-lg">
-                  Assistant answers questions, refines code, and
+                  ასისტენტი პასუხობს კითხვებს, აუმჯობესებს კოდს და
                   <br />
-                  makes precise edits.
+                  ახდენს ზუსტ რედაქტირებას.
                 </p>
               </div>
 
@@ -1452,26 +1452,26 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                         className="flex items-center gap-1 text-xs text-[#8B949E] hover:text-[#00D4FF] disabled:text-[#3E4450] disabled:cursor-not-allowed transition-colors"
                         title={
                           savedMessages.has(message.id)
-                            ? "Already saved to memory"
-                            : "Save to memory for future context"
+                            ? "უკვე შენახულია მეხსიერებაში"
+                            : "მეხსიერებაში შენახვა მომავალი კონტექსტისთვის"
                         }
                       >
                         {savingToMemory.get(message.id) ? (
                           <>
                             <RefreshCw size={12} className="animate-spin" />
-                            <span>Saving...</span>
+                            <span>ინახება...</span>
                           </>
                         ) : savedMessages.has(message.id) ? (
                           <>
                             <Check size={12} className="text-green-400" />
                             <span className="text-green-400">
-                              💾 Saved to Memory
+                              💾 მეხსიერებაში შენახულია
                             </span>
                           </>
                         ) : (
                           <>
                             <Brain size={12} />
-                            <span>💾 Save to Memory</span>
+                            <span>💾 მეხსიერებაში შენახვა</span>
                           </>
                         )}
                       </button>
@@ -1485,7 +1485,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                   <div className="bg-[#3E4450] p-3 rounded-lg">
                     <div className="flex items-center gap-2 text-[#8B949E]">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#00D4FF]"></div>
-                      <span className="text-sm">Assistant is thinking...</span>
+                      <span className="text-sm">ასისტენტი ფიქრობს...</span>
                     </div>
                   </div>
                 </div>
@@ -1504,7 +1504,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                   className="flex items-center gap-2 text-[#00D4FF] text-sm hover:text-[#0969DA] transition-all"
                 >
                   <Sparkles size={16} />
-                  <span>Advanced</span>
+                  <span>გაფართოებული პარამეტრები</span>
                   <ChevronDown
                     size={16}
                     className={`transition-transform ${isAdvancedOpen ? "rotate-180" : ""}`}
@@ -1514,7 +1514,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                 <div className="ml-auto flex items-center gap-2 text-sm text-[#8B949E]">
                   <span>
                     {availableModels.find((m) => m.id === selectedModel)
-                      ?.label || "Loading..."}
+                      ?.label || "იტვირთება..."}
                   </span>
                   <div className="w-2 h-2 bg-[#00D4FF] rounded-full"></div>
 
@@ -1546,7 +1546,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                 <div className="bg-[#21252B] border border-[#3E4450] rounded-lg p-3 mb-3 space-y-3">
                   <div>
                     <label className="block text-sm text-[#8B949E] mb-1">
-                      Model
+                      მოდელი
                     </label>
                     <select
                       value={selectedModel}
@@ -1554,7 +1554,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                       className="w-full bg-[#2C313A] border border-[#3E4450] rounded text-[#E6EDF3] text-sm px-3 py-2"
                     >
                       {availableModels.length === 0 ? (
-                        <option value="">Loading models...</option>
+                        <option value="">მოდელები იტვირთება...</option>
                       ) : (
                         availableModels.map((model) => (
                           <option key={model.id} value={model.id}>
@@ -1567,7 +1567,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
 
                   <div>
                     <label className="block text-sm text-[#8B949E] mb-1">
-                      Manual Override
+                      ხელით გადაფარვა
                     </label>
                     <select
                       value={manualOverride}
@@ -1579,18 +1579,17 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                       className="w-full bg-[#2C313A] border border-[#3E4450] rounded text-[#E6EDF3] text-sm px-3 py-2"
                     >
                       <option value="auto">Auto (Router Decision)</option>
-                      <option value="small">Force Small Model</option>
-                      <option value="large">Force Large Model</option>
+                      <option value="small">პატარა მოდელის იძულება</option>
+                      <option value="large">დიდი მოდელის იძულება</option>
                     </select>
                     <p className="text-xs text-[#8B949E] mt-1">
-                      Override automatic model routing. Auto uses policy-based
-                      selection.
+                      ავტომატური მოდელის არჩევის გადაფარვა. ავტო იყენებს წესებზე დაფუძნებულ არჩევანს.
                     </p>
                   </div>
 
                   <div>
                     <label className="block text-sm text-[#8B949E] mb-1">
-                      Context Depth
+                      კონტექსტის სიღრმე
                     </label>
                     <div className="flex items-center gap-3">
                       <input
@@ -1611,13 +1610,13 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                       </span>
                     </div>
                     <p className="text-xs text-[#8B949E] mt-1">
-                      Number of previous messages to include (1-10)
+                      წინა შეტყობინებების რაოდენობა (1-10)
                     </p>
                   </div>
 
                   <div>
                     <label className="block text-sm text-[#8B949E] mb-1">
-                      Language Mode
+                      ენის რეჟიმი
                     </label>
                     <select
                       value={languageMode}
@@ -1633,7 +1632,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                       <option value="mixed">🌐 Mixed Languages</option>
                     </select>
                     <p className="text-xs text-[#8B949E] mt-1">
-                      Response language preference
+                      პასუხის ენის პრეფერენცია
                     </p>
                   </div>
 
@@ -1649,7 +1648,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                       htmlFor="stream-output"
                       className="text-sm text-[#8B949E]"
                     >
-                      ⚡ Stream responses (პასუხების ნაკადი)
+                      ⚡ ნაკადური პასუხები
                     </label>
                   </div>
 
@@ -1664,7 +1663,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                       htmlFor="include-context"
                       className="text-sm text-[#8B949E]"
                     >
-                      📁 Include project context (პროექტის კონტექსტი)
+                      📁 პროექტის კონტექსტის ჩართვა
                     </label>
                   </div>
 
@@ -1718,7 +1717,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
 
                   <div className="border-t border-[#3E4450] pt-3">
                     <label className="block text-sm text-[#8B949E] mb-2">
-                      📎 File Attachments
+                      📎 ფაილების დართვა
                     </label>
                     <div className="flex items-center gap-2">
                       <input
@@ -1734,15 +1733,15 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                         className="flex-1 bg-[#3E4450] hover:bg-[#4A5568] text-[#8B949E] hover:text-white px-3 py-2 rounded text-sm transition-all flex items-center gap-2"
                       >
                         <Paperclip size={16} />
-                        Choose files...
+                        ფაილების არჩევა...
                       </button>
                       {selectedFiles.length > 0 && (
                         <button
                           onClick={() => setSelectedFiles([])}
                           className="px-2 py-2 text-[#F85149] hover:bg-[#3E4450] rounded text-sm transition-all"
-                          title="Clear selected files"
+                          title="არჩეული ფაილების გასუფთავება"
                         >
-                          Clear ({selectedFiles.length})
+                          გასუფთავება ({selectedFiles.length})
                         </button>
                       )}
                     </div>
@@ -1781,7 +1780,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                 {isSearchingMemory && (
                   <div className="flex items-center gap-2 text-[#8B949E] text-sm">
                     <Brain className="w-4 h-4 animate-pulse text-blue-400" />
-                    <span>🧠 Searching memory...</span>
+                    <span>🧠 მეხსიერების ძებნა...</span>
                   </div>
                 )}
 
@@ -1793,8 +1792,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                     >
                       <Brain className="w-4 h-4" />
                       <span>
-                        {semanticContext.results.length} relevant memor
-                        {semanticContext.results.length === 1 ? "y" : "ies"} found
+                        ნაპოვნია {semanticContext.results.length} შესაბამისი მეხსიერება
                       </span>
                       <ChevronDown
                         className={`w-3 h-3 transition-transform ${
@@ -1850,7 +1848,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                     }
                   }
                 }}
-                placeholder="Ask Assistant, use @ to include specific files..."
+                placeholder="ჰკითხე ასისტენტს, გამოიყენე @ კონკრეტული ფაილების ჩასართავად..."
                 className="w-full bg-[#21252B] border border-[#3E4450] rounded-lg px-4 py-3 pr-20 text-[#E6EDF3] placeholder-[#8B949E] resize-none focus:outline-none focus:border-[#00D4FF] min-h-[44px] max-h-32"
                 rows={1}
               />
@@ -1870,14 +1868,14 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="text-[#8B949E] hover:text-white p-1 transition-all"
-                  title="Attach files"
+                  title="ფაილების დართვა"
                 >
                   <Paperclip size={16} />
                 </button>
 
                 {selectedFiles.length > 0 && (
                   <span className="text-[#8B949E] text-sm">
-                    {selectedFiles.length} files
+                    {selectedFiles.length} ფაილი
                   </span>
                 )}
 
@@ -1885,7 +1883,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                   onClick={sendMessage}
                   disabled={!chatInput.trim() || isLoading || isSearchingMemory}
                   className="bg-[#0969DA] hover:bg-[#0969DA]/80 disabled:bg-[#3E4450] disabled:cursor-not-allowed text-white p-1 rounded transition-all"
-                  title={isSearchingMemory ? "Searching memory..." : "Send message"}
+                  title={isSearchingMemory ? "მეხსიერების ძებნა..." : "შეტყობინების გაგზავნა"}
                 >
                   {isSearchingMemory ? (
                     <RefreshCw size={14} className="animate-spin" />
