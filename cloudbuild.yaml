@@ -1,0 +1,220 @@
+# Google Cloud Build Configuration
+# Multi-stage builds for frontend, backend, and ai-service
+
+steps:
+  # Step 1: Build Frontend (ai-frontend)
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-frontend'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/ai-frontend:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/ai-frontend:latest'
+      - '-f'
+      - 'ai-frontend/Dockerfile'
+      - './ai-frontend'
+    waitFor: ['-']
+
+  # Step 2: Build Backend
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-backend'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/backend:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/backend:latest'
+      - '-f'
+      - 'backend/Dockerfile'
+      - './backend'
+    waitFor: ['-']
+
+  # Step 3: Build AI Service
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-ai-service'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/ai-service:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/ai-service:latest'
+      - '-f'
+      - 'ai-service/Dockerfile'
+      - './ai-service'
+    waitFor: ['-']
+
+  # Step 4: Build Gateway
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-gateway'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/gateway:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/gateway:latest'
+      - '-f'
+      - 'gateway/Dockerfile'
+      - './gateway'
+    waitFor: ['-']
+
+  # Step 5: Push Frontend to GCR
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-frontend'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'gcr.io/$PROJECT_ID/ai-frontend'
+    waitFor: ['build-frontend']
+
+  # Step 6: Push Backend to GCR
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-backend'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'gcr.io/$PROJECT_ID/backend'
+    waitFor: ['build-backend']
+
+  # Step 7: Push AI Service to GCR
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-ai-service'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'gcr.io/$PROJECT_ID/ai-service'
+    waitFor: ['build-ai-service']
+
+  # Step 8: Push Gateway to GCR
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-gateway'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'gcr.io/$PROJECT_ID/gateway'
+    waitFor: ['build-gateway']
+
+  # Step 9: Deploy Frontend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-frontend'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'ai-frontend'
+      - '--image=gcr.io/$PROJECT_ID/ai-frontend:$COMMIT_SHA'
+      - '--region=$_REGION'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--memory=512Mi'
+      - '--cpu=1'
+      - '--min-instances=0'
+      - '--max-instances=10'
+      - '--concurrency=80'
+      - '--port=80'
+    waitFor: ['push-frontend']
+
+  # Step 10: Deploy Backend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-backend'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'backend'
+      - '--image=gcr.io/$PROJECT_ID/backend:$COMMIT_SHA'
+      - '--region=$_REGION'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--memory=1Gi'
+      - '--cpu=2'
+      - '--min-instances=1'
+      - '--max-instances=20'
+      - '--concurrency=100'
+      - '--port=3000'
+      - '--set-env-vars=NODE_ENV=production'
+    waitFor: ['push-backend']
+
+  # Step 11: Deploy AI Service to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-ai-service'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'ai-service'
+      - '--image=gcr.io/$PROJECT_ID/ai-service:$COMMIT_SHA'
+      - '--region=$_REGION'
+      - '--platform=managed'
+      - '--memory=2Gi'
+      - '--cpu=4'
+      - '--min-instances=1'
+      - '--max-instances=50'
+      - '--concurrency=80'
+      - '--port=8080'
+      - '--timeout=300s'
+      - '--set-env-vars=NODE_ENV=production'
+    waitFor: ['push-ai-service']
+
+  # Step 12: Deploy Gateway to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-gateway'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'gateway'
+      - '--image=gcr.io/$PROJECT_ID/gateway:$COMMIT_SHA'
+      - '--region=$_REGION'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--memory=512Mi'
+      - '--cpu=1'
+      - '--min-instances=1'
+      - '--max-instances=10'
+      - '--concurrency=100'
+      - '--port=8080'
+    waitFor: ['push-gateway']
+
+  # Step 13: Run smoke tests
+  - name: 'gcr.io/cloud-builders/curl'
+    id: 'smoke-test'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Running smoke tests..."
+        FRONTEND_URL=$(gcloud run services describe ai-frontend --region=$_REGION --format='value(status.url)')
+        BACKEND_URL=$(gcloud run services describe backend --region=$_REGION --format='value(status.url)')
+        AI_URL=$(gcloud run services describe ai-service --region=$_REGION --format='value(status.url)')
+        
+        curl -f "$FRONTEND_URL/health" || exit 1
+        curl -f "$BACKEND_URL/health" || exit 1
+        curl -f "$AI_URL/health" || exit 1
+        
+        echo "✅ All services are healthy"
+    waitFor: ['deploy-frontend', 'deploy-backend', 'deploy-ai-service', 'deploy-gateway']
+
+# Images to be pushed to Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/ai-frontend:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/ai-frontend:latest'
+  - 'gcr.io/$PROJECT_ID/backend:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/backend:latest'
+  - 'gcr.io/$PROJECT_ID/ai-service:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/ai-service:latest'
+  - 'gcr.io/$PROJECT_ID/gateway:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/gateway:latest'
+
+# Substitution variables
+substitutions:
+  _REGION: 'us-central1'
+
+# Build options
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+  substitutionOption: 'ALLOW_LOOSE'
+
+# Build timeout (30 minutes)
+timeout: '1800s'
