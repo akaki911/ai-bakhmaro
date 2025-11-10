@@ -28,8 +28,10 @@ The platform features a multi-service architecture:
     -   **Security Hardening**: Prevention of package installation bypasses, destructive command confirmation, and terminal command validation.
     -   **Workspace Executor**: Secure JavaScript code execution using `isolated-vm` for true V8 isolate-based sandboxing, resource limits, and dangerous pattern detection. This includes a visual execution interface in the Developer Console with SSE streaming.
     -   **Semantic Memory System**: Full end-to-end integration of Vector Memory into the AI Chat system, including semantic search, UI indicators, and memory persistence.
-    -   **Git Native Integration**: PostgreSQL-backed Git metrics history storage with performance trend analysis and latency reduction calculations.
+    -   **Git Native Service (Phase 1)**: Comprehensive Git integration with native commands and GitHub API fallback. Features include Chokidar file watcher for auto-commit functionality, Firestore secrets vault with AES-256-CBC encryption for credentials, Octokit fallback mechanism when native commands fail, and PostgreSQL-backed performance metrics with latency tracking.
     -   **Vector Memory & Semantic Search**: Self-hosted vector database using PostgreSQL pgvector, OpenAI embeddings API integration with LRU cache and local fallback, and a dedicated API and frontend UI for managing vector memories.
+    -   **UnifiedConsole (Phase 4)**: Replit-style unified developer interface combining Chat, Terminal, Memory, Logs, and Execution panels in a single screen. Features resizable split panels, collapsible sidebars (Services, Metrics, Logs), StatusBar with real-time metrics (connection, CPU, RAM, errors), QuickActionsToolbar (Cmd+K command palette), and responsive design for mobile and desktop.
+    -   **Cloud Run Auto-Execution Layer (Phase 5)**: Production deployment infrastructure with Google Cloud Run orchestration. Includes cloudrun_executor.js for container lifecycle management (deploy, execute, scale, terminate), cloudbuild.yaml for multi-stage builds across all services, auto_deploy_trigger.js with Firestore triggers for automated deployments, and cost_monitor_service.js for usage tracking, budget alerts, and optimization recommendations.
 
 ## External Dependencies
 -   **PostgreSQL**: Primary database for persistence, including pgvector extension.
