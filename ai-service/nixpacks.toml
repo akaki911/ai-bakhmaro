@@ -1,12 +1,16 @@
 
 [phases.setup]
-nixPkgs = ["nodejs_18", "npm-9_x"]
+nixPkgs = ["nodejs-18_x", "pnpm"]
 
 [phases.install]
-cmds = ["npm install"]
+cmds = [
+  "pnpm install --frozen-lockfile --prefer-offline"
+]
 
 [phases.build]
-cmds = []
+cmds = [
+  "echo 'No build step required for AI service'"
+]
 
 [start]
 cmd = "node server.js"
