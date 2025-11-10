@@ -44,7 +44,7 @@ export const GitPerformanceMetrics: React.FC = () => {
   const fetchMetrics = useCallback(async () => {
     try {
       setIsLoading(true);
-      const endpoint = resolveServiceUrl('/api/git/metrics');
+      const endpoint = resolveServiceUrl('/api/github/metrics');
       const response = await fetch(endpoint, { credentials: 'include' });
       
       if (!response.ok) {
