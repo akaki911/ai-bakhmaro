@@ -9,8 +9,8 @@
  * to replace Gurulo's static knowledge base with live codebase understanding.
  */
 
-const fs = require('fs').promises;
 const path = require('path');
+const { getProjectStructure, clearProjectStructureCache } = require('./file_system_service');
 
 class ProjectIntelligenceService {
   constructor() {
@@ -27,13 +27,6 @@ class ProjectIntelligenceService {
       '.js', '.ts', '.jsx', '.tsx', '.json', '.md', '.html', '.css', 
       '.scss', '.py', '.sh', '.yml', '.yaml', '.txt', '.sql',
       '.php', '.rb', '.go', '.rust', '.java', '.c', '.cpp', '.h'
-    ]);
-    
-    // SECURITY: Sensitive file patterns to exclude (secrets protection)
-    this.deniedFiles = new Set([
-      '.env', '.env.local', '.env.production', '.env.development',
-      '.env.staging', '.env.test', '.secret', '.key', '.pem', '.p12',
-      '.pfx', 'secrets.txt', 'password.txt', 'config.secret'
     ]);
     
     // Cache for performance optimization
@@ -57,60 +50,15 @@ class ProjectIntelligenceService {
       return this.fileCache.get('allFiles');
     }
 
-    console.log('🔍 [PROJECT INTELLIGENCE] Scanning project files...');
-    const allFiles = [];
-    const projectRoot = process.cwd();
+    console.log('🔍 [PROJECT INTELLIGENCE] Refreshing workspace file index...');
 
-    const scanDirectory = async (currentPath, depth = 0) => {
-      // Prevent excessive recursion
-      if (depth > 10) return;
-      
-      try {
-        const items = await fs.readdir(currentPath, { withFileTypes: true });
-        
-        for (const item of items) {
-          const itemPath = path.join(currentPath, item.name);
-          
-          if (item.isDirectory()) {
-            // Skip ignored directories
-            if (!this.ignoredDirs.has(item.name) && !item.name.startsWith('.')) {
-              await scanDirectory(itemPath, depth + 1);
-            }
-          } else if (item.isFile()) {
-            const ext = path.extname(item.name).toLowerCase();
-            const fileName = item.name.toLowerCase();
-            
-            // SECURITY: Skip sensitive files (secrets protection)
-            if (this.deniedFiles.has(fileName) || 
-                fileName.startsWith('.env') || 
-                fileName.includes('secret') || 
-                fileName.includes('password') ||
-                fileName.includes('key.') ||
-                fileName.endsWith('.key') ||
-                fileName.endsWith('.pem')) {
-              continue; // Skip sensitive files
-            }
-            
-            // Include relevant file extensions (safe files only)
-            if (this.codeExts.has(ext) || 
-                (item.name.includes('config') && !fileName.includes('secret'))) {
-              const relativePath = path.relative(projectRoot, itemPath);
-              allFiles.push(relativePath.replace(/\\/g, '/')); // Normalize path separators
-            }
-          }
-        }
-      } catch (error) {
-        console.warn(`⚠️ [PROJECT INTELLIGENCE] Error scanning directory ${currentPath}:`, error.message);
-      }
-    };
+    const allFiles = await getProjectStructure();
 
-    await scanDirectory(projectRoot);
-    
     // Cache the results
     this.fileCache.set('allFiles', allFiles);
     this.lastScanTime = now;
-    
-    console.log(`📂 [PROJECT INTELLIGENCE] Found ${allFiles.length} project files`);
+
+    console.log(`📂 [PROJECT INTELLIGENCE] Indexed ${allFiles.length} files across allowed services`);
     return allFiles;
   }
 
@@ -312,6 +260,7 @@ class ProjectIntelligenceService {
   clearCache() {
     this.fileCache.clear();
     this.lastScanTime = 0;
+    clearProjectStructureCache();
     console.log('🧹 [PROJECT INTELLIGENCE] Cache cleared');
   }
 
