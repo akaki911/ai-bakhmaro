@@ -17,6 +17,7 @@ import GitHubAnalyticsTab from './GitHubAnalyticsTab';
 import GitHubOperationsTab from './GitHubOperationsTab';
 import GitHubGitOpsTab from './GitHubGitOpsTab';
 import RepositoryAutomationTab from './RepositoryAutomationTab'; // Assuming this component exists
+import GitPerformanceMetrics from './GitPerformanceMetrics';
 import { useGitHubConnection, useGitHubData, useGitHubOperations } from './hooks';
 
 export interface GitHubStatus {
@@ -31,7 +32,7 @@ export interface GitHubStatus {
 
 const GitHubManagementHub: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'git-ops' | 'operations' | 'settings' | 'issues' | 'analytics' | 'automation'
+    'overview' | 'git-ops' | 'operations' | 'settings' | 'issues' | 'analytics' | 'automation' | 'performance'
   >('overview');
   const [status] = useState<GitHubStatus | null>(null);
   const [loading] = useState(false);
@@ -99,6 +100,12 @@ const GitHubManagementHub: React.FC = () => {
       icon: BarChart3,
       label: 'ანალიტიკა',
       description: 'Repository მეტრიკები, commit ისტორია და პერფორმანსი'
+    },
+    {
+      key: 'performance',
+      icon: BarChart3,
+      label: 'Git პერფორმანსი',
+      description: 'Real-time Git operations metrics და trend analysis'
     },
     {
       key: 'issues',
@@ -181,6 +188,8 @@ const GitHubManagementHub: React.FC = () => {
         );
       case 'issues':
         return <GitHubIssuesTab {...commonProps} />; // Passing commonProps to issues tab
+      case 'performance':
+        return <GitPerformanceMetrics />;
       case 'settings':
         return <GitHubSettingsTab {...commonProps} connection={gitHubConnection} />;
       default:
