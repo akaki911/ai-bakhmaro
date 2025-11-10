@@ -115,6 +115,25 @@ class ProjectIntelligenceService {
   }
 
   /**
+   * Find relevant files based on query (wrapper for simplified API)
+   * @param {string} query - Search query (Georgian or English)
+   * @param {number} maxFiles - Maximum number of files to return
+   * @returns {Promise<Array>} Array of {path, score} objects sorted by relevance
+   */
+  async findRelevantFiles(query, maxFiles = 10) {
+    const allFiles = await this.getAllProjectFiles();
+    const relevantPaths = await this.findRelevantProjectFiles(query, allFiles, maxFiles);
+    
+    // Return with score metadata for compatibility
+    return relevantPaths.map((path, index) => ({
+      path,
+      score: (maxFiles - index) / maxFiles, // Descending score
+      fileName: require('path').basename(path),
+      directory: require('path').dirname(path)
+    }));
+  }
+
+  /**
    * Find relevant project files based on query with enhanced scoring algorithm
    * @param {string} query - Search query (Georgian or English)
    * @param {Array} allFiles - Array of all project files
