@@ -1,22 +1,64 @@
 const fs = require('fs').promises;
 const path = require('path');
+const VectorMemoryService = require('./vector_memory_service');
+const embeddingsService = require('./embeddings_service');
 
 /**
- * Semantic Search Service
+ * Semantic Search Service (Enhanced with pgvector)
  * 
- * This service provides semantic search capabilities for the knowledge base.
- * It loads the pre-built knowledge base and provides functions to find
- * semantically similar content chunks based on vector similarity.
+ * Provides semantic search capabilities using PostgreSQL pgvector.
+ * Falls back to local JSON knowledge base if vector memory is unavailable.
+ * 
+ * Features:
+ * - Real vector embeddings via OpenAI/embeddings API
+ * - PostgreSQL pgvector similarity search
+ * - Fallback to local JSON knowledge base
+ * - Hybrid search (vector + keyword)
+ * 
+ * Phase 3: Vector Memory Integration
  */
 
 class SemanticSearchService {
   constructor() {
+    // Legacy JSON knowledge base (fallback)
     this.knowledgeBase = null;
     this.isLoaded = false;
+    
+    // Vector memory service (primary)
+    this.vectorMemory = new VectorMemoryService();
+    this.vectorMemoryEnabled = false;
   }
 
   /**
-   * Load knowledge base from JSON file
+   * Initialize the service (load knowledge base and initialize vector memory)
+   * This should be called once when the server starts
+   */
+  async initialize() {
+    await Promise.all([
+      this.loadKnowledgeBase(),
+      this.initializeVectorMemory()
+    ]);
+  }
+
+  /**
+   * Initialize vector memory service
+   */
+  async initializeVectorMemory() {
+    try {
+      const result = await this.vectorMemory.initialize();
+      if (result.success) {
+        this.vectorMemoryEnabled = true;
+        console.log('✅ [SEMANTIC SEARCH] Vector memory enabled');
+      } else {
+        console.warn('⚠️ [SEMANTIC SEARCH] Vector memory unavailable, using fallback');
+      }
+    } catch (error) {
+      console.warn('⚠️ [SEMANTIC SEARCH] Vector memory initialization failed:', error.message);
+    }
+  }
+
+  /**
+   * Load knowledge base from JSON file (fallback)
    * This should be called once when the server starts
    */
   async loadKnowledgeBase() {
@@ -48,6 +90,89 @@ class SemanticSearchService {
       // Initialize with empty knowledge base to prevent crashes
       this.knowledgeBase = { chunks: [] };
       this.isLoaded = true;
+    }
+  }
+
+  /**
+   * Search using vector memory (primary method)
+   * @param {string} query - Search query
+   * @param {Object} options - Search options
+   * @returns {Promise<Array>} Search results
+   */
+  async searchVector(query, options = {}) {
+    if (!this.vectorMemoryEnabled) {
+      console.warn('⚠️ Vector memory not enabled, falling back to local search');
+      return this.findSimilarChunks(query, options.limit || 5);
+    }
+
+    try {
+      // Generate embedding for query
+      const embeddingResult = await embeddingsService.generateEmbedding(query);
+      
+      if (!embeddingResult.success) {
+        console.error('❌ Failed to generate query embedding');
+        return this.findSimilarChunks(query, options.limit || 5);
+      }
+
+      // Search vector memory
+      const searchResult = await this.vectorMemory.findSimilar(
+        embeddingResult.embedding,
+        {
+          limit: options.limit || 5,
+          threshold: options.threshold || 0.7,
+          source: options.source,
+          userId: options.userId,
+          metadata: options.metadata
+        }
+      );
+
+      if (!searchResult.success) {
+        console.error('❌ Vector search failed');
+        return this.findSimilarChunks(query, options.limit || 5);
+      }
+
+      console.log(`✅ Found ${searchResult.results.length} vector results`);
+      return searchResult.results;
+    } catch (error) {
+      console.error('❌ Vector search error:', error);
+      return this.findSimilarChunks(query, options.limit || 5);
+    }
+  }
+
+  /**
+   * Store text in vector memory
+   * @param {string} text - Text to store
+   * @param {Object} metadata - Metadata
+   * @param {string} source - Source type
+   * @param {string} userId - User ID
+   * @returns {Promise<Object>} Result
+   */
+  async storeInVectorMemory(text, metadata = {}, source = 'knowledge_base', userId = 'system') {
+    if (!this.vectorMemoryEnabled) {
+      return { success: false, error: 'Vector memory not enabled' };
+    }
+
+    try {
+      // Generate embedding
+      const embeddingResult = await embeddingsService.generateEmbedding(text);
+      
+      if (!embeddingResult.success) {
+        return { success: false, error: 'Failed to generate embedding' };
+      }
+
+      // Store in vector memory
+      const result = await this.vectorMemory.storeEmbedding(
+        text,
+        embeddingResult.embedding,
+        metadata,
+        source,
+        userId
+      );
+
+      return result;
+    } catch (error) {
+      console.error('❌ Failed to store in vector memory:', error);
+      return { success: false, error: error.message };
     }
   }
 
