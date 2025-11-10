@@ -736,6 +736,16 @@ const parseAssistantPayload = (
     if (typeof value === 'string') {
       try {
         const parsed = JSON.parse(value);
+        // Handle Gurulo structured response - extract plainText for display
+        if (parsed && typeof parsed === 'object' && 'plainText' in parsed) {
+          const guruloResponse = parsed as { plainText: string; content?: ChatStructuredContent[] };
+          // Return plainText as the display content, not the whole JSON
+          return {
+            content: guruloResponse.plainText ? createStructuredFromText(guruloResponse.plainText, language) : [],
+            derivedFrom: 'structured',
+            plainText: guruloResponse.plainText || '',
+          };
+        }
         return parseAssistantPayload(parsed, language, 'json', options);
       } catch {
         // fall through to text normalization when payload is not valid JSON
@@ -802,10 +812,13 @@ const parseAssistantPayload = (
 };
 
 const messageContentToPlainText = (
-  content: ChatStructuredContent[],
+  content: ChatStructuredContent[] | string | null,
   language: 'ka' | 'en',
 ): string => {
-  if (!content.length) {
+  if (typeof content === 'string') {
+    return content;
+  }
+  if (!content || !content.length) {
     return '';
   }
 
@@ -1566,7 +1579,6 @@ export function AIChatInterface() {
               mode: 'explain',
               client: 'gurulo-ui',
               directive: directiveBlocks.join('\n'),
-              timestamp: new Date().toISOString(),
               audience: audienceTag,
             },
           }),
@@ -1743,9 +1755,20 @@ export function AIChatInterface() {
                     parsed = { content: dataPayload };
                   }
 
+                  // Handle Gurulo structured response - extract plainText for display
+                  if (parsed && typeof parsed === 'object' && 'plainText' in parsed) {
+                    const guruloResponse = parsed as { plainText: string; content?: ChatStructuredContent[] };
+                    // Return plainText as the display content, not the whole JSON
+                    parsed = {
+                      ...guruloResponse,
+                      content: guruloResponse.plainText ? createStructuredFromText(guruloResponse.plainText, language) : [],
+                    };
+                  }
+
                   const payload = parsed as
-                    | { content?: string; response?: string; type?: string; error?: string; final?: boolean }
+                    | { content?: string; response?: string; type?: string; error?: string; final?: boolean; plainText?: string }
                     | string;
+
 
                   if (typeof payload === 'object' && payload?.type === 'error') {
                     throw new Error(payload?.error || 'stream_error');
@@ -1890,6 +1913,22 @@ export function AIChatInterface() {
           }
         } else {
           const data = await response.json();
+
+          // Extract plainText if it's a Gurulo structured response
+          let displayContent = data.response;
+          if (typeof data.response === 'object' && data.response.plainText) {
+            displayContent = data.response.plainText;
+          } else if (typeof data.response === 'string') {
+            try {
+              const parsed = JSON.parse(data.response);
+              if (parsed.plainText) {
+                displayContent = parsed.plainText;
+              }
+            } catch {
+              // Keep original if not JSON
+            }
+          }
+
           const metadataRecord = getRecord((data as Record<string, unknown> | undefined)?.metadata);
           const telemetryRecord = getRecord(metadataRecord?.telemetry);
           if (telemetryRecord) {
@@ -1902,7 +1941,7 @@ export function AIChatInterface() {
                   : undefined,
             };
           }
-          const messageText = data?.response ?? data?.message ?? data?.content ?? data;
+          const messageText = displayContent;
           const parsed = parseAssistantPayload(messageText, language, activeContentFormat, {
             audience: audienceTag,
           });
@@ -2078,6 +2117,38 @@ export function AIChatInterface() {
     setError(null);
     lastRequestRef.current = 0;
   }, []);
+
+  const renderMessageContent = (msg: ChatMessage) => {
+    if (!msg.content) return null;
+
+    if (typeof msg.content === 'string') {
+      return msg.content;
+    }
+
+    if (Array.isArray(msg.content)) {
+      return msg.content.map((block, index) => (
+        <div key={`block-${index}`}>
+          {block.sections.map((section, sectionIndex) => (
+            <div key={`section-${sectionIndex}`}>
+              {section.title && <p className="text-sm font-semibold text-gray-400">{section.title}</p>}
+              {section.bullets.length > 0 && (
+                <ul className="list-disc pl-5">
+                  {section.bullets.map((bullet, bulletIndex) => (
+                    <li key={`bullet-${bulletIndex}`} className="text-sm text-gray-300">
+                      {bullet}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {section.cta && <p className="mt-2 text-xs text-gray-500">{section.cta}</p>}
+            </div>
+          ))}
+        </div>
+      ));
+    }
+    return null;
+  };
+
 
   return (
     <>
