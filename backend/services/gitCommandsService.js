@@ -356,7 +356,8 @@ const deleteBranch = async (name, { force = false } = {}) => {
 const withAuthEnv = (token) => ({
   ...process.env,
   GIT_ASKPASS: path.resolve(__dirname, '../utils/git-askpass.sh'),
-  GITHUB_ACCESS_TOKEN: token
+  // Use provided token or fallback to environment
+  GITHUB_ACCESS_TOKEN: token || process.env.GITHUB_TOKEN
 });
 
 const push = async ({ remote = 'origin', branch = 'main', token }) => {
