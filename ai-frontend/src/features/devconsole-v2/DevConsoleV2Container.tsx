@@ -12,10 +12,11 @@ import { ServicesView } from './components/ServicesView';
 import { MultiTabTerminal } from './components/MultiTabTerminal';
 import RealTimeErrorMonitor from './components/RealTimeErrorMonitor';
 import { useRealTimeErrors } from './hooks/useRealTimeErrors';
-import { Wifi, WifiOff, AlertTriangle, AlertCircle, HelpCircle, Activity, Database, TrendingUp, Server, Zap, Bell, Terminal, FileText, BarChart3, GitBranch, Code } from 'lucide-react';
+import { Wifi, WifiOff, AlertTriangle, AlertCircle, HelpCircle, Activity, Database, TrendingUp, Server, Zap, Bell, Terminal, FileText, BarChart3, GitBranch, Code, Brain } from 'lucide-react';
 import { SystemMetrics } from './types';
 import AIRolloutManager from '../../components/AIRolloutManager';
 import { CodeExecutor } from './components/CodeExecutor';
+import { VectorMemoryManager } from './components/VectorMemory/VectorMemoryManager';
 
 
 // SystemMetrics imported from types.ts
@@ -52,7 +53,7 @@ export const DevConsoleV2Container: React.FC = () => {
     droppedCount,
     setFilters
   } = useConsoleStore();
-  const [activeTab, setActiveTab] = useState<'logs' | 'metrics' | 'services' | 'rollout' | 'terminal' | 'execute'>('logs');
+  const [activeTab, setActiveTab] = useState<'logs' | 'metrics' | 'services' | 'rollout' | 'terminal' | 'execute' | 'memory'>('logs');
 
   const { logs, connectionStatus, reconnect, clearLogs, forceReload, isLoadingFromCache } = useConsoleStream(filters);
 
@@ -200,6 +201,7 @@ export const DevConsoleV2Container: React.FC = () => {
     { id: 'rollout', label: 'Rollout', icon: GitBranch },
     { id: 'terminal', label: 'Terminal', icon: Terminal },
     { id: 'execute', label: 'Execute', icon: Code },
+    { id: 'memory', label: 'Memory', icon: Brain },
   ];
 
   return (
@@ -374,6 +376,12 @@ export const DevConsoleV2Container: React.FC = () => {
           {activeTab === 'execute' && (
             <div className="flex-1 min-h-0 p-4">
               <CodeExecutor language={language} />
+            </div>
+          )}
+
+          {activeTab === 'memory' && (
+            <div className="flex-1 min-h-0 p-4">
+              <VectorMemoryManager language={language} />
             </div>
           )}
         </div>
