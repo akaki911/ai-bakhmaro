@@ -1,6 +1,7 @@
 
 import React, { useCallback, useState } from 'react';
-import { DevConsoleV2Container } from '../../../features/devconsole-v2/DevConsoleV2Container';
+// Import Unified Console - the modernized developer console
+import { UnifiedConsole } from '../../../features/unified-console/UnifiedConsole';
 import { DevConsoleProvider } from '../../../contexts/DevConsoleContext';
 
 interface ConsoleTabProps {
@@ -28,7 +29,8 @@ const ConsoleTab: React.FC<ConsoleTabProps> = ({ hasDevConsoleAccess }) => {
         <GithubControlPanel />
         <div className="flex-1 rounded-3xl border border-white/10 bg-[#0F1320]/80 backdrop-blur-2xl shadow-[0_35px_80px_rgba(5,10,30,0.55)]">
           <DevConsoleProvider>
-            <DevConsoleV2Container />
+            {/* Unified Console - Comprehensive developer interface */}
+            <UnifiedConsole />
           </DevConsoleProvider>
         </div>
       </div>

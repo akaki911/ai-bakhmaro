@@ -28,7 +28,8 @@ import {
   Eye
 } from 'lucide-react';
 import FileViewer from './FileViewer';
-import { DevConsoleV2Container } from '../features/devconsole-v2/DevConsoleV2Container';
+// Import Unified Console - the modernized developer console
+import { UnifiedConsole } from '../features/unified-console/UnifiedConsole';
 import { useFilePreview } from '../contexts/useFilePreview';
 
 interface FileNode {
@@ -1053,7 +1054,8 @@ const ReplitInterface: React.FC = () => {
 
             {activeTab === 'console' && (
               <div className="h-full w-full">
-                <DevConsoleV2Container />
+                {/* Unified Console - Comprehensive developer interface */}
+                <UnifiedConsole />
               </div>
             )}
           </div>

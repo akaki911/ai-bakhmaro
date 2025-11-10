@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildServiceOrigin } from '../src/features/devconsole-v2/utils/serviceUrls.js';
+// Updated path to unified-console
+import { buildServiceOrigin } from '../src/features/unified-console/utils/serviceUrls.js';
 
 const originalWindow = globalThis.window;
 
