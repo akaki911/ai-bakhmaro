@@ -35,6 +35,12 @@ import { getAdminAuthHeaders } from "../utils/adminToken";
 import { fetchWithDirectAiFallback } from "@/utils/aiFallback";
 import "../styles/enhancedMessages.css";
 import { useMemoryControls } from "../hooks/memory/useMemoryControls";
+import { useVectorMemory } from "../hooks/useVectorMemory";
+import {
+  SemanticContextPayload,
+  VectorMemoryResult,
+  DEFAULT_SEMANTIC_SEARCH_OPTIONS,
+} from "../types/semanticContext";
 
 // UPDATE 2024-10-01: Added admin-token Authorization headers for AI fetches and
 // surfaced a UI banner when 401 responses occur so admins can reconfigure the
@@ -84,6 +90,7 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
 }) => {
   const { user, isAuthenticated, authInitialized } = useAuth();
   const memoryControls = useMemoryControls(isAuthenticated ? user?.personalId : null);
+  const { searchVector } = useVectorMemory();
   const [authorizationError, setAuthorizationError] = useState<string | null>(null);
 
   const fallbackAiFetch = useCallback(
@@ -233,6 +240,14 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
   const [pollingActive, setPollingActive] = useState(true);
   const [backoffDelay, setBackoffDelay] = useState(30000); // Start with 30s
   const initializationGuardRef = useRef<boolean>(false);
+
+  // Phase 3: Semantic Search State
+  const [semanticSearchEnabled, setSemanticSearchEnabled] = useState(
+    DEFAULT_SEMANTIC_SEARCH_OPTIONS.enabled
+  );
+  const [isSearchingMemory, setIsSearchingMemory] = useState(false);
+  const [semanticContext, setSemanticContext] = useState<SemanticContextPayload | null>(null);
+  const [showMemoryContext, setShowMemoryContext] = useState(false);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -735,6 +750,70 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
     setCheckpoints((prev) => prev.filter((c) => c.id !== checkpointId));
   }, []);
 
+  // Phase 3: Semantic Search Function
+  const searchSemanticMemory = useCallback(
+    async (query: string): Promise<SemanticContextPayload | null> => {
+      // Clear stale context before starting new search
+      setSemanticContext(null);
+      setShowMemoryContext(false);
+
+      if (!semanticSearchEnabled) {
+        console.log("🧠 [SEMANTIC] Search disabled");
+        return null;
+      }
+
+      if (query.length < DEFAULT_SEMANTIC_SEARCH_OPTIONS.minQueryLength) {
+        console.log(
+          `🧠 [SEMANTIC] Query too short (${query.length} < ${DEFAULT_SEMANTIC_SEARCH_OPTIONS.minQueryLength})`,
+        );
+        return null;
+      }
+
+      setIsSearchingMemory(true);
+      const searchStart = Date.now();
+
+      try {
+        const result = await searchVector({
+          query,
+          limit: DEFAULT_SEMANTIC_SEARCH_OPTIONS.maxResults,
+          threshold: DEFAULT_SEMANTIC_SEARCH_OPTIONS.threshold,
+        });
+
+        const searchDuration = Date.now() - searchStart;
+
+        if (!result.results || result.results.length === 0) {
+          console.log("🧠 [SEMANTIC] No relevant memories found");
+          // Context already cleared at start
+          return null;
+        }
+
+        const payload: SemanticContextPayload = {
+          results: result.results as VectorMemoryResult[],
+          searchQuery: query,
+          metadata: {
+            resultCount: result.count || 0,
+            threshold: DEFAULT_SEMANTIC_SEARCH_OPTIONS.threshold,
+            maxResults: DEFAULT_SEMANTIC_SEARCH_OPTIONS.maxResults,
+            searchDuration,
+          },
+        };
+
+        console.log(
+          `🧠 [SEMANTIC] Found ${payload.results.length} memories in ${searchDuration}ms`,
+        );
+        setSemanticContext(payload);
+        return payload;
+      } catch (error) {
+        console.error("❌ [SEMANTIC] Search failed:", error);
+        // Context already cleared at start
+        return null;
+      } finally {
+        setIsSearchingMemory(false);
+      }
+    },
+    [semanticSearchEnabled, searchVector],
+  );
+
   // ===== CHAT FUNCTIONS =====
   const sendMessage = async () => {
     if (!chatInput.trim()) return;
@@ -760,6 +839,9 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
     setIsLoading(true);
 
     try {
+      // Phase 3: Semantic Search Integration
+      const memoryContext = await searchSemanticMemory(currentInput);
+
       // This part is modified based on the provided context and solution
       let enhancedQuery = currentInput;
       // Check if this is a file system related query
@@ -799,6 +881,14 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
           audience: "admin_dev",
         },
       };
+
+      // Phase 3: Add semantic context if available
+      if (memoryContext) {
+        requestBody.semanticContext = memoryContext;
+        console.log(
+          `🧠 [SEMANTIC] Attached ${memoryContext.results.length} memories to request`,
+        );
+      }
 
       // Add model selection and manual override
       if (selectedModel) {
@@ -1533,6 +1623,56 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
               )}
             </div>
 
+            {/* Phase 3: Memory Search Indicator & Context Panel */}
+            {(isSearchingMemory || semanticContext) && (
+              <div className="px-4 py-2 bg-[#1C2128] border-t border-[#3E4450]">
+                {isSearchingMemory && (
+                  <div className="flex items-center gap-2 text-[#8B949E] text-sm">
+                    <Brain className="w-4 h-4 animate-pulse text-blue-400" />
+                    <span>🧠 Searching memory...</span>
+                  </div>
+                )}
+
+                {semanticContext && !isSearchingMemory && (
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => setShowMemoryContext(!showMemoryContext)}
+                      className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                    >
+                      <Brain className="w-4 h-4" />
+                      <span>
+                        {semanticContext.results.length} relevant memor
+                        {semanticContext.results.length === 1 ? "y" : "ies"} found
+                      </span>
+                      <ChevronDown
+                        className={`w-3 h-3 transition-transform ${
+                          showMemoryContext ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {showMemoryContext && (
+                      <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
+                        {semanticContext.results.map((result, idx) => (
+                          <div
+                            key={result.id}
+                            className="flex items-start gap-2 bg-[#21252B] rounded p-2 text-xs"
+                          >
+                            <span className="px-1.5 py-0.5 bg-green-900/30 text-green-300 rounded font-mono">
+                              {(result.similarity * 100).toFixed(0)}%
+                            </span>
+                            <span className="text-[#8B949E] flex-1 truncate">
+                              {result.text.substring(0, 100)}...
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Input Field - Fixed positioning with viewport height calculation */}
             <div className="relative flex-shrink-0 mt-auto">
               <textarea
@@ -1591,10 +1731,15 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
 
                 <button
                   onClick={sendMessage}
-                  disabled={!chatInput.trim() || isLoading}
+                  disabled={!chatInput.trim() || isLoading || isSearchingMemory}
                   className="bg-[#0969DA] hover:bg-[#0969DA]/80 disabled:bg-[#3E4450] disabled:cursor-not-allowed text-white p-1 rounded transition-all"
+                  title={isSearchingMemory ? "Searching memory..." : "Send message"}
                 >
-                  <Send size={14} />
+                  {isSearchingMemory ? (
+                    <RefreshCw size={14} className="animate-spin" />
+                  ) : (
+                    <Send size={14} />
+                  )}
                 </button>
               </div>
             </div>
