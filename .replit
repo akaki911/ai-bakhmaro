@@ -49,6 +49,10 @@ externalPort = 3001
 localPort = 9092
 externalPort = 3000
 
+[[ports]]
+localPort = 43499
+externalPort = 5000
+
 [env]
 NODE_ENV = "development"
 
