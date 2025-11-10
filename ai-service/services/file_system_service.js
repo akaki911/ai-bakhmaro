@@ -1,64 +1,53 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-async function getProjectStructure() {
+const WORKSPACE_ROOT = path.resolve(__dirname, '..', '..');
+const ALLOWED_SERVICES = new Set([
+  'ai-service',
+  'ai-frontend',
+  'backend',
+  'gateway',
+  'shared',
+  'functions',
+  'frontend',
+  'tests',
+  'scripts',
+  'docs'
+]);
+const IGNORED_DIRS = ['node_modules', '.git', '.replit', 'build', 'dist', '.assistant_backups', 'tmp', 'logs'];
+const SENSITIVE_PATTERNS = [
+  /\.env/i,                              // Environment files
+  /\.key$/,                               // Key files
+  /firebase-service-account/,             // Firebase credentials
+  /backend[/\\]data[/\\]/,                // Backend data folder
+  /secrets/i,                             // Secret configs
+  /\.pem$/,                               // Certificate files
+  /audit[_-]?log/i,                       // Audit logs
+  /database\.json$/,                      // Database dumps
+  /config[/\\].*\.key/                    // Config keys
+];
+const loggedSensitiveFiles = new Set();
+let cachedProjectFiles = null;
+let lastProjectScan = 0;
+const PROJECT_CACHE_TTL = 30000; // 30 seconds
+
+const containsIgnoredSegment = (normalizedRel) => {
+  const segments = normalizedRel.split('/');
+  return segments.some(segment => IGNORED_DIRS.includes(segment));
+};
+
+async function getProjectStructure(forceRefresh = false) {
   try {
-    // Scan workspace with strict security controls
-    const workspaceRoot = path.resolve(process.cwd(), '..');
-    
-    // SECURITY: Whitelist of allowed service directories only
-    const allowedServices = ['ai-service', 'ai-frontend', 'backend'];
-    
-    // SECURITY: Sensitive file/folder patterns to exclude
-    const sensitivePatterns = [
-      /\.env/i,                              // Environment files
-      /\.key$/,                               // Key files
-      /firebase-service-account/,             // Firebase credentials
-      /backend[/\\]data[/\\]/,                // Backend data folder
-      /secrets/i,                             // Secret configs
-      /\.pem$/,                               // Certificate files
-      /audit[_-]?log/i,                       // Audit logs
-      /database\.json$/,                      // Database dumps
-      /config[/\\].*\.key/                    // Config keys
-    ];
-    
-    // For Node.js 18.17.0+, use recursive readdir
-    let allFiles;
-    try {
-      allFiles = await fs.readdir(workspaceRoot, { recursive: true });
-    } catch (error) {
-      // Fallback for older Node.js versions - walk directories manually
-      allFiles = await walkDirectory(workspaceRoot);
+    const now = Date.now();
+
+    if (!forceRefresh && cachedProjectFiles && (now - lastProjectScan) < PROJECT_CACHE_TTL) {
+      return cachedProjectFiles;
     }
 
-    // Multi-layer filtering: ignore dirs + service whitelist + sensitive exclusion
-    const ignoredDirs = ['node_modules', '.git', '.replit', 'build', 'dist', '.assistant_backups', 'tmp', 'logs'];
-    
-    return allFiles.filter(file => {
-      // Layer 1: Skip ignored directories
-      if (ignoredDirs.some(folder => file.startsWith(folder))) return false;
-      
-      // Layer 2: Service whitelist - only allow files from approved services
-      const isInAllowedService = allowedServices.some(service => 
-        file.startsWith(service + '/') || file.startsWith(service + '\\')
-      );
-      if (!isInAllowedService) return false;
-      
-      // Layer 3: Sensitive pattern exclusion
-      if (sensitivePatterns.some(pattern => pattern.test(file))) {
-        console.warn(`🔒 [SECURITY] Excluding sensitive file from scan: ${file}`);
-        return false;
-      }
-      
-      // Layer 4: Verify it's actually a file (not directory)
-      try {
-        const fullPath = path.resolve(workspaceRoot, file);
-        const stat = require('fs').statSync(fullPath);
-        return stat.isFile();
-      } catch {
-        return false;
-      }
-    });
+    const files = await walkDirectory(WORKSPACE_ROOT);
+    cachedProjectFiles = files;
+    lastProjectScan = now;
+    return files;
   } catch (error) {
     console.error('Error getting project structure:', error);
     return [];
@@ -75,13 +64,48 @@ async function walkDirectory(dir, relativePath = '') {
       const fullPath = path.join(dir, entry.name);
       const relPath = path.join(relativePath, entry.name);
 
+      const normalizedRel = relPath.replace(/\\/g, '/');
+      const firstSegment = normalizedRel.split('/')[0];
+
       if (entry.isDirectory()) {
+        // Respect ignore list at directory level
+        if (
+          containsIgnoredSegment(normalizedRel) ||
+          normalizedRel.startsWith('.') && !ALLOWED_SERVICES.has(firstSegment)
+        ) {
+          continue;
+        }
+
+        if (!ALLOWED_SERVICES.has(firstSegment) || containsIgnoredSegment(normalizedRel)) {
+          continue;
+        }
+
+        if (SENSITIVE_PATTERNS.some(pattern => pattern.test(`${normalizedRel}/`))) {
+          if (!loggedSensitiveFiles.has(normalizedRel)) {
+            console.warn(`🔒 [SECURITY] Excluding sensitive directory from scan: ${normalizedRel}`);
+            loggedSensitiveFiles.add(normalizedRel);
+          }
+          continue;
+        }
+
         // Recursively walk subdirectories
         const subFiles = await walkDirectory(fullPath, relPath);
         files.push(...subFiles);
       } else {
-        // Add file to list
-        files.push(relPath);
+        if (!ALLOWED_SERVICES.has(firstSegment)) {
+          continue;
+        }
+
+        if (SENSITIVE_PATTERNS.some(pattern => pattern.test(normalizedRel))) {
+          if (!loggedSensitiveFiles.has(normalizedRel)) {
+            console.warn(`🔒 [SECURITY] Excluding sensitive file from scan: ${normalizedRel}`);
+            loggedSensitiveFiles.add(normalizedRel);
+          }
+          continue;
+        }
+
+        // Add file to list (normalized)
+        files.push(normalizedRel);
       }
     }
   } catch (error) {
@@ -102,24 +126,23 @@ async function readFileContent(filePath, options = {}) {
   const { maxBytes = 8000, encoding = 'utf8' } = options;
 
   try {
-    // Use workspace root for cross-service file access
-    const workspaceRoot = path.resolve(process.cwd(), '..');
-    const absolutePath = path.resolve(workspaceRoot, filePath);
+    const absolutePath = path.resolve(WORKSPACE_ROOT, filePath);
 
-    // SECURITY: Ensure file is within workspace and allowed services
-    const allowedServices = ['ai-service', 'ai-frontend', 'backend'];
-    const isWithinWorkspace = absolutePath.startsWith(workspaceRoot);
-    const isInAllowedService = allowedServices.some(service =>
-      absolutePath.includes(path.join(workspaceRoot, service))
-    );
-    
-    if (!isWithinWorkspace || !isInAllowedService) {
+    // SECURITY: Ensure file is within workspace boundaries
+    const relativeToWorkspace = path.relative(WORKSPACE_ROOT, absolutePath);
+    if (relativeToWorkspace.startsWith('..') || path.isAbsolute(relativeToWorkspace)) {
+      throw new Error('File access outside workspace is not permitted');
+    }
+
+    // SECURITY: Ensure file resides in an allowed service directory
+    const normalizedRelative = relativeToWorkspace.replace(/\\/g, '/');
+    const serviceSegment = normalizedRelative.split('/')[0];
+    if (!ALLOWED_SERVICES.has(serviceSegment) || containsIgnoredSegment(normalizedRelative)) {
       throw new Error('File access outside allowed service directories not permitted');
     }
-    
+
     // SECURITY: Block sensitive files
-    const sensitivePatterns = [/.env/i, /\.key$/, /firebase-service-account/, /secrets/i];
-    if (sensitivePatterns.some(pattern => pattern.test(filePath))) {
+    if (SENSITIVE_PATTERNS.some(pattern => pattern.test(filePath))) {
       throw new Error('Access to sensitive files not permitted');
     }
 
@@ -142,5 +165,9 @@ async function readFileContent(filePath, options = {}) {
 
 module.exports = {
   getProjectStructure,
-  readFileContent
+  readFileContent,
+  clearProjectStructureCache: () => {
+    cachedProjectFiles = null;
+    lastProjectScan = 0;
+  }
 };
