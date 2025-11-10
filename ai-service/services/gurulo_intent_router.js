@@ -63,7 +63,7 @@ function detectIntent(message = '', options = {}) {
     return { name: 'trip_plan', confidence: DEFAULT_CONFIDENCE, params: {}, missingParams: [] };
   }
 
-  return { name: 'off_topic_consumer_block', confidence: 0.4, params: {}, missingParams: [] };
+  return { name: 'general_query', confidence: 0.5, params: {}, missingParams: [] };
 }
 
 module.exports = {

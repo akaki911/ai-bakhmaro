@@ -5,6 +5,7 @@ const router = express.Router();
 
 const { detectIntent } = require('../services/gurulo_intent_router');
 const codexAgent = require('../agents/codex_agent');
+const groqService = require('../services/groq_service');
 const guruloCore = require('../../shared/gurulo-core');
 const { normalizeResponse, GURULO_CORE_VERSION } = guruloCore.response;
 const {
@@ -276,10 +277,6 @@ const handleChatRequest = async (req, res) => {
         );
     };
 
-    if (intent.name === 'off_topic_consumer_block') {
-      return respondWithPayload(buildOffTopicResponse(metadata, builderOptions));
-    }
-
     if (intent.name === 'greeting') {
       return respondWithPayload(buildGreetingResponse(metadata, builderOptions));
     }
@@ -325,6 +322,55 @@ const handleChatRequest = async (req, res) => {
 
     if (intent.name === 'legacy_feature') {
       return respondWithPayload(buildLegacyFeatureResponse(metadata, builderOptions));
+    }
+
+    if (intent.name === 'general_query') {
+      try {
+        const systemPrompt = `You are Gurulo — AI Developer Assistant for ai.bakhmaro.co.
+Answer in natural Georgian, using clear and concise language.
+Focus on: AI development, code understanding, automation workflows, platform diagnostics.
+Current context: Node.js/React full-stack with Firebase, PostgreSQL, pgvector.`;
+
+        const conversationMessages = [
+          { role: 'system', content: systemPrompt },
+          ...normalizedHistory,
+          { role: 'user', content: message }
+        ];
+
+        if (semanticContext && semanticContext.results && semanticContext.results.length > 0) {
+          const memoryContext = semanticContext.results
+            .map((r, idx) => `Memory ${idx + 1}: ${r.text}`)
+            .slice(0, 3)
+            .join('\n');
+          conversationMessages[conversationMessages.length - 1].content = 
+            `🧠 Context:\n${memoryContext}\n\n${message}`;
+          console.log(`🧠 [SEMANTIC] Injected ${semanticContext.results.length} memories into Groq prompt`);
+        }
+
+        const groqResponse = await groqService.askGroq(conversationMessages, false);
+        const responseText = groqResponse?.choices?.[0]?.message?.content || 
+                            groqResponse?.content || 
+                            'ბოდიში, პასუხის გენერირება ვერ მოხერხდა.';
+
+        return res.status(200).json({
+          success: true,
+          response: responseText,
+          plainText: responseText,
+          metadata: {
+            intent: 'general_query',
+            confidence: intent.confidence,
+            model: groqResponse?.model || 'groq-llm',
+            usage: groqResponse?.usage || null,
+            semanticContext: semanticContext ? {
+              resultsCount: semanticContext.results?.length || 0,
+              threshold: semanticContext.metadata?.threshold
+            } : null
+          },
+          conversationHistoryLength: historyLength
+        });
+      } catch (groqError) {
+        console.error('⚠️ Groq fallback failed:', groqError?.message || groqError);
+      }
     }
 
     return respondWithPayload(buildOffTopicResponse(metadata, builderOptions));
