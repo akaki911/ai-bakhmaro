@@ -230,6 +230,9 @@ const corsMiddleware = (req, res, next) => {
 };
 
 
+// Trust proxy for proper IP detection behind Replit's reverse proxy
+app.set('trust proxy', true);
+
 // SOL-203: CORS credentials:true + headers passthrough + auto-improve support
 app.use(corsMiddleware); // Use the custom middleware
 app.use(express.json({ limit: '50mb' }));

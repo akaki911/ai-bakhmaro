@@ -591,6 +591,10 @@ const limiter = rateLimit({
     retryAfter: '15 minutes'
   }
 });
+
+// Trust proxy for proper IP detection behind Replit's reverse proxy
+app.set('trust proxy', true);
+
 app.use(limiter);
 
 // Body parsing middleware
