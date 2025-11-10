@@ -129,7 +129,9 @@ const GitHubSettingsTab: React.FC<GitHubSettingsTabProps> = ({
     autoMerge: status?.autoMerge || false, // Add autoMerge state
     mergeMethod: status?.mergeMethod || 'merge', // Add mergeMethod state
     defaultCommitTitle: status?.defaultCommitTitle || '', // Add defaultCommitTitle state
-    defaultCommitMessage: status?.defaultCommitMessage || '' // Add defaultCommitMessage state
+    defaultCommitMessage: status?.defaultCommitMessage || '', // Add defaultCommitMessage state
+    autoCommitWatcher: status?.autoCommitWatcher || false, // Auto-Commit Watcher state
+    watcherDebounceMs: status?.watcherDebounceMs || 3000 // Debounce time in milliseconds (default: 3 seconds)
   });
 
   const [webhookStatus, setWebhookStatus] = useState({
@@ -631,6 +633,19 @@ const GitHubSettingsTab: React.FC<GitHubSettingsTabProps> = ({
         }
       }
 
+      // Save auto-commit watcher settings
+      if (settings.autoCommitWatcher !== status?.autoCommitWatcher) {
+        if (settings.autoCommitWatcher) {
+          await fetch('/api/ai/github/auto-commit-watcher/enable', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ debounceMs: settings.watcherDebounceMs })
+          });
+        } else {
+          await fetch('/api/ai/github/auto-commit-watcher/disable', { method: 'POST' });
+        }
+      }
+
       showMessage('success', 'პარამეტრები შენახულია');
       refetch();
     } catch (error) {
@@ -1037,6 +1052,46 @@ const GitHubSettingsTab: React.FC<GitHubSettingsTabProps> = ({
               )}
               <span className="text-xs text-gray-400">წუთი</span>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-gray-700 pt-4">
+            <div>
+              <label className="text-sm font-medium text-white">Auto-Commit Watcher</label>
+              <p className="text-xs text-gray-400">ავტომატური commit-ები ფაილების ცვლილებებზე (real-time)</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={settings.autoCommitWatcher}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setIntegrationSettingsDirty(true);
+                  setSettings({ ...settings, autoCommitWatcher: checked });
+                }}
+                disabled={!isConnected || connectionLoading || integrationDisabled}
+                className="rounded disabled:opacity-50"
+              />
+              {settings.autoCommitWatcher && (
+                <>
+                  <input
+                    type="number"
+                    value={settings.watcherDebounceMs}
+                    onChange={(e) => setSettings({...settings, watcherDebounceMs: parseInt(e.target.value)})}
+                    min="1000"
+                    max="30000"
+                    step="1000"
+                    disabled={!isConnected || connectionLoading || integrationDisabled}
+                    className="w-20 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs disabled:opacity-50"
+                  />
+                  <span className="text-xs text-gray-400">ms</span>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="text-xs text-gray-500 pl-4">
+            <p>• დაკვირვების რეჟიმი: ფაილების ცვლილებებზე მყისიერი რეაგირება</p>
+            <p>• Debounce: ვარდების შეფერხება commit-ის წინ (1000-30000 ms)</p>
+            <p>• Native Git commands: უშუალო ოპერაციები Octokit fallback-ით</p>
           </div>
         </div>
       </div>
