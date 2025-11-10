@@ -1755,16 +1755,6 @@ export function AIChatInterface() {
                     parsed = { content: dataPayload };
                   }
 
-                  // Handle Gurulo structured response - extract plainText for display
-                  if (parsed && typeof parsed === 'object' && 'plainText' in parsed) {
-                    const guruloResponse = parsed as { plainText: string; content?: ChatStructuredContent[] };
-                    // Return plainText as the display content, not the whole JSON
-                    parsed = {
-                      ...guruloResponse,
-                      content: guruloResponse.plainText ? createStructuredFromText(guruloResponse.plainText, language) : [],
-                    };
-                  }
-
                   const payload = parsed as
                     | { content?: string; response?: string; type?: string; error?: string; final?: boolean; plainText?: string }
                     | string;
@@ -1914,21 +1904,6 @@ export function AIChatInterface() {
         } else {
           const data = await response.json();
 
-          // Extract plainText if it's a Gurulo structured response
-          let displayContent = data.response;
-          if (typeof data.response === 'object' && data.response.plainText) {
-            displayContent = data.response.plainText;
-          } else if (typeof data.response === 'string') {
-            try {
-              const parsed = JSON.parse(data.response);
-              if (parsed.plainText) {
-                displayContent = parsed.plainText;
-              }
-            } catch {
-              // Keep original if not JSON
-            }
-          }
-
           const metadataRecord = getRecord((data as Record<string, unknown> | undefined)?.metadata);
           const telemetryRecord = getRecord(metadataRecord?.telemetry);
           if (telemetryRecord) {
@@ -1941,8 +1916,7 @@ export function AIChatInterface() {
                   : undefined,
             };
           }
-          const messageText = displayContent;
-          const parsed = parseAssistantPayload(messageText, language, activeContentFormat, {
+          const parsed = parseAssistantPayload(data.response || data, language, activeContentFormat, {
             audience: audienceTag,
           });
           aggregatedPlainText = parsed.plainText;
