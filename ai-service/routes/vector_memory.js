@@ -2,7 +2,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { requireAssistantAuth } = require('../middleware/service_auth');
+const { requireAssistantAuth } = require('../middleware/authz');
 
 /**
  * Vector Memory API Routes
