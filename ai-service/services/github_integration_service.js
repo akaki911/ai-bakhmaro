@@ -1395,18 +1395,101 @@ class GitHubIntegrationService {
   }
 
   /**
+   * Check for performance degradation trends
+   * Compares recent performance (last 5 ops) vs baseline (previous ops)
+   * Issues warning if latency increases by >30%
+   * @returns {Promise<Object>} Trend analysis
+   */
+  async checkPerformanceTrend() {
+    try {
+      // Get recent average (last 5 operations)
+      const recentAvg = await this.getRollingAverage('all', 5);
+      
+      // Get baseline average (operations 6-15)
+      const query = `
+        SELECT AVG(duration_ms) as avg_duration
+        FROM (
+          SELECT duration_ms 
+          FROM git_metrics_history 
+          WHERE status = 'success'
+          ORDER BY timestamp DESC 
+          OFFSET 5
+          LIMIT 10
+        ) baseline_ops
+      `;
+      const result = await pool.query(query);
+      const baselineAvg = result.rows[0]?.avg_duration || 0;
+      
+      if (baselineAvg === 0 || recentAvg === 0) {
+        return { hasTrend: false, message: 'Not enough data for trend analysis' };
+      }
+      
+      // Calculate percentage change
+      const percentChange = ((recentAvg - baselineAvg) / baselineAvg) * 100;
+      
+      // Check for degradation (>30% increase)
+      if (percentChange > 30) {
+        const warning = `⚠️ PERFORMANCE DEGRADATION: Git operations ${Math.round(percentChange)}% slower! Recent avg: ${Math.round(recentAvg)}ms, Baseline: ${Math.round(baselineAvg)}ms`;
+        console.warn(warning);
+        
+        // Send to metrics service for alerting
+        if (this.metricsService) {
+          this.metricsService.recordCustomMetric('git_performance_degradation', percentChange);
+        }
+        
+        return {
+          hasTrend: true,
+          type: 'degradation',
+          percentChange: Math.round(percentChange),
+          recentAvg: Math.round(recentAvg),
+          baselineAvg: Math.round(baselineAvg),
+          warning
+        };
+      }
+      
+      // Check for improvement (>30% decrease)
+      if (percentChange < -30) {
+        const message = `✅ PERFORMANCE IMPROVEMENT: Git operations ${Math.abs(Math.round(percentChange))}% faster! Recent avg: ${Math.round(recentAvg)}ms, Baseline: ${Math.round(baselineAvg)}ms`;
+        console.log(message);
+        
+        return {
+          hasTrend: true,
+          type: 'improvement',
+          percentChange: Math.round(percentChange),
+          recentAvg: Math.round(recentAvg),
+          baselineAvg: Math.round(baselineAvg),
+          message
+        };
+      }
+      
+      return {
+        hasTrend: false,
+        percentChange: Math.round(percentChange),
+        recentAvg: Math.round(recentAvg),
+        baselineAvg: Math.round(baselineAvg),
+        message: 'Performance stable'
+      };
+    } catch (error) {
+      console.error('❌ Failed to check performance trend:', error.message);
+      return { hasTrend: false, error: error.message };
+    }
+  }
+
+  /**
    * Get performance metrics summary with rolling averages from PostgreSQL
+   * Includes automatic trend detection and warnings
    * @returns {Promise<Object>} Performance metrics
    */
   async getMetrics() {
     const totalOperations = this.metrics.commitCount + this.metrics.pushCount + this.metrics.pullCount;
     
     // Get rolling averages from PostgreSQL (last 10 operations)
-    const [commitRollingAvg, pushRollingAvg, pullRollingAvg, latencyReduction] = await Promise.all([
+    const [commitRollingAvg, pushRollingAvg, pullRollingAvg, latencyReduction, trend] = await Promise.all([
       this.getRollingAverage('commit', 10),
       this.getRollingAverage('push', 10),
       this.getRollingAverage('pull', 10),
-      this.calculateLatencyReduction()
+      this.calculateLatencyReduction(),
+      this.checkPerformanceTrend()
     ]);
     
     return {
@@ -1438,7 +1521,14 @@ class GitHubIntegrationService {
         totalOperations,
         latencyReduction,
         uptime: Math.round((Date.now() - this.metrics.startTime) / 1000)
-      }
+      },
+      trend: trend.hasTrend ? {
+        type: trend.type,
+        percentChange: trend.percentChange,
+        recentAvg: trend.recentAvg,
+        baselineAvg: trend.baselineAvg,
+        warning: trend.warning || trend.message
+      } : null
     };
   }
 }
