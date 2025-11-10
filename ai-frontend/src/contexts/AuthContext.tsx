@@ -106,6 +106,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Device recognition functionality
   const performDeviceRecognition = async () => {
+    // Skip device recognition in development to avoid CORS errors with external APIs
+    if (import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      console.warn('⚠️ Device recognition skipped in development mode');
+      return;
+    }
+
     if (!isDeviceFingerprintingSupported()) {
       console.warn('⚠️ Device fingerprinting not supported');
       return;
@@ -420,16 +426,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!firebaseEnabled) {
       if (import.meta.env.DEV) {
         console.warn('⚠️ Firebase disabled — skipping client auth bootstrap.');
+        
+        // In development mode, attempt to restore offline user from localStorage
+        try {
+          const offlineUser = localStorage.getItem('offline_user');
+          if (offlineUser) {
+            const userData = JSON.parse(offlineUser);
+            console.log('🔄 Restoring offline user session (Firebase disabled mode)');
+            setUser(userData);
+            setIsAuthenticated(true);
+            setUserRole(userData.role);
+            setPersonalId(userData.personalId);
+            setFirebaseUid(userData.id);
+            setRouteAdvice(prev => ({
+              ...prev,
+              role: userData.role,
+              deviceTrust: false,
+              target: '/admin?tab=dashboard',
+              reason: 'Offline user authenticated',
+              authenticated: true
+            }));
+          } else {
+            setRouteAdvice(prev => ({
+              ...prev,
+              reason: 'Firebase disabled; AI-only mode active',
+              authenticated: false,
+            }));
+          }
+        } catch (error) {
+          console.warn('⚠️ Could not restore offline user:', error);
+          setRouteAdvice(prev => ({
+            ...prev,
+            reason: 'Firebase disabled; AI-only mode active',
+            authenticated: false,
+          }));
+        }
+      } else {
+        setRouteAdvice(prev => ({
+          ...prev,
+          reason: 'Firebase disabled; AI-only mode active',
+          authenticated: false,
+        }));
       }
 
       setIsLoading(false);
-      setAuthInitialized(false);
+      setAuthInitialized(true);
       setIsAuthReady(true);
-      setRouteAdvice(prev => ({
-        ...prev,
-        reason: 'Firebase disabled; AI-only mode active',
-        authenticated: false,
-      }));
 
       return;
     }
