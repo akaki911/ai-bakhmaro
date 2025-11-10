@@ -281,4 +281,22 @@ router.get('/status/detailed', authenticateUser, async (req, res) => {
   }
 });
 
+// Get Git performance metrics (Phase 1: Performance Monitoring)
+router.get('/metrics', authenticateUser, async (req, res) => {
+  try {
+    const metrics = await gitHubService.getMetrics();
+    res.json({
+      success: true,
+      metrics
+    });
+  } catch (error) {
+    console.error('Failed to get Git metrics:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      metrics: null
+    });
+  }
+});
+
 module.exports = router;

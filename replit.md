@@ -34,13 +34,19 @@ The platform is built on a multi-service architecture:
 ### Phase 1: Git Native Integration - Performance Monitoring ✅
 Implemented PostgreSQL-backed Git metrics history storage:
 - **Migration**: `001_create_git_metrics_history.sql` creates `git_metrics_history` table with operation type, duration, status, metadata, and timestamp tracking
-- **Methods**: 
+- **Methods** (`ai-service/services/github_integration_service.js`): 
   - `storeMetricsHistory(operation, duration, status, metadata)` - persists Git operation metrics to PostgreSQL
-  - `getRollingAverage(operation, limit)` - calculates rolling averages from last N operations
+  - `getRollingAverage(operation, limit)` - calculates rolling averages from last N **successful** operations (error-aware aggregation)
+  - `checkPerformanceTrend()` - **NEW**: compares recent 5 ops vs baseline (ops 6-15), issues warning if >30% degradation or improvement
   - `calculateLatencyReduction()` - async method using PostgreSQL rolling averages (baseline: first 10 operations)
-  - `getMetrics()` - enhanced to return both in-memory metrics and database-backed rolling averages
+  - `getMetrics()` - enhanced to return in-memory metrics, rolling averages, **and trend analysis** (degradation/improvement alerts)
 - **Integration**: All Git operations (commit, push, pull) now store metrics history on success and error
-- **File**: `ai-service/services/github_integration_service.js`
+- **API Endpoint**: `GET /api/github/metrics` - returns full performance metrics with trend analysis
+- **Frontend Dashboard**: `GitPerformanceMetrics.tsx` component in GitHubManagementHub
+  - Real-time metrics visualization (commits, pushes, pulls)
+  - Trend alerts with visual warnings (red for degradation, green for improvement)
+  - Auto-refresh every 30 seconds
+  - Rolling averages vs session averages comparison
 
 ### Phase 3: Vector Memory & Semantic Search ✅
 Implemented self-hosted vector database using PostgreSQL pgvector:
