@@ -12,9 +12,10 @@ import { ServicesView } from './components/ServicesView';
 import { MultiTabTerminal } from './components/MultiTabTerminal';
 import RealTimeErrorMonitor from './components/RealTimeErrorMonitor';
 import { useRealTimeErrors } from './hooks/useRealTimeErrors';
-import { Wifi, WifiOff, AlertTriangle, AlertCircle, HelpCircle, Activity, Database, TrendingUp, Server, Zap, Bell, Terminal, FileText, BarChart3, GitBranch } from 'lucide-react';
+import { Wifi, WifiOff, AlertTriangle, AlertCircle, HelpCircle, Activity, Database, TrendingUp, Server, Zap, Bell, Terminal, FileText, BarChart3, GitBranch, Code } from 'lucide-react';
 import { SystemMetrics } from './types';
 import AIRolloutManager from '../../components/AIRolloutManager';
+import { CodeExecutor } from './components/CodeExecutor';
 
 
 // SystemMetrics imported from types.ts
@@ -51,7 +52,7 @@ export const DevConsoleV2Container: React.FC = () => {
     droppedCount,
     setFilters
   } = useConsoleStore();
-  const [activeTab, setActiveTab] = useState<'logs' | 'metrics' | 'services' | 'rollout' | 'terminal'>('logs');
+  const [activeTab, setActiveTab] = useState<'logs' | 'metrics' | 'services' | 'rollout' | 'terminal' | 'execute'>('logs');
 
   const { logs, connectionStatus, reconnect, clearLogs, forceReload, isLoadingFromCache } = useConsoleStream(filters);
 
@@ -198,6 +199,7 @@ export const DevConsoleV2Container: React.FC = () => {
     { id: 'services', label: 'Services', icon: Server },
     { id: 'rollout', label: 'Rollout', icon: GitBranch },
     { id: 'terminal', label: 'Terminal', icon: Terminal },
+    { id: 'execute', label: 'Execute', icon: Code },
   ];
 
   return (
@@ -366,6 +368,12 @@ export const DevConsoleV2Container: React.FC = () => {
           {activeTab === 'terminal' && (
             <div className="flex-1 min-h-0 p-4">
               <MultiTabTerminal />
+            </div>
+          )}
+
+          {activeTab === 'execute' && (
+            <div className="flex-1 min-h-0 p-4">
+              <CodeExecutor language={language} />
             </div>
           )}
         </div>
