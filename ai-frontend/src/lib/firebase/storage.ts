@@ -1,6 +1,4 @@
-const storageModule = (await import('firebase/storage')) as typeof import('firebase/storage');
-
-const {
+import {
   connectStorageEmulator,
   deleteObject,
   getDownloadURL,
@@ -10,7 +8,7 @@ const {
   uploadBytes,
   uploadBytesResumable,
   uploadString,
-} = storageModule;
+} from 'firebase/storage';
 
 export {
   connectStorageEmulator,
