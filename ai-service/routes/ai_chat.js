@@ -157,8 +157,9 @@ const buildSuccessResponse = (intent, payload, historyLength, audience, normaliz
 
   const baseResponse = {
     success: true,
-    response: normalized,
+    response: normalized.plainText,
     plainText: normalized.plainText,
+    core: normalized,
     metadata: responseMetadata,
     conversationHistoryLength: historyLength,
   };
@@ -262,7 +263,7 @@ const handleChatRequest = async (req, res) => {
     const intent = detectIntent(message, { metadata });
 
     const respondWithPayload = (payload) => {
-      res.set('X-Content-Format', 'json');
+      res.set('X-Content-Format', 'text');
       return res
         .status(200)
         .json(
@@ -338,13 +339,14 @@ const handleChatRequest = async (req, res) => {
       metadata,
     });
 
-    res.set('X-Content-Format', 'json');
+    res.set('X-Content-Format', 'text');
     return res.status(500).json({
       success: false,
       error: 'AI Chat service unavailable',
       details: error.message,
-      response: normalizedFallback,
+      response: normalizedFallback.plainText,
       plainText: normalizedFallback.plainText,
+      core: normalizedFallback,
       metadata: {
         core: normalizedFallback.meta,
         format: GURULO_CORE_VERSION,
