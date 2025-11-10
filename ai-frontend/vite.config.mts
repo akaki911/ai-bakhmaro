@@ -24,6 +24,18 @@ export default defineConfig({
       usePolling: true,
       interval: 800,
     },
+    proxy: {
+      '/api/ai': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/api': {
+        target: 'http://localhost:5002',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   optimizeDeps: {},
   resolve: {
