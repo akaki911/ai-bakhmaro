@@ -1,5 +1,48 @@
 [
   {
+    "title": "AI-Generated: Code Complexity Reduction for services/safety_switch_service.js",
+    "description": "🧮 კოდის სირთულე მაღალია (93): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (93): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ",
+    "files": [
+      {
+        "path": "services/safety_switch_service.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "services/safety_switch_service.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (93): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1762777566011_wm2qidrl1",
+    "createdAt": "2025-11-10T12:26:06.011Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1762777566011",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-10T12:26:06.011Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
     "title": "AI-Generated: Code Complexity Reduction for services/resource_optimizer.js",
     "description": "🧮 კოდის სირთულე მაღალია (53): რეფაქტორინგი შეიძლება საჭირო იყოს; 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ",
     "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (53): რეფაქტორინგი შეიძლება საჭირო იყოს; 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ",
@@ -24,12 +67,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506818_urqp6q90g",
-    "createdAt": "2025-11-10T12:25:06.818Z",
+    "id": "ai_prop_1762777566007_niwhi9i7d",
+    "createdAt": "2025-11-10T12:26:06.007Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506818",
+    "correlationId": "cid_1762777566007",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -37,7 +80,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.818Z"
+        "at": "2025-11-10T12:26:06.007Z"
       }
     ],
     "feedbackHistory": []
@@ -67,12 +110,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506814_4kbnjhdww",
-    "createdAt": "2025-11-10T12:25:06.814Z",
+    "id": "ai_prop_1762777566004_dh219zlsl",
+    "createdAt": "2025-11-10T12:26:06.004Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506814",
+    "correlationId": "cid_1762777566004",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -80,7 +123,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.814Z"
+        "at": "2025-11-10T12:26:06.004Z"
       }
     ],
     "feedbackHistory": []
@@ -110,12 +153,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506810_fmz8mj8rh",
-    "createdAt": "2025-11-10T12:25:06.810Z",
+    "id": "ai_prop_1762777566000_w4uvwzqco",
+    "createdAt": "2025-11-10T12:26:06.000Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506809",
+    "correlationId": "cid_1762777566000",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -123,7 +166,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.810Z"
+        "at": "2025-11-10T12:26:06.000Z"
       }
     ],
     "feedbackHistory": []
@@ -153,12 +196,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506804_qecfdytag",
-    "createdAt": "2025-11-10T12:25:06.804Z",
+    "id": "ai_prop_1762777565996_2k3iqxajm",
+    "createdAt": "2025-11-10T12:26:05.996Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506804",
+    "correlationId": "cid_1762777565995",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -166,7 +209,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.804Z"
+        "at": "2025-11-10T12:26:05.996Z"
       }
     ],
     "feedbackHistory": []
@@ -196,12 +239,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506796_t20erzfip",
-    "createdAt": "2025-11-10T12:25:06.796Z",
+    "id": "ai_prop_1762777565991_wju33o6se",
+    "createdAt": "2025-11-10T12:26:05.991Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506795",
+    "correlationId": "cid_1762777565991",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -209,7 +252,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.796Z"
+        "at": "2025-11-10T12:26:05.991Z"
       }
     ],
     "feedbackHistory": []
@@ -239,12 +282,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506761_mslhjnigu",
-    "createdAt": "2025-11-10T12:25:06.761Z",
+    "id": "ai_prop_1762777565987_lswjbkeq5",
+    "createdAt": "2025-11-10T12:26:05.987Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506761",
+    "correlationId": "cid_1762777565986",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -252,7 +295,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.761Z"
+        "at": "2025-11-10T12:26:05.987Z"
       }
     ],
     "feedbackHistory": []
@@ -282,12 +325,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506736_twkkodedh",
-    "createdAt": "2025-11-10T12:25:06.736Z",
+    "id": "ai_prop_1762777565983_cwpxjr9n1",
+    "createdAt": "2025-11-10T12:26:05.983Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506736",
+    "correlationId": "cid_1762777565983",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -295,7 +338,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.736Z"
+        "at": "2025-11-10T12:26:05.983Z"
       }
     ],
     "feedbackHistory": []
@@ -325,12 +368,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506723_swuevjv25",
-    "createdAt": "2025-11-10T12:25:06.723Z",
+    "id": "ai_prop_1762777565979_p1o5wuyjh",
+    "createdAt": "2025-11-10T12:26:05.979Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506722",
+    "correlationId": "cid_1762777565978",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -338,7 +381,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.723Z"
+        "at": "2025-11-10T12:26:05.979Z"
       }
     ],
     "feedbackHistory": []
@@ -368,12 +411,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506711_veormq6ze",
-    "createdAt": "2025-11-10T12:25:06.711Z",
+    "id": "ai_prop_1762777565974_t845rob49",
+    "createdAt": "2025-11-10T12:26:05.974Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506711",
+    "correlationId": "cid_1762777565974",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -381,7 +424,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.711Z"
+        "at": "2025-11-10T12:26:05.974Z"
       }
     ],
     "feedbackHistory": []
@@ -411,12 +454,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506705_2bfizfe15",
-    "createdAt": "2025-11-10T12:25:06.705Z",
+    "id": "ai_prop_1762777565970_npb7an2ex",
+    "createdAt": "2025-11-10T12:26:05.970Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506705",
+    "correlationId": "cid_1762777565970",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -424,7 +467,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.705Z"
+        "at": "2025-11-10T12:26:05.970Z"
       }
     ],
     "feedbackHistory": []
@@ -454,12 +497,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506699_rtbqv9k2l",
-    "createdAt": "2025-11-10T12:25:06.699Z",
+    "id": "ai_prop_1762777565965_h0y0fj4no",
+    "createdAt": "2025-11-10T12:26:05.965Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506699",
+    "correlationId": "cid_1762777565965",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -467,7 +510,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.699Z"
+        "at": "2025-11-10T12:26:05.965Z"
       }
     ],
     "feedbackHistory": []
@@ -497,12 +540,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506694_35jxf6r4c",
-    "createdAt": "2025-11-10T12:25:06.694Z",
+    "id": "ai_prop_1762777565961_olkum43a7",
+    "createdAt": "2025-11-10T12:26:05.961Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506694",
+    "correlationId": "cid_1762777565960",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -510,7 +553,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.694Z"
+        "at": "2025-11-10T12:26:05.961Z"
       }
     ],
     "feedbackHistory": []
@@ -540,12 +583,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506686_hxzzly5qh",
-    "createdAt": "2025-11-10T12:25:06.686Z",
+    "id": "ai_prop_1762777565957_pei9a48gx",
+    "createdAt": "2025-11-10T12:26:05.957Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506685",
+    "correlationId": "cid_1762777565957",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -553,7 +596,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.686Z"
+        "at": "2025-11-10T12:26:05.957Z"
       }
     ],
     "feedbackHistory": []
@@ -583,12 +626,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506680_pcd8q2hya",
-    "createdAt": "2025-11-10T12:25:06.680Z",
+    "id": "ai_prop_1762777565953_3pn38rjuk",
+    "createdAt": "2025-11-10T12:26:05.953Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506680",
+    "correlationId": "cid_1762777565953",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -596,7 +639,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.680Z"
+        "at": "2025-11-10T12:26:05.953Z"
       }
     ],
     "feedbackHistory": []
@@ -626,12 +669,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506675_xrsiulo84",
-    "createdAt": "2025-11-10T12:25:06.675Z",
+    "id": "ai_prop_1762777565950_cqpkndwbw",
+    "createdAt": "2025-11-10T12:26:05.950Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506675",
+    "correlationId": "cid_1762777565950",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -639,7 +682,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.675Z"
+        "at": "2025-11-10T12:26:05.950Z"
       }
     ],
     "feedbackHistory": []
@@ -669,12 +712,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506660_boqae61c9",
-    "createdAt": "2025-11-10T12:25:06.660Z",
+    "id": "ai_prop_1762777565946_z4soaa31v",
+    "createdAt": "2025-11-10T12:26:05.946Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506660",
+    "correlationId": "cid_1762777565946",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -682,7 +725,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.660Z"
+        "at": "2025-11-10T12:26:05.946Z"
       }
     ],
     "feedbackHistory": []
@@ -712,12 +755,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506649_vx1i8vz4w",
-    "createdAt": "2025-11-10T12:25:06.649Z",
+    "id": "ai_prop_1762777565941_uqeripjyc",
+    "createdAt": "2025-11-10T12:26:05.941Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506649",
+    "correlationId": "cid_1762777565941",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -725,7 +768,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.649Z"
+        "at": "2025-11-10T12:26:05.941Z"
       }
     ],
     "feedbackHistory": []
@@ -755,12 +798,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506644_wagbx8r9a",
-    "createdAt": "2025-11-10T12:25:06.644Z",
+    "id": "ai_prop_1762777565937_nqj11dl65",
+    "createdAt": "2025-11-10T12:26:05.937Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506644",
+    "correlationId": "cid_1762777565937",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -768,7 +811,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.644Z"
+        "at": "2025-11-10T12:26:05.937Z"
       }
     ],
     "feedbackHistory": []
@@ -798,12 +841,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506636_mqfp5j33w",
-    "createdAt": "2025-11-10T12:25:06.636Z",
+    "id": "ai_prop_1762777565933_mnr3fuyz1",
+    "createdAt": "2025-11-10T12:26:05.933Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506636",
+    "correlationId": "cid_1762777565933",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -811,7 +854,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.636Z"
+        "at": "2025-11-10T12:26:05.933Z"
       }
     ],
     "feedbackHistory": []
@@ -841,12 +884,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506632_xvtyn3dtw",
-    "createdAt": "2025-11-10T12:25:06.632Z",
+    "id": "ai_prop_1762777565926_fbisbm9q0",
+    "createdAt": "2025-11-10T12:26:05.926Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506632",
+    "correlationId": "cid_1762777565925",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -854,7 +897,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.632Z"
+        "at": "2025-11-10T12:26:05.926Z"
       }
     ],
     "feedbackHistory": []
@@ -884,12 +927,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506627_6okzsq4kv",
-    "createdAt": "2025-11-10T12:25:06.627Z",
+    "id": "ai_prop_1762777565920_ty4fmkw4w",
+    "createdAt": "2025-11-10T12:26:05.920Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506627",
+    "correlationId": "cid_1762777565920",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -897,7 +940,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.627Z"
+        "at": "2025-11-10T12:26:05.920Z"
       }
     ],
     "feedbackHistory": []
@@ -927,12 +970,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506621_oelmxgpgn",
-    "createdAt": "2025-11-10T12:25:06.621Z",
+    "id": "ai_prop_1762777565917_6a5k0kuyr",
+    "createdAt": "2025-11-10T12:26:05.917Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506621",
+    "correlationId": "cid_1762777565917",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -940,7 +983,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.621Z"
+        "at": "2025-11-10T12:26:05.917Z"
       }
     ],
     "feedbackHistory": []
@@ -970,12 +1013,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506585_4qrg9su0t",
-    "createdAt": "2025-11-10T12:25:06.585Z",
+    "id": "ai_prop_1762777565913_se1rp111n",
+    "createdAt": "2025-11-10T12:26:05.913Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506584",
+    "correlationId": "cid_1762777565913",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -983,7 +1026,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.585Z"
+        "at": "2025-11-10T12:26:05.913Z"
       }
     ],
     "feedbackHistory": []
@@ -1013,12 +1056,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506575_v1h5jsh0z",
-    "createdAt": "2025-11-10T12:25:06.575Z",
+    "id": "ai_prop_1762777565908_gdyw94aj8",
+    "createdAt": "2025-11-10T12:26:05.908Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506575",
+    "correlationId": "cid_1762777565908",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1026,7 +1069,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.575Z"
+        "at": "2025-11-10T12:26:05.908Z"
       }
     ],
     "feedbackHistory": []
@@ -1056,12 +1099,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506568_jh8biexcd",
-    "createdAt": "2025-11-10T12:25:06.569Z",
+    "id": "ai_prop_1762777565905_lt0jikf2n",
+    "createdAt": "2025-11-10T12:26:05.905Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506568",
+    "correlationId": "cid_1762777565904",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1069,7 +1112,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.569Z"
+        "at": "2025-11-10T12:26:05.905Z"
       }
     ],
     "feedbackHistory": []
@@ -1099,12 +1142,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506534_g3gwllxl8",
-    "createdAt": "2025-11-10T12:25:06.534Z",
+    "id": "ai_prop_1762777565901_afarb1iih",
+    "createdAt": "2025-11-10T12:26:05.901Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506533",
+    "correlationId": "cid_1762777565901",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1112,7 +1155,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.534Z"
+        "at": "2025-11-10T12:26:05.901Z"
       }
     ],
     "feedbackHistory": []
@@ -1142,12 +1185,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506524_dcjvo8rho",
-    "createdAt": "2025-11-10T12:25:06.524Z",
+    "id": "ai_prop_1762777565897_n5g5k2qfz",
+    "createdAt": "2025-11-10T12:26:05.897Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506524",
+    "correlationId": "cid_1762777565897",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1155,7 +1198,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.524Z"
+        "at": "2025-11-10T12:26:05.897Z"
       }
     ],
     "feedbackHistory": []
@@ -1185,12 +1228,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506518_ufhnmpejv",
-    "createdAt": "2025-11-10T12:25:06.518Z",
+    "id": "ai_prop_1762777565893_wpwopy5gz",
+    "createdAt": "2025-11-10T12:26:05.893Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506518",
+    "correlationId": "cid_1762777565893",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1198,7 +1241,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.518Z"
+        "at": "2025-11-10T12:26:05.893Z"
       }
     ],
     "feedbackHistory": []
@@ -1228,12 +1271,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506511_mrp544zeu",
-    "createdAt": "2025-11-10T12:25:06.511Z",
+    "id": "ai_prop_1762777565888_bd6ztjbcc",
+    "createdAt": "2025-11-10T12:26:05.888Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506511",
+    "correlationId": "cid_1762777565888",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1241,7 +1284,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.511Z"
+        "at": "2025-11-10T12:26:05.888Z"
       }
     ],
     "feedbackHistory": []
@@ -1271,12 +1314,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506505_p7nvlv23p",
-    "createdAt": "2025-11-10T12:25:06.505Z",
+    "id": "ai_prop_1762777565882_p1d0uvhlk",
+    "createdAt": "2025-11-10T12:26:05.882Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506505",
+    "correlationId": "cid_1762777565881",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1284,7 +1327,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.505Z"
+        "at": "2025-11-10T12:26:05.882Z"
       }
     ],
     "feedbackHistory": []
@@ -1314,12 +1357,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506493_9et8j19gf",
-    "createdAt": "2025-11-10T12:25:06.493Z",
+    "id": "ai_prop_1762777565875_s1s77rh68",
+    "createdAt": "2025-11-10T12:26:05.875Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506493",
+    "correlationId": "cid_1762777565875",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1327,7 +1370,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.493Z"
+        "at": "2025-11-10T12:26:05.875Z"
       }
     ],
     "feedbackHistory": []
@@ -1357,12 +1400,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506485_vnhaj605j",
-    "createdAt": "2025-11-10T12:25:06.485Z",
+    "id": "ai_prop_1762777565867_y5wnjqda0",
+    "createdAt": "2025-11-10T12:26:05.867Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506483",
+    "correlationId": "cid_1762777565866",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1370,7 +1413,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.485Z"
+        "at": "2025-11-10T12:26:05.867Z"
       }
     ],
     "feedbackHistory": []
@@ -1400,12 +1443,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506475_epvsjazx8",
-    "createdAt": "2025-11-10T12:25:06.475Z",
+    "id": "ai_prop_1762777565860_mefq11fot",
+    "createdAt": "2025-11-10T12:26:05.860Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506474",
+    "correlationId": "cid_1762777565860",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1413,7 +1456,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.475Z"
+        "at": "2025-11-10T12:26:05.860Z"
       }
     ],
     "feedbackHistory": []
@@ -1443,12 +1486,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506465_1v9lbd4xs",
-    "createdAt": "2025-11-10T12:25:06.465Z",
+    "id": "ai_prop_1762777565852_h65si8d95",
+    "createdAt": "2025-11-10T12:26:05.852Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506465",
+    "correlationId": "cid_1762777565852",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1456,7 +1499,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.465Z"
+        "at": "2025-11-10T12:26:05.852Z"
       }
     ],
     "feedbackHistory": []
@@ -1486,12 +1529,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506409_80e9s3pwv",
-    "createdAt": "2025-11-10T12:25:06.409Z",
+    "id": "ai_prop_1762777565849_gaq1fud7n",
+    "createdAt": "2025-11-10T12:26:05.849Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506409",
+    "correlationId": "cid_1762777565849",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1499,7 +1542,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.409Z"
+        "at": "2025-11-10T12:26:05.849Z"
       }
     ],
     "feedbackHistory": []
@@ -1529,12 +1572,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506394_fzjgcpcsa",
-    "createdAt": "2025-11-10T12:25:06.394Z",
+    "id": "ai_prop_1762777565843_zrcakc235",
+    "createdAt": "2025-11-10T12:26:05.843Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506394",
+    "correlationId": "cid_1762777565843",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1542,7 +1585,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.394Z"
+        "at": "2025-11-10T12:26:05.843Z"
       }
     ],
     "feedbackHistory": []
@@ -1572,12 +1615,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506367_ff4vkc0jt",
-    "createdAt": "2025-11-10T12:25:06.367Z",
+    "id": "ai_prop_1762777565839_q1q8lii1i",
+    "createdAt": "2025-11-10T12:26:05.839Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506367",
+    "correlationId": "cid_1762777565839",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1585,7 +1628,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.368Z"
+        "at": "2025-11-10T12:26:05.839Z"
       }
     ],
     "feedbackHistory": []
@@ -1615,12 +1658,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506362_r0bsrcl8t",
-    "createdAt": "2025-11-10T12:25:06.362Z",
+    "id": "ai_prop_1762777565835_h5vn0sx2g",
+    "createdAt": "2025-11-10T12:26:05.835Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506362",
+    "correlationId": "cid_1762777565835",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1628,7 +1671,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.362Z"
+        "at": "2025-11-10T12:26:05.835Z"
       }
     ],
     "feedbackHistory": []
@@ -1658,12 +1701,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506357_k621hfok7",
-    "createdAt": "2025-11-10T12:25:06.357Z",
+    "id": "ai_prop_1762777565829_by0gktuyj",
+    "createdAt": "2025-11-10T12:26:05.829Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506357",
+    "correlationId": "cid_1762777565829",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1671,7 +1714,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.357Z"
+        "at": "2025-11-10T12:26:05.829Z"
       }
     ],
     "feedbackHistory": []
@@ -1701,12 +1744,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506352_8monlcjgi",
-    "createdAt": "2025-11-10T12:25:06.352Z",
+    "id": "ai_prop_1762777565824_2hxhsm6ke",
+    "createdAt": "2025-11-10T12:26:05.824Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506352",
+    "correlationId": "cid_1762777565824",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1714,7 +1757,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.352Z"
+        "at": "2025-11-10T12:26:05.824Z"
       }
     ],
     "feedbackHistory": []
@@ -1744,12 +1787,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506347_c7n3c86k5",
-    "createdAt": "2025-11-10T12:25:06.347Z",
+    "id": "ai_prop_1762777565819_pazmpkng0",
+    "createdAt": "2025-11-10T12:26:05.819Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506346",
+    "correlationId": "cid_1762777565819",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1757,7 +1800,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.347Z"
+        "at": "2025-11-10T12:26:05.819Z"
       }
     ],
     "feedbackHistory": []
@@ -1787,12 +1830,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506340_wb3mj7rm7",
-    "createdAt": "2025-11-10T12:25:06.340Z",
+    "id": "ai_prop_1762777565815_svpj6td2j",
+    "createdAt": "2025-11-10T12:26:05.815Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506340",
+    "correlationId": "cid_1762777565814",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1800,7 +1843,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.340Z"
+        "at": "2025-11-10T12:26:05.815Z"
       }
     ],
     "feedbackHistory": []
@@ -1830,12 +1873,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506322_tu2gwrb51",
-    "createdAt": "2025-11-10T12:25:06.322Z",
+    "id": "ai_prop_1762777565809_bhe7oh25d",
+    "createdAt": "2025-11-10T12:26:05.809Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506322",
+    "correlationId": "cid_1762777565809",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1843,7 +1886,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.322Z"
+        "at": "2025-11-10T12:26:05.809Z"
       }
     ],
     "feedbackHistory": []
@@ -1873,12 +1916,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506315_pqkymwdj8",
-    "createdAt": "2025-11-10T12:25:06.315Z",
+    "id": "ai_prop_1762777565802_hp9y100oe",
+    "createdAt": "2025-11-10T12:26:05.802Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506310",
+    "correlationId": "cid_1762777565802",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1886,7 +1929,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.315Z"
+        "at": "2025-11-10T12:26:05.802Z"
       }
     ],
     "feedbackHistory": []
@@ -1916,12 +1959,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506302_tot1y1po4",
-    "createdAt": "2025-11-10T12:25:06.302Z",
+    "id": "ai_prop_1762777565798_becvza079",
+    "createdAt": "2025-11-10T12:26:05.798Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506301",
+    "correlationId": "cid_1762777565798",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1929,7 +1972,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.302Z"
+        "at": "2025-11-10T12:26:05.798Z"
       }
     ],
     "feedbackHistory": []
@@ -1959,12 +2002,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506294_nt9vrbuuv",
-    "createdAt": "2025-11-10T12:25:06.294Z",
+    "id": "ai_prop_1762777565793_h6dgxvb0y",
+    "createdAt": "2025-11-10T12:26:05.793Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506293",
+    "correlationId": "cid_1762777565793",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -1972,7 +2015,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.294Z"
+        "at": "2025-11-10T12:26:05.793Z"
       }
     ],
     "feedbackHistory": []
@@ -2002,12 +2045,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506287_fokfpit0a",
-    "createdAt": "2025-11-10T12:25:06.287Z",
+    "id": "ai_prop_1762777565788_e8jb5cvnm",
+    "createdAt": "2025-11-10T12:26:05.788Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506287",
+    "correlationId": "cid_1762777565788",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -2015,7 +2058,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.287Z"
+        "at": "2025-11-10T12:26:05.788Z"
       }
     ],
     "feedbackHistory": []
@@ -2045,12 +2088,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506279_5l4gdbvbk",
-    "createdAt": "2025-11-10T12:25:06.279Z",
+    "id": "ai_prop_1762777565783_wqnb6vsyz",
+    "createdAt": "2025-11-10T12:26:05.783Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506278",
+    "correlationId": "cid_1762777565783",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -2058,7 +2101,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.279Z"
+        "at": "2025-11-10T12:26:05.783Z"
       }
     ],
     "feedbackHistory": []
@@ -2088,12 +2131,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1762777506267_9imzsofsj",
-    "createdAt": "2025-11-10T12:25:06.267Z",
+    "id": "ai_prop_1762777565776_9unqbnmc1",
+    "createdAt": "2025-11-10T12:26:05.776Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1762777506267",
+    "correlationId": "cid_1762777565775",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -2101,50 +2144,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-10T12:25:06.267Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for routes/metrics.js",
-    "description": "📊 კოდის სირთულე ზომიერია (12): კარგი ბალანსი; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 📊 კოდის სირთულე ზომიერია (12): კარგი ბალანსი; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "routes/metrics.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "routes/metrics.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "📊 კოდის სირთულე ზომიერია (12): კარგი ბალანსი; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1762777506257_67e59x99b",
-    "createdAt": "2025-11-10T12:25:06.257Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1762777506256",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-10T12:25:06.257Z"
+        "at": "2025-11-10T12:26:05.776Z"
       }
     ],
     "feedbackHistory": []
