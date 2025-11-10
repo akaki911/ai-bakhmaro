@@ -15,10 +15,13 @@ class GitHubIssuesService {
   // Initialize GitHub API client
   async initialize(token, repositoryUrl) {
     try {
-      if (!token) {
+      // Fallback to environment variable if token not provided
+      const resolvedToken = token || process.env.GITHUB_TOKEN;
+      
+      if (!resolvedToken) {
         throw new Error('GitHub token არის საჭირო');
       }
-      this.githubToken = token; // Store token for makeGitHubRequest
+      this.githubToken = resolvedToken; // Store token for makeGitHubRequest
 
       this.octokit = new Octokit({
         auth: token,
