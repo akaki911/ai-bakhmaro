@@ -27,6 +27,11 @@
     "@types/cors": "^2.8.19",
     "concurrently": "^9.2.1"
   },
+  "pnpm": {
+    "overrides": {
+      "@opentelemetry/api": "1.7.0"
+    }
+  },
   "engines": {
     "node": ">=18 <=22"
   },
