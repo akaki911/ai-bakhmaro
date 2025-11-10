@@ -74,12 +74,14 @@ console.log('Doubled:', doubled);
       }
 
       let buffer = '';
+      let currentEvent = '';
 
       while (true) {
         const { done, value } = await reader.read();
         
         if (done) {
           console.log('✅ [EXECUTOR] Stream complete');
+          setIsExecuting(false);
           break;
         }
 
@@ -92,8 +94,8 @@ console.log('Doubled:', doubled);
 
         for (const line of lines) {
           if (line.startsWith('event:')) {
-            const eventType = line.substring(6).trim();
-            continue; // Event type is on separate line
+            currentEvent = line.substring(6).trim();
+            continue;
           }
 
           if (line.startsWith('data:')) {
@@ -107,21 +109,54 @@ console.log('Doubled:', doubled);
                 setExecutionId(data.executionId);
               }
 
-              // Handle different event types
-              if (data.output) {
-                setStreamOutput(prev => [...prev, data.output]);
-              } else if (data.error) {
-                setStreamErrors(prev => [...prev, `Error: ${data.error}`]);
-                setIsExecuting(false);
-              } else if (data.success !== undefined) {
-                // Complete event
-                setExecutionResult({
-                  success: data.success,
-                  duration: data.duration,
-                  output: data.output,
-                });
-                setIsExecuting(false);
+              // Handle different event types based on SSE event field
+              switch (currentEvent) {
+                case 'stdout':
+                  if (data.output) {
+                    setStreamOutput(prev => [...prev, data.output]);
+                  }
+                  break;
+                  
+                case 'stderr':
+                  if (data.output) {
+                    setStreamErrors(prev => [...prev, data.output]);
+                  }
+                  break;
+                  
+                case 'complete':
+                  setExecutionResult({
+                    success: data.success,
+                    duration: data.duration,
+                    output: data.output,
+                  });
+                  setIsExecuting(false);
+                  break;
+                  
+                case 'error':
+                  setStreamErrors(prev => [...prev, `Error: ${data.error || data.type || 'Unknown error'}`]);
+                  setIsExecuting(false);
+                  break;
+                  
+                default:
+                  // Fallback for legacy/ad-hoc format
+                  if (data.output) {
+                    setStreamOutput(prev => [...prev, data.output]);
+                  } else if (data.error) {
+                    setStreamErrors(prev => [...prev, `Error: ${data.error}`]);
+                    setIsExecuting(false);
+                  } else if (data.success !== undefined) {
+                    setExecutionResult({
+                      success: data.success,
+                      duration: data.duration,
+                      output: data.output,
+                    });
+                    setIsExecuting(false);
+                  }
               }
+              
+              // Reset event type for next message
+              currentEvent = '';
+              
             } catch (parseError) {
               console.warn('Failed to parse SSE data:', dataStr);
             }
@@ -261,8 +296,8 @@ console.log('Doubled:', doubled);
           </div>
         </div>
 
-        {/* Output Panel */}
-        {hasOutput && (
+        {/* Output Panel - Always visible during/after execution */}
+        {(hasOutput || isExecuting) && (
           <div className="flex-1 min-h-0 rounded-lg border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800">
             <div className="flex h-full flex-col">
               <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-2 dark:border-gray-600 dark:bg-gray-700">
@@ -271,6 +306,9 @@ console.log('Doubled:', doubled);
                   <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
                     {language === 'ka' ? 'შედეგი' : 'Output'}
                   </span>
+                  {isExecuting && (
+                    <Loader2 className="h-3 w-3 animate-spin text-blue-500" />
+                  )}
                   {executionId && (
                     <span className="text-xs text-gray-400">
                       ID: {executionId.substring(0, 8)}...
@@ -283,22 +321,24 @@ console.log('Doubled:', doubled);
                   )}
                 </div>
 
-                <div className="flex items-center space-x-1">
-                  <button
-                    onClick={handleCopyOutput}
-                    className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-600 dark:hover:text-gray-300"
-                    title={language === 'ka' ? 'კოპირება' : 'Copy'}
-                  >
-                    {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                  </button>
-                  <button
-                    onClick={handleDownloadOutput}
-                    className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-600 dark:hover:text-gray-300"
-                    title={language === 'ka' ? 'ჩამოტვირთვა' : 'Download'}
-                  >
-                    <Download className="h-4 w-4" />
-                  </button>
-                </div>
+                {hasOutput && (
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={handleCopyOutput}
+                      className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-600 dark:hover:text-gray-300"
+                      title={language === 'ka' ? 'კოპირება' : 'Copy'}
+                    >
+                      {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    </button>
+                    <button
+                      onClick={handleDownloadOutput}
+                      className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-600 dark:hover:text-gray-300"
+                      title={language === 'ka' ? 'ჩამოტვირთვა' : 'Download'}
+                    >
+                      <Download className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <ExecutionOutput 
