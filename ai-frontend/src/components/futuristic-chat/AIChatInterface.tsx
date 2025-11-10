@@ -736,16 +736,6 @@ const parseAssistantPayload = (
     if (typeof value === 'string') {
       try {
         const parsed = JSON.parse(value);
-        // Handle Gurulo structured response - extract plainText for display
-        if (parsed && typeof parsed === 'object' && 'plainText' in parsed) {
-          const guruloResponse = parsed as { plainText: string; content?: ChatStructuredContent[] };
-          // Return plainText as the display content, not the whole JSON
-          return {
-            content: guruloResponse.plainText ? createStructuredFromText(guruloResponse.plainText, language) : [],
-            derivedFrom: 'structured',
-            plainText: guruloResponse.plainText || '',
-          };
-        }
         return parseAssistantPayload(parsed, language, 'json', options);
       } catch {
         // fall through to text normalization when payload is not valid JSON
