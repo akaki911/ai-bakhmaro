@@ -18,10 +18,9 @@ const { requireAssistantAuth } = require('../middleware/service_auth');
 
 // Instantiate services (singleton pattern)
 const VectorMemoryService = require('../services/vector_memory_service');
-const EmbeddingsService = require('../services/embeddings_service');
+const embeddingsService = require('../services/embeddings_service');
 
 const vectorMemoryService = new VectorMemoryService();
-const embeddingsService = new EmbeddingsService();
 
 /**
  * POST /api/ai/vector-memory/embeddings

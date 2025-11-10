@@ -12,6 +12,7 @@
   ],
   "scripts": {
     "dev": "concurrently -c cyan,magenta --names gateway,frontend \"npm run --workspace gateway dev\" \"npm run --workspace ai-frontend dev\"",
+    "dev:all": "concurrently -c cyan,magenta,green --names frontend,backend,ai-service \"cd ai-frontend && npx vite --port 5000 --host 0.0.0.0\" \"cd backend && PORT=5002 npm start\" \"cd ai-service && PORT=5001 node server.js\"",
     "dev:frontend": "npm run --workspace ai-frontend dev",
     "dev:gateway": "npm run --workspace gateway dev",
     "build": "node scripts/run-workspace-build.mjs",
