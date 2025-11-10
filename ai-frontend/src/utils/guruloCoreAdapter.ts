@@ -80,6 +80,19 @@ export const parseGuruloCoreCandidate = (value: unknown): GuruloCorePayload | nu
     return value;
   }
 
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const record = value as Record<string, unknown>;
+    const nestedKeys: Array<keyof typeof record> = ['core', 'response', 'data', 'payload'];
+    for (const key of nestedKeys) {
+      if (key in record) {
+        const nested = parseGuruloCoreCandidate(record[key]);
+        if (nested) {
+          return nested;
+        }
+      }
+    }
+  }
+
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (!trimmed.startsWith('{')) {
