@@ -472,6 +472,11 @@ export const useAIServiceState = (isAuthenticated?: boolean, authUser?: any) => 
   });
 
   const fetchGuruloStatus = useCallback(async () => {
+    // Legacy endpoint - skip in development mode
+    if (import.meta.env.DEV) {
+      return createEmptyGuruloStatus();
+    }
+    
     try {
       const data = await rateLimitedJsonFetch(buildApiUrl('/api/gurulo-status'), {
         key: GURULO_STATUS_RATE_KEY,
@@ -517,6 +522,11 @@ export const useAIServiceState = (isAuthenticated?: boolean, authUser?: any) => 
   });
 
   const fetchGuruloBrainStatus = useCallback(async () => {
+    // Legacy endpoint - skip in development mode
+    if (import.meta.env.DEV) {
+      return createEmptyGuruloBrainStatus();
+    }
+    
     try {
       const data = await rateLimitedJsonFetch(buildApiUrl('/api/gurulo-brain-status'), {
         key: GURULO_BRAIN_RATE_KEY,

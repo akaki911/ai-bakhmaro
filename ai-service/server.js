@@ -427,10 +427,9 @@ app.use('/api/safety-switch', require('./routes/safety_switch'));
 console.log('🖥️ Mounting Terminal Session routes...');
 app.use('/api/terminal', require('./routes/terminal_sessions'));
 
-// Apply service authentication to core AI routes
-console.log('🔒 Applying service authentication to AI API routes...');
-app.use('/api/ai', serviceAuth);
-app.use('/v1/ai', serviceAuth);
+// NOTE: Service authentication is applied selectively via guardedPrefixes (lines 244-249)
+// to protect only internal/proposal endpoints. Public endpoints like /api/ai/health,
+// /api/ai/models, and /api/ai/stream remain accessible with user authentication.
 
 // V1 API Health Endpoints - Liveness and Readiness
 app.get('/api/ai/live', (req, res) => {
