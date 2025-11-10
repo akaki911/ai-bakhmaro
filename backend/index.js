@@ -592,8 +592,9 @@ const limiter = rateLimit({
   }
 });
 
-// Trust proxy for proper IP detection behind Replit's reverse proxy
-app.set('trust proxy', true);
+// Trust proxy configuration - specific to Replit's reverse proxy
+// Using numbered proxy count instead of true to avoid express-rate-limit warnings
+app.set('trust proxy', 1);
 
 app.use(limiter);
 

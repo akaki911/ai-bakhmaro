@@ -1,4 +1,4 @@
-modules = ["web", "bash", "nodejs-20"]
+modules = ["web", "bash", "nodejs-20", "postgresql-16"]
 hidden = [".config", "package-lock.json"]
 run = "npm run dev"
 
@@ -50,7 +50,7 @@ localPort = 9092
 externalPort = 3000
 
 [[ports]]
-localPort = 43499
+localPort = 41203
 externalPort = 5000
 
 [env]

@@ -928,7 +928,8 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
   }, [isInitializing]);
 
   useEffect(() => {
-    if (!isSuperAdminUser) {
+    // Skip telemetry in development mode or if not super admin
+    if (!isSuperAdminUser || import.meta.env.DEV) {
       setTelemetryData((prev) => ({
         ...prev,
         secrets: {
