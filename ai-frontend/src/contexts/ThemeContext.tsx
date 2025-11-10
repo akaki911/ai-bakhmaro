@@ -30,7 +30,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     
     if (theme === 'dark') {
       root.classList.add('dark');
-      document.body.style.backgroundColor = '#0B0F19';
+      document.body.style.backgroundColor = '#0f172a';
     } else {
       root.classList.remove('dark');
       document.body.style.backgroundColor = '#ffffff';

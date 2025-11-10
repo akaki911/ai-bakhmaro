@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Sun, Moon } from 'lucide-react';
-import { useDarkMode } from '../hooks/useDarkMode';
+import { useTheme } from '../contexts/useTheme';
 
 interface ThemeToggleProps {
   className?: string;
@@ -20,7 +20,7 @@ export default function ThemeToggle({
   showLabel = true,
   onVisualChange,
 }: ThemeToggleProps) {
-  const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const { isDarkMode, toggleTheme } = useTheme();
   const lastVisualMode = useRef<'dark' | 'light' | null>(null);
 
   const emitVisualChange = useCallback(
@@ -69,7 +69,7 @@ export default function ThemeToggle({
       whileTap={{ scale: 0.98 }}
       onClick={() => {
         const nextMode = isDarkMode ? 'light' : 'dark';
-        toggleDarkMode();
+        toggleTheme();
         emitVisualChange(nextMode);
       }}
       className={`admin-theme-toggle ${className}`.trim()}
