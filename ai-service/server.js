@@ -347,6 +347,7 @@ app.use('/api/ai', aiChatRoute);           // POST /chat, /intelligent-chat
 app.use('/api/ai', aiStreamRoute);         // POST /stream
 app.use('/api/ai', aiModelsRoute);         // GET /models
 app.use('/api/ai', require('./routes/execute')); // POST /execute (Phase 2: Workspace Executor)
+app.use('/api/ai/vector-memory', require('./routes/vector_memory')); // Vector Memory API (Phase 3)
 app.use('/api/ai/recovery', aiRecoveryRoute); // POST /recover/:id
 
 // Mount protected Auto-Improve routes (AI Service only)
