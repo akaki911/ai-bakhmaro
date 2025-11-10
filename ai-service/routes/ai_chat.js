@@ -8,6 +8,9 @@ const codexAgent = require('../agents/codex_agent');
 const groqService = require('../services/groq_service');
 const guruloCore = require('../../shared/gurulo-core');
 const { normalizeResponse, GURULO_CORE_VERSION } = guruloCore.response;
+const contextRetrieval = require('../services/context_retrieval_service');
+const projectIntelligence = require('../services/project_intelligence_service');
+const fs = require('fs').promises;
 const {
   buildGreetingResponse,
   buildSmalltalkResponse,
@@ -326,10 +329,69 @@ const handleChatRequest = async (req, res) => {
 
     if (intent.name === 'general_query') {
       try {
+        console.log('🔍 [CONTEXT-AWARE] Processing general_query with file context...');
+        
+        const fileMentions = contextRetrieval.extractFileMentions(message);
+        console.log(`📂 [CONTEXT-AWARE] Extracted file mentions: ${fileMentions.length}`);
+        
+        let fileContextParts = [];
+        let filesRead = [];
+        
+        if (fileMentions.length > 0) {
+          const resolvedFiles = await contextRetrieval.resolveCandidateFiles(fileMentions);
+          console.log(`✅ [CONTEXT-AWARE] Resolved ${resolvedFiles.length} files: ${resolvedFiles.slice(0, 3).join(', ')}${resolvedFiles.length > 3 ? '...' : ''}`);
+          
+          for (const filePath of resolvedFiles.slice(0, 5)) {
+            try {
+              const absolutePath = require('path').join(process.cwd(), filePath);
+              const content = await fs.readFile(absolutePath, 'utf-8');
+              const lines = content.split('\n');
+              const preview = lines.slice(0, 50).join('\n');
+              
+              fileContextParts.push(`📄 File: ${filePath}\n\`\`\`\n${preview}\n${lines.length > 50 ? `\n... (${lines.length - 50} more lines)` : ''}\`\`\``);
+              filesRead.push(filePath);
+              console.log(`📖 [CONTEXT-AWARE] Read ${filePath} (${lines.length} lines)`);
+            } catch (readError) {
+              console.error(`⚠️ [CONTEXT-AWARE] Failed to read ${filePath}:`, readError.message);
+            }
+          }
+        } else if (message.toLowerCase().includes('ფაილ') || message.toLowerCase().includes('კოდ') || 
+                   message.toLowerCase().includes('file') || message.toLowerCase().includes('code')) {
+          console.log('🔍 [CONTEXT-AWARE] No explicit files mentioned, using project intelligence...');
+          
+          const allFiles = await projectIntelligence.getAllProjectFiles();
+          const relevantFiles = await projectIntelligence.findRelevantFiles(message, 5);
+          
+          console.log(`📊 [CONTEXT-AWARE] Project has ${allFiles.length} files, found ${relevantFiles.length} relevant`);
+          
+          for (const fileInfo of relevantFiles.slice(0, 3)) {
+            try {
+              const absolutePath = require('path').join(process.cwd(), fileInfo.path);
+              const content = await fs.readFile(absolutePath, 'utf-8');
+              const lines = content.split('\n');
+              const preview = lines.slice(0, 30).join('\n');
+              
+              fileContextParts.push(`📄 Relevant File: ${fileInfo.path}\nScore: ${fileInfo.score}\n\`\`\`\n${preview}\n${lines.length > 30 ? `\n... (${lines.length - 30} more lines)` : ''}\`\`\``);
+              filesRead.push(fileInfo.path);
+              console.log(`📖 [CONTEXT-AWARE] Read ${fileInfo.path} (score: ${fileInfo.score})`);
+            } catch (readError) {
+              console.error(`⚠️ [CONTEXT-AWARE] Failed to read ${fileInfo.path}:`, readError.message);
+            }
+          }
+        }
+
         const systemPrompt = `You are Gurulo — AI Developer Assistant for ai.bakhmaro.co.
 Answer in natural Georgian, using clear and concise language.
 Focus on: AI development, code understanding, automation workflows, platform diagnostics.
-Current context: Node.js/React full-stack with Firebase, PostgreSQL, pgvector.`;
+Current context: Node.js/React full-stack with Firebase, PostgreSQL, pgvector.
+
+${fileContextParts.length > 0 ? `\n📚 CODEBASE CONTEXT:\n${fileContextParts.join('\n\n---\n\n')}\n` : ''}
+
+When answering:
+- Reference specific files and line numbers when relevant
+- Provide concrete code examples from the context
+- Identify real issues in the codebase
+- Suggest specific fixes with file paths`;
 
         const conversationMessages = [
           { role: 'system', content: systemPrompt },
@@ -343,7 +405,7 @@ Current context: Node.js/React full-stack with Firebase, PostgreSQL, pgvector.`;
             .slice(0, 3)
             .join('\n');
           conversationMessages[conversationMessages.length - 1].content = 
-            `🧠 Context:\n${memoryContext}\n\n${message}`;
+            `🧠 Memory Context:\n${memoryContext}\n\n${message}`;
           console.log(`🧠 [SEMANTIC] Injected ${semanticContext.results.length} memories into Groq prompt`);
         }
 
@@ -361,6 +423,8 @@ Current context: Node.js/React full-stack with Firebase, PostgreSQL, pgvector.`;
             confidence: intent.confidence,
             model: groqResponse?.model || 'groq-llm',
             usage: groqResponse?.usage || null,
+            filesRead: filesRead,
+            fileContextProvided: fileContextParts.length > 0,
             semanticContext: semanticContext ? {
               resultsCount: semanticContext.results?.length || 0,
               threshold: semanticContext.metadata?.threshold
