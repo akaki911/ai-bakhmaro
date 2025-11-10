@@ -542,6 +542,9 @@ class GitHubIntegrationService {
         this.metricsService.recordGitOperation('commit', duration, 'success');
       }
       
+      // Store in PostgreSQL history
+      await this.storeMetricsHistory('commit', duration, 'success', { message: commitMessage });
+      
       console.log(`✅ კომიტი შექმნილი (${duration}ms):`, commitMessage);
       
       // Store last commit hash
@@ -557,6 +560,8 @@ class GitHubIntegrationService {
       if (this.metricsService) {
         this.metricsService.recordGitOperation('commit', duration, 'error');
       }
+      // Store error in history
+      await this.storeMetricsHistory('commit', duration, 'error', { error: error.message });
       console.error('❌ კომიტის შეცდომა:', error);
       return { success: false, error: error.message };
     }
@@ -584,8 +589,12 @@ class GitHubIntegrationService {
       // Send to metrics service
       if (this.metricsService) {
         this.metricsService.recordGitOperation('push', duration, 'success');
-        this.metricsService.updateGitLatencyReduction(this.calculateLatencyReduction());
+        const latencyReduction = await this.calculateLatencyReduction();
+        this.metricsService.updateGitLatencyReduction(latencyReduction);
       }
+      
+      // Store in PostgreSQL history
+      await this.storeMetricsHistory('push', duration, 'success', { branch });
       
       console.log(`🚀 ცვლილებები GitHub-ზე გაიგზავნა (${duration}ms)`);
       return { success: true, message: 'Push წარმატებული', duration };
@@ -594,6 +603,8 @@ class GitHubIntegrationService {
       if (this.metricsService) {
         this.metricsService.recordGitOperation('push', duration, 'error');
       }
+      // Store error in history
+      await this.storeMetricsHistory('push', duration, 'error', { error: error.message });
       console.error('❌ Push შეცდომა:', error);
       return { success: false, error: error.message };
     }
@@ -620,6 +631,9 @@ class GitHubIntegrationService {
         this.metricsService.recordGitOperation('pull', duration, 'success');
       }
       
+      // Store in PostgreSQL history
+      await this.storeMetricsHistory('pull', duration, 'success');
+      
       console.log(`⬇️ ცვლილებები GitHub-დან ჩამოტვირთული (${duration}ms)`);
       return { success: true, message: 'Pull წარმატებული', duration };
     } catch (error) {
@@ -627,6 +641,8 @@ class GitHubIntegrationService {
       if (this.metricsService) {
         this.metricsService.recordGitOperation('pull', duration, 'error');
       }
+      // Store error in history
+      await this.storeMetricsHistory('pull', duration, 'error', { error: error.message });
       console.error('❌ Pull შეცდომა:', error);
       return { success: false, error: error.message };
     }
@@ -1287,29 +1303,111 @@ class GitHubIntegrationService {
   }
 
   /**
-   * Calculate latency reduction compared to API-based approach
-   * Baseline: Octokit API ~800-1200ms per operation
-   * @returns {number} Latency reduction percentage
+   * Store Git operation metrics in PostgreSQL history
+   * @param {string} operation - Operation type (commit, push, pull)
+   * @param {number} duration - Duration in milliseconds
+   * @param {string} status - Operation status (success or error)
+   * @param {Object} metadata - Additional metadata
    */
-  calculateLatencyReduction() {
+  async storeMetricsHistory(operation, duration, status = 'success', metadata = {}) {
+    try {
+      await pool.query(
+        `INSERT INTO git_metrics_history (operation, duration_ms, status, metadata, timestamp)
+         VALUES ($1, $2, $3, $4, now())`,
+        [operation, duration, status, JSON.stringify(metadata)]
+      );
+    } catch (error) {
+      // Don't fail operation if metrics storage fails
+      console.warn('⚠️ Failed to store Git metrics history:', error.message);
+    }
+  }
+
+  /**
+   * Get rolling average for last N operations
+   * @param {string} operation - Operation type (commit, push, pull) or 'all'
+   * @param {number} limit - Number of recent operations to average (default: 10)
+   * @returns {Promise<number>} Average duration in milliseconds
+   */
+  async getRollingAverage(operation = 'all', limit = 10) {
+    try {
+      let query;
+      let params;
+      
+      if (operation === 'all') {
+        query = `
+          SELECT AVG(duration_ms) as avg_duration
+          FROM (
+            SELECT duration_ms 
+            FROM git_metrics_history 
+            WHERE status = 'success'
+            ORDER BY timestamp DESC 
+            LIMIT $1
+          ) recent_ops
+        `;
+        params = [limit];
+      } else {
+        query = `
+          SELECT AVG(duration_ms) as avg_duration
+          FROM (
+            SELECT duration_ms 
+            FROM git_metrics_history 
+            WHERE operation = $1 AND status = 'success'
+            ORDER BY timestamp DESC 
+            LIMIT $2
+          ) recent_ops
+        `;
+        params = [operation, limit];
+      }
+      
+      const result = await pool.query(query, params);
+      return result.rows[0]?.avg_duration || 0;
+    } catch (error) {
+      console.warn('⚠️ Failed to get rolling average:', error.message);
+      return 0;
+    }
+  }
+
+  /**
+   * Calculate latency reduction compared to API-based approach
+   * Uses rolling average from PostgreSQL history for more accurate measurement
+   * Baseline: Octokit API ~800-1200ms per operation
+   * @returns {Promise<number>} Latency reduction percentage
+   */
+  async calculateLatencyReduction() {
     const baselineLatency = 1000; // 1 second baseline for GitHub API approach
-    const totalOperations = this.metrics.commitCount + this.metrics.pushCount + this.metrics.pullCount;
     
-    if (totalOperations === 0) return 0;
+    // Get rolling average from PostgreSQL history (last 10 successful operations)
+    const rollingAvg = await this.getRollingAverage('all', 10);
     
-    const totalTime = this.metrics.totalCommitTime + this.metrics.totalPushTime + this.metrics.totalPullTime;
-    const averageLatency = totalTime / totalOperations;
+    if (rollingAvg === 0) {
+      // Fallback to in-memory metrics if no history available
+      const totalOperations = this.metrics.commitCount + this.metrics.pushCount + this.metrics.pullCount;
+      if (totalOperations === 0) return 0;
+      
+      const totalTime = this.metrics.totalCommitTime + this.metrics.totalPushTime + this.metrics.totalPullTime;
+      const averageLatency = totalTime / totalOperations;
+      const reduction = ((baselineLatency - averageLatency) / baselineLatency) * 100;
+      return Math.max(0, Math.round(reduction));
+    }
     
-    const reduction = ((baselineLatency - averageLatency) / baselineLatency) * 100;
+    const reduction = ((baselineLatency - rollingAvg) / baselineLatency) * 100;
     return Math.max(0, Math.round(reduction));
   }
 
   /**
-   * Get performance metrics summary
-   * @returns {Object} Performance metrics
+   * Get performance metrics summary with rolling averages from PostgreSQL
+   * @returns {Promise<Object>} Performance metrics
    */
-  getMetrics() {
+  async getMetrics() {
     const totalOperations = this.metrics.commitCount + this.metrics.pushCount + this.metrics.pullCount;
+    
+    // Get rolling averages from PostgreSQL (last 10 operations)
+    const [commitRollingAvg, pushRollingAvg, pullRollingAvg, latencyReduction] = await Promise.all([
+      this.getRollingAverage('commit', 10),
+      this.getRollingAverage('push', 10),
+      this.getRollingAverage('pull', 10),
+      this.calculateLatencyReduction()
+    ]);
     
     return {
       commits: {
@@ -1317,6 +1415,7 @@ class GitHubIntegrationService {
         averageTime: this.metrics.commitCount > 0 
           ? Math.round(this.metrics.totalCommitTime / this.metrics.commitCount)
           : 0,
+        rollingAverage: Math.round(commitRollingAvg),
         lastDuration: this.metrics.lastCommitDuration
       },
       pushes: {
@@ -1324,6 +1423,7 @@ class GitHubIntegrationService {
         averageTime: this.metrics.pushCount > 0
           ? Math.round(this.metrics.totalPushTime / this.metrics.pushCount)
           : 0,
+        rollingAverage: Math.round(pushRollingAvg),
         lastDuration: this.metrics.lastPushDuration
       },
       pulls: {
@@ -1331,11 +1431,12 @@ class GitHubIntegrationService {
         averageTime: this.metrics.pullCount > 0
           ? Math.round(this.metrics.totalPullTime / this.metrics.pullCount)
           : 0,
+        rollingAverage: Math.round(pullRollingAvg),
         lastDuration: this.metrics.lastPullDuration
       },
       overall: {
         totalOperations,
-        latencyReduction: this.calculateLatencyReduction(),
+        latencyReduction,
         uptime: Math.round((Date.now() - this.metrics.startTime) / 1000)
       }
     };
