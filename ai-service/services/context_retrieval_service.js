@@ -67,39 +67,98 @@ function extractFileMentions(query) {
 }
 
 /**
+ * Normalize path for cross-platform comparison
+ * @param {string} filePath - File path to normalize
+ * @returns {string} - Normalized path
+ */
+function normalizePath(filePath) {
+    return filePath
+        .replace(/\\/g, '/')           // Windows → Unix separators
+        .replace(/^\.\//, '')          // Remove leading ./
+        .toLowerCase();                // Case-insensitive
+}
+
+/**
+ * Extract basename from path
+ * @param {string} filePath - File path
+ * @returns {string} - File basename
+ */
+function getBasename(filePath) {
+    return filePath.split('/').pop();
+}
+
+/**
  * Resolve candidate file mentions to actual project file paths
+ * ENHANCED: Cross-platform normalization + basename multimap + fuzzy matching
  * Part 1 requirement: Enhanced file resolution
  * @param {Array<string>} mentions - File mentions from extractFileMentions
  * @returns {Promise<Array<string>>} - Array of resolved file paths
  */
 async function resolveCandidateFiles(mentions) {
-    if (!mentions || mentions.length === 0) return [];
+    if (!mentions || mentions.length === 0) {
+        console.log('📂 [CONTEXT RETRIEVAL] No file mentions to resolve');
+        return [];
+    }
     
     try {
         const projectFiles = await getProjectStructure();
+        console.log(`📂 [CONTEXT RETRIEVAL] Resolving ${mentions.length} mentions against ${projectFiles.length} project files`);
+        
+        // Build basename → paths multimap for efficient lookup
+        const basenameMap = new Map();
+        projectFiles.forEach(filePath => {
+            const normalized = normalizePath(filePath);
+            const basename = getBasename(normalized);
+            
+            if (!basenameMap.has(basename)) {
+                basenameMap.set(basename, []);
+            }
+            basenameMap.get(basename).push(filePath); // Keep original path
+        });
+        
         const resolved = new Set();
         
         for (const mention of mentions) {
-            // 1. Exact path match
-            if (projectFiles.includes(mention)) {
-                resolved.add(mention);
+            const normalizedMention = normalizePath(mention);
+            const mentionBasename = getBasename(normalizedMention);
+            
+            // Strategy 1: Exact full path match (rare but fast)
+            const exactMatch = projectFiles.find(p => normalizePath(p) === normalizedMention);
+            if (exactMatch) {
+                resolved.add(exactMatch);
+                console.log(`✅ [CONTEXT RETRIEVAL] Exact match: "${mention}" → "${exactMatch}"`);
                 continue;
             }
             
-            // 2. Filename-based matching
-            const matchingFiles = projectFiles.filter(projectFile => {
-                const fileName = projectFile.split('/').pop();
-                return fileName === mention || 
-                       projectFile.endsWith(`/${mention}`) ||
-                       projectFile.includes(mention);
+            // Strategy 2: Basename lookup (most common case)
+            if (basenameMap.has(mentionBasename)) {
+                const candidates = basenameMap.get(mentionBasename);
+                candidates.forEach(file => resolved.add(file));
+                console.log(`✅ [CONTEXT RETRIEVAL] Basename match: "${mention}" → ${candidates.length} file(s): ${candidates.slice(0, 2).join(', ')}${candidates.length > 2 ? '...' : ''}`);
+                continue;
+            }
+            
+            // Strategy 3: Fuzzy substring matching (fallback)
+            const fuzzyMatches = projectFiles.filter(projectFile => {
+                const normalizedProject = normalizePath(projectFile);
+                return normalizedProject.includes(normalizedMention) ||
+                       normalizedProject.endsWith(`/${normalizedMention}`);
             });
             
-            matchingFiles.forEach(file => resolved.add(file));
+            if (fuzzyMatches.length > 0) {
+                fuzzyMatches.forEach(file => resolved.add(file));
+                console.log(`🔍 [CONTEXT RETRIEVAL] Fuzzy match: "${mention}" → ${fuzzyMatches.length} file(s)`);
+            } else {
+                console.warn(`⚠️ [CONTEXT RETRIEVAL] No match found for: "${mention}"`);
+            }
         }
         
-        return Array.from(resolved);
+        const resolvedArray = Array.from(resolved);
+        console.log(`📊 [CONTEXT RETRIEVAL] Resolved ${resolvedArray.length} files from ${mentions.length} mentions`);
+        return resolvedArray;
+        
     } catch (error) {
-        console.warn('⚠️ [CONTEXT RETRIEVAL] Error resolving candidate files:', error.message);
+        console.error('❌ [CONTEXT RETRIEVAL] Error resolving candidate files:', error.message);
         return [];
     }
 }

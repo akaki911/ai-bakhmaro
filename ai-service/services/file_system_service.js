@@ -3,23 +3,56 @@ const path = require('path');
 
 async function getProjectStructure() {
   try {
+    // Scan workspace with strict security controls
+    const workspaceRoot = path.resolve(process.cwd(), '..');
+    
+    // SECURITY: Whitelist of allowed service directories only
+    const allowedServices = ['ai-service', 'ai-frontend', 'backend'];
+    
+    // SECURITY: Sensitive file/folder patterns to exclude
+    const sensitivePatterns = [
+      /\.env/i,                              // Environment files
+      /\.key$/,                               // Key files
+      /firebase-service-account/,             // Firebase credentials
+      /backend[/\\]data[/\\]/,                // Backend data folder
+      /secrets/i,                             // Secret configs
+      /\.pem$/,                               // Certificate files
+      /audit[_-]?log/i,                       // Audit logs
+      /database\.json$/,                      // Database dumps
+      /config[/\\].*\.key/                    // Config keys
+    ];
+    
     // For Node.js 18.17.0+, use recursive readdir
     let allFiles;
     try {
-      allFiles = await fs.readdir(process.cwd(), { recursive: true });
+      allFiles = await fs.readdir(workspaceRoot, { recursive: true });
     } catch (error) {
       // Fallback for older Node.js versions - walk directories manually
-      allFiles = await walkDirectory(process.cwd());
+      allFiles = await walkDirectory(workspaceRoot);
     }
 
-    // Filter out ignored directories and return only files (not directories)
-    const ignored = ['node_modules', '.git', '.replit', 'build', 'dist', '.assistant_backups'];
+    // Multi-layer filtering: ignore dirs + service whitelist + sensitive exclusion
+    const ignoredDirs = ['node_modules', '.git', '.replit', 'build', 'dist', '.assistant_backups', 'tmp', 'logs'];
+    
     return allFiles.filter(file => {
-      // Skip if starts with ignored folder
-      if (ignored.some(folder => file.startsWith(folder))) return false;
-      // Skip directories - we only want files
+      // Layer 1: Skip ignored directories
+      if (ignoredDirs.some(folder => file.startsWith(folder))) return false;
+      
+      // Layer 2: Service whitelist - only allow files from approved services
+      const isInAllowedService = allowedServices.some(service => 
+        file.startsWith(service + '/') || file.startsWith(service + '\\')
+      );
+      if (!isInAllowedService) return false;
+      
+      // Layer 3: Sensitive pattern exclusion
+      if (sensitivePatterns.some(pattern => pattern.test(file))) {
+        console.warn(`🔒 [SECURITY] Excluding sensitive file from scan: ${file}`);
+        return false;
+      }
+      
+      // Layer 4: Verify it's actually a file (not directory)
       try {
-        const fullPath = path.resolve(process.cwd(), file);
+        const fullPath = path.resolve(workspaceRoot, file);
         const stat = require('fs').statSync(fullPath);
         return stat.isFile();
       } catch {
@@ -60,7 +93,8 @@ async function walkDirectory(dir, relativePath = '') {
 
 /**
  * Read file content with size and encoding options
- * @param {string} filePath - Relative path to file
+ * UPDATED: Supports cross-service reads within workspace
+ * @param {string} filePath - Relative path to file (workspace-relative)
  * @param {Object} options - Reading options
  * @returns {Promise<string>} File content
  */
@@ -68,11 +102,25 @@ async function readFileContent(filePath, options = {}) {
   const { maxBytes = 8000, encoding = 'utf8' } = options;
 
   try {
-    const absolutePath = path.resolve(process.cwd(), filePath);
+    // Use workspace root for cross-service file access
+    const workspaceRoot = path.resolve(process.cwd(), '..');
+    const absolutePath = path.resolve(workspaceRoot, filePath);
 
-    // Security check - ensure file is within project directory
-    if (!absolutePath.startsWith(process.cwd())) {
-      throw new Error('File access outside project directory not allowed');
+    // SECURITY: Ensure file is within workspace and allowed services
+    const allowedServices = ['ai-service', 'ai-frontend', 'backend'];
+    const isWithinWorkspace = absolutePath.startsWith(workspaceRoot);
+    const isInAllowedService = allowedServices.some(service =>
+      absolutePath.includes(path.join(workspaceRoot, service))
+    );
+    
+    if (!isWithinWorkspace || !isInAllowedService) {
+      throw new Error('File access outside allowed service directories not permitted');
+    }
+    
+    // SECURITY: Block sensitive files
+    const sensitivePatterns = [/.env/i, /\.key$/, /firebase-service-account/, /secrets/i];
+    if (sensitivePatterns.some(pattern => pattern.test(filePath))) {
+      throw new Error('Access to sensitive files not permitted');
     }
 
     const stats = await fs.stat(absolutePath);
