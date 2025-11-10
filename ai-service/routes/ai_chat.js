@@ -39,6 +39,30 @@ const chatRequestSchema = z.object({
   modelOverride: z.string().trim().min(1).optional(),
   metadata: z.record(z.any()).optional(),
   audience: z.enum(['public_front', 'admin_dev']).optional(),
+  semanticContext: z
+    .object({
+      results: z.array(
+        z.object({
+          id: z.number(),
+          text: z.string(),
+          similarity: z.number(),
+          metadata: z.record(z.any()).optional(),
+          source: z.string().optional(),
+          userId: z.string().optional(),
+          createdAt: z.string().optional(),
+        }),
+      ),
+      searchQuery: z.string(),
+      metadata: z
+        .object({
+          resultCount: z.number(),
+          threshold: z.number(),
+          maxResults: z.number(),
+          searchDuration: z.number().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
 }).passthrough();
 
 const validateChatRequest = (req, res, next) => {
@@ -154,6 +178,7 @@ const handleChatRequest = async (req, res) => {
     conversationHistory = [],
     metadata = {},
     audience: audienceCandidate,
+    semanticContext,
   } = body;
 
   const normalizedHistory = normalizeConversationHistory(conversationHistory);
@@ -184,6 +209,8 @@ const handleChatRequest = async (req, res) => {
       hasHistory: historyLength > 0,
       personalId,
       messageLength: message.length,
+      hasSemanticContext: !!semanticContext,
+      semanticResultsCount: semanticContext?.results?.length || 0,
     });
 
     if (useCodex) {
@@ -192,15 +219,25 @@ const handleChatRequest = async (req, res) => {
       const codexCommand = (metadata?.codexCommand || slashMatch?.[1]?.toLowerCase() || 'chat').replace('-', '_');
       const strippedMessage = slashMatch ? message.replace(/^\/[a-zA-Z_-]+\s*/, '') : message;
 
+      let enhancedMessage = strippedMessage;
+      if (semanticContext && semanticContext.results && semanticContext.results.length > 0) {
+        const memoryContext = semanticContext.results
+          .map((r, idx) => `Memory ${idx + 1} (${(r.similarity * 100).toFixed(0)}% match): ${r.text}`)
+          .join('\n\n');
+        enhancedMessage = `🧠 Relevant Memory Context:\n${memoryContext}\n\n---\nUser Query: ${strippedMessage}`;
+        console.log(`🧠 [SEMANTIC] Injected ${semanticContext.results.length} memories into Codex prompt`);
+      }
+
       try {
         const codexResult = await codexAgent.generate({
           command: codexCommand,
-          message: strippedMessage,
+          message: enhancedMessage,
           instructions: metadata?.instructions,
           filePath: metadata?.filePath || metadata?.targetFile,
           conversation: conversationForCodex,
           metadata: {
             ...metadata,
+            semanticContext,
             origin: metadata?.origin || 'chat-endpoint',
             useCodex: true,
           },
@@ -233,6 +270,7 @@ const handleChatRequest = async (req, res) => {
             userId: personalId,
             language: metadata.language,
             metadata,
+            semanticContext,
           }),
         );
     };
