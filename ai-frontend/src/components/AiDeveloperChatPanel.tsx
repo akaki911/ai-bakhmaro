@@ -23,6 +23,7 @@ import {
   X,
   Brain,
   RefreshCw,
+  Check,
 } from "lucide-react";
 import { useAuth } from "../contexts/useAuth";
 import {
@@ -249,8 +250,37 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
   const [semanticContext, setSemanticContext] = useState<SemanticContextPayload | null>(null);
   const [showMemoryContext, setShowMemoryContext] = useState(false);
 
+  // Phase 3: Memory Persistence State
+  const [savingToMemory, setSavingToMemory] = useState<Map<string, boolean>>(
+    new Map(),
+  );
+  const [savedMessages, setSavedMessages] = useState<Set<string>>(() => {
+    // Load from localStorage on init (persistent deduplication)
+    try {
+      const stored = localStorage.getItem("saved_messages");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const { storeEmbedding } = useVectorMemory();
+
+  // Persist savedMessages to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "saved_messages",
+        JSON.stringify(Array.from(savedMessages)),
+      );
+    } catch (error) {
+      console.error("Failed to persist saved messages:", error);
+    }
+  }, [savedMessages]);
+
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const saveErrorTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -814,6 +844,73 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
     [semanticSearchEnabled, searchVector],
   );
 
+  // Phase 3: Save Message to Memory Function
+  const saveMessageToMemory = useCallback(
+    async (messageId: string, content: string, metadata?: Record<string, any>) => {
+      // Guard: Check if already saving this message ID
+      if (savingToMemory.get(messageId)) {
+        console.log("💾 [MEMORY] Save already in progress");
+        return;
+      }
+
+      if (!content || content.length < 10) {
+        if (saveErrorTimerRef.current) {
+          clearTimeout(saveErrorTimerRef.current);
+        }
+        setSaveError("Message too short to save (min 10 characters)");
+        saveErrorTimerRef.current = setTimeout(() => setSaveError(null), 3000);
+        return;
+      }
+
+      if (savedMessages.has(messageId)) {
+        if (saveErrorTimerRef.current) {
+          clearTimeout(saveErrorTimerRef.current);
+        }
+        setSaveError("Message already saved to memory");
+        saveErrorTimerRef.current = setTimeout(() => setSaveError(null), 3000);
+        return;
+      }
+
+      setSavingToMemory((prev) => new Map(prev).set(messageId, true));
+      setSaveError(null);
+
+      try {
+        await storeEmbedding({
+          text: content,
+          metadata: {
+            ...metadata,
+            messageId,
+            source: "chat_assistant",
+            savedAt: new Date().toISOString(),
+          },
+          source: "chat_assistant",
+          userId: user?.personalId || "anonymous",
+        });
+
+        setSavedMessages((prev) => new Set(prev).add(messageId));
+        console.log(`💾 [MEMORY] Saved message ${messageId} to vector memory`);
+      } catch (error) {
+        console.error("❌ [MEMORY] Failed to save message:", error);
+        const errorMsg =
+          error instanceof Error
+            ? error.message
+            : "Failed to save message to memory";
+        if (saveErrorTimerRef.current) {
+          clearTimeout(saveErrorTimerRef.current);
+        }
+        setSaveError(errorMsg);
+        saveErrorTimerRef.current = setTimeout(() => setSaveError(null), 5000);
+      } finally {
+        setSavingToMemory((prev) => {
+          const next = new Map(prev);
+          next.delete(messageId);
+          return next;
+        });
+      }
+    },
+    [storeEmbedding, savedMessages, user?.personalId],
+  );
+
   // ===== CHAT FUNCTIONS =====
   const sendMessage = async () => {
     if (!chatInput.trim()) return;
@@ -1288,15 +1385,29 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
               </div>
             </div>
           ) : (
-            // ===== CHAT MESSAGES =====
-            <div
-              ref={chatContainerRef}
-              className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 console-scrollbar"
-              style={{
-                maxHeight: "calc(100vh - 180px)",
-                scrollBehavior: "smooth",
-              }}
-            >
+            <>
+              {/* Phase 3: Save to Memory Error Banner */}
+              {saveError && (
+                <div className="bg-[#3A1F1F] border-b border-[#FF6B6B]/40 text-[#FFB4B4] px-4 py-2 text-sm flex items-center justify-between">
+                  <span>❌ {saveError}</span>
+                  <button
+                    onClick={() => setSaveError(null)}
+                    className="text-[#FFB4B4] hover:text-white transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
+
+              {/* ===== CHAT MESSAGES ===== */}
+              <div
+                ref={chatContainerRef}
+                className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 console-scrollbar"
+                style={{
+                  maxHeight: "calc(100vh - 180px)",
+                  scrollBehavior: "smooth",
+                }}
+              >
               {chatMessages.map((message) => (
                 <div
                   key={message.id}
@@ -1310,21 +1421,61 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                       </div>
                     </div>
                   ) : (
-                    // AI message with Phase 1 SECURED React Component Rendering
-                    <EnhancedMessageRenderer
-                      message={
-                        message.enhanced || {
-                          id: message.id,
-                          content: message.content,
-                          category: message.category || "primary",
-                          hasCodeBlocks: false,
-                          codeBlocks: [],
-                          visualElements: [],
-                          georgianFormatted: false,
+                    // AI message with Phase 1 SECURED React Component Rendering + Phase 3 Save to Memory
+                    <div className="max-w-[85%] space-y-2">
+                      <EnhancedMessageRenderer
+                        message={
+                          message.enhanced || {
+                            id: message.id,
+                            content: message.content,
+                            category: message.category || "primary",
+                            hasCodeBlocks: false,
+                            codeBlocks: [],
+                            visualElements: [],
+                            georgianFormatted: false,
+                          }
                         }
-                      }
-                      className="max-w-[85%]"
-                    />
+                        className="w-full"
+                      />
+                      {/* Phase 3: Save to Memory Button */}
+                      <button
+                        onClick={() =>
+                          saveMessageToMemory(message.id, message.content, {
+                            category: message.category,
+                            timestamp: new Date().toISOString(),
+                          })
+                        }
+                        disabled={
+                          savingToMemory.get(message.id) ||
+                          savedMessages.has(message.id)
+                        }
+                        className="flex items-center gap-1 text-xs text-[#8B949E] hover:text-[#00D4FF] disabled:text-[#3E4450] disabled:cursor-not-allowed transition-colors"
+                        title={
+                          savedMessages.has(message.id)
+                            ? "Already saved to memory"
+                            : "Save to memory for future context"
+                        }
+                      >
+                        {savingToMemory.get(message.id) ? (
+                          <>
+                            <RefreshCw size={12} className="animate-spin" />
+                            <span>Saving...</span>
+                          </>
+                        ) : savedMessages.has(message.id) ? (
+                          <>
+                            <Check size={12} className="text-green-400" />
+                            <span className="text-green-400">
+                              💾 Saved to Memory
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <Brain size={12} />
+                            <span>💾 Save to Memory</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}
@@ -1339,7 +1490,8 @@ const ReplitAssistantPanel: React.FC<ReplitAssistantPanelProps> = ({
                   </div>
                 </div>
               )}
-            </div>
+              </div>
+            </>
           )}
 
           {/* ===== BOTTOM INPUT AREA ===== */}
