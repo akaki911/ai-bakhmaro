@@ -31,6 +31,26 @@ The platform is built on a multi-service architecture:
 
 ## Recent Changes (2025-01-10)
 
+### Phase 2.1: Workspace Executor - Secure Code Execution ✅
+Implemented isolated-vm sandbox for secure JavaScript code execution:
+- **Package**: `isolated-vm` - true V8 isolate-based sandboxing (replaces deprecated vm2 with 8+ critical CVEs)
+- **Service** (`ai-service/services/workspace_executor.js`):
+  - `SandboxPolicy` class - resource limits (128MB memory, 30s timeout), blocked globals validation
+  - `ExecutionRunner` class - isolated-vm execution engine with event-driven stdout/stderr capture
+  - Code validation: dangerous pattern detection (require, eval, Function, process, fs, network)
+  - Security: true OS-level isolation, memory limit enforcement, clean isolate disposal
+- **API Endpoints** (`ai-service/routes/execute.js`):
+  - `POST /api/ai/execute` - Execute code with SSE streaming support
+  - `GET /api/ai/execute/stats` - Execution service statistics
+  - `GET /api/ai/execute/health` - Health check
+- **SSE Streaming**: Event types - stdout, stderr, complete, error (with executionId filtering to prevent cross-execution leakage)
+- **Security Hardening**:
+  - ✅ Fixed critical SSE cross-execution leakage bug (executionId filtering)
+  - ✅ Fixed validation error handling (immediate error events prevent client hangs)
+  - ✅ Fixed non-streaming responses (mirrors runner success flag)
+- **Integration**: Route mounted in server.js, service authentication required
+- **Status**: ✅ Production-ready (Architect approved)
+
 ### Phase 1: Git Native Integration - Performance Monitoring ✅
 Implemented PostgreSQL-backed Git metrics history storage:
 - **Migration**: `001_create_git_metrics_history.sql` creates `git_metrics_history` table with operation type, duration, status, metadata, and timestamp tracking
