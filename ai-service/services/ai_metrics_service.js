@@ -61,6 +61,28 @@ class AIMetricsService {
       registers: [this.register]
     });
     
+    // Git operations metrics
+    this.gitOperations = new client.Counter({
+      name: 'git_operations_total',
+      help: 'Total number of Git operations',
+      labelNames: ['operation', 'status'],
+      registers: [this.register]
+    });
+    
+    this.gitOperationDuration = new client.Histogram({
+      name: 'git_operation_duration_ms',
+      help: 'Duration of Git operations in milliseconds',
+      labelNames: ['operation'],
+      buckets: [50, 100, 200, 500, 1000, 2000, 5000],
+      registers: [this.register]
+    });
+    
+    this.gitLatencyReduction = new client.Gauge({
+      name: 'git_latency_reduction_percent',
+      help: 'Git latency reduction compared to API-based approach',
+      registers: [this.register]
+    });
+    
     // HTTP metrics for AI service
     this.httpRequestsTotal = new client.Counter({
       name: 'http_requests_total',
@@ -113,6 +135,17 @@ class AIMetricsService {
   // Record file operation
   recordFileOperation(operation, fileType = 'unknown') {
     this.aiFileOperations.inc({ operation, file_type: fileType });
+  }
+  
+  // Record Git operation
+  recordGitOperation(operation, duration, status = 'success') {
+    this.gitOperations.inc({ operation, status });
+    this.gitOperationDuration.observe({ operation }, duration);
+  }
+  
+  // Update Git latency reduction metric
+  updateGitLatencyReduction(reductionPercent) {
+    this.gitLatencyReduction.set(reductionPercent);
   }
   
   // Record HTTP request

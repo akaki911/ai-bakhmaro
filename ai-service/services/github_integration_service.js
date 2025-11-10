@@ -32,6 +32,28 @@ class GitHubIntegrationService {
     this.repoOwner = process.env.GITHUB_REPO_OWNER || 'bakhmaro';
     this.repoName = process.env.GITHUB_REPO_NAME || 'gurulo-ai';
     
+    // Performance metrics tracking
+    this.metrics = {
+      commitCount: 0,
+      pushCount: 0,
+      pullCount: 0,
+      totalCommitTime: 0,
+      totalPushTime: 0,
+      totalPullTime: 0,
+      lastCommitDuration: 0,
+      lastPushDuration: 0,
+      lastPullDuration: 0,
+      startTime: Date.now()
+    };
+    
+    // Metrics service integration
+    this.metricsService = null;
+    try {
+      this.metricsService = require('./ai_metrics_service');
+    } catch (error) {
+      console.warn('⚠️ Could not load metrics service');
+    }
+    
     // Initialize settings from database
     this.initializeSettings().catch(console.error);
     
@@ -503,11 +525,24 @@ class GitHubIntegrationService {
 
   // Commit changes with intelligent message
   async commitChanges(message = null) {
+    const startTime = Date.now();
     try {
       const commitMessage = message || await this.generateIntelligentCommitMessage();
       
       await this.executeCommand(`git commit -m "${commitMessage}"`);
-      console.log('✅ კომიტი შექმნილი:', commitMessage);
+      const duration = Date.now() - startTime;
+      
+      // Update metrics
+      this.metrics.commitCount++;
+      this.metrics.totalCommitTime += duration;
+      this.metrics.lastCommitDuration = duration;
+      
+      // Send to metrics service
+      if (this.metricsService) {
+        this.metricsService.recordGitOperation('commit', duration, 'success');
+      }
+      
+      console.log(`✅ კომიტი შექმნილი (${duration}ms):`, commitMessage);
       
       // Store last commit hash
       try {
@@ -516,8 +551,12 @@ class GitHubIntegrationService {
         // Ignore hash retrieval errors
       }
       
-      return { success: true, message: 'კომიტი წარმატებული', commitMessage };
+      return { success: true, message: 'კომიტი წარმატებული', commitMessage, duration };
     } catch (error) {
+      const duration = Date.now() - startTime;
+      if (this.metricsService) {
+        this.metricsService.recordGitOperation('commit', duration, 'error');
+      }
       console.error('❌ კომიტის შეცდომა:', error);
       return { success: false, error: error.message };
     }
@@ -525,6 +564,7 @@ class GitHubIntegrationService {
 
   // Push to GitHub
   async pushToGitHub() {
+    const startTime = Date.now();
     try {
       if (!this.remoteUrl) {
         throw new Error('GitHub remote არ არის კონფიგურირებული');
@@ -534,9 +574,26 @@ class GitHubIntegrationService {
       const branch = currentBranch.trim() || this.branch;
       
       await this.executeCommand(`git push origin ${branch}`);
-      console.log('🚀 ცვლილებები GitHub-ზე გაიგზავნა');
-      return { success: true, message: 'Push წარმატებული' };
+      const duration = Date.now() - startTime;
+      
+      // Update metrics
+      this.metrics.pushCount++;
+      this.metrics.totalPushTime += duration;
+      this.metrics.lastPushDuration = duration;
+      
+      // Send to metrics service
+      if (this.metricsService) {
+        this.metricsService.recordGitOperation('push', duration, 'success');
+        this.metricsService.updateGitLatencyReduction(this.calculateLatencyReduction());
+      }
+      
+      console.log(`🚀 ცვლილებები GitHub-ზე გაიგზავნა (${duration}ms)`);
+      return { success: true, message: 'Push წარმატებული', duration };
     } catch (error) {
+      const duration = Date.now() - startTime;
+      if (this.metricsService) {
+        this.metricsService.recordGitOperation('push', duration, 'error');
+      }
       console.error('❌ Push შეცდომა:', error);
       return { success: false, error: error.message };
     }
@@ -544,15 +601,32 @@ class GitHubIntegrationService {
 
   // Pull from GitHub
   async pullFromGitHub() {
+    const startTime = Date.now();
     try {
       if (!this.remoteUrl) {
         throw new Error('GitHub remote არ არის კონფიგურირებული');
       }
 
       await this.executeCommand('git pull origin main');
-      console.log('⬇️ ცვლილებები GitHub-დან ჩამოტვირთული');
-      return { success: true, message: 'Pull წარმატებული' };
+      const duration = Date.now() - startTime;
+      
+      // Update metrics
+      this.metrics.pullCount++;
+      this.metrics.totalPullTime += duration;
+      this.metrics.lastPullDuration = duration;
+      
+      // Send to metrics service
+      if (this.metricsService) {
+        this.metricsService.recordGitOperation('pull', duration, 'success');
+      }
+      
+      console.log(`⬇️ ცვლილებები GitHub-დან ჩამოტვირთული (${duration}ms)`);
+      return { success: true, message: 'Pull წარმატებული', duration };
     } catch (error) {
+      const duration = Date.now() - startTime;
+      if (this.metricsService) {
+        this.metricsService.recordGitOperation('pull', duration, 'error');
+      }
       console.error('❌ Pull შეცდომა:', error);
       return { success: false, error: error.message };
     }
@@ -1210,6 +1284,61 @@ class GitHubIntegrationService {
       console.error('❌ Branch status error:', error);
       return { success: false, error: error.message };
     }
+  }
+
+  /**
+   * Calculate latency reduction compared to API-based approach
+   * Baseline: Octokit API ~800-1200ms per operation
+   * @returns {number} Latency reduction percentage
+   */
+  calculateLatencyReduction() {
+    const baselineLatency = 1000; // 1 second baseline for GitHub API approach
+    const totalOperations = this.metrics.commitCount + this.metrics.pushCount + this.metrics.pullCount;
+    
+    if (totalOperations === 0) return 0;
+    
+    const totalTime = this.metrics.totalCommitTime + this.metrics.totalPushTime + this.metrics.totalPullTime;
+    const averageLatency = totalTime / totalOperations;
+    
+    const reduction = ((baselineLatency - averageLatency) / baselineLatency) * 100;
+    return Math.max(0, Math.round(reduction));
+  }
+
+  /**
+   * Get performance metrics summary
+   * @returns {Object} Performance metrics
+   */
+  getMetrics() {
+    const totalOperations = this.metrics.commitCount + this.metrics.pushCount + this.metrics.pullCount;
+    
+    return {
+      commits: {
+        total: this.metrics.commitCount,
+        averageTime: this.metrics.commitCount > 0 
+          ? Math.round(this.metrics.totalCommitTime / this.metrics.commitCount)
+          : 0,
+        lastDuration: this.metrics.lastCommitDuration
+      },
+      pushes: {
+        total: this.metrics.pushCount,
+        averageTime: this.metrics.pushCount > 0
+          ? Math.round(this.metrics.totalPushTime / this.metrics.pushCount)
+          : 0,
+        lastDuration: this.metrics.lastPushDuration
+      },
+      pulls: {
+        total: this.metrics.pullCount,
+        averageTime: this.metrics.pullCount > 0
+          ? Math.round(this.metrics.totalPullTime / this.metrics.pullCount)
+          : 0,
+        lastDuration: this.metrics.lastPullDuration
+      },
+      overall: {
+        totalOperations,
+        latencyReduction: this.calculateLatencyReduction(),
+        uptime: Math.round((Date.now() - this.metrics.startTime) / 1000)
+      }
+    };
   }
 }
 
