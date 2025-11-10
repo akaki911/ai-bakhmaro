@@ -471,6 +471,13 @@ const normalizeChatContent = (value: unknown, language: 'ka' | 'en'): string => 
   if (typeof value === 'object') {
     const record = value as Record<string, unknown>;
 
+    if (typeof record.plainText === 'string' && record.plainText.trim()) {
+      return record.plainText;
+    }
+    if (typeof record.plain_text === 'string' && record.plain_text.trim()) {
+      return record.plain_text;
+    }
+
     const localized = record[language];
     if (typeof localized === 'string') {
       return localized;
