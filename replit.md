@@ -91,7 +91,7 @@ Implemented PostgreSQL-backed Git metrics history storage:
   - Auto-refresh every 30 seconds
   - Rolling averages vs session averages comparison
 
-### Phase 3: Vector Memory & Semantic Search ✅
+### Phase 3: Vector Memory & Semantic Search
 Implemented self-hosted vector database using PostgreSQL pgvector:
 
 **1. Vector Memory Service** (`ai-service/services/vector_memory_service.js`):
@@ -113,6 +113,19 @@ Implemented self-hosted vector database using PostgreSQL pgvector:
 - `storeInVectorMemory(text, metadata, source, userId)` - adds content to vector database
 - Graceful fallback to legacy JSON knowledge base when vector memory unavailable
 - Hybrid initialization: parallel loading of vector memory and JSON knowledge base
+
+**4. Vector Memory API** (`ai-service/routes/vector_memory.js`) - ✅ Production-ready:
+- **POST /api/ai/vector-memory/embeddings** - Store text with auto-embedding generation (max 10K chars)
+- **POST /api/ai/vector-memory/search** - Semantic search with query text or raw embedding (max 100 results, 0.7 similarity threshold)
+- **GET /api/ai/vector-memory/stats** - Vector memory statistics (total embeddings, sources, users)
+- **GET /api/ai/vector-memory/:id** - Retrieve specific memory by ID
+- **DELETE /api/ai/vector-memory/:id** - Delete specific memory by ID
+- Security: requireAssistantAuth middleware on all endpoints
+- Validation: Input length limits, type checking, ID validation
+- Error handling: HTTP codes (400, 404, 500) with Georgian/English dual-language messages
+- Service integration: Singleton instances (VectorMemoryService, EmbeddingsService) with proper success/error handling
+- Route ordering: `/stats` before `/:id` to prevent Express route collision
+- **Status**: ✅ Architect approved (production-ready)
 
 ## External Dependencies
 -   **PostgreSQL (Replit Database)**: Primary database for persistence (replacing Firebase Firestore), including pgvector extension for semantic search
