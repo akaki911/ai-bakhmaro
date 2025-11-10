@@ -1906,7 +1906,18 @@ export function AIChatInterface() {
                   : undefined,
             };
           }
-          const parsed = parseAssistantPayload(data.response || data, language, activeContentFormat, {
+          const responseRecord = (data as Record<string, unknown>) ?? {};
+          const plainTextCandidate =
+            typeof responseRecord.plainText === 'string' ? responseRecord.plainText : '';
+          const responseCandidate = responseRecord.response ?? data;
+          const coreCandidate = parseGuruloCoreCandidate(
+            responseRecord.core ?? responseCandidate ?? data,
+          );
+          const parserInput =
+            coreCandidate ??
+            (plainTextCandidate.trim().length ? plainTextCandidate : responseCandidate ?? data);
+
+          const parsed = parseAssistantPayload(parserInput, language, activeContentFormat, {
             audience: audienceTag,
           });
           aggregatedPlainText = parsed.plainText;
