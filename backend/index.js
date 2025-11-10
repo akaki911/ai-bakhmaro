@@ -404,11 +404,26 @@ const authorizeAiMetadataRequest = (req, res, next) => {
   try {
     const privilegedRoles = new Set(['SUPER_ADMIN', 'ADMIN']);
     const sessionUser = req.session?.user || req.user || {};
+    const sessionRoleRaw =
+      sessionUser?.role ||
+      req.session?.userRole ||
+      req.headers['x-user-role'] ||
+      req.headers['x-gurulo-role'];
+    const sessionRole =
+      typeof sessionRoleRaw === 'string' ? sessionRoleRaw.toUpperCase() : null;
 
-    if (sessionUser?.role && privilegedRoles.has(sessionUser.role)) {
+    if (sessionRole && privilegedRoles.has(sessionRole)) {
       log.debug('✅ [AI AUTH] Session role authorized for AI metadata', {
         path: req.path,
-        role: sessionUser.role,
+        role: sessionRole,
+      });
+      return next();
+    }
+
+    if (req.session?.isSuperAdmin === true) {
+      log.debug('✅ [AI AUTH] Session flagged as super admin', {
+        path: req.path,
+        via: 'session-flag',
       });
       return next();
     }
@@ -418,7 +433,11 @@ const authorizeAiMetadataRequest = (req, res, next) => {
       .split(',')
       .map((id) => id.trim())
       .filter(Boolean);
-    const personalId = sessionUser?.personalId || req.headers['x-user-id'];
+    const personalId =
+      sessionUser?.personalId ||
+      req.headers['x-user-id'] ||
+      req.headers['x-personal-id'] ||
+      req.headers['x-gurulo-personal-id'];
 
     if (personalId && authorizedIds.includes(personalId)) {
       log.debug('✅ [AI AUTH] Session personalId authorized for AI metadata', {
