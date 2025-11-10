@@ -10,7 +10,7 @@ const guruloCore = require('../../shared/gurulo-core');
 const { normalizeResponse, GURULO_CORE_VERSION } = guruloCore.response;
 const contextRetrieval = require('../services/context_retrieval_service');
 const projectIntelligence = require('../services/project_intelligence_service');
-const fs = require('fs').promises;
+const { readFileContent } = require('../services/file_system_service');
 const {
   buildGreetingResponse,
   buildSmalltalkResponse,
@@ -343,11 +343,16 @@ const handleChatRequest = async (req, res) => {
           
           for (const filePath of resolvedFiles.slice(0, 5)) {
             try {
-              const absolutePath = require('path').join(process.cwd(), filePath);
-              const content = await fs.readFile(absolutePath, 'utf-8');
+              const content = await readFileContent(filePath, { maxBytes: 16000 });
+
+              if (!content) {
+                console.warn(`⚠️ [CONTEXT-AWARE] No readable content for ${filePath}`);
+                continue;
+              }
+
               const lines = content.split('\n');
               const preview = lines.slice(0, 50).join('\n');
-              
+
               fileContextParts.push(`📄 File: ${filePath}\n\`\`\`\n${preview}\n${lines.length > 50 ? `\n... (${lines.length - 50} more lines)` : ''}\`\`\``);
               filesRead.push(filePath);
               console.log(`📖 [CONTEXT-AWARE] Read ${filePath} (${lines.length} lines)`);
@@ -366,18 +371,33 @@ const handleChatRequest = async (req, res) => {
           
           for (const fileInfo of relevantFiles.slice(0, 3)) {
             try {
-              const absolutePath = require('path').join(process.cwd(), fileInfo.path);
-              const content = await fs.readFile(absolutePath, 'utf-8');
+              const content = await readFileContent(fileInfo.path, { maxBytes: 16000 });
+
+              if (!content) {
+                console.warn(`⚠️ [CONTEXT-AWARE] No readable content for ${fileInfo.path}`);
+                continue;
+              }
+
               const lines = content.split('\n');
               const preview = lines.slice(0, 30).join('\n');
-              
-              fileContextParts.push(`📄 Relevant File: ${fileInfo.path}\nScore: ${fileInfo.score}\n\`\`\`\n${preview}\n${lines.length > 30 ? `\n... (${lines.length - 30} more lines)` : ''}\`\`\``);
+
+              const displayScore = typeof fileInfo.score === 'number' ? fileInfo.score.toFixed(2) : 'N/A';
+
+              fileContextParts.push(`📄 Relevant File: ${fileInfo.path}\nScore: ${displayScore}\n\`\`\`\n${preview}\n${lines.length > 30 ? `\n... (${lines.length - 30} more lines)` : ''}\`\`\``);
               filesRead.push(fileInfo.path);
-              console.log(`📖 [CONTEXT-AWARE] Read ${fileInfo.path} (score: ${fileInfo.score})`);
+              console.log(`📖 [CONTEXT-AWARE] Read ${fileInfo.path} (score: ${displayScore})`);
             } catch (readError) {
               console.error(`⚠️ [CONTEXT-AWARE] Failed to read ${fileInfo.path}:`, readError.message);
             }
           }
+
+          if (filesRead.length === 0) {
+            console.warn('⚠️ [CONTEXT-AWARE] Project intelligence lookup completed with no readable files.');
+          }
+        }
+
+        if (filesRead.length === 0 && fileMentions.length > 0) {
+          console.warn('⚠️ [CONTEXT-AWARE] File mentions detected but no file content could be attached.');
         }
 
         const systemPrompt = `You are Gurulo — AI Developer Assistant for ai.bakhmaro.co.
