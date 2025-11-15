@@ -13,10 +13,12 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
+import { FEATURE_FLAGS } from './config/features';
 import './index.css';
 
 const Login = lazy(() => import('./Login'));
 const AIDashboardShell = lazy(() => import('./components/AIDashboardShell'));
+const MailShell = lazy(() => import('./components/MailShell'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -100,6 +102,25 @@ function AppRouter() {
             </Suspense>
           </ProtectedRoute>
         )}
+      />
+
+      <Route
+        path="/mail"
+        element={
+          FEATURE_FLAGS.enableMailDemo ? (
+            <ProtectedRoute requiredRole="USER">
+              <Suspense
+                fallback={
+                  <RouteFallback title="Mail Demo იტვირთება" subtitle="ფოსტისა და AI ასისტენტის მოდული მზადდება." />
+                }
+              >
+                <MailShell />
+              </Suspense>
+            </ProtectedRoute>
+          ) : (
+            <Navigate to="/admin?tab=dashboard" replace />
+          )
+        }
       />
 
       <Route path="*" element={<Navigate to="/admin?tab=dashboard" replace />} />
