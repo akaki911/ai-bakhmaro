@@ -4,6 +4,8 @@ const path = require('path');
 const { ensureLocalSecrets } = require('../scripts/ensureLocalSecrets');
 const { validateEnv } = require('../shared/config/envValidator');
 
+const DEFAULT_FRONTEND_ORIGIN = 'https://ai.bakhmaro.co';
+
 ensureLocalSecrets({ cwd: path.resolve(__dirname, '..') });
 
 const envValidation = validateEnv({ serviceName: 'backend' });
@@ -22,7 +24,7 @@ const applyFallback = (key, fallback) => {
   return true;
 };
 
-applyFallback('FRONTEND_URL', 'http://127.0.0.1:5000');
+applyFallback('FRONTEND_URL', DEFAULT_FRONTEND_ORIGIN);
 applyFallback('DEV_TASKS_ENABLED', 'false');
 
 const runtimeConfig = require('./config/runtimeConfig');
@@ -125,8 +127,6 @@ const httpServer = http.createServer(app);
 const shouldDisableHttpListen = process.env.DISABLE_EXPRESS_LISTEN === 'true';
 let server = null;
 
-const DEFAULT_FRONTEND_ORIGIN = 'https://ai.bakhmaro.co';
-
 const normaliseOriginValue = (value) => {
   if (!value || typeof value !== 'string') {
     return null;
@@ -150,20 +150,8 @@ const normaliseOriginValue = (value) => {
 };
 
 const buildAllowedOriginsMap = () => {
-  const candidates = [
-    DEFAULT_FRONTEND_ORIGIN,
-    process.env.FRONTEND_URL,
-    process.env.ALT_FRONTEND_URL,
-    process.env.AI_DOMAIN,
-    process.env.PUBLIC_FRONTEND_ORIGIN,
-    process.env.CORS_ALLOWED_ORIGIN,
-    process.env.ALLOWED_ORIGINS,
-    process.env.ORIGIN,
-    process.env.REPLIT_DEV_DOMAIN,
-    process.env.REPLIT_DOMAINS,
-  ];
-
   const origins = new Map();
+
   const addOrigin = (origin) => {
     const normalised = normaliseOriginValue(origin);
     if (!normalised) {
@@ -175,30 +163,14 @@ const buildAllowedOriginsMap = () => {
     }
   };
 
-  candidates
-    .flatMap((value) => (typeof value === 'string' ? value.split(',') : []))
-    .forEach(addOrigin);
+  const primaryFrontend = normaliseOriginValue(process.env.FRONTEND_URL) || DEFAULT_FRONTEND_ORIGIN;
+  addOrigin(primaryFrontend);
 
-  if (process.env.NODE_ENV !== 'production') {
-    addOrigin('https://ai.bakhmaro.co');
+  if (!isProductionEnv) {
     addOrigin('http://127.0.0.1:3000');
     addOrigin('http://localhost:3000');
-    addOrigin('http://127.0.0.1:5173');
-    addOrigin('http://localhost:5173');
     addOrigin('http://127.0.0.1:5000');
     addOrigin('http://localhost:5000');
-    
-    if (process.env.REPLIT_DEV_DOMAIN) {
-      addOrigin(`https://${process.env.REPLIT_DEV_DOMAIN}`);
-      addOrigin(`http://${process.env.REPLIT_DEV_DOMAIN}`);
-    }
-    if (process.env.REPLIT_DOMAINS) {
-      const replitDomains = process.env.REPLIT_DOMAINS.split(',');
-      replitDomains.forEach(domain => {
-        addOrigin(`https://${domain.trim()}`);
-        addOrigin(`http://${domain.trim()}`);
-      });
-    }
   }
 
   return origins;
@@ -547,6 +519,15 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.get('/api/auth/health', (req, res) => {
+  res.json({
+    ok: true,
+    status: 'OK',
+    service: 'backend-auth',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Gurulo UI test clients and scripted runners need a generous rate limit when
 // exercising the chat proxy. Apply their bypass marker before attaching the
 // shared rate limiter so the skip callback can observe it.
@@ -701,7 +682,9 @@ if (process.env.DEV_BYPASS_RATE_LIMIT !== 'true') {
 // Basic API endpoint
 app.get('/', (req, res) => {
   res.status(200).json({
-    message: 'Backend API is live'
+    status: 'OK',
+    service: 'backend',
+    timestamp: new Date().toISOString(),
   });
 });
 
