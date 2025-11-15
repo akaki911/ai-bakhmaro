@@ -1176,6 +1176,7 @@ app.use("/api/memory", require("./routes/memory_api"));
 app.use('/api/performance', require('./routes/performance_routes'));
 app.use('/api/project', require('./routes/project_stats'));
 app.use('/api/config', require('./routes/config'));
+app.use('/api/mail', require('./routes/mail'));
 
 // User and GitHub routes
 app.use('/api/user', require('./routes/user_activity'));
