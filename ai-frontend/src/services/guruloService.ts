@@ -1,4 +1,5 @@
 import { buildApiUrl } from '@/lib/apiBase';
+import { envFeatureFlag } from '@/lib/featureFlags';
 import { rateLimitedJsonFetch } from '@/utils/rateLimitedFetch';
 
 export interface MailAccountConfig {
@@ -65,6 +66,7 @@ export interface MailSendPayload {
 
 const jsonHeaders = { 'Content-Type': 'application/json' } as const;
 const BASE_KEY = 'gurulo:mail';
+const USE_MAIL_PROTOTYPE = envFeatureFlag('VITE_MAIL_PROTOTYPE', true);
 
 const buildUrl = (path: string, params?: Record<string, string | number | undefined>) => {
   const base = buildApiUrl(path);
@@ -87,7 +89,7 @@ const buildUrl = (path: string, params?: Record<string, string | number | undefi
   return `${base}${base.includes('?') ? '&' : '?'}${query}`;
 };
 
-export const GuruloMailService = {
+const HttpMailService = {
   listAccounts: () =>
     rateLimitedJsonFetch<{ success: boolean; accounts: MailAccountSummary[] }>(
       buildApiUrl('/api/mail/accounts'),
@@ -155,5 +157,221 @@ export const GuruloMailService = {
       },
     ),
 };
+
+type MailboxByFolder = Record<string, MailSyncResponse>;
+
+const deepClone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
+
+const demoAccounts: MailAccountSummary[] = [
+  {
+    id: 'demo-primary',
+    name: 'Primary Inbox',
+    email: 'user.primary@example.com',
+    isDefault: true,
+    config: {
+      imapHost: 'demo-imap.local',
+      imapPort: 993,
+      smtpHost: 'demo-smtp.local',
+      smtpPort: 587,
+      user: 'user.primary',
+      hasPassword: false,
+      useSecureImap: true,
+      useSecureSmtp: true,
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'demo-team',
+    name: 'Team Inbox',
+    email: 'team@example.com',
+    isDefault: false,
+    config: {
+      imapHost: 'demo-imap.local',
+      imapPort: 993,
+      smtpHost: 'demo-smtp.local',
+      smtpPort: 587,
+      user: 'team',
+      hasPassword: false,
+      useSecureImap: true,
+      useSecureSmtp: true,
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
+const seededMailbox: MailboxByFolder = {
+  Inbox: {
+    success: true,
+    folder: 'Inbox',
+    accountId: 'demo-primary',
+    messages: [
+      {
+        id: 'demo-msg-1',
+        subject: 'გურულო Prototype Inbox-ში მოგესალმებით',
+        from: 'welcome@gurulo.ai',
+        to: 'user.primary@example.com',
+        date: new Date().toISOString(),
+        snippet: 'ეს არის სიმულირებული შეტყობინება ინ-მემორი ინბოქსიდან.',
+        flags: ['Seen'],
+      },
+      {
+        id: 'demo-msg-2',
+        subject: 'ფუნქციონალი: სინქრონიზაცია და გასაგზავნი',
+        from: 'product@gurulo.ai',
+        to: 'user.primary@example.com',
+        date: new Date(Date.now() - 3600 * 1000).toISOString(),
+        snippet: 'Folder sync აბრუნებს MailSyncResponse-ს rateLimitedJsonFetch-ის გარეშე.',
+        flags: [],
+      },
+      {
+        id: 'demo-msg-3',
+        subject: 'ინბოქსის თესლი დემო რეჟიმისთვის',
+        from: 'demo@gurulo.ai',
+        to: 'user.primary@example.com',
+        date: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+        snippet: 'ეს მონაცემები ინახება მხოლოდ მეხსიერებაში და არ ტოვებს ბრაუზერს.',
+        flags: ['Flagged'],
+      },
+    ],
+  },
+  Sent: {
+    success: true,
+    folder: 'Sent',
+    accountId: 'demo-primary',
+    messages: [
+      {
+        id: 'demo-sent-1',
+        subject: 'გამოგზავნილი შეტყობინება (დემო)',
+        from: 'user.primary@example.com',
+        to: 'teammate@example.com',
+        date: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
+        snippet: 'სწრაფი ტექსტური შინაარსი სალამად.',
+        flags: ['Seen'],
+      },
+    ],
+  },
+};
+
+const getFolderKey = (folder: string) => folder.trim() || 'Inbox';
+
+const findAccountEmail = (accountId: string) =>
+  demoAccounts.find((account) => account.id === accountId)?.email ?? accountId;
+
+const getPrototypeSyncResponse = (folder: string, accountId?: string): MailSyncResponse => {
+  const key = getFolderKey(folder);
+  const fallback = seededMailbox.Inbox;
+  const snapshot = seededMailbox[key] ?? fallback;
+
+  return deepClone({
+    ...snapshot,
+    folder: folder || snapshot.folder,
+    accountId: accountId ?? snapshot.accountId,
+  });
+};
+
+const PrototypeMailService: typeof HttpMailService = {
+  listAccounts: async () => ({ success: true, accounts: deepClone(demoAccounts) }),
+
+  createAccount: async (payload: MailAccountPayload) => {
+    const newAccount: MailAccountSummary = {
+      id: `demo-${Date.now()}`,
+      name: payload.name,
+      email: payload.email,
+      isDefault: Boolean(payload.isDefault),
+      config: {
+        ...payload.config,
+        hasPassword: Boolean(payload.config.pass),
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    demoAccounts.push(newAccount);
+    return { success: true, account: deepClone(newAccount) };
+  },
+
+  updateAccount: async (accountId: string, payload: Partial<MailAccountPayload>) => {
+    const index = demoAccounts.findIndex((account) => account.id === accountId);
+    if (index === -1) {
+      throw new Error('Account not found');
+    }
+
+    const existing = demoAccounts[index];
+    const updated: MailAccountSummary = {
+      ...existing,
+      ...payload,
+      config: {
+        ...existing.config,
+        ...(payload.config ?? {}),
+        hasPassword: payload.config?.pass ? true : existing.config.hasPassword,
+      },
+      updatedAt: new Date().toISOString(),
+    };
+
+    demoAccounts.splice(index, 1, updated);
+    return { success: true, account: deepClone(updated) };
+  },
+
+  deleteAccount: async (accountId: string) => {
+    const index = demoAccounts.findIndex((account) => account.id === accountId);
+    if (index !== -1) {
+      demoAccounts.splice(index, 1);
+    }
+
+    return new Response(null, { status: 204 });
+  },
+
+  testConnection: async () => ({ success: true, result: { message: 'Prototype connection successful' } }),
+
+  syncFolder: async (folder: string, options: { accountId?: string; limit?: number } = {}) => {
+    const snapshot = getPrototypeSyncResponse(folder, options.accountId);
+    const limitedMessages = options.limit ? snapshot.messages.slice(0, options.limit) : snapshot.messages;
+
+    return {
+      ...snapshot,
+      messages: limitedMessages,
+    };
+  },
+
+  sendEmail: async (accountId: string, email: MailSendPayload) => {
+    const sentFolder = getPrototypeSyncResponse('Sent', accountId);
+    const fromEmail = findAccountEmail(accountId);
+    const newMessage = {
+      id: `demo-sent-${Date.now()}`,
+      subject: email.subject,
+      from: fromEmail,
+      to: Array.isArray(email.to) ? email.to.join(', ') : email.to,
+      date: new Date().toISOString(),
+      snippet: email.text || email.html || 'Sent from prototype inbox',
+      flags: ['Seen'],
+    };
+
+    sentFolder.messages = [newMessage, ...sentFolder.messages];
+    seededMailbox.Sent = sentFolder;
+
+    return { success: true, result: { messageId: newMessage.id } };
+  },
+
+  moveEmail: async (_accountId: string, emailId: string, targetFolder: string) => {
+    const sourceFolders = Object.keys(seededMailbox);
+    for (const folder of sourceFolders) {
+      const mailbox = seededMailbox[folder];
+      const index = mailbox.messages.findIndex((msg) => msg.id === emailId);
+      if (index !== -1) {
+        const [message] = mailbox.messages.splice(index, 1);
+        const destination = getPrototypeSyncResponse(targetFolder, mailbox.accountId);
+        destination.messages.unshift(message);
+        seededMailbox[getFolderKey(targetFolder)] = destination;
+        break;
+      }
+    }
+
+    return { success: true };
+  },
+};
+
+export const GuruloMailService = USE_MAIL_PROTOTYPE ? PrototypeMailService : HttpMailService;
 
 export type GuruloMailServiceType = typeof GuruloMailService;
