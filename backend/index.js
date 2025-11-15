@@ -159,6 +159,8 @@ const buildAllowedOriginsMap = () => {
     process.env.CORS_ALLOWED_ORIGIN,
     process.env.ALLOWED_ORIGINS,
     process.env.ORIGIN,
+    process.env.REPLIT_DEV_DOMAIN,
+    process.env.REPLIT_DOMAINS,
   ];
 
   const origins = new Map();
@@ -183,6 +185,20 @@ const buildAllowedOriginsMap = () => {
     addOrigin('http://localhost:3000');
     addOrigin('http://127.0.0.1:5173');
     addOrigin('http://localhost:5173');
+    addOrigin('http://127.0.0.1:5000');
+    addOrigin('http://localhost:5000');
+    
+    if (process.env.REPLIT_DEV_DOMAIN) {
+      addOrigin(`https://${process.env.REPLIT_DEV_DOMAIN}`);
+      addOrigin(`http://${process.env.REPLIT_DEV_DOMAIN}`);
+    }
+    if (process.env.REPLIT_DOMAINS) {
+      const replitDomains = process.env.REPLIT_DOMAINS.split(',');
+      replitDomains.forEach(domain => {
+        addOrigin(`https://${domain.trim()}`);
+        addOrigin(`http://${domain.trim()}`);
+      });
+    }
   }
 
   return origins;
@@ -195,12 +211,17 @@ const primaryAllowedOrigin =
   allowedOriginsMap.get(normaliseOriginValue(DEFAULT_FRONTEND_ORIGIN)) ||
   DEFAULT_FRONTEND_ORIGIN;
 
+console.log('🔒 [CORS] Allowed origins:', Array.from(allowedOriginsSet));
+console.log('🔒 [CORS] Primary origin:', primaryAllowedOrigin);
+
 const websocketAllowlist = [
   FRONTEND_URL,
   process.env.ALT_FRONTEND_URL,
   'http://127.0.0.1:5000',
   'http://localhost:5000',
   'https://127.0.0.1:5000',
+  process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null,
+  process.env.REPLIT_DEV_DOMAIN ? `http://${process.env.REPLIT_DEV_DOMAIN}` : null,
 ].filter(Boolean);
 
 const guruloRealtime = setupGuruloWebSocket(httpServer, {
