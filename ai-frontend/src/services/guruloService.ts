@@ -66,7 +66,7 @@ export interface MailSendPayload {
 
 const jsonHeaders = { 'Content-Type': 'application/json' } as const;
 const BASE_KEY = 'gurulo:mail';
-const USE_MAIL_PROTOTYPE = envFeatureFlag('VITE_MAIL_PROTOTYPE', true);
+const USE_MAIL_PROTOTYPE = envFeatureFlag('VITE_MAIL_PROTOTYPE', false);
 
 const buildUrl = (path: string, params?: Record<string, string | number | undefined>) => {
   const base = buildApiUrl(path);
