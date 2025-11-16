@@ -12,6 +12,7 @@ interface LogListProps {
   onPinLog?: () => void;
   onCopyLog?: () => void;
   autoscroll?: boolean;
+  isMockMode?: boolean;
 }
 
 export const LogList: React.FC<LogListProps> = ({
@@ -20,7 +21,8 @@ export const LogList: React.FC<LogListProps> = ({
   isLoading: _isLoading = false,
   onPinLog: _onPinLog,
   onCopyLog: _onCopyLog,
-  autoscroll: _autoscroll = true
+  autoscroll: _autoscroll = true,
+  isMockMode = false
 }) => {
   const parentRef = useRef<HTMLDivElement>(null);
   const lastLogCountRef = useRef(logs.length);
@@ -98,8 +100,18 @@ export const LogList: React.FC<LogListProps> = ({
 
   return (
     <div className="relative flex-1 flex flex-col">
+      {isMockMode && (
+        <div className="sticky top-0 z-30 bg-amber-50 dark:bg-amber-900/40 text-amber-900 dark:text-amber-100 border-b border-amber-200 dark:border-amber-700 px-3 py-2 text-xs font-semibold flex items-center space-x-2">
+          <span role="img" aria-label="warning">⚠️</span>
+          <span>Showing cached or mock logs while live stream recovers.</span>
+        </div>
+      )}
+
       {/* Table Header */}
-      <div className="sticky top-0 z-20 bg-gray-100 dark:bg-gray-800 border-b-2 border-gray-300 dark:border-gray-600 px-3 py-2 font-mono text-xs font-semibold">
+      <div
+        className="sticky top-0 z-20 bg-gray-100 dark:bg-gray-800 border-b-2 border-gray-300 dark:border-gray-600 px-3 py-2 font-mono text-xs font-semibold"
+        style={{ top: isMockMode ? '36px' : 0 }}
+      >
         <div className="grid grid-cols-[auto_90px_80px_1fr_auto] gap-3 items-center lg:grid-cols-[auto_100px_90px_1fr_auto] xl:gap-4">
           <div className="text-gray-700 dark:text-gray-300 w-[140px]">TIMESTAMP</div>
           <div className="text-gray-700 dark:text-gray-300 text-center">SOURCE</div>
