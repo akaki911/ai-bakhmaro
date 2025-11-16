@@ -33,6 +33,7 @@ The platform features a multi-service architecture:
     -   **UnifiedConsole (Phase 4)**: Replit-style unified developer interface combining Chat, Terminal, Memory, Logs, and Execution panels in a single screen. Features resizable split panels, collapsible sidebars (Services, Metrics, Logs), StatusBar with real-time metrics (connection, CPU, RAM, errors), QuickActionsToolbar (Cmd+K command palette), and responsive design for mobile and desktop.
     -   **Cloud Run Auto-Execution Layer (Phase 5)**: Production deployment infrastructure with Google Cloud Run orchestration. Includes cloudrun_executor.js for container lifecycle management (deploy, execute, scale, terminate), cloudbuild.yaml for multi-stage builds across all services, auto_deploy_trigger.js with Firestore triggers for automated deployments, and cost_monitor_service.js for usage tracking, budget alerts, and optimization recommendations.
     -   **Gurulo Response Rendering Fix (Nov 2025)**: Fixed critical frontend bug where Gurulo AI responses displayed raw JSON instead of plainText. Frontend now correctly passes full gurulo-core payload to parseAssistantPayload, allowing parseGuruloCoreCandidate and adaptGuruloCorePayload to extract plainText properly. Both streaming and non-streaming response flows validated.
+    -   **Mail System Integration (Nov 2025)**: Complete IMAP/SMTP email management system integrated into Gurulo admin panel. Features include full CRUD operations for mail accounts with encrypted password storage in Firestore, inbox synchronization via Python IMAP client, email composition and sending via Nodemailer SMTP, connection testing for both IMAP and SMTP, and a dedicated Mail tab in the AI Developer Panel with Gurulo's dark theme design. Default account configured as gurulo@bakhmaro.co (PrivateEmail.com) for system notifications and daily summaries.
 
 ## External Dependencies
 -   **PostgreSQL**: Primary database for persistence, including pgvector extension.
@@ -41,3 +42,5 @@ The platform features a multi-service architecture:
 -   **Chokidar**: For real-time file system monitoring.
 -   **React-Syntax-Highlighter**: For code preview.
 -   **Firebase**: For data persistence and session management.
+-   **Nodemailer**: For SMTP email sending functionality.
+-   **PrivateEmail.com**: Mail server for gurulo@bakhmaro.co (IMAP: mail.privateemail.com:993, SMTP: mail.privateemail.com:465).
