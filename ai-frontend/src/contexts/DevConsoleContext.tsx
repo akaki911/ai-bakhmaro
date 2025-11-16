@@ -14,7 +14,7 @@ export const DevConsoleProvider: React.FC<DevConsoleProviderProps> = ({ children
   const [logs, setLogs] = useState<LogEntry[]>([]);
 
   // Connection state
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected' | 'degraded'>('disconnected');
 
   // Buffer metrics
   const [bufferSize, setBufferSize] = useState(0);
@@ -22,6 +22,7 @@ export const DevConsoleProvider: React.FC<DevConsoleProviderProps> = ({ children
 
   // Loading state
   const [isLoadingFromCache, setIsLoadingFromCache] = useState(false);
+  const [isMockMode, setIsMockMode] = useState(false);
 
   // Clear logs action
   const clearLogs = useCallback(() => {
@@ -47,6 +48,8 @@ export const DevConsoleProvider: React.FC<DevConsoleProviderProps> = ({ children
     setDroppedPercentage,
     isLoadingFromCache,
     setIsLoadingFromCache,
+    isMockMode,
+    setIsMockMode,
     clearLogs,
     addLog
   };

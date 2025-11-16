@@ -84,7 +84,7 @@ export const UnifiedConsole: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'logs' | 'metrics' | 'services' | 'rollout' | 'terminal' | 'execute' | 'memory'>('logs');
   const [logPlacement, setLogPlacement] = useState<'main' | 'sidebar'>('main');
 
-  const { logs, connectionStatus, reconnect, clearLogs, forceReload, isLoadingFromCache } = useConsoleStream(filters);
+  const { logs, connectionStatus, reconnect, clearLogs, forceReload, isLoadingFromCache, isMockMode } = useConsoleStream(filters);
 
   const metricsSnapshot = systemMetrics ?? EMPTY_METRICS;
 
@@ -255,7 +255,7 @@ export const UnifiedConsole: React.FC = () => {
       </div>
 
       <div className="flex-1 min-h-0">
-        <LogList logs={visibleLogs} />
+        <LogList logs={visibleLogs} isMockMode={isMockMode} />
       </div>
     </div>
   );
@@ -471,7 +471,7 @@ export const UnifiedConsole: React.FC = () => {
 
       {/* Status Bar at Bottom */}
       <StatusBar
-        connectionStatus={metricsConnectionStatus}
+        connectionStatus={connectionStatus}
         activeService="AI Service"
         errorCount={errorCount.critical + errorCount.error}
         warningCount={errorCount.warning}
@@ -481,6 +481,7 @@ export const UnifiedConsole: React.FC = () => {
         isLoading={metricsLoading}
         error={metricsError}
         lastUpdated={metricsLastUpdated}
+        isMockMode={isMockMode}
         onRetry={refetchMetrics}
         onErrorClick={() => setShowErrorMonitor(true)}
       />
