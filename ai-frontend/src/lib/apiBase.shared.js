@@ -151,6 +151,15 @@ const pickFirstRelative = (candidates) => {
 };
 
 const resolveBackendBase = () => {
+  const hostname = typeof window !== 'undefined' ? window.location?.hostname : undefined;
+  const isLocalDev = hostname === 'localhost' || hostname === '127.0.0.1' || 
+                     (hostname && (hostname.includes('.replit.dev') || hostname.includes('.repl.co')));
+  
+  if (isLocalDev) {
+    console.log('🔧 [apiBase] Local development mode detected - using relative URLs');
+    return '';
+  }
+
   const candidateKeys = [
     'VITE_API_BASE',
     'VITE_BACKEND_URL',
@@ -163,10 +172,7 @@ const resolveBackendBase = () => {
   const envCandidates = readImportMetaCandidates(candidateKeys);
   const processCandidates = readProcessEnvCandidates(candidateKeys);
   const runtimeCandidates = readRuntimeCandidates();
-
-  const override = resolveBackendOverrideForHost(
-    typeof window !== 'undefined' ? window.location?.hostname : undefined,
-  );
+  const override = resolveBackendOverrideForHost(hostname);
 
   const absolute =
     pickFirstAbsolute(envCandidates) ||
