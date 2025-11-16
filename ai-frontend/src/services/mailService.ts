@@ -75,7 +75,7 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
 
 export const mailService = {
   async listAccounts(signal?: AbortSignal): Promise<MailAccount[]> {
-    const url = buildApiUrl('/mail/accounts');
+    const url = buildApiUrl('/api/mail/accounts');
     const response = await fetch(url, {
       method: 'GET',
       credentials: 'include',
@@ -86,7 +86,7 @@ export const mailService = {
   },
 
   async createAccount(payload: MailAccountPayload, signal?: AbortSignal): Promise<MailAccount> {
-    const url = buildApiUrl('/mail/accounts');
+    const url = buildApiUrl('/api/mail/accounts');
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -99,7 +99,7 @@ export const mailService = {
   },
 
   async updateAccount(accountId: string, payload: Partial<MailAccountPayload>, signal?: AbortSignal): Promise<MailAccount> {
-    const url = buildApiUrl(`/mail/accounts/${accountId}`);
+    const url = buildApiUrl(`/api/mail/accounts/${accountId}`);
     const response = await fetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -112,7 +112,7 @@ export const mailService = {
   },
 
   async deleteAccount(accountId: string, signal?: AbortSignal): Promise<void> {
-    const url = buildApiUrl(`/mail/accounts/${accountId}`);
+    const url = buildApiUrl(`/api/mail/accounts/${accountId}`);
     const response = await fetch(url, {
       method: 'DELETE',
       credentials: 'include',
@@ -125,7 +125,7 @@ export const mailService = {
   },
 
   async testConnection(accountId: string, signal?: AbortSignal): Promise<ConnectionTestResult> {
-    const url = buildApiUrl(`/mail/accounts/${accountId}/test`);
+    const url = buildApiUrl(`/api/mail/accounts/${accountId}/test`);
     const response = await fetch(url, {
       method: 'POST',
       credentials: 'include',
@@ -140,7 +140,7 @@ export const mailService = {
     if (accountId) params.append('accountId', accountId);
     params.append('limit', String(limit));
     
-    const url = buildApiUrl(`/mail/sync/${folder}?${params.toString()}`);
+    const url = buildApiUrl(`/api/mail/sync/${folder}?${params.toString()}`);
     const response = await fetch(url, {
       method: 'GET',
       credentials: 'include',
@@ -151,7 +151,7 @@ export const mailService = {
   },
 
   async sendEmail(accountId: string, email: EmailPayload, signal?: AbortSignal): Promise<any> {
-    const url = buildApiUrl('/mail/send');
+    const url = buildApiUrl('/api/mail/send');
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -164,7 +164,7 @@ export const mailService = {
   },
 
   async moveEmail(accountId: string, emailId: string, targetFolder: string, signal?: AbortSignal): Promise<void> {
-    const url = buildApiUrl('/mail/move');
+    const url = buildApiUrl('/api/mail/move');
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

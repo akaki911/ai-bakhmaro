@@ -101,25 +101,7 @@ const MailTab: React.FC = () => {
   }, [activeAccountId, showToast]);
 
   useEffect(() => {
-    const initializeSession = async () => {
-      if (import.meta.env.DEV) {
-        try {
-          const response = await fetch('/api/mail/dev/init-session', {
-            method: 'POST',
-            credentials: 'include',
-          });
-          if (response.ok) {
-            console.log('✅ [Mail Tab] Backend session initialized');
-          }
-        } catch (error) {
-          console.warn('⚠️ [Mail Tab] Session init failed:', error);
-        }
-      }
-      
-      fetchData();
-    };
-
-    initializeSession();
+    fetchData();
     const unsubscribe = guruloService.subscribeToUpdates(() => {
       fetchData(activeAccountId ?? undefined);
     });
