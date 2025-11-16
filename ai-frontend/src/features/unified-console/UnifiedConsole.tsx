@@ -34,6 +34,24 @@ import { VectorMemoryManager } from './components/VectorMemory/VectorMemoryManag
 import { ResizablePanel, ResizableHorizontalPanel } from './components/ResizablePanel';
 import { StatusBar } from './components/StatusBar';
 import { QuickActionsToolbar } from './components/QuickActionsToolbar';
+import { useSystemMetrics } from './hooks/useSystemMetrics';
+
+const EMPTY_METRICS: SystemMetrics = {
+  cpuUsage: 0,
+  memoryUsage: 0,
+  networkRequests: 0,
+  errorRate: 0,
+  responseTime: 0,
+  uptime: '0m',
+  activeConnections: 0,
+  throughput: 0,
+  latency: { p50: 0, p95: 0, p99: 0 },
+  services: {
+    frontend: { status: 'healthy', cpu: 0, memory: 0, errors: [] },
+    backend: { status: 'healthy', cpu: 0, memory: 0, errors: [] },
+    ai: { status: 'healthy', cpu: 0, memory: 0, errors: [] },
+  },
+};
 
 /**
  * Main Unified Console Component
@@ -46,22 +64,14 @@ export const UnifiedConsole: React.FC = () => {
   const [showTerminal, setShowTerminal] = useState(false);
   const [showErrorMonitor, setShowErrorMonitor] = useState(false);
   const [language, setLanguage] = useState<'ka' | 'en'>('ka');
-  const [systemMetrics, setSystemMetrics] = useState<SystemMetrics>({
-    cpuUsage: 0,
-    memoryUsage: 0,
-    networkRequests: 0,
-    errorRate: 0,
-    responseTime: 0,
-    uptime: '0m',
-    activeConnections: 0,
-    throughput: 0,
-    latency: { p50: 0, p95: 0, p99: 0 },
-    services: {
-      frontend: { status: 'healthy', cpu: 0, memory: 0, errors: [] },
-      backend: { status: 'healthy', cpu: 0, memory: 0, errors: [] },
-      ai: { status: 'healthy', cpu: 0, memory: 0, errors: [] }
-    }
-  });
+  const {
+    metrics: systemMetrics,
+    error: metricsError,
+    isLoading: metricsLoading,
+    connectionStatus: metricsConnectionStatus,
+    lastUpdated: metricsLastUpdated,
+    refetch: refetchMetrics,
+  } = useSystemMetrics();
 
   const {
     filters,
@@ -74,6 +84,8 @@ export const UnifiedConsole: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'logs' | 'metrics' | 'services' | 'rollout' | 'terminal' | 'execute' | 'memory'>('logs');
 
   const { logs, connectionStatus, reconnect, clearLogs, forceReload, isLoadingFromCache } = useConsoleStream(filters);
+
+  const metricsSnapshot = systemMetrics ?? EMPTY_METRICS;
 
   // Auto-recovery for failed connections
   useEffect(() => {
@@ -94,53 +106,6 @@ export const UnifiedConsole: React.FC = () => {
     hasRecentErrors,
     criticalErrors
   } = useRealTimeErrors({ language, autoConnect: false }); // Connection managed by RealTimeErrorMonitor
-
-  // Enhanced system metrics with real-time data
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = Date.now();
-      const cpuUsage = 15 + Math.random() * 35; // 15-50%
-      const memoryUsage = 40 + Math.random() * 30; // 40-70%
-
-      setSystemMetrics({
-        cpuUsage,
-        memoryUsage,
-        networkRequests: Math.floor(80 + Math.random() * 40), // 80-120 req/min
-        errorRate: Math.random() * 3, // 0-3%
-        responseTime: 45 + Math.random() * 100, // 45-145ms
-        uptime: `${Math.floor((now - 1640995200000) / 60000)}m`, // From Jan 1, 2022
-        activeConnections: Math.floor(10 + Math.random() * 15), // 10-25 connections
-        throughput: Math.floor(500 + Math.random() * 300), // 500-800 KB/s
-        latency: {
-          p50: Math.floor(20 + Math.random() * 30), // 20-50ms
-          p95: Math.floor(80 + Math.random() * 40), // 80-120ms
-          p99: Math.floor(150 + Math.random() * 100) // 150-250ms
-        },
-        services: {
-          frontend: {
-            status: cpuUsage < 70 ? 'healthy' : 'warning',
-            cpu: 8 + Math.random() * 12,
-            memory: 45 + Math.random() * 20,
-            errors: []
-          },
-          backend: {
-            status: memoryUsage < 80 ? 'healthy' : 'warning',
-            cpu: 12 + Math.random() * 18,
-            memory: 55 + Math.random() * 25,
-            errors: []
-          },
-          ai: {
-            status: Math.random() > 0.1 ? 'healthy' : 'warning',
-            cpu: 20 + Math.random() * 25,
-            memory: 65 + Math.random() * 20,
-            errors: []
-          }
-        }
-      });
-    }, 1500); // Update every 1.5 seconds for smoother real-time feel
-
-    return () => clearInterval(interval);
-  }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -394,7 +359,16 @@ export const UnifiedConsole: React.FC = () => {
                   <LogList logs={visibleLogs} />
                 </div>
               )}
-              {rightPanelTab === 'metrics' && <LiveMetrics />}
+              {rightPanelTab === 'metrics' && (
+                <LiveMetrics
+                  metrics={systemMetrics}
+                  isLoading={metricsLoading}
+                  error={metricsError}
+                  isConnected={metricsConnectionStatus === 'connected'}
+                  onRetry={refetchMetrics}
+                  lastUpdated={metricsLastUpdated}
+                />
+              )}
               {rightPanelTab === 'services' && (
                 <div className="p-3">
                   <ServicePanel />
@@ -407,13 +381,17 @@ export const UnifiedConsole: React.FC = () => {
 
       {/* Status Bar at Bottom */}
       <StatusBar
-        connectionStatus={connectionStatus}
+        connectionStatus={metricsConnectionStatus}
         activeService="AI Service"
         errorCount={errorCount.critical + errorCount.error}
         warningCount={errorCount.warning}
-        cpuUsage={systemMetrics.cpuUsage}
-        memoryUsage={systemMetrics.memoryUsage}
-        uptime={systemMetrics.uptime}
+        cpuUsage={metricsSnapshot.cpuUsage}
+        memoryUsage={metricsSnapshot.memoryUsage}
+        uptime={metricsSnapshot.uptime}
+        isLoading={metricsLoading}
+        error={metricsError}
+        lastUpdated={metricsLastUpdated}
+        onRetry={refetchMetrics}
         onErrorClick={() => setShowErrorMonitor(true)}
       />
 

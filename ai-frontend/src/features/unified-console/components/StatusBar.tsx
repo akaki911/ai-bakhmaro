@@ -9,6 +9,10 @@ interface StatusBarProps {
   cpuUsage?: number;
   memoryUsage?: number;
   uptime?: string;
+  isLoading?: boolean;
+  error?: string | null;
+  lastUpdated?: Date | null;
+  onRetry?: () => void;
   onErrorClick?: () => void;
 }
 
@@ -20,9 +24,15 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   cpuUsage = 0,
   memoryUsage = 0,
   uptime = '0m',
+  isLoading = false,
+  error,
+  lastUpdated,
+  onRetry,
   onErrorClick
 }) => {
   const getConnectionColor = () => {
+    if (isLoading) return 'text-yellow-500';
+    if (error) return 'text-red-500';
     switch (connectionStatus) {
       case 'connected':
         return 'text-green-500';
@@ -36,11 +46,30 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   };
 
   const getConnectionIcon = () => {
-    if (connectionStatus === 'connected') {
-      return <Wifi size={14} className="text-green-500" />;
+    if (isLoading) {
+      return <Clock size={14} className="text-yellow-500" />;
     }
-    return <WifiOff size={14} className="text-red-500" />;
+
+    if (error || connectionStatus === 'disconnected') {
+      return <WifiOff size={14} className="text-red-500" />;
+    }
+
+    if (connectionStatus === 'connecting') {
+      return <Wifi size={14} className="text-yellow-500" />;
+    }
+
+    return <Wifi size={14} className="text-green-500" />;
   };
+
+  const connectionLabel = isLoading
+    ? 'Loading metrics...'
+    : error
+      ? 'Metrics unavailable'
+      : connectionStatus === 'connected'
+        ? 'Live'
+        : connectionStatus === 'connecting'
+          ? 'Connecting...'
+          : 'Offline';
 
   return (
     <div className="h-6 flex items-center justify-between px-4 bg-gray-100 dark:bg-gray-900 border-t border-gray-300 dark:border-gray-700 text-xs text-gray-700 dark:text-gray-300">
@@ -48,7 +77,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         <div className="flex items-center space-x-1">
           {getConnectionIcon()}
           <span className={getConnectionColor()}>
-            {connectionStatus === 'connected' ? 'Live' : connectionStatus === 'connecting' ? 'Connecting...' : 'Offline'}
+            {connectionLabel}
           </span>
         </div>
 
@@ -71,9 +100,31 @@ export const StatusBar: React.FC<StatusBarProps> = ({
           <Clock size={14} className="text-cyan-500" />
           <span>Uptime: <span className="font-medium">{uptime}</span></span>
         </div>
+
+        {lastUpdated && (
+          <div className="flex items-center space-x-1 text-gray-500">
+            <Clock size={14} />
+            <span>Updated {lastUpdated.toLocaleTimeString()}</span>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center space-x-3">
+        {error && (
+          <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+            <AlertCircle size={14} />
+            <span className="font-medium">{error}</span>
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="px-2 py-0.5 bg-red-600 hover:bg-red-500 text-white rounded"
+              >
+                Retry
+              </button>
+            )}
+          </div>
+        )}
+
         {errorCount > 0 && (
           <button
             onClick={onErrorClick}
