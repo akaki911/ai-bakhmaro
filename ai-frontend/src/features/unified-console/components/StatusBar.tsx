@@ -121,7 +121,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         {isMockMode && (
           <div className="flex items-center space-x-2 px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full border border-amber-300 dark:bg-amber-900/40 dark:text-amber-200 dark:border-amber-700">
             <AlertTriangle size={12} />
-            <span className="font-medium">Mock/cache data</span>
+            <span className="font-medium">Cached logs (offline)</span>
           </div>
         )}
       </div>
