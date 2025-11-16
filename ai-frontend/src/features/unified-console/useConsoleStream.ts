@@ -69,7 +69,6 @@ export const useConsoleStream = (filters?: any) => {
   const connectRef = useRef<(forceRefresh?: boolean) => void>(() => {});
 
   const setupLiveConnection = useCallback(() => {
-
     try {
       // Build URL with filter parameters
       const url = new URL('/api/dev/console/stream', window.location.origin);
@@ -94,6 +93,8 @@ export const useConsoleStream = (filters?: any) => {
         }
         console.log('✅ DevConsole v2 SSE connected');
         setConnectionStatus('connected');
+        connectedRef.current = true;
+        shouldStayConnectedRef.current = true;
         setIsMockMode(false);
         setIsLoadingFromCache(false);
         reconnectAttempts.current = 0;
@@ -105,6 +106,10 @@ export const useConsoleStream = (filters?: any) => {
 
           // Handle different message types from SSE
           if (data.type === 'connection' || data.type === 'heartbeat') {
+            if (data.type === 'connection') {
+              connectedRef.current = true;
+              setConnectionStatus('connected');
+            }
             console.log('🔗 DevConsole SSE:', data.message || data.type);
             return;
           }
@@ -194,7 +199,33 @@ export const useConsoleStream = (filters?: any) => {
       }
       pollingCleanupRef.current = startPollingFallback();
     }
-  }, [filters, connect, startPollingFallback]);
+  }, [filters, setConnectionStatus, setIsLoadingFromCache, setIsMockMode, startPollingFallback]);
+
+  const connect = useCallback((forceRefresh = false) => {
+    // Prevent duplicate connections unless a refresh is explicitly requested
+    if (connectedRef.current && !forceRefresh) {
+      return;
+    }
+
+    shouldStayConnectedRef.current = true;
+    setConnectionStatus('connecting');
+
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+
+    if (forceRefresh && pollingCleanupRef.current) {
+      pollingCleanupRef.current();
+      pollingCleanupRef.current = null;
+    }
+
+    setupLiveConnection();
+  }, [setConnectionStatus, setupLiveConnection]);
+
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   const forceReload = useCallback(() => {
     console.log('🔄 Force reloading logs from server...');
