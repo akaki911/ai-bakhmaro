@@ -290,8 +290,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🔍 Bootstrap authentication check...');
 
-      // Perform device recognition first
-      await performDeviceRecognition();
+      // Perform device recognition first (skip in dev for now to avoid CORS)
+      if (!import.meta.env.DEV) {
+        await performDeviceRecognition();
+      }
 
       // Step 1: Check admin session first
       const adminResponse = await fetch('/api/admin/webauthn/me', {
@@ -306,43 +308,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Handle session timeout responses
       if (adminResponse.status === 401) {
-        const data = await adminResponse.json();
-        if (data.code === 'SESSION_IDLE_TIMEOUT') {
-          console.log('🚪 [AUTH] Session expired due to inactivity');
-          // Clear local state
-          setUser(null);
-          setIsAuthenticated(false);
-          // Redirect to login if needed
-          return null;
+        try {
+          const data = await adminResponse.json();
+          if (data.code === 'SESSION_IDLE_TIMEOUT') {
+            console.log('🚪 [AUTH] Session expired due to inactivity');
+            setUser(null);
+            setIsAuthenticated(false);
+            return null;
+          }
+        } catch (e) {
+          console.warn('⚠️ [AUTH] Could not parse 401 response', e);
         }
       }
 
       if (import.meta.env.DEV) {
         console.log('🔍 Admin session response:', {
           status: adminResponse.status,
-          statusText: adminResponse.statusText
+          statusText: adminResponse.statusText,
+          ok: adminResponse.ok
         });
       }
 
       if (adminResponse.ok) {
-        const data = await adminResponse.json();
-        const userRole = data.role || data.user?.role;
-        const userId = data.userId || data.user?.id;
+        try {
+          const data = await adminResponse.json();
+          const userRole = data.role || data.user?.role;
+          const userId = data.userId || data.user?.id;
 
-        if (userRole === 'SUPER_ADMIN' || data.isSuperAdmin) {
-          const adminUser = {
-            id: userId || '01019062020',
-            email: data.user?.email || 'admin@bakhmaro.co',
-            role: 'SUPER_ADMIN' as UserRole,
-            personalId: data.user?.personalId || userId || '01019062020',
-            displayName: data.user?.displayName || 'სუპერ ადმინისტრატორი',
-            authMethod: 'webauthn' as const
-          };
+          if (userRole === 'SUPER_ADMIN' || data.isSuperAdmin) {
+            const adminUser = {
+              id: userId || '01019062020',
+              email: data.user?.email || 'admin@bakhmaro.co',
+              role: 'SUPER_ADMIN' as UserRole,
+              personalId: data.user?.personalId || userId || '01019062020',
+              displayName: data.user?.displayName || 'სუპერ ადმინისტრატორი',
+              authMethod: 'webauthn' as const
+            };
 
-          if (import.meta.env.DEV) {
             console.log('✅ Admin session valid:', adminUser);
+            return adminUser;
           }
-          return adminUser;
+        } catch (parseError) {
+          console.warn('⚠️ [AUTH] Failed to parse admin response', parseError);
         }
       }
 
@@ -360,33 +367,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (import.meta.env.DEV) {
         console.log('🔍 General session response:', {
           status: generalResponse.status,
-          statusText: generalResponse.statusText
+          statusText: generalResponse.statusText,
+          ok: generalResponse.ok
         });
       }
 
       if (generalResponse.ok) {
-        const data = await generalResponse.json();
+        try {
+          const data = await generalResponse.json();
 
-        if (data.user && data.authenticated) {
-          const user = {
-            id: data.user.id,
-            email: data.user.email,
-            role: data.user.role || 'SUPER_ADMIN',
-            personalId: data.user.personalId,
-            displayName: data.user.displayName,
-            authMethod: 'firebase' as const
-          };
+          if (data.user && data.authenticated) {
+            const user = {
+              id: data.user.id,
+              email: data.user.email,
+              role: data.user.role || 'SUPER_ADMIN',
+              personalId: data.user.personalId,
+              displayName: data.user.displayName,
+              authMethod: 'firebase' as const
+            };
 
-          if (import.meta.env.DEV) {
             console.log('✅ General session valid:', user);
+            return user;
           }
-          return user;
+        } catch (parseError) {
+          console.warn('⚠️ [AUTH] Failed to parse general auth response', parseError);
         }
       }
 
     } catch (error) {
+      console.error('❌ Session check error:', error);
       if (import.meta.env.DEV) {
-        console.log('❌ Session check error:', error);
+        console.log('❌ Session check error details:', {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        });
       }
     }
     return null;
