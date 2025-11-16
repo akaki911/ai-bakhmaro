@@ -341,7 +341,7 @@ export const useConsoleStream = (filters?: any) => {
 
     setTimeout(() => {
       console.log(`🔄 Reconnecting to console stream (attempt ${retryCountRef.current + 1})`);
-      connect(true); // Pass true to force a refresh
+      connectRef.current(true); // Pass true to force a refresh
       retryCountRef.current++;
     }, retryDelay);
   }, [connect]); // Depend on connect, not connectToStream
