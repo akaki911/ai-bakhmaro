@@ -1,15 +1,7 @@
 
-#!/usr/bin/env bash
+#!/bin/sh
 # Pre-commit hook for Gurulo AI project
-# Windows-compatible version
+# Cross-platform version (Windows, Linux, macOS)
 
-# Skip on Windows if bash not available
-if ! command -v bash &> /dev/null; then
-    echo "⚠️ Bash not found - skipping pre-commit checks"
-    exit 0
-fi
-
-# Run linting
-npm run lint-staged
-
-exit $?
+# Run Node.js lint-staged script
+exec node scripts/run-lint-staged.js
