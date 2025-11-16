@@ -435,3 +435,11 @@ export async function sendEmail(accountId: string, email: any, _draftId?: string
     html: email.htmlBody,
   });
 }
+
+export async function updateEmail(_accountId: string, _emailId: string, _updates: any): Promise<void> {
+  console.warn('updateEmail not yet implemented');
+}
+
+export async function updateEmails(_accountId: string, _emailIds: string[], _updates: any): Promise<void> {
+  console.warn('updateEmails not yet implemented');
+}
