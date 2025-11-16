@@ -62,39 +62,7 @@ export const useConsoleStream = (filters?: any) => {
     setConnectionStatus('disconnected');
   }, [setConnectionStatus]);
 
-  const connect = useCallback((forceRefresh = false) => {
-    shouldStayConnectedRef.current = true;
-
-    // ✅ Single connection guard - prevent StrictMode double connection
-    if (connectedRef.current || eventSourceRef.current) {
-      return;
-    }
-
-    connectedRef.current = true;
-
-    // Try to load from cache first if not forcing refresh
-    if (!forceRefresh) {
-      const cachedLogs = storage.getCachedData<LogEntry[]>('LOGS', []);
-      if (cachedLogs.length > 0 && storage.isCacheValid('LOGS')) {
-        console.log('✅ Loading logs from cache:', cachedLogs.length, 'entries');
-        setIsLoadingFromCache(true);
-        setLogs(cachedLogs);
-        setBufferSize(cachedLogs.length);
-        setConnectionStatus('connected');
-        setIsLoadingFromCache(false);
-
-        // Continue with live connection for new logs
-        setupLiveConnection();
-        return;
-      }
-    } else {
-      // Clear cache when forcing refresh
-      storage.clearCache('LOGS');
-    }
-
-    setConnectionStatus('connecting');
-    setupLiveConnection();
-  }, [disconnect]);
+  const connectRef = useRef<(forceRefresh?: boolean) => void>(() => {});
 
   const setupLiveConnection = useCallback(() => {
 
@@ -202,7 +170,7 @@ export const useConsoleStream = (filters?: any) => {
           if (shouldStayConnectedRef.current) {
             console.log('🔄 Attempting DevConsole reconnection...');
             // Use connect with forceRefresh=true to ensure a fresh connection attempt
-            connect(true);
+            connectRef.current(true);
           }
         }, 5000);
       };
