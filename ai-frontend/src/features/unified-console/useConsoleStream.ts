@@ -234,41 +234,6 @@ export const useConsoleStream = (filters?: any) => {
     connect(true);
   }, [connect, disconnect]);
 
-  const generateMockLogs = useCallback(() => {
-    const sources = ['ai', 'backend', 'frontend'] as const;
-    const levels = ['info', 'warn', 'error'] as const;
-    const messages = [
-      'User authentication successful',
-      'Database connection established',
-      'API request processed',
-      'Cache invalidated',
-      'File upload completed',
-      'Error in webhook processing',
-      'Warning: High memory usage detected',
-      'Debug: Query execution time exceeded',
-      'System health check passed',
-      'Session expired for user'
-    ];
-
-    const mockLogs: LogEntry[] = [];
-    for (let i = 0; i < 50; i++) {
-      const source = sources[Math.floor(Math.random() * sources.length)];
-      const level = levels[Math.floor(Math.random() * levels.length)];
-      const message = messages[Math.floor(Math.random() * messages.length)];
-
-      mockLogs.push({
-        ts: Date.now() - (i * 1000),
-        source,
-        level,
-        message: `${message} - Entry ${i + 1}`,
-        id: `mock-${Date.now()}-${i}`,
-        meta: level === 'error' ? { stack: 'Mock error stack trace' } : undefined
-      });
-    }
-
-    return mockLogs.reverse(); // Show newest first
-  }, []);
-
   const startPollingFallback = useCallback(() => {
     console.log('🔄 Starting polling fallback for DevConsole');
 
@@ -310,30 +275,18 @@ export const useConsoleStream = (filters?: any) => {
           console.warn(`⚠️ Polling failed (${consecutiveErrors}/${MAX_ERRORS}):`, response.status);
 
           if (consecutiveErrors >= MAX_ERRORS) {
-            console.log('📝 Max polling errors reached, using cached/mock logs');
             const cachedLogs = storage.getCachedData<LogEntry[]>('LOGS', []);
 
             if (cachedLogs.length > 0) {
               setLogs(cachedLogs);
               setBufferSize(cachedLogs.length);
               setIsLoadingFromCache(true);
+              setIsMockMode(true);
             } else {
-              const mockLogs = generateMockLogs();
-              setLogs(mockLogs);
-              setBufferSize(mockLogs.length);
-              storage.setCachedData('LOGS', mockLogs);
               setIsLoadingFromCache(false);
+              setIsMockMode(false);
             }
-
-            setConnectionStatus('degraded');
-            setIsMockMode(true);
-
-            // Stop polling after max attempts
-            if (pollInterval) {
-              clearInterval(pollInterval);
-              pollInterval = null;
-            }
-            return;
+            setConnectionStatus('disconnected');
           }
         }
       } catch (error) {
@@ -341,19 +294,19 @@ export const useConsoleStream = (filters?: any) => {
         console.error(`❌ Polling fallback failed (${consecutiveErrors}/${MAX_ERRORS}):`, error);
 
         if (consecutiveErrors >= MAX_ERRORS) {
-          console.log('📝 Max polling errors reached, enabling fallback mode');
-          const mockLogs = generateMockLogs();
-          setLogs(mockLogs);
-          setConnectionStatus('degraded');
-          setIsMockMode(true);
-          setIsLoadingFromCache(false);
-          setBufferSize(mockLogs.length);
+          const cachedLogs = storage.getCachedData<LogEntry[]>('LOGS', []);
 
-          // Continue with reduced polling frequency
-          if (pollInterval) {
-            clearInterval(pollInterval);
-            pollInterval = setInterval(poll, 10000); // Reduce to 10s intervals
+          if (cachedLogs.length > 0) {
+            setLogs(cachedLogs);
+            setConnectionStatus('disconnected');
+            setIsMockMode(true);
+            setIsLoadingFromCache(true);
+            setBufferSize(cachedLogs.length);
+          } else {
+            setIsLoadingFromCache(false);
+            setIsMockMode(false);
           }
+          setConnectionStatus('disconnected');
         }
       }
     };
@@ -371,7 +324,7 @@ export const useConsoleStream = (filters?: any) => {
         pollInterval = null;
       }
     };
-  }, [generateMockLogs, setBufferSize, setConnectionStatus, setIsLoadingFromCache, setIsMockMode, setLogs]);
+  }, [setBufferSize, setConnectionStatus, setIsLoadingFromCache, setIsMockMode, setLogs]);
 
 
 

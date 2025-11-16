@@ -103,7 +103,7 @@ export const LogList: React.FC<LogListProps> = ({
       {isMockMode && (
         <div className="sticky top-0 z-30 bg-amber-50 dark:bg-amber-900/40 text-amber-900 dark:text-amber-100 border-b border-amber-200 dark:border-amber-700 px-3 py-2 text-xs font-semibold flex items-center space-x-2">
           <span role="img" aria-label="warning">⚠️</span>
-          <span>Showing cached or mock logs while live stream recovers.</span>
+          <span>Offline mode: showing cached, read-only logs until live updates return.</span>
         </div>
       )}
 
