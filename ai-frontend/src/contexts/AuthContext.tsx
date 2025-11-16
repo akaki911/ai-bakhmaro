@@ -499,6 +499,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }, authTimeout);
 
       try {
+        // DEV-ONLY: Initialize development session for mail system BEFORE route checks
+        if (import.meta.env.DEV) {
+          const hostname = window.location.hostname;
+          const isLocalDev = hostname === 'localhost' || hostname === '127.0.0.1' || 
+                            hostname.includes('.replit.dev') || hostname.includes('.repl.co');
+          
+          if (isLocalDev) {
+            try {
+              const devInitResponse = await fetch('/api/mail/dev/init-session', {
+                method: 'POST',
+                credentials: 'include',
+              });
+              if (devInitResponse.ok) {
+                console.log('✅ [Auth] Development session initialized');
+              }
+            } catch (error) {
+              console.warn('⚠️ [Auth] Dev session init failed (non-fatal):', error);
+            }
+          }
+        }
+
         // SOL-431: Fetch route advice first
         const advice = await fetchRouteAdvice();
 
