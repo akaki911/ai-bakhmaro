@@ -1,8 +1,8 @@
 import React from 'react';
-import { Wifi, WifiOff, AlertCircle, CheckCircle, Activity, Database, Clock } from 'lucide-react';
+import { Wifi, WifiOff, AlertCircle, CheckCircle, Activity, Database, Clock, AlertTriangle } from 'lucide-react';
 
 interface StatusBarProps {
-  connectionStatus: 'connected' | 'connecting' | 'disconnected';
+  connectionStatus: 'connected' | 'connecting' | 'disconnected' | 'degraded';
   activeService?: string;
   errorCount?: number;
   warningCount?: number;
@@ -12,6 +12,7 @@ interface StatusBarProps {
   isLoading?: boolean;
   error?: string | null;
   lastUpdated?: Date | null;
+  isMockMode?: boolean;
   onRetry?: () => void;
   onErrorClick?: () => void;
 }
@@ -27,6 +28,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   isLoading = false,
   error,
   lastUpdated,
+  isMockMode = false,
   onRetry,
   onErrorClick
 }) => {
@@ -36,6 +38,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     switch (connectionStatus) {
       case 'connected':
         return 'text-green-500';
+      case 'degraded':
+        return 'text-amber-500';
       case 'connecting':
         return 'text-yellow-500';
       case 'disconnected':
@@ -54,6 +58,10 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       return <WifiOff size={14} className="text-red-500" />;
     }
 
+    if (connectionStatus === 'degraded') {
+      return <AlertTriangle size={14} className="text-amber-500" />;
+    }
+
     if (connectionStatus === 'connecting') {
       return <Wifi size={14} className="text-yellow-500" />;
     }
@@ -67,9 +75,11 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       ? 'Metrics unavailable'
       : connectionStatus === 'connected'
         ? 'Live'
-        : connectionStatus === 'connecting'
-          ? 'Connecting...'
-          : 'Offline';
+        : connectionStatus === 'degraded'
+          ? 'Degraded (polling)'
+          : connectionStatus === 'connecting'
+            ? 'Connecting...'
+            : 'Offline';
 
   return (
     <div className="h-6 flex items-center justify-between px-4 bg-gray-100 dark:bg-gray-900 border-t border-gray-300 dark:border-gray-700 text-xs text-gray-700 dark:text-gray-300">
@@ -105,6 +115,13 @@ export const StatusBar: React.FC<StatusBarProps> = ({
           <div className="flex items-center space-x-1 text-gray-500">
             <Clock size={14} />
             <span>Updated {lastUpdated.toLocaleTimeString()}</span>
+          </div>
+        )}
+
+        {isMockMode && (
+          <div className="flex items-center space-x-2 px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full border border-amber-300 dark:bg-amber-900/40 dark:text-amber-200 dark:border-amber-700">
+            <AlertTriangle size={12} />
+            <span className="font-medium">Mock/cache data</span>
           </div>
         )}
       </div>
