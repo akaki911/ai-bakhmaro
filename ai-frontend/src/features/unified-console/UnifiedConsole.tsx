@@ -82,6 +82,7 @@ export const UnifiedConsole: React.FC = () => {
     setFilters
   } = useConsoleStore();
   const [activeTab, setActiveTab] = useState<'logs' | 'metrics' | 'services' | 'rollout' | 'terminal' | 'execute' | 'memory'>('logs');
+  const [logPlacement, setLogPlacement] = useState<'main' | 'sidebar'>('main');
 
   const { logs, connectionStatus, reconnect, clearLogs, forceReload, isLoadingFromCache } = useConsoleStream(filters);
 
@@ -206,9 +207,88 @@ export const UnifiedConsole: React.FC = () => {
     return () => window.removeEventListener('keydown', handleCommandPalette);
   }, [showCommandPalette]);
 
+  const handleDockLogsToMain = () => {
+    setLogPlacement('main');
+    setActiveTab('logs');
+  };
+
+  const handlePopOutLogs = () => {
+    setLogPlacement('sidebar');
+    setRightPanelTab('logs');
+  };
+
+  const renderLogsPanel = (placement: 'main' | 'sidebar') => (
+    <div className="flex h-full flex-col gap-3">
+      <div className="flex flex-col gap-2">
+        <ConsoleToolbar
+          filters={filters}
+          onFiltersChange={setFilters}
+          onClear={clearLogs}
+          onPause={toggleAutoscroll}
+          onJumpToLatest={handleJumpToLatest}
+          onExport={() => setShowExportMenu(true)}
+          onReload={forceReconnect}
+          onToggleServices={handleToggleServices}
+          onToggleTerminal={handleToggleTerminal}
+          isPaused={!ui.autoscroll}
+          showServices={showServices}
+          showTerminal={showTerminal}
+        />
+
+        <div className="flex items-center justify-end gap-2">
+          {placement === 'sidebar' ? (
+            <button
+              onClick={handleDockLogsToMain}
+              className="rounded-md border border-gray-300 bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+            >
+              📌 Dock logs in main tab
+            </button>
+          ) : (
+            <button
+              onClick={handlePopOutLogs}
+              className="rounded-md border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 shadow-sm transition hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/40 dark:text-blue-200 dark:hover:bg-blue-900"
+            >
+              🪟 Pop out to sidebar
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0">
+        <LogList logs={visibleLogs} />
+      </div>
+    </div>
+  );
+
   const renderTabContent = () => (
     <div className="h-full overflow-auto p-4">
-      {activeTab === 'logs' && <LogList logs={visibleLogs} />}
+      {activeTab === 'logs' && (
+        logPlacement === 'main' ? (
+          renderLogsPanel('main')
+        ) : (
+          <div className="flex h-full items-center justify-center text-center text-gray-600 dark:text-gray-300">
+            <div className="space-y-3">
+              <div className="text-3xl">🪟</div>
+              <div className="text-lg font-semibold">Logs are popped out to the sidebar</div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Keep other tools in the main workspace while the log feed stays live on the right.</p>
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  onClick={handleDockLogsToMain}
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+                >
+                  Dock logs back here
+                </button>
+                <button
+                  onClick={() => setRightPanelTab('logs')}
+                  className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                >
+                  Focus sidebar feed
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      )}
       {activeTab === 'execute' && <CodeExecutor language={language} />}
       {activeTab === 'memory' && <VectorMemoryManager language={language} />}
       {activeTab === 'services' && <ServicesView onBackToLogs={() => setActiveTab('logs')} />}
@@ -339,24 +419,34 @@ export const UnifiedConsole: React.FC = () => {
             {/* Right Panel Content */}
             <div className="flex-1 min-h-0 overflow-auto">
               {rightPanelTab === 'logs' && (
-                <div className="p-3">
-                  <div className="mb-3">
-                    <ConsoleToolbar
-                      filters={filters}
-                      onFiltersChange={setFilters}
-                      onClear={clearLogs}
-                      onPause={toggleAutoscroll}
-                      onJumpToLatest={handleJumpToLatest}
-                      onExport={() => setShowExportMenu(true)}
-                      onReload={forceReconnect}
-                      onToggleServices={handleToggleServices}
-                      onToggleTerminal={handleToggleTerminal}
-                      isPaused={!ui.autoscroll}
-                      showServices={showServices}
-                      showTerminal={showTerminal}
-                    />
-                  </div>
-                  <LogList logs={visibleLogs} />
+                <div className="p-3 h-full">
+                  {logPlacement === 'sidebar' ? (
+                    renderLogsPanel('sidebar')
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-center text-gray-600 dark:text-gray-300">
+                      <div className="space-y-3">
+                        <div className="text-2xl">🧭</div>
+                        <div className="text-lg font-semibold">Logs are docked in the main tab</div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Pop them out here to keep the stream visible without rendering the feed twice.
+                        </p>
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={handlePopOutLogs}
+                            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+                          >
+                            Pop out to sidebar
+                          </button>
+                          <button
+                            onClick={() => setActiveTab('logs')}
+                            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                          >
+                            Go to main log view
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               {rightPanelTab === 'metrics' && (
