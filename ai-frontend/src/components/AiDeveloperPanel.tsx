@@ -415,7 +415,14 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
   } = useSystemState();
 
   const hasDevConsoleAccess = useMemo(
-    () => Boolean(isSuperAdminUser),
+    () => {
+      // Development mode: allow access without authentication for debugging
+      if (import.meta.env.DEV || import.meta.env.MODE === 'development') {
+        return true;
+      }
+      // Production mode: require SUPER_ADMIN
+      return Boolean(isSuperAdminUser);
+    },
     [isSuperAdminUser],
   );
 
