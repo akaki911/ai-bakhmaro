@@ -1,3 +1,34 @@
+
+// Development session status check
+router.get('/dev/session-status', (req, res) => {
+  if (process.env.NODE_ENV !== 'development') {
+    return res.status(403).json({
+      authenticated: false,
+      error: 'Development endpoint only'
+    });
+  }
+
+  const session = req.session;
+  
+  if (session && session.user) {
+    return res.json({
+      authenticated: true,
+      user: {
+        userId: session.user.userId || session.user.id,
+        email: session.user.email,
+        role: session.user.role,
+        personalId: session.user.personalId,
+        displayName: session.user.displayName
+      }
+    });
+  }
+
+  return res.json({
+    authenticated: false
+  });
+});
+
+
 const express = require('express');
 const router = express.Router();
 
