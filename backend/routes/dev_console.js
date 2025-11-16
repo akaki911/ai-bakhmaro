@@ -161,6 +161,25 @@ const logBuffer = {
   }
 };
 
+const normalizeLogEntry = (logEntry = {}) => {
+  const allowedSources = ['ai', 'backend', 'frontend'];
+  const allowedLevels = ['info', 'warn', 'error'];
+
+  const ts = typeof logEntry.ts === 'number' ? logEntry.ts : Date.now();
+  const source = allowedSources.includes(logEntry.source) ? logEntry.source : 'backend';
+  const level = allowedLevels.includes(logEntry.level) ? logEntry.level : 'info';
+  const message = typeof logEntry.message === 'string' ? logEntry.message : '';
+
+  return {
+    ts,
+    source,
+    level,
+    message,
+    meta: logEntry.meta,
+    id: logEntry.id || `${ts}-${Math.random().toString(36).slice(2)}`
+  };
+};
+
 const forwardExternalLog = (logEntry, origin = 'replit-monitor') => {
   if (!logEntry) {
     return;
@@ -397,23 +416,22 @@ router.get('/stream', (req, res) => {
   res.write(`data: ${JSON.stringify({
     type: 'connection',
     message: 'DevConsole v2 stream connected',
-    timestamp: Date.now()
+    ts: Date.now()
   })}\n\n`);
 
   // Send initial backlog so the UI mirrors existing console history
-  const initialLogs = logBuffer.entries.slice(-200);
+  const initialLogs = logBuffer.entries.slice(-200).map(entry => normalizeLogEntry(entry));
   if (initialLogs.length > 0) {
     initialLogs.forEach(log => {
-      const payload = { type: 'log', ...log };
-      res.write(`data: ${JSON.stringify(payload)}\n\n`);
+      res.write(`data: ${JSON.stringify(log)}\n\n`);
     });
   } else if (replitMonitorReady) {
     res.write(`data: ${JSON.stringify({
-      type: 'log',
+      type: 'connection',
       ts: Date.now(),
+      message: 'Replit monitor connected. Awaiting new console activity...',
       source: 'system',
       level: 'info',
-      message: 'Replit monitor connected. Awaiting new console activity...',
       meta: { origin: 'replit-monitor' }
     })}\n\n`);
   }
@@ -422,17 +440,15 @@ router.get('/stream', (req, res) => {
   const heartbeat = setInterval(() => {
     res.write(`data: ${JSON.stringify({
       type: 'heartbeat',
-      timestamp: Date.now()
+      ts: Date.now()
     })}\n\n`);
   }, 30000); // 30 seconds
 
   // Listen for log events and forward to client
   const logHandler = (logEntry) => {
     try {
-      res.write(`data: ${JSON.stringify({
-        type: 'log',
-        ...logEntry
-      })}\n\n`);
+      const normalized = normalizeLogEntry(logEntry);
+      res.write(`data: ${JSON.stringify(normalized)}\n\n`);
     } catch (error) {
       console.error('SSE write error:', error);
     }
