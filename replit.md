@@ -33,7 +33,15 @@ The platform features a multi-service architecture:
     -   **UnifiedConsole (Phase 4)**: Replit-style unified developer interface combining Chat, Terminal, Memory, Logs, and Execution panels in a single screen. Features resizable split panels, collapsible sidebars (Services, Metrics, Logs), StatusBar with real-time metrics (connection, CPU, RAM, errors), QuickActionsToolbar (Cmd+K command palette), and responsive design for mobile and desktop.
     -   **Cloud Run Auto-Execution Layer (Phase 5)**: Production deployment infrastructure with Google Cloud Run orchestration. Includes cloudrun_executor.js for container lifecycle management (deploy, execute, scale, terminate), cloudbuild.yaml for multi-stage builds across all services, auto_deploy_trigger.js with Firestore triggers for automated deployments, and cost_monitor_service.js for usage tracking, budget alerts, and optimization recommendations.
     -   **Gurulo Response Rendering Fix (Nov 2025)**: Fixed critical frontend bug where Gurulo AI responses displayed raw JSON instead of plainText. Frontend now correctly passes full gurulo-core payload to parseAssistantPayload, allowing parseGuruloCoreCandidate and adaptGuruloCorePayload to extract plainText properly. Both streaming and non-streaming response flows validated.
-    -   **Mail System Integration (Nov 2025)**: Complete IMAP/SMTP email management system integrated into Gurulo admin panel. Features include full CRUD operations for mail accounts with encrypted password storage in Firestore, inbox synchronization via Python IMAP client, email composition and sending via Nodemailer SMTP, connection testing for both IMAP and SMTP, and a dedicated Mail tab in the AI Developer Panel with Gurulo's dark theme design. Default account configured as gurulo@bakhmaro.co (PrivateEmail.com) for system notifications and daily summaries.
+    -   **Mail System Integration (Nov 2025)**: Complete IMAP/SMTP email management system integrated into Gurulo AI Developer Panel. Features include:
+        - **Frontend**: 11 modular components migrated from standalone mail/ app (Sidebar, EmailList, EmailListItem, EmailDetail, ComposeModal, Header, Settings, icons, hooks, types, services)
+        - **Backend API**: Full REST API at /api/mail/* routes (CRUD accounts, fetchEmails, sendEmail, moveEmail)
+        - **Integration**: guruloService.ts refactored to use backend API via ai-frontend/src/services/mailService.ts
+        - **UI/UX**: Gurulo theme (#050914 bg, cyan-500 accents, white/5 borders, rounded-2xl) applied across all 7 main components
+        - **State Management**: MailTab.tsx implements mail/App.tsx complete logic (account switching, folder navigation, email composition)
+        - **Default Account**: gurulo@bakhmaro.co (PrivateEmail.com IMAP/SMTP) for system notifications
+        - **Pending Backend**: Custom folders, tags, and drafts temporarily use localStorage (marked with TODO comments)
+        - **Fixed**: ComposeModal auto-save timeout cleanup to prevent memory leaks
 
 ## External Dependencies
 -   **PostgreSQL**: Primary database for persistence, including pgvector extension.
