@@ -159,6 +159,47 @@ https://ai-bakhmaro.co`,
   }
 });
 
+router.post('/dev/init-session', async (req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ success: false, error: 'Dev endpoint disabled in production' });
+  }
+  
+  try {
+    const GURULO_USER_ID = 'Tj4gYW6hlDSjkUIwHx4gqcxRb9u1';
+    
+    req.session.user = {
+      id: GURULO_USER_ID,
+      role: 'SUPER_ADMIN',
+      personalId: '01019062020',
+      email: 'admin@bakhmaro.co',
+      displayName: 'სუპერ ადმინისტრატორი',
+      authMethod: 'dev_init'
+    };
+    req.session.isAuthenticated = true;
+    req.session.isSuperAdmin = true;
+    req.session.userRole = 'SUPER_ADMIN';
+    req.session.userId = GURULO_USER_ID;
+    
+    req.session.save((err) => {
+      if (err) {
+        console.error('❌ Dev session save error:', err);
+        return res.status(500).json({ success: false, error: 'Session save failed' });
+      }
+      
+      console.log('✅ [DEV] Backend session initialized for Gurulo user');
+      
+      res.json({ 
+        success: true, 
+        message: 'Dev session initialized',
+        user: req.session.user,
+        sessionId: req.sessionID?.substring(0, 8)
+      });
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.use(requireAuthentication);
 
 const ensureUser = (req) => {
