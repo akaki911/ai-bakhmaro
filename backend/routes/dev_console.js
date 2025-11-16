@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { EventEmitter } = require('events');
 const axios = require('axios'); // For Groq API requests
+const os = require('os');
+const metricsService = require('../services/metrics_service');
+const performanceMonitor = require('../services/performance_monitoring');
 
 let replitMonitorService;
 let replitMonitorReady = false;
@@ -44,6 +47,98 @@ const RETRY_CONFIG = {
   factor: 1000, // Start with 1 second backoff
   maxTimeout: 10000, // Max 10 seconds backoff
   randomize: true
+};
+
+const formatDuration = (seconds) => {
+  if (!seconds || Number.isNaN(seconds)) {
+    return '0s';
+  }
+
+  const totalSeconds = Math.floor(seconds);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const secs = totalSeconds % 60;
+
+  const parts = [];
+  if (days) parts.push(`${days}d`);
+  if (hours) parts.push(`${hours}h`);
+  if (minutes) parts.push(`${minutes}m`);
+  if (secs || parts.length === 0) parts.push(`${secs}s`);
+  return parts.join(' ');
+};
+
+const parsePercent = (value) => {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const numeric = parseFloat(value.replace('%', ''));
+    return Number.isFinite(numeric) ? numeric : 0;
+  }
+  return 0;
+};
+
+const buildServiceMap = ({ backendCpu, backendMemory }) => ({
+  backend: {
+    name: 'Backend',
+    status: 'healthy',
+    cpu: backendCpu,
+    memory: backendMemory,
+    uptime: formatDuration(process.uptime()),
+    port: Number(process.env.PORT) || undefined,
+    url: process.env.BACKEND_URL,
+    pid: process.pid,
+    errors: [],
+  },
+  ai: {
+    name: 'AI Service',
+    status: process.env.AI_SERVICE_URL ? 'healthy' : 'warning',
+    cpu: 0,
+    memory: 0,
+    url: process.env.AI_SERVICE_URL,
+    errors: [],
+  },
+  frontend: {
+    name: 'Frontend',
+    status: 'healthy',
+    cpu: 0,
+    memory: 0,
+    url: process.env.FRONTEND_URL,
+    errors: [],
+  },
+});
+
+const buildSystemMetrics = (activeConnections = 0) => {
+  const summary = metricsService.getMetricsSummary();
+  const perfMetrics = performanceMonitor.getRealTimeMetrics();
+
+  const totalMem = os.totalmem();
+  const rssMem = process.memoryUsage().rss;
+  const memoryUsage = totalMem > 0 ? Number(((rssMem / totalMem) * 100).toFixed(2)) : 0;
+
+  const cpuLoad = os.cpus().length > 0 ? os.loadavg()[0] / os.cpus().length : 0;
+  const cpuUsage = Number(Math.max(0, cpuLoad * 100).toFixed(2));
+
+  const requestCount = summary.requests?.total ?? perfMetrics.requests ?? 0;
+  const uptimeSeconds = summary.uptime ?? Math.round(perfMetrics.uptime / 1000) ?? 0;
+  const throughput = uptimeSeconds > 0 ? Number((requestCount / uptimeSeconds).toFixed(2)) : 0;
+
+  return {
+    cpuUsage,
+    memoryUsage,
+    networkRequests: requestCount,
+    errorRate: parsePercent(summary.requests?.errorRate ?? perfMetrics.errorRate),
+    responseTime: perfMetrics.averageResponseTime ?? 0,
+    uptime: formatDuration(uptimeSeconds),
+    activeConnections,
+    throughput,
+    latency: {
+      p50: performanceMonitor.getPercentileResponseTime(50),
+      p95: performanceMonitor.getPercentileResponseTime(95),
+      p99: performanceMonitor.getPercentileResponseTime(99),
+    },
+    services: buildServiceMap({ backendCpu: cpuUsage, backendMemory: memoryUsage }),
+    timestamp: new Date().toISOString(),
+  };
 };
 
 // Function to format Groq API requests with validation
@@ -466,33 +561,10 @@ router.get('/metrics/stream', (req, res) => {
   });
 
   const sendMetrics = () => {
-    // Simulate metrics data
-    const metrics = {
-      ts: Date.now(),
-      services: {
-        backend: {
-          cpu: Math.random() * 50 + 10,
-          memory: Math.random() * 100 + 50, // MB
-          status: 'running',
-          uptime: process.uptime()
-        },
-        ai: {
-          cpu: Math.random() * 30 + 5,
-          memory: Math.random() * 80 + 40, // MB
-          status: 'running',
-          requests: Math.floor(Math.random() * 50)
-        },
-        frontend: {
-          status: 'running',
-          buildTime: '2.3s'
-        }
-      },
-      latency: {
-        p50: Math.random() * 50 + 10,
-        p95: Math.random() * 100 + 50,
-        p99: Math.random() * 200 + 100
-      }
-    };
+    const activeConnections = typeof req.socket?.server?._connections === 'number'
+      ? req.socket.server._connections
+      : 0;
+    const metrics = buildSystemMetrics(activeConnections);
     res.write(`data: ${JSON.stringify(metrics)}\n\n`);
   };
 
@@ -533,24 +605,12 @@ router.get('/services/status', (req, res) => {
 
 // System metrics endpoint (simplified)
 router.get('/metrics', (req, res) => {
-  const metrics = {
-    system: {
-      cpu: Math.random() * 50 + 20,
-      memory: Math.random() * 30 + 60, // MB
-      diskIO: Math.random() * 20 + 5
-    },
-    network: {
-      requests: Math.floor(Math.random() * 50) + 100,
-      responseTime: Math.floor(Math.random() * 200) + 100,
-      errors: Math.floor(Math.random() * 5)
-    },
-    processes: [
-      { name: 'backend', pid: 1235, cpu: Math.random() * 20 + 5, memory: Math.random() * 40 + 100, status: 'running' },
-      { name: 'frontend', pid: 1236, cpu: Math.random() * 15 + 5, memory: Math.random() * 30 + 80, status: 'running' }
-    ]
-  };
+  const activeConnections = typeof req.socket?.server?._connections === 'number'
+    ? req.socket.server._connections
+    : 0;
+  const metrics = buildSystemMetrics(activeConnections);
 
-  res.json({ success: true, metrics, timestamp: new Date().toISOString() });
+  res.json(metrics);
 });
 
 // Mock Command Endpoints (SAFE - NO REAL RESTARTS)
