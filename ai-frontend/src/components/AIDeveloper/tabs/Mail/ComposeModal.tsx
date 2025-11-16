@@ -58,6 +58,14 @@ const ComposeModal: React.FC<ComposeModalProps> = ({ isOpen, onClose, onSend, on
 
     if (!isOpen) return null;
 
+    const handleClose = () => {
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+            saveTimeoutRef.current = null;
+        }
+        onClose();
+    };
+
     const handleSend = () => {
         if (!recipient || !subject) {
             setError('მიმღების და სათაურის ველები სავალდებულოა.');
@@ -85,34 +93,34 @@ const ComposeModal: React.FC<ComposeModalProps> = ({ isOpen, onClose, onSend, on
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={handleClose}>
             <div
-                className="bg-white dark:bg-gray-850 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] animate-fadeIn border dark:border-gray-700"
+                className="bg-white/5 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] animate-fadeIn border border-white/5"
                 onClick={e => e.stopPropagation()}
             >
-                <header className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-                    <h2 className="text-lg font-semibold">{getTitle()}</h2>
-                    <button onClick={onClose} className="text-2xl leading-none p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">&times;</button>
+                <header className="flex items-center justify-between p-4 border-b border-white/5 flex-shrink-0">
+                    <h2 className="text-lg font-semibold text-white">{getTitle()}</h2>
+                    <button onClick={handleClose} className="text-2xl leading-none p-1 rounded-full hover:bg-white/5 text-white">&times;</button>
                 </header>
                 <div className="p-4 space-y-4 overflow-y-auto">
-                    {error && <p className="text-red-500 text-sm px-1">{error}</p>}
+                    {error && <p className="text-red-400 text-sm px-1">{error}</p>}
                      <div className="flex items-center">
-                        <span className="text-sm text-gray-500 dark:text-gray-400 w-20">გამგზავნი:</span>
+                        <span className="text-sm text-white/60 w-20">გამგზავნი:</span>
                         <input
                             type="text"
                             value={initialData.sender}
                             readOnly
-                            className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-700 dark:text-gray-300"
+                            className="w-full px-3 py-2 bg-white/5 rounded-xl text-white"
                         />
                     </div>
                     <div className="flex items-center">
-                         <span className="text-sm text-gray-500 dark:text-gray-400 w-20">მიმღები:</span>
+                         <span className="text-sm text-white/60 w-20">მიმღები:</span>
                         <input
                             type="email"
                             placeholder=""
                             value={recipient}
                             onChange={(e) => setRecipient(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-light dark:focus:ring-brand-dark"
+                            className="w-full px-3 py-2 border border-white/5 rounded-xl bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                         />
                     </div>
                     <input
@@ -120,20 +128,20 @@ const ComposeModal: React.FC<ComposeModalProps> = ({ isOpen, onClose, onSend, on
                         placeholder="სათაური"
                         value={subject}
                         onChange={(e) => setSubject(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-light dark:focus:ring-brand-dark"
+                        className="w-full px-3 py-2 border border-white/5 rounded-xl bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                     />
                      <textarea
                         placeholder="წერილის ტექსტი..."
                         value={body}
                         onChange={(e) => setBody(e.target.value)}
-                        className="w-full h-64 resize-none px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-light dark:focus:ring-brand-dark"
+                        className="w-full h-64 resize-none px-3 py-2 border border-white/5 rounded-xl bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                     />
                 </div>
-                <footer className="flex justify-between items-center p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">{getSaveStatusText()}</span>
+                <footer className="flex justify-between items-center p-4 border-t border-white/5 flex-shrink-0">
+                    <span className="text-sm text-white/60">{getSaveStatusText()}</span>
                     <button
                         onClick={handleSend}
-                        className="bg-brand-light hover:bg-brand-hover text-white font-bold py-2 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md"
+                        className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-6 rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-md"
                     >
                         გაგზავნა
                     </button>
