@@ -74,7 +74,7 @@ npm run dev
 
 ### Git Hooks Configuration
 
-This project uses pre-commit hooks to ensure code quality. To enable them:
+This project uses pre-commit hooks to ensure code quality. Running `npm install` now auto-configures the hooks via the `prepare` script. To manually (re)enable them:
 
 **Linux/macOS/Replit:**
 ```bash
@@ -86,6 +86,8 @@ See [`SETUP-WINDOWS.md`](SETUP-WINDOWS.md) for detailed Windows setup instructio
 ```bash
 npm run setup-hooks
 ```
+
+If Git clients such as GitHub Desktop complain about missing `.git/hooks/pre-commit`, rerun `npm run setup-hooks` to install a fallback hook alongside the `.githooks` configuration.
 
 The pre-commit hook automatically runs linting on staged files before each commit.
 
