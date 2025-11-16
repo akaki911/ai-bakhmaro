@@ -68,6 +68,98 @@ export const useConsoleStream = (filters?: any) => {
 
   const connectRef = useRef<(forceRefresh?: boolean) => void>(() => {});
 
+  const startPollingFallback = useCallback(() => {
+    console.log('🔄 Starting polling fallback for DevConsole');
+
+    let pollInterval: NodeJS.Timeout | null = null;
+    let consecutiveErrors = 0;
+    const MAX_ERRORS = 3;
+
+    setConnectionStatus('degraded');
+    setIsMockMode(false);
+    setIsLoadingFromCache(false);
+
+    const poll = async () => {
+      try {
+        const response = await fetch('/api/dev/console/tail?limit=100', {
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          // Handle both old and new response formats
+          const logsArray = data.logs || data.entries || [];
+          const newLogs = logsArray.map((log: any, index: number) => ({
+            ...log,
+            id: log.id || `poll-${Date.now()}-${index}`
+          }));
+
+          setLogs(newLogs);
+          setConnectionStatus('degraded');
+          setIsMockMode(false);
+          setIsLoadingFromCache(false);
+          setBufferSize(newLogs.length);
+          storage.setCachedData('LOGS', newLogs);
+          consecutiveErrors = 0; // Reset error counter on success
+
+          console.log('✅ DevConsole polling successful, received', newLogs.length, 'logs');
+        } else {
+          consecutiveErrors++;
+          console.warn(`⚠️ Polling failed (${consecutiveErrors}/${MAX_ERRORS}):`, response.status);
+
+          if (consecutiveErrors >= MAX_ERRORS) {
+            const cachedLogs = storage.getCachedData<LogEntry[]>('LOGS', []);
+
+            if (cachedLogs.length > 0) {
+              setLogs(cachedLogs);
+              setBufferSize(cachedLogs.length);
+              setIsLoadingFromCache(true);
+              setIsMockMode(true);
+            } else {
+              setIsLoadingFromCache(false);
+              setIsMockMode(false);
+            }
+            setConnectionStatus('disconnected');
+          }
+        }
+      } catch (error) {
+        consecutiveErrors++;
+        console.error(`❌ Polling fallback failed (${consecutiveErrors}/${MAX_ERRORS}):`, error);
+
+        if (consecutiveErrors >= MAX_ERRORS) {
+          const cachedLogs = storage.getCachedData<LogEntry[]>('LOGS', []);
+
+          if (cachedLogs.length > 0) {
+            setLogs(cachedLogs);
+            setConnectionStatus('disconnected');
+            setIsMockMode(true);
+            setIsLoadingFromCache(true);
+            setBufferSize(cachedLogs.length);
+          } else {
+            setIsLoadingFromCache(false);
+            setIsMockMode(false);
+          }
+          setConnectionStatus('disconnected');
+        }
+      }
+    };
+
+    // Initial poll
+    poll();
+
+    // Set up interval polling (every 5 seconds to reduce load) - INCREASED to 60 seconds to prevent spam
+    pollInterval = setInterval(poll, 60000);
+
+    // Return cleanup function
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+    };
+  }, [setBufferSize, setConnectionStatus, setIsLoadingFromCache, setIsMockMode, setLogs]);
+
   const setupLiveConnection = useCallback(() => {
     try {
       // Build URL with filter parameters
@@ -233,100 +325,6 @@ export const useConsoleStream = (filters?: any) => {
     disconnect(true);
     connect(true);
   }, [connect, disconnect]);
-
-  const startPollingFallback = useCallback(() => {
-    console.log('🔄 Starting polling fallback for DevConsole');
-
-    let pollInterval: NodeJS.Timeout | null = null;
-    let consecutiveErrors = 0;
-    const MAX_ERRORS = 3;
-
-    setConnectionStatus('degraded');
-    setIsMockMode(false);
-    setIsLoadingFromCache(false);
-
-    const poll = async () => {
-      try {
-        const response = await fetch('/api/dev/console/tail?limit=100', {
-          credentials: 'include'
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-
-          // Handle both old and new response formats
-          const logsArray = data.logs || data.entries || [];
-          const newLogs = logsArray.map((log: any, index: number) => ({
-            ...log,
-            id: log.id || `poll-${Date.now()}-${index}`
-          }));
-
-          setLogs(newLogs);
-          setConnectionStatus('degraded');
-          setIsMockMode(false);
-          setIsLoadingFromCache(false);
-          setBufferSize(newLogs.length);
-          storage.setCachedData('LOGS', newLogs);
-          consecutiveErrors = 0; // Reset error counter on success
-
-          console.log('✅ DevConsole polling successful, received', newLogs.length, 'logs');
-        } else {
-          consecutiveErrors++;
-          console.warn(`⚠️ Polling failed (${consecutiveErrors}/${MAX_ERRORS}):`, response.status);
-
-          if (consecutiveErrors >= MAX_ERRORS) {
-            const cachedLogs = storage.getCachedData<LogEntry[]>('LOGS', []);
-
-            if (cachedLogs.length > 0) {
-              setLogs(cachedLogs);
-              setBufferSize(cachedLogs.length);
-              setIsLoadingFromCache(true);
-              setIsMockMode(true);
-            } else {
-              setIsLoadingFromCache(false);
-              setIsMockMode(false);
-            }
-            setConnectionStatus('disconnected');
-          }
-        }
-      } catch (error) {
-        consecutiveErrors++;
-        console.error(`❌ Polling fallback failed (${consecutiveErrors}/${MAX_ERRORS}):`, error);
-
-        if (consecutiveErrors >= MAX_ERRORS) {
-          const cachedLogs = storage.getCachedData<LogEntry[]>('LOGS', []);
-
-          if (cachedLogs.length > 0) {
-            setLogs(cachedLogs);
-            setConnectionStatus('disconnected');
-            setIsMockMode(true);
-            setIsLoadingFromCache(true);
-            setBufferSize(cachedLogs.length);
-          } else {
-            setIsLoadingFromCache(false);
-            setIsMockMode(false);
-          }
-          setConnectionStatus('disconnected');
-        }
-      }
-    };
-
-    // Initial poll
-    poll();
-
-    // Set up interval polling (every 5 seconds to reduce load) - INCREASED to 60 seconds to prevent spam
-    pollInterval = setInterval(poll, 60000);
-
-    // Return cleanup function
-    return () => {
-      if (pollInterval) {
-        clearInterval(pollInterval);
-        pollInterval = null;
-      }
-    };
-  }, [setBufferSize, setConnectionStatus, setIsLoadingFromCache, setIsMockMode, setLogs]);
-
-
 
   const reconnect = useCallback(() => {
     setConnectionStatus('connecting');
