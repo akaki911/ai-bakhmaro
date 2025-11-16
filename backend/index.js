@@ -604,6 +604,22 @@ app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
+// Session middleware configuration
+app.use(session({
+  name: 'bk_admin.sid',
+  secret: process.env.SESSION_SECRET || 'fallback-dev-secret-change-in-prod',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    sameSite: 'lax',
+    secure: isProductionEnv,
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+console.log('✅ [SESSION] Express session middleware configured');
+
 // Enhanced Rate Limiting Configuration - Increased for WebAuthn testing
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
