@@ -36,4 +36,5 @@ export interface SystemMetrics {
     p99: number;
   };
   services: ServiceMap;
+  timestamp?: string | number;
 }
