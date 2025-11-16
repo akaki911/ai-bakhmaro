@@ -466,55 +466,107 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (!firebaseEnabled) {
       if (import.meta.env.DEV) {
-        console.warn('⚠️ Firebase disabled — skipping client auth bootstrap.');
+        console.warn('⚠️ Firebase disabled — attempting backend session check');
         
-        // In development mode, attempt to restore offline user from localStorage
-        try {
-          const offlineUser = localStorage.getItem('offline_user');
-          if (offlineUser) {
-            const userData = JSON.parse(offlineUser);
-            console.log('🔄 Restoring offline user session (Firebase disabled mode)');
-            setUser(userData);
-            setIsAuthenticated(true);
-            setUserRole(userData.role);
-            setPersonalId(userData.personalId);
-            setFirebaseUid(userData.id);
-            setRouteAdvice(prev => ({
-              ...prev,
-              role: userData.role,
-              deviceTrust: false,
-              target: '/admin?tab=dashboard',
-              reason: 'Offline user authenticated',
-              authenticated: true
-            }));
-          } else {
+        // In development mode, check backend for active session
+        const initDevAuth = async () => {
+          console.log('🚀 [DevAuth] Starting development authentication initialization');
+          try {
+            console.log('🔄 [DevAuth] Step 1: Ensuring dev session...');
+            await ensureDevSession();
+            console.log('✅ [DevAuth] Dev session ensured');
+            
+            console.log('🔄 [DevAuth] Step 2: Fetching route advice...');
+            const advice = await fetchRouteAdvice();
+            console.log('✅ [DevAuth] Route advice fetched:', advice);
+            
+            console.log('🔄 [DevAuth] Step 3: Checking backend session...');
+            const backendUser = await checkBackendSession();
+            console.log('✅ [DevAuth] Backend session check complete:', backendUser ? 'User found' : 'No user');
+            
+            if (backendUser) {
+              console.log('✅ [DevAuth] Setting authenticated user state:', backendUser);
+              setUser(backendUser);
+              setIsAuthenticated(true);
+              setUserRole(backendUser.role);
+              setPersonalId(backendUser.personalId);
+              setFirebaseUid(backendUser.id);
+              setRouteAdvice(prev => ({
+                ...prev,
+                role: backendUser.role,
+                deviceTrust: false,
+                target: advice?.target || '/admin?tab=dashboard',
+                reason: 'Development session authenticated',
+                authenticated: true
+              }));
+              console.log('✅ [DevAuth] User state set successfully');
+            } else {
+              console.log('⚠️ [DevAuth] No backend session, trying localStorage fallback');
+              // Try localStorage fallback
+              try {
+                const offlineUser = localStorage.getItem('offline_user');
+                if (offlineUser) {
+                  const userData = JSON.parse(offlineUser);
+                  console.log('🔄 [DevAuth] Restoring offline user session:', userData);
+                  setUser(userData);
+                  setIsAuthenticated(true);
+                  setUserRole(userData.role);
+                  setPersonalId(userData.personalId);
+                  setFirebaseUid(userData.id);
+                  setRouteAdvice(prev => ({
+                    ...prev,
+                    role: userData.role,
+                    deviceTrust: false,
+                    target: '/admin?tab=dashboard',
+                    reason: 'Offline user authenticated',
+                    authenticated: true
+                  }));
+                } else {
+                  console.log('⚠️ [DevAuth] No offline user found, entering AI-only mode');
+                  setRouteAdvice(prev => ({
+                    ...prev,
+                    reason: 'Firebase disabled; AI-only mode active',
+                    authenticated: false,
+                  }));
+                }
+              } catch (error) {
+                console.warn('⚠️ [DevAuth] Could not restore offline user:', error);
+                setRouteAdvice(prev => ({
+                  ...prev,
+                  reason: 'Firebase disabled; AI-only mode active',
+                  authenticated: false,
+                }));
+              }
+            }
+          } catch (error) {
+            console.error('❌ [DevAuth] Development auth initialization failed:', error);
             setRouteAdvice(prev => ({
               ...prev,
               reason: 'Firebase disabled; AI-only mode active',
               authenticated: false,
             }));
+          } finally {
+            console.log('🏁 [DevAuth] Finalizing: Setting loading flags to false');
+            setIsLoading(false);
+            setAuthInitialized(true);
+            setIsAuthReady(true);
+            console.log('✅ [DevAuth] Development authentication initialization complete');
           }
-        } catch (error) {
-          console.warn('⚠️ Could not restore offline user:', error);
-          setRouteAdvice(prev => ({
-            ...prev,
-            reason: 'Firebase disabled; AI-only mode active',
-            authenticated: false,
-          }));
-        }
+        };
+        
+        initDevAuth();
+        return;
       } else {
         setRouteAdvice(prev => ({
           ...prev,
           reason: 'Firebase disabled; AI-only mode active',
           authenticated: false,
         }));
+        setIsLoading(false);
+        setAuthInitialized(true);
+        setIsAuthReady(true);
+        return;
       }
-
-      setIsLoading(false);
-      setAuthInitialized(true);
-      setIsAuthReady(true);
-
-      return;
     }
 
     let mounted = true;
@@ -569,8 +621,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           sessionUser = sessionRaceResult.user;
         }
 
-        if (sessionUser && mounted) {
+        // ARCHITECT FIX: Set loading flags immediately after /api/auth/me completes,
+        // regardless of whether we got a user or not. This allows UI to render.
+        if (mounted) {
           clearTimeout(timeoutId);
+          setIsLoading(false);
+          setAuthInitialized(true);
+          setIsAuthReady(true);
+          console.log('✅ [AUTH] Backend session check complete, UI unblocked');
+        }
+
+        if (sessionUser && mounted) {
           setUser(sessionUser);
           setIsAuthenticated(true);
           setUserRole(sessionUser.role);
@@ -583,9 +644,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             target: advice?.target || prev.target, // Use advice target if available
             authenticated: true,
           }));
-          setIsLoading(false);
-          setAuthInitialized(true);
-          setIsAuthReady(true);
+          console.log('✅ [AUTH] User session restored from backend');
           return;
         }
       } catch (error) {
@@ -597,6 +656,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             timestamp: new Date().toISOString()
           });
           console.log('⚡ Continuing with Firebase auth');
+        }
+        
+        // ARCHITECT FIX: Even if backend check fails, set loading flags to unblock UI
+        if (mounted) {
+          clearTimeout(timeoutId);
+          setIsLoading(false);
+          setAuthInitialized(true);
+          setIsAuthReady(true);
+          console.log('⚠️ [AUTH] Backend check failed, UI unblocked for Firebase auth');
         }
       }
 
