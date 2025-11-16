@@ -347,13 +347,13 @@ const resolveCorsOptions = (req, resolvedOrigin) => {
 
 const corsMiddleware = (req, res, next) => {
   const requestOrigin = req.headers.origin;
-  
+
   // Allow healthcheck and monitoring requests, regardless of Origin header
   const isHealthCheck = req.path === '/health' || 
                         req.path === '/api/health' ||
                         req.path === '/' ||
                         req.path.startsWith('/health');
-  
+
   if (isHealthCheck) {
     console.log('🏥 CORS Middleware: Healthcheck request detected - allowing.');
     return next();
@@ -679,12 +679,12 @@ if (process.env.DEV_BYPASS_RATE_LIMIT !== 'true') {
   console.log('⚠️ Rate limiting bypassed for development');
 }
 
-// Basic API endpoint
-app.get('/', (req, res) => {
-  res.status(200).json({
-    status: 'OK',
-    service: 'backend',
-    timestamp: new Date().toISOString(),
+// Root endpoint - JSON only
+app.get("/", (req, res) => {
+  return res.status(200).json({
+    status: "backend-ok",
+    service: "Bakhmaro Backend API",
+    version: "1.0.0"
   });
 });
 
@@ -858,230 +858,6 @@ try {
 } catch (error) {
   console.error('❌ Failed to load secrets routes:', error.message);
 }
-
-// Mount Auto-Improve routes BEFORE any AI proxy - CRITICAL for route precedence
-try {
-  const autoImproveRoutes = require('./routes/auto_improve');
-  const autoImproveMounts = [
-    '/api/ai/autoimprove',
-    '/api/ai/auto-improve',
-    '/api/auto-improve',
-  ];
-  autoImproveMounts.forEach((mountPath) => {
-    app.use(mountPath, serviceAuth, autoImproveRoutes);
-  });
-  console.log('✅ Auto-improve routes mounted successfully with service authentication guard');
-  console.log('📍 Auto-improve endpoints available:');
-  console.log('   - Health: /api/ai/autoimprove/_debug/ping');
-  console.log('   - List: /api/ai/autoimprove/proposals');
-  console.log('   - Dry-run: /api/ai/autoimprove/dry-run/validate');
-  console.log('   - Approve: /api/ai/autoimprove/proposals/:id/approve');
-  console.log('   - Alternative: /api/ai/auto-improve/* (alias endpoints)');
-  console.log('   - Internal: /internal/backend/autoimprove/* (requires AI_INTERNAL_TOKEN)');
-  console.log('   - Internal alias: /internal/backend/auto-improve/*');
-} catch (error) {
-  console.error('❌ Failed to mount auto-improve routes:', error.message);
-}
-
-const proxyAiHealth = async (req, res) => {
-  const correlationId = req.headers['x-correlation-id'] || `ai-health-${Date.now().toString(36)}`;
-  const targetUrl = `${AI_SERVICE_URL}/api/ai/health`;
-  const controller = new AbortController();
-  const timeoutHandle = setTimeout(() => controller.abort(), AI_HEALTH_TIMEOUT_MS);
-  const startedAt = Date.now();
-
-  console.log('🔍 [AI HEALTH] Forwarding health check to AI service', {
-    targetUrl,
-    correlationId
-  });
-
-  try {
-    const upstreamResponse = await fetch(targetUrl, {
-      method: 'GET',
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'Bakhmaro-Backend-HealthProbe',
-        'X-Forwarded-For': req.headers['x-forwarded-for'] || req.ip,
-        'X-Correlation-Id': correlationId,
-        Origin: req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5000'
-      }
-    });
-
-    const durationMs = Date.now() - startedAt;
-    const bodyText = await upstreamResponse.text();
-    let payload = null;
-
-    try {
-      payload = JSON.parse(bodyText);
-    } catch (parseError) {
-      console.warn('⚠️ [AI HEALTH] Upstream response not JSON, returning raw payload');
-    }
-
-    if (!upstreamResponse.ok) {
-      console.error('❌ [AI HEALTH] Upstream health check failed', {
-        status: upstreamResponse.status,
-        durationMs,
-        correlationId
-      });
-
-      res.status(upstreamResponse.status).json({
-        ok: false,
-        status: 'UPSTREAM_UNAVAILABLE',
-        message: 'AI service health check failed',
-        upstreamStatus: upstreamResponse.status,
-        upstreamBody: payload || bodyText,
-        correlationId,
-        durationMs,
-        timestamp: new Date().toISOString(),
-        port: PORT
-      });
-      return;
-    }
-
-    res.set('Cache-Control', 'no-store');
-    const responsePayload = typeof payload === 'object' && payload !== null
-      ? payload
-      : { message: bodyText };
-
-    res.status(200).json({
-      ...responsePayload,
-      proxy: {
-        forwarded: true,
-        durationMs,
-        upstreamUrl: targetUrl,
-        upstreamStatus: upstreamResponse.status,
-        backendPort: PORT
-      }
-    });
-  } catch (error) {
-    const isAbort = error.name === 'AbortError';
-    console.error('❌ [AI HEALTH] Failed to contact AI service', {
-      message: error.message,
-      aborted: isAbort,
-      correlationId
-    });
-
-    res.status(502).json({
-      ok: false,
-      status: isAbort ? 'UPSTREAM_TIMEOUT' : 'UPSTREAM_ERROR',
-      message: isAbort ? 'AI service health check timed out' : 'AI service health check failed',
-      correlationId,
-      durationMs: Date.now() - startedAt,
-      timestamp: new Date().toISOString(),
-      port: PORT
-    });
-  } finally {
-    clearTimeout(timeoutHandle);
-  }
-};
-
-// Add other essential AI endpoints that Frontend expects
-app.get('/api/ai/health', proxyAiHealth);
-
-// Add AI models endpoint with rollout support (must be mounted before proxy/legacy handlers)
-app.get('/api/ai/models', authorizeAiMetadataRequest, async (req, res) => {
-  try {
-    console.log('🔍 [AI MODELS] GET /api/ai/models requested from Backend');
-
-    // Use AI Rollout Manager for models endpoint
-    const aiRolloutManager = require('../functions/src/services/ai_rollout_manager');
-    const userRole = req.session?.user?.role || req.header('x-user-role') || null;
-    const personalId = req.session?.user?.personalId || req.header('x-user-id') || null;
-
-    const response = await aiRolloutManager.routeRequest('getModels', {}, personalId, userRole);
-
-    res.set('Cache-Control', 'no-store');
-    res.set('Content-Type', 'application/json; charset=utf-8');
-
-    console.log('✅ [AI MODELS] Returning models via rollout manager');
-
-    return res.status(200).json({
-      ...response,
-      service: 'backend-rollout'
-    });
-  } catch (err) {
-    console.error('❌ [AI MODELS] Rollout error:', err);
-
-    // Fallback to static models
-    const models = [
-      {
-        id: 'llama-3.1-8b-instant',
-        label: 'LLaMA 3.1 8B (სწრაფი)',
-        category: 'small',
-        description: 'უსწრაფესი მოდელი მარტივი ამოცანებისთვის',
-        tokens: '8K context'
-      },
-      {
-        id: 'llama-3.3-70b-versatile',
-        label: 'LLaMA 3.3 70B (ძლიერი)',
-        category: 'large',
-        description: 'ძლიერი მოდელი რთული ამოცანებისთვის',
-        tokens: '128K context'
-      }
-    ];
-
-    return res.status(200).json({
-      success: true,
-      models,
-      timestamp: new Date().toISOString(),
-      service: 'backend-fallback'
-    });
-  }
-});
-
-// Primary live chat router must be mounted before legacy/proxy handlers
-const aiChatRouter = require('../functions/src/routes/ai_chat');
-app.use('/api/ai/admin', require('../functions/src/routes/ai_admin'));
-app.use('/api/ai/trace', aiTraceRoutes);
-app.use('/api/ai', aiChatRouter);
-
-// Mount Gurulo status routes before legacy/proxy AI handlers
-app.use('/api', guruloStatusRoutes);
-
-// Mount legacy AI compatibility routes before proxy to guarantee coverage
-app.use('/api/ai', legacyAiRoutes);
-
-// Mount AI proxy routes (if available)
-if (process.env.DISABLE_AI_PROXY_ROUTES === 'true') {
-  console.warn('⚠️ AI proxy routes disabled via DISABLE_AI_PROXY_ROUTES');
-} else {
-  const aiProxyRoutes = require('../functions/src/routes/ai_proxy');
-  app.use('/api/ai', aiProxyRoutes);
-}
-
-// Mount file-monitor routes for Live Agent functionality
-app.get('/api/file-monitor/events', (req, res) => {
-  try {
-    const since = req.query.since ? parseInt(req.query.since) : 0;
-
-    // Return mock events for now - this would connect to AI service in production
-    const events = global.liveAgentEvents || [];
-    const newEvents = events.filter(event =>
-      new Date(event.timestamp).getTime() > since
-    );
-
-    res.json({
-      success: true,
-      events: newEvents,
-      timestamp: Date.now()
-    });
-  } catch (error) {
-    console.error('❌ File monitor events error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get file monitor events'
-    });
-  }
-});
-
-app.get('/api/file-monitor/health', (req, res) => {
-  res.json({
-    success: true,
-    status: 'active',
-    message: 'File monitor service active',
-    timestamp: new Date().toISOString()
-  });
-});
 
 // Mount Auto-Improve routes
 const autoImproveRoutes = require('./routes/auto_improve');
@@ -1358,24 +1134,12 @@ app.use((error, req, res, next) => {
   });
 });
 
-// 404 handler
-app.get('/api/gurulo/ws/health', (req, res) => {
-  const stats = guruloRealtime?.stats?.() || { clients: 0 };
-  res.json({
-    success: true,
-    status: 'ready',
-    clients: stats.clients,
-    timestamp: new Date().toISOString(),
-  });
-});
-
+// 404 handler - JSON only
 app.use((req, res) => {
   console.log(`❌ [404] ${req.method} ${req.path} not found`);
-  res.status(404).json({
-    success: false,
-    error: 'Not Found',
-    message: `Route ${req.method} ${req.path} not found`,
-    timestamp: new Date().toISOString()
+  return res.status(404).json({ 
+    error: "Not found",
+    path: req.path 
   });
 });
 

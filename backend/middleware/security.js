@@ -1,23 +1,22 @@
-
 const rateLimit = require('express-rate-limit');
 
 // Security Headers Middleware
 const securityHeaders = (req, res, next) => {
   // Remove sensitive headers
   res.removeHeader('X-Powered-By');
-  
+
   // Add security headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-  
+
   // HSTS for production
   if (process.env.NODE_ENV === 'production') {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   }
-  
+
   next();
 };
 
@@ -27,14 +26,14 @@ const ipLogger = (req, res, next) => {
                  req.get('X-Real-IP') || 
                  req.connection.remoteAddress || 
                  req.ip;
-  
+
   req.realIP = realIP;
-  
+
   // Log suspicious activity
   if (process.env.ENABLE_SECURITY_LOGGING === 'true') {
     console.log(`🔍 REQUEST: ${req.method} ${req.originalUrl} from ${realIP}`);
   }
-  
+
   next();
 };
 
@@ -43,14 +42,14 @@ const deviceFingerprintMiddleware = (req, res, next) => {
   const userAgent = req.get('User-Agent') || '';
   const acceptLanguage = req.get('Accept-Language') || '';
   const customFingerprint = req.get('X-Device-Fingerprint') || '';
-  
+
   req.deviceInfo = {
     userAgent,
     language: acceptLanguage.split(',')[0],
     customFingerprint,
     timestamp: Date.now()
   };
-  
+
   next();
 };
 
@@ -92,10 +91,35 @@ const createApiLimiter = (windowMs = 15 * 60 * 1000, max = 100) => {
   });
 };
 
+// CORS Configuration
+// Production: only allow frontend domain
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? ['https://ai.bakhmaro.co']
+  : [
+      'https://d46c9dc8-434e-4883-accb-5bd2dc9193da-00-4rhersweyrz2.picard.replit.dev',
+      'https://2c2cd970-4894-4549-bf8a-0ed98550093e-00-2lgecmi2xhw4g.janeway.replit.dev',
+      'http://localhost:5000',
+      'https://ai.bakhmaro.co'
+    ];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  optionsSuccessStatus: 204,
+};
+
 module.exports = {
   securityHeaders,
   ipLogger,
   deviceFingerprintMiddleware,
   createAuthLimiter,
-  createApiLimiter
+  createApiLimiter,
+  corsOptions
 };
