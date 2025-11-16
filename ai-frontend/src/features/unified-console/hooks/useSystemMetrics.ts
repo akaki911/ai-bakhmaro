@@ -6,6 +6,20 @@ interface UseSystemMetricsOptions {
   maxBackoffMs?: number;
 }
 
+const resolveMetricsEndpoint = () => {
+  const metricsOverride = import.meta.env?.VITE_DEV_METRICS_URL;
+  if (metricsOverride) return metricsOverride;
+
+  const backendBase = import.meta.env?.VITE_BACKEND_URL;
+  if (backendBase) {
+    return `${backendBase.replace(/\/$/, '')}/api/dev/metrics`;
+  }
+
+  return '/api/dev/metrics';
+};
+
+const METRICS_ENDPOINT = resolveMetricsEndpoint();
+
 const DEFAULT_SERVICES: SystemMetrics['services'] = {
   frontend: { status: 'healthy', cpu: 0, memory: 0, errors: [] },
   backend: { status: 'healthy', cpu: 0, memory: 0, errors: [] },
@@ -64,7 +78,7 @@ export const useSystemMetrics = ({
       abortControllerRef.current = controller;
 
       try {
-        const response = await fetch('/api/dev/metrics', { signal: controller.signal });
+        const response = await fetch(METRICS_ENDPOINT, { signal: controller.signal });
         if (!response.ok) {
           throw new Error(`Request failed with status ${response.status}`);
         }
@@ -82,9 +96,8 @@ export const useSystemMetrics = ({
       } catch (err: any) {
         if (!isMounted || err?.name === 'AbortError') return;
 
-        const retries = retryCountRef.current + 1;
-        retryCountRef.current = retries;
-        const nextDelay = Math.min(pollIntervalMs * 2 ** retries, maxBackoffMs);
+        retryCountRef.current = retryCountRef.current + 1;
+        const nextDelay = Math.min(pollIntervalMs, maxBackoffMs);
 
         setError(err?.message || 'Failed to load system metrics');
         setIsLoading(false);
