@@ -36,12 +36,14 @@ The platform features a multi-service architecture:
     -   **Mail System Integration (Nov 2025)**: Complete IMAP/SMTP email management system integrated into Gurulo AI Developer Panel. Features include:
         - **Frontend**: 11 modular components migrated from standalone mail/ app (Sidebar, EmailList, EmailListItem, EmailDetail, ComposeModal, Header, Settings, icons, hooks, types, services)
         - **Backend API**: Full REST API at /api/mail/* routes (CRUD accounts, fetchEmails, sendEmail, moveEmail)
+        - **Session Management**: express-session middleware configured in backend/index.js with MemoryStore for development
         - **Integration**: guruloService.ts refactored to use backend API via ai-frontend/src/services/mailService.ts
         - **UI/UX**: Gurulo theme (#050914 bg, cyan-500 accents, white/5 borders, rounded-2xl) applied across all 7 main components
         - **State Management**: MailTab.tsx implements mail/App.tsx complete logic (account switching, folder navigation, email composition)
         - **Default Account**: gurulo@bakhmaro.co (PrivateEmail.com IMAP/SMTP) for system notifications
         - **Pending Backend**: Custom folders, tags, and drafts temporarily use localStorage (marked with TODO comments)
         - **Fixed**: ComposeModal auto-save timeout cleanup to prevent memory leaks
+        - **Fixed (Nov 16)**: Frontend API routing - apiBase.shared.js now detects local development (localhost, .replit.dev) and forces relative URLs to use Vite proxy instead of production backend. Development session auto-initialization in MailTab.tsx for personalId 01019062020 (SUPER_ADMIN)
 
 ## External Dependencies
 -   **PostgreSQL**: Primary database for persistence, including pgvector extension.
