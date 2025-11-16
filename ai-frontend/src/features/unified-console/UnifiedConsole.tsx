@@ -241,6 +241,16 @@ export const UnifiedConsole: React.FC = () => {
     return () => window.removeEventListener('keydown', handleCommandPalette);
   }, [showCommandPalette]);
 
+  const renderTabContent = () => (
+    <div className="h-full overflow-auto p-4">
+      {activeTab === 'logs' && <LogList logs={visibleLogs} />}
+      {activeTab === 'execute' && <CodeExecutor language={language} />}
+      {activeTab === 'memory' && <VectorMemoryManager language={language} />}
+      {activeTab === 'services' && <ServicesView onBackToLogs={() => setActiveTab('logs')} />}
+      {activeTab === 'rollout' && <AIRolloutManager />}
+    </div>
+  );
+
   return (
     <div className="unified-console flex flex-col h-full w-full bg-white dark:bg-gray-900">
       {/* Quick Actions Toolbar */}
@@ -255,21 +265,23 @@ export const UnifiedConsole: React.FC = () => {
       {/* Main Split Layout */}
       <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
         {/* Left Sidebar - Services & Metrics (Resizable & Collapsible) */}
-        <ResizablePanel
-          position="left"
-          defaultWidth={280}
-          minWidth={200}
-          maxWidth={400}
-          collapsible={true}
-          className="hidden lg:flex flex-shrink-0"
-        >
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <ServicePanel />
-            <div className="flex-1 min-h-0 overflow-auto">
-              <LiveMetrics />
+        {showServices && (
+          <ResizablePanel
+            position="left"
+            defaultWidth={280}
+            minWidth={200}
+            maxWidth={400}
+            collapsible={true}
+            className="hidden lg:flex flex-shrink-0"
+          >
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <ServicePanel />
+              <div className="flex-1 min-h-0 overflow-auto">
+                <LiveMetrics />
+              </div>
             </div>
-          </div>
-        </ResizablePanel>
+          </ResizablePanel>
+        )}
 
         {/* Center Content - Main Workspace */}
         <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-gray-900 w-full lg:w-auto">
@@ -297,38 +309,38 @@ export const UnifiedConsole: React.FC = () => {
 
           {/* Split Main Content - Top (Current Tab) & Bottom (Terminal) */}
           <div className="flex-1 flex flex-col min-h-0">
-            {/* Top Half - Current Tab Content (Resizable) */}
-            <ResizableHorizontalPanel
-              position="top"
-              defaultHeight={400}
-              minHeight={200}
-              maxHeight={800}
-              collapsible={false}
-              className="flex-shrink-0"
-            >
-              <div className="h-full overflow-auto p-4">
-                {activeTab === 'logs' && <LogList logs={visibleLogs} />}
-                {activeTab === 'execute' && <CodeExecutor language={language} />}
-                {activeTab === 'memory' && <VectorMemoryManager language={language} />}
-                {activeTab === 'services' && <ServicesView onBackToLogs={() => setActiveTab('logs')} />}
-                {activeTab === 'rollout' && <AIRolloutManager />}
-              </div>
-            </ResizableHorizontalPanel>
+            {showTerminal ? (
+              <>
+                {/* Top Half - Current Tab Content (Resizable) */}
+                <ResizableHorizontalPanel
+                  position="top"
+                  defaultHeight={400}
+                  minHeight={200}
+                  maxHeight={800}
+                  collapsible={false}
+                  className="flex-shrink-0"
+                >
+                  {renderTabContent()}
+                </ResizableHorizontalPanel>
 
-            {/* Bottom Half - Terminal (Always Visible) */}
-            <div className="flex-1 min-h-0 border-t border-gray-300 dark:border-gray-700">
-              <div className="h-full flex flex-col">
-                <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
-                  <div className="flex items-center space-x-2">
-                    <Terminal size={16} className="text-gray-600 dark:text-gray-400" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Terminal</span>
+                {/* Bottom Half - Terminal (Toggled Visibility) */}
+                <div className="flex-1 min-h-0 border-t border-gray-300 dark:border-gray-700">
+                  <div className="h-full flex flex-col">
+                    <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
+                      <div className="flex items-center space-x-2">
+                        <Terminal size={16} className="text-gray-600 dark:text-gray-400" />
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Terminal</span>
+                      </div>
+                    </div>
+                    <div className="flex-1 min-h-0">
+                      <MultiTabTerminal />
+                    </div>
                   </div>
                 </div>
-                <div className="flex-1 min-h-0">
-                  <MultiTabTerminal />
-                </div>
-              </div>
-            </div>
+              </>
+            ) : (
+              <div className="flex-1 min-h-0">{renderTabContent()}</div>
+            )}
           </div>
         </div>
 
@@ -417,7 +429,7 @@ export const UnifiedConsole: React.FC = () => {
         <ShortcutsHelp onClose={() => setShowShortcuts(false)} />
       )}
 
-      {showCommandPalette && (
+              {showCommandPalette && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center pt-20 z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl mx-4">
             <div className="p-4 border-b border-gray-300 dark:border-gray-700">
@@ -439,6 +451,16 @@ export const UnifiedConsole: React.FC = () => {
                 { label: 'Export Logs', action: () => setShowExportMenu(true), icon: '💾' },
                 { label: 'Toggle Error Monitor', action: () => setShowErrorMonitor(!showErrorMonitor), icon: '⚠️' },
                 { label: 'Keyboard Shortcuts', action: () => setShowShortcuts(true), icon: '⌨️' },
+                {
+                  label: showServices ? 'Hide Services Panel' : 'Show Services Panel',
+                  action: handleToggleServices,
+                  icon: '🖥️'
+                },
+                {
+                  label: showTerminal ? 'Hide Terminal' : 'Show Terminal',
+                  action: handleToggleTerminal,
+                  icon: '💻'
+                }
               ].map((item, index) => (
                 <button
                   key={index}
