@@ -15,6 +15,7 @@ import {
   HardDrive,
   KeyRound,
   LayoutDashboard,
+  Mail,
   Megaphone,
   MessageSquare,
   Moon,
@@ -35,6 +36,7 @@ import SettingsTab from "./AIDeveloper/tabs/SettingsTab";
 import AutoImproveTab from "./AIDeveloper/tabs/AutoImproveTab";
 import { SecretsPage } from "./AIDeveloper/tabs/Secrets";
 import GitHubTab from "./AIDeveloper/tabs/GitHubTab";
+import MailTab from "./AIDeveloper/tabs/MailTab";
 import { DevConsoleProvider } from "../contexts/DevConsoleContext";
 import { useAIServiceState } from "@/hooks/useAIServiceState";
 import { useFileOperations } from "../hooks/useFileOperations";
@@ -61,6 +63,7 @@ type TabKey =
   | "logs"
   | "secrets"
   | "github"
+  | "mail"
   | "settings";
 
 type AccentTone = "violet" | "blue" | "green" | "pink" | "gold";
@@ -106,6 +109,7 @@ const CORE_TABS: TabKey[] = [
   "logs",
   "secrets",
   "github",
+  "mail",
   "settings",
 ];
 
@@ -1107,6 +1111,15 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
         href: "/admin?tab=github",
       },
       {
+        key: "mail",
+        action: "tab",
+        tabKey: "mail",
+        icon: Mail,
+        label: "ფოსტა",
+        title: "Mail Management",
+        href: "/admin?tab=mail",
+      },
+      {
         key: "settings",
         action: "tab",
         tabKey: "settings",
@@ -1593,6 +1606,10 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
 
                     {activeTab === "github" && (
                       <GitHubTab hasDevConsoleAccess={hasDevConsoleAccess} />
+                    )}
+
+                    {activeTab === "mail" && (
+                      <MailTab />
                     )}
 
                     {activeTab === "settings" && (
