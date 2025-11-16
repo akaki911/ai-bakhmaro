@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Email, Folder, View, CustomFolder, Account, Tag, ComposeData, MailAccountConfig } from './Mail/types';
 import { mailService } from '../../../services/mailService';
-import * as guruloService from './Mail/services/guruloService';
+import * as guruloService from '../../../services/guruloService';
 import Sidebar from './Mail/Sidebar';
 import Header from './Mail/Header';
 import EmailList from './Mail/EmailList';
