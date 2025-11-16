@@ -888,6 +888,11 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
   }, [loadFileTree, loadModels, refreshHealth]);
 
   useEffect(() => {
+    if (import.meta.env.DEV || import.meta.env.MODE === 'development') {
+      setIsInitializing(false);
+      return;
+    }
+
     if (!isAuthenticated || !hasDevConsoleAccess) {
       return;
     }
