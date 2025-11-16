@@ -114,7 +114,7 @@ class MailAccountService {
   }
 
   async createAccount(userId, payload) {
-    this.validatePayload(payload);
+    this.validatePayload(payload, { requireConfig: false });
 
     const accountRef = this.collection(userId).doc();
     const preparedConfig = this.prepareConfig(payload.config);
