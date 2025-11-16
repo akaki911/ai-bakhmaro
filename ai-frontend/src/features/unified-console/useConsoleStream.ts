@@ -39,6 +39,7 @@ export const useConsoleStream = (filters?: any) => {
   const reconnectAttempts = useRef(0);
   const totalReceived = useRef(0);
   const totalDropped = useRef(0);
+  const pollingCleanupRef = useRef<(() => void) | null>(null);
 
   // ✅ Single connection guard for StrictMode
   const connectedRef = useRef(false);
@@ -49,6 +50,10 @@ export const useConsoleStream = (filters?: any) => {
   // ✅ Disconnect function - defined first to avoid TDZ
   const disconnect = useCallback((stayConnected = false) => {
     shouldStayConnectedRef.current = stayConnected;
+    if (pollingCleanupRef.current) {
+      pollingCleanupRef.current();
+      pollingCleanupRef.current = null;
+    }
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
@@ -111,6 +116,10 @@ export const useConsoleStream = (filters?: any) => {
       });
 
       eventSource.onopen = () => {
+        if (pollingCleanupRef.current) {
+          pollingCleanupRef.current();
+          pollingCleanupRef.current = null;
+        }
         console.log('✅ DevConsole v2 SSE connected');
         setConnectionStatus('connected');
         reconnectAttempts.current = 0;
@@ -206,9 +215,12 @@ export const useConsoleStream = (filters?: any) => {
       connectedRef.current = false;
 
       // Fallback to polling
-      startPollingFallback();
+      if (pollingCleanupRef.current) {
+        pollingCleanupRef.current();
+      }
+      pollingCleanupRef.current = startPollingFallback();
     }
-  }, [filters, connect]);
+  }, [filters, connect, startPollingFallback]);
 
   const forceReload = useCallback(() => {
     console.log('🔄 Force reloading logs from server...');
