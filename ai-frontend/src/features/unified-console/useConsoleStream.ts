@@ -4,7 +4,7 @@ import { useDevConsole } from '../../contexts/useDevConsole';
 import type { LogEntry } from '../../contexts/DevConsoleContext.types';
 
 export interface ConnectionStatus {
-  status: 'connected' | 'connecting' | 'disconnected';
+  status: 'connected' | 'connecting' | 'disconnected' | 'degraded';
   lastReconnectAt?: number;
 }
 
@@ -32,7 +32,9 @@ export const useConsoleStream = (filters?: any) => {
     droppedPercentage,
     setDroppedPercentage,
     isLoadingFromCache,
-    setIsLoadingFromCache
+    setIsLoadingFromCache,
+    isMockMode,
+    setIsMockMode
   } = useDevConsole();
 
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -60,7 +62,9 @@ export const useConsoleStream = (filters?: any) => {
     }
     connectedRef.current = false;
     setConnectionStatus('disconnected');
-  }, [setConnectionStatus]);
+    setIsMockMode(false);
+    setIsLoadingFromCache(false);
+  }, [setConnectionStatus, setIsLoadingFromCache, setIsMockMode]);
 
   const connectRef = useRef<(forceRefresh?: boolean) => void>(() => {});
 
@@ -90,6 +94,8 @@ export const useConsoleStream = (filters?: any) => {
         }
         console.log('✅ DevConsole v2 SSE connected');
         setConnectionStatus('connected');
+        setIsMockMode(false);
+        setIsLoadingFromCache(false);
         reconnectAttempts.current = 0;
       };
 
@@ -239,6 +245,10 @@ export const useConsoleStream = (filters?: any) => {
     let consecutiveErrors = 0;
     const MAX_ERRORS = 3;
 
+    setConnectionStatus('degraded');
+    setIsMockMode(false);
+    setIsLoadingFromCache(false);
+
     const poll = async () => {
       try {
         const response = await fetch('/api/dev/console/tail?limit=100', {
@@ -256,7 +266,9 @@ export const useConsoleStream = (filters?: any) => {
           }));
 
           setLogs(newLogs);
-          setConnectionStatus('connected');
+          setConnectionStatus('degraded');
+          setIsMockMode(false);
+          setIsLoadingFromCache(false);
           setBufferSize(newLogs.length);
           storage.setCachedData('LOGS', newLogs);
           consecutiveErrors = 0; // Reset error counter on success
@@ -273,14 +285,17 @@ export const useConsoleStream = (filters?: any) => {
             if (cachedLogs.length > 0) {
               setLogs(cachedLogs);
               setBufferSize(cachedLogs.length);
+              setIsLoadingFromCache(true);
             } else {
               const mockLogs = generateMockLogs();
               setLogs(mockLogs);
               setBufferSize(mockLogs.length);
               storage.setCachedData('LOGS', mockLogs);
+              setIsLoadingFromCache(false);
             }
 
-            setConnectionStatus('connected');
+            setConnectionStatus('degraded');
+            setIsMockMode(true);
 
             // Stop polling after max attempts
             if (pollInterval) {
@@ -298,7 +313,9 @@ export const useConsoleStream = (filters?: any) => {
           console.log('📝 Max polling errors reached, enabling fallback mode');
           const mockLogs = generateMockLogs();
           setLogs(mockLogs);
-          setConnectionStatus('connected');
+          setConnectionStatus('degraded');
+          setIsMockMode(true);
+          setIsLoadingFromCache(false);
           setBufferSize(mockLogs.length);
 
           // Continue with reduced polling frequency
@@ -323,7 +340,7 @@ export const useConsoleStream = (filters?: any) => {
         pollInterval = null;
       }
     };
-  }, [generateMockLogs]);
+  }, [generateMockLogs, setBufferSize, setConnectionStatus, setIsLoadingFromCache, setIsMockMode, setLogs]);
 
 
 
@@ -388,6 +405,7 @@ export const useConsoleStream = (filters?: any) => {
     bufferSize,
     droppedPercentage,
     isLoadingFromCache,
+    isMockMode,
     reconnect,
     clearLogs,
     forceReload
