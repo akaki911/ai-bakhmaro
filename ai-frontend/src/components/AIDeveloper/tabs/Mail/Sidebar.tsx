@@ -15,8 +15,8 @@ const AccountSwitcher: React.FC<AccountSwitcherProps> = ({ accounts, activeAccou
     
     if (!activeAccount) {
         return (
-             <div className="h-20 flex items-center justify-center px-4 border-b border-gray-200 dark:border-gray-700">
-                <p className="text-sm text-gray-500">ანგარიში არ არის</p>
+             <div className="h-20 flex items-center justify-center px-4 border-b border-white/5">
+                <p className="text-sm text-white/60">ანგარიში არ არის</p>
              </div>
         )
     }
@@ -24,21 +24,21 @@ const AccountSwitcher: React.FC<AccountSwitcherProps> = ({ accounts, activeAccou
     return (
         <div className="relative" ref={switcherRef}>
             <div 
-                className="h-20 flex items-center px-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="h-20 flex items-center px-4 border-b border-white/5 cursor-pointer hover:bg-white/5"
                 onClick={() => setIsOpen(!isOpen)}
             >
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-200 to-purple-200 dark:from-indigo-900 dark:to-purple-900 rounded-full flex items-center justify-center font-bold text-brand-light dark:text-brand-dark mr-3 flex-shrink-0">
+                <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-full flex items-center justify-center font-bold text-white mr-3 flex-shrink-0">
                     {activeAccount.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate text-sm">{activeAccount.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{activeAccount.email}</p>
+                    <p className="font-semibold truncate text-sm text-white">{activeAccount.name}</p>
+                    <p className="text-xs text-white/60 truncate">{activeAccount.email}</p>
                 </div>
-                <ChevronDownIcon className={`h-5 w-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDownIcon className={`h-5 w-5 text-white/60 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </div>
 
             {isOpen && (
-                <div className="absolute top-full mt-1 w-full bg-white dark:bg-gray-800 rounded-md shadow-lg z-20 border dark:border-gray-700">
+                <div className="absolute top-full mt-1 w-full bg-white/5 rounded-xl shadow-lg z-20 border border-white/5">
                     <ul className="py-1 max-h-60 overflow-y-auto">
                         {accounts.map(account => (
                             <li key={account.id}>
@@ -49,10 +49,10 @@ const AccountSwitcher: React.FC<AccountSwitcherProps> = ({ accounts, activeAccou
                                         onAccountChange(account.id);
                                         setIsOpen(false); 
                                     }} 
-                                    className={`block px-4 py-2 text-sm ${account.id === activeAccount.id ? 'font-bold text-brand-light dark:text-brand-dark' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                    className={`block px-4 py-2 text-sm ${account.id === activeAccount.id ? 'font-bold text-cyan-500' : 'text-white hover:bg-white/5'}`}
                                 >
                                     {account.name}
-                                    <span className="block text-xs text-gray-500">{account.email}</span>
+                                    <span className="block text-xs text-white/60">{account.email}</span>
                                 </a>
                             </li>
                         ))}
@@ -144,13 +144,13 @@ const Sidebar: React.FC<SidebarProps> = ({
     };
 
     return (
-        <aside className="w-64 flex-shrink-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col">
+        <aside className="w-64 flex-shrink-0 bg-[#050914] border-r border-white/5 flex flex-col">
             <AccountSwitcher accounts={accounts} activeAccount={activeAccount} onAccountChange={onAccountChange} />
             <div className="p-4">
                 <button
                     onClick={onCompose}
                     disabled={!activeAccount}
-                    className="w-full flex items-center justify-center bg-brand-light hover:bg-brand-hover text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                    className="w-full flex items-center justify-center bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg disabled:bg-white/5 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 >
                     <EditIcon className="h-5 w-5 mr-2" />
                     წერილის დაწერა
@@ -167,10 +167,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     e.preventDefault();
                                     onFolderChange(item.folder);
                                 }}
-                                className={`flex items-center justify-between px-4 py-2 my-1 rounded-lg transition-colors duration-200 ${
+                                className={`flex items-center justify-between px-4 py-2 my-1 rounded-2xl transition-colors duration-200 ${
                                     activeView === View.Mail && activeFolder === item.folder
-                                        ? 'bg-indigo-100 dark:bg-gray-800 text-brand-light dark:text-white font-semibold shadow-inner'
-                                        : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                                        ? 'bg-cyan-500/10 border-l-2 border-cyan-500 text-cyan-500 font-semibold shadow-inner'
+                                        : 'hover:bg-white/5 text-white'
                                 }`}
                             >
                                 <div className="flex items-center">
@@ -178,7 +178,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     <span className="ml-3">{item.label}</span>
                                 </div>
                                 {item.folder === Folder.Inbox && unreadCount > 0 && (
-                                    <span className="bg-brand-light text-white text-xs font-bold px-2 py-1 rounded-full">{unreadCount}</span>
+                                    <span className="bg-cyan-500 text-white text-xs font-bold px-2 py-1 rounded-full">{unreadCount}</span>
                                 )}
                             </a>
                         </li>
@@ -186,9 +186,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </ul>
                 <div className="mt-4">
                     <div className="flex justify-between items-center px-4 py-2">
-                        <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">საქაღალდეები</h2>
-                        <button onClick={() => { setIsCreating(true); handleCancelEdit(); }} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-                            <FolderPlusIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                        <h2 className="text-xs font-semibold text-white/60 uppercase tracking-wider">საქაღალდეები</h2>
+                        <button onClick={() => { setIsCreating(true); handleCancelEdit(); }} className="p-1 rounded-full hover:bg-white/5">
+                            <FolderPlusIcon className="h-5 w-5 text-white/60" />
                         </button>
                     </div>
                     {isCreating && (
@@ -198,13 +198,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 value={newFolderName}
                                 onChange={(e) => setNewFolderName(e.target.value)}
                                 placeholder="საქაღალდის სახელი..."
-                                className="w-full text-sm px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-transparent focus:outline-none focus:ring-1 focus:ring-brand-light"
+                                className="w-full text-sm px-3 py-1.5 border border-white/5 rounded-xl bg-transparent text-white focus:outline-none focus:ring-1 focus:ring-cyan-500"
                                 autoFocus
                                 onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
                             />
                             <div className="flex justify-end space-x-2">
-                                <button onClick={() => setIsCreating(false)} className="px-2 py-1 text-xs rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">გაუქმება</button>
-                                <button onClick={handleCreate} className="px-2 py-1 text-xs rounded-md bg-brand-light text-white hover:bg-brand-hover">შექმნა</button>
+                                <button onClick={() => setIsCreating(false)} className="px-2 py-1 text-xs rounded-xl hover:bg-white/5 text-white">გაუქმება</button>
+                                <button onClick={handleCreate} className="px-2 py-1 text-xs rounded-xl bg-cyan-500 text-white hover:bg-cyan-600">შექმნა</button>
                             </div>
                         </div>
                     )}
@@ -217,13 +217,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                                             type="text"
                                             value={editingFolderName}
                                             onChange={(e) => setEditingFolderName(e.target.value)}
-                                            className="w-full text-sm px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-transparent focus:outline-none focus:ring-1 focus:ring-brand-light"
+                                            className="w-full text-sm px-3 py-1.5 border border-white/5 rounded-xl bg-transparent text-white focus:outline-none focus:ring-1 focus:ring-cyan-500"
                                             autoFocus
                                             onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit()}
                                         />
                                         <div className="flex justify-end space-x-2">
-                                            <button onClick={handleCancelEdit} className="px-2 py-1 text-xs rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">გაუქმება</button>
-                                            <button onClick={handleSaveEdit} className="px-2 py-1 text-xs rounded-md bg-brand-light text-white hover:bg-brand-hover">შენახვა</button>
+                                            <button onClick={handleCancelEdit} className="px-2 py-1 text-xs rounded-xl hover:bg-white/5 text-white">გაუქმება</button>
+                                            <button onClick={handleSaveEdit} className="px-2 py-1 text-xs rounded-xl bg-cyan-500 text-white hover:bg-cyan-600">შენახვა</button>
                                         </div>
                                     </div>
                                 ) : (
@@ -233,21 +233,21 @@ const Sidebar: React.FC<SidebarProps> = ({
                                         e.preventDefault();
                                         onFolderChange(folder.id);
                                     }}
-                                    className={`group flex items-center justify-between px-4 py-2 my-1 rounded-lg transition-colors duration-200 text-sm ${
+                                    className={`group flex items-center justify-between px-4 py-2 my-1 rounded-2xl transition-colors duration-200 text-sm ${
                                         activeView === View.Mail && activeFolder === folder.id
-                                            ? 'bg-indigo-100 dark:bg-gray-800 text-brand-light dark:text-white font-semibold shadow-inner'
-                                            : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                                            ? 'bg-cyan-500/10 border-l-2 border-cyan-500 text-cyan-500 font-semibold shadow-inner'
+                                            : 'hover:bg-white/5 text-white'
                                     }`}
                                 >
                                     <div className="flex items-center truncate">
-                                      <FolderIcon className="h-5 w-5 mr-3 text-gray-400 dark:text-gray-500" />
+                                      <FolderIcon className="h-5 w-5 mr-3 text-white/60" />
                                       <span className="truncate" title={folder.name}>{folder.name}</span>
                                     </div>
                                     <div className="hidden group-hover:flex items-center space-x-1 flex-shrink-0">
-                                        <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleStartEdit(folder);}} className="p-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600" title="რედაქტირება">
+                                        <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleStartEdit(folder);}} className="p-1 rounded hover:bg-white/5" title="რედაქტირება">
                                             <EditIcon className="h-4 w-4" />
                                         </button>
-                                        <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); onDeleteFolder(folder.id, folder.name);}} className="p-1 rounded hover:bg-red-200 dark:hover:bg-red-900/50 text-red-500" title="წაშლა">
+                                        <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); onDeleteFolder(folder.id, folder.name);}} className="p-1 rounded hover:bg-red-900/50 text-red-400" title="წაშლა">
                                             <DeleteIcon className="h-4 w-4" />
                                         </button>
                                     </div>
@@ -259,14 +259,14 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </div>
                  <div className="mt-4">
                     <div className="flex justify-between items-center px-4 py-2">
-                        <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">ჭდეები</h2>
+                        <h2 className="text-xs font-semibold text-white/60 uppercase tracking-wider">ჭდეები</h2>
                          {/* Placeholder for Add Tag button */}
                     </div>
                      <ul>
                         {tags.map(tag => (
                              <li key={tag.id}>
-                                <a href="#" className="flex items-center px-4 py-2 my-1 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300">
-                                    <span className={`w-3 h-3 rounded-full mr-3 ${tagColors[tag.color] || 'bg-gray-400'}`}></span>
+                                <a href="#" className="flex items-center px-4 py-2 my-1 rounded-2xl text-sm hover:bg-white/5 text-white">
+                                    <span className={`w-3 h-3 rounded-full mr-3 ${tagColors[tag.color] || 'bg-white/60'}`}></span>
                                     <span className="truncate">{tag.name}</span>
                                 </a>
                             </li>
@@ -282,10 +282,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                         e.preventDefault();
                         onViewChange(View.Settings);
                     }}
-                    className={`flex items-center px-4 py-2 my-1 rounded-lg transition-colors duration-200 ${
+                    className={`flex items-center px-4 py-2 my-1 rounded-2xl transition-colors duration-200 ${
                         activeView === View.Settings
-                            ? 'bg-indigo-100 dark:bg-gray-800 text-brand-light dark:text-white font-semibold shadow-inner'
-                            : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                            ? 'bg-cyan-500/10 border-l-2 border-cyan-500 text-cyan-500 font-semibold shadow-inner'
+                            : 'hover:bg-white/5 text-white'
                     }`}
                 >
                     <SettingsIcon className="h-5 w-5" />

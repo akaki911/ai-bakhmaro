@@ -75,15 +75,15 @@ const EmailListItem: React.FC<EmailListItemProps> = ({ email, onSelectEmail, isS
     
     return (
         <li
-            className={`flex items-center p-4 relative transition-colors duration-150 ${!isLast ? 'border-b border-gray-200 dark:border-gray-700' : ''} ${isSelected ? 'bg-indigo-50 dark:bg-gray-900' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+            className={`flex items-center p-4 relative transition-colors duration-150 ${!isLast ? 'border-b border-white/5' : ''} ${isSelected ? 'bg-cyan-500/10' : 'hover:bg-white/5'}`}
         >
-            {isFocused && <div className="absolute inset-0 ring-2 ring-brand-light dark:ring-brand-dark rounded-sm pointer-events-none"></div>}
+            {isFocused && <div className="absolute inset-0 ring-2 ring-cyan-500 rounded-sm pointer-events-none"></div>}
             <div className="flex items-center pr-4" onClick={handleCheckboxClick}>
                  <input
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => {}}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    className="h-4 w-4 rounded border-white/20 text-cyan-500 focus:ring-cyan-500 cursor-pointer"
                 />
             </div>
             
@@ -91,19 +91,19 @@ const EmailListItem: React.FC<EmailListItemProps> = ({ email, onSelectEmail, isS
 
             <div className="flex-1 min-w-0 cursor-pointer" onClick={handleContainerClick}>
                 <div className="flex justify-between items-baseline">
-                    <p className={`truncate font-semibold ${!email.read && !isSelected ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}>
+                    <p className={`truncate font-semibold ${!email.read && !isSelected ? 'text-white' : 'text-white/60'}`}>
                         {email.sender}
                     </p>
                     <div className="flex items-center flex-shrink-0 ml-4">
                         {email.attachments && email.attachments.length > 0 && (
-                            <PaperclipIcon className="h-4 w-4 text-gray-400 mr-2" />
+                            <PaperclipIcon className="h-4 w-4 text-white/60 mr-2" />
                         )}
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-white/60">
                             {formatDate(email.timestamp)}
                         </p>
                     </div>
                 </div>
-                <p className={`truncate ${!email.read && !isSelected ? 'text-gray-800 dark:text-gray-200' : 'text-gray-500 dark:text-gray-400'}`}>
+                <p className={`truncate ${!email.read && !isSelected ? 'text-white' : 'text-white/60'}`}>
                     {email.subject}
                 </p>
             </div>
