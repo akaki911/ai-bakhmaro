@@ -64,6 +64,31 @@ Deployments promote from staging to production through Firebase Hosting channels
 
 [`docs/deployment.md`](docs/deployment.md) enumerates the full release checklist, rollback strategy, and smoke tests.
 
+## Local Development Setup
+
+### Quick Start
+```bash
+npm install
+npm run dev
+```
+
+### Git Hooks Configuration
+
+This project uses pre-commit hooks to ensure code quality. To enable them:
+
+**Linux/macOS/Replit:**
+```bash
+git config core.hooksPath .githooks
+```
+
+**Windows:**
+See [`SETUP-WINDOWS.md`](SETUP-WINDOWS.md) for detailed Windows setup instructions, or run:
+```bash
+npm run setup-hooks
+```
+
+The pre-commit hook automatically runs linting on staged files before each commit.
+
 ## Environment Variables
 
 Environment configuration is centralised in Firebase runtime config. The most critical keys are summarised below; refer to [`docs/environment.md`](docs/environment.md) for exhaustive tables.
