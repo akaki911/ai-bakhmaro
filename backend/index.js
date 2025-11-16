@@ -171,6 +171,12 @@ const buildAllowedOriginsMap = () => {
     addOrigin('http://localhost:3000');
     addOrigin('http://127.0.0.1:5000');
     addOrigin('http://localhost:5000');
+    
+    if (process.env.REPLIT_DEV_DOMAIN) {
+      addOrigin(`https://${process.env.REPLIT_DEV_DOMAIN}`);
+      addOrigin(`http://${process.env.REPLIT_DEV_DOMAIN}`);
+      console.log('🔧 [CORS] Added Replit dev domain:', process.env.REPLIT_DEV_DOMAIN);
+    }
   }
 
   return origins;

@@ -74,6 +74,11 @@ class AuditService {
   };
 
   logEvent = async (eventType, payload = {}) => {
+    if (!this.db) {
+      logStructured('debug', 'audit event logging skipped - no firestore', { eventType });
+      return null;
+    }
+    
     try {
       const entry = {
         eventType,
@@ -101,6 +106,11 @@ class AuditService {
     details = {},
     req = null,
   }) => {
+    if (!this.db) {
+      logStructured('debug', 'security event logging skipped - no firestore', { action });
+      return null;
+    }
+    
     try {
       const requestIp = req ? this.getClientIP(req) : ipAddress;
       const resolvedUserAgent = req?.get?.('User-Agent') || userAgent || '';

@@ -1,3 +1,5 @@
+const express = require('express');
+const router = express.Router();
 
 // Development session status check
 router.get('/dev/session-status', (req, res) => {
@@ -27,10 +29,6 @@ router.get('/dev/session-status', (req, res) => {
     authenticated: false
   });
 });
-
-
-const express = require('express');
-const router = express.Router();
 
 const { requireAuthentication } = require('../middleware/role_guards');
 const mailAccounts = require('../services/mailAccountService');
