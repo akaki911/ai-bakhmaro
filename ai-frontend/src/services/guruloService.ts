@@ -64,6 +64,14 @@ export interface MailSendPayload {
   attachments?: Array<{ filename: string; content: string; encoding?: string }>;
 }
 
+export interface OfflineMailData {
+  accounts: MailAccountSummary[];
+  activeAccountId: string | null;
+  emails: any[];
+  customFolders: any[];
+  tags: any[];
+}
+
 const jsonHeaders = { 'Content-Type': 'application/json' } as const;
 const BASE_KEY = 'gurulo:mail';
 const USE_MAIL_PROTOTYPE = envFeatureFlag('VITE_MAIL_PROTOTYPE', true);
@@ -156,6 +164,8 @@ const HttpMailService = {
         body: JSON.stringify({ accountId, emailId, targetFolder }),
       },
     ),
+
+  loadOfflineData: (): OfflineMailData | null => null,
 };
 
 type MailboxByFolder = Record<string, MailSyncResponse>;
@@ -370,8 +380,58 @@ const PrototypeMailService: typeof HttpMailService = {
 
     return { success: true };
   },
+
+  loadOfflineData: (): OfflineMailData | null => null,
 };
 
 export const GuruloMailService = USE_MAIL_PROTOTYPE ? PrototypeMailService : HttpMailService;
 
 export type GuruloMailServiceType = typeof GuruloMailService;
+
+export async function getAccounts(): Promise<MailAccountSummary[]> {
+  const response = await GuruloMailService.listAccounts();
+  return response.accounts;
+}
+
+export async function getEmails(accountId: string): Promise<any[]> {
+  const response = await GuruloMailService.syncFolder('Inbox', { accountId });
+  return response.messages.map((msg: any) => ({
+    id: msg.id,
+    sender: msg.from,
+    recipient: msg.to,
+    subject: msg.subject,
+    body: msg.snippet,
+    timestamp: msg.date,
+    read: msg.flags.includes('Seen'),
+    folder: 'Inbox',
+  }));
+}
+
+export async function getCustomFolders(_accountId: string): Promise<any[]> {
+  return [];
+}
+
+export async function getTags(_accountId: string): Promise<any[]> {
+  return [];
+}
+
+export function subscribeToUpdates(_callback: () => void): () => void {
+  return () => {};
+}
+
+export async function moveEmails(accountId: string, emailIds: string[], targetFolder: string): Promise<void> {
+  for (const emailId of emailIds) {
+    await GuruloMailService.moveEmail(accountId, emailId, targetFolder);
+  }
+}
+
+export async function sendEmail(accountId: string, email: any, _draftId?: string | null): Promise<void> {
+  await GuruloMailService.sendEmail(accountId, {
+    to: email.to,
+    cc: email.cc,
+    bcc: email.bcc,
+    subject: email.subject,
+    text: email.body,
+    html: email.htmlBody,
+  });
+}
