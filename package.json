@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "dev": "concurrently -c cyan,magenta --names gateway,frontend \"npm run --workspace gateway dev\" \"npm run --workspace ai-frontend dev\"",
-    "dev:all": "concurrently -c cyan,magenta,green --names frontend,backend,ai-service \"cd ai-frontend && npx vite --port 5000 --host 0.0.0.0\" \"cd backend && PORT=5002 npm start\" \"cd ai-service && BACKEND_URL=http://127.0.0.1:5002 PORT=5001 node server.js\"",
+    "dev:all": "concurrently -c cyan,magenta,green --names frontend,backend,ai-service \"cd ai-frontend && npx vite --port 5000 --host 0.0.0.0\" \"cd backend && cross-env PORT=5002 npm start\" \"cd ai-service && cross-env BACKEND_URL=http://127.0.0.1:5002 PORT=5001 node server.js\"",
     "dev:frontend": "npm run --workspace ai-frontend dev",
     "dev:gateway": "npm run --workspace gateway dev",
     "build": "node scripts/run-workspace-build.mjs",
@@ -20,13 +20,14 @@
     "test": "npm run test --workspaces --if-present",
     "type-check": "npm run --workspace ai-frontend type-check --if-present",
     "health-check": "node system-health-check.js",
-    "test:integration": "./scripts/run-integration-tests.sh",
+    "test:integration": "node scripts/run-integration-tests.js",
     "check:secrets-required": "node check-secrets.js",
     "lint-staged": "node scripts/run-lint-staged.js"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0"
   },
   "pnpm": {
     "overrides": {
