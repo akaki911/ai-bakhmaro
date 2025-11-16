@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { storage } from './storage';
 import { useDevConsole } from '../../contexts/useDevConsole';
 import type { LogEntry } from '../../contexts/DevConsoleContext.types';
+import { getBackendBaseURL } from '../../lib/env';
 
 export interface ConnectionStatus {
   status: 'connected' | 'connecting' | 'disconnected' | 'degraded';
@@ -81,7 +82,8 @@ export const useConsoleStream = (filters?: any) => {
 
     const poll = async () => {
       try {
-        const response = await fetch('/api/dev/console/tail?limit=100', {
+        const backendURL = getBackendBaseURL();
+        const response = await fetch(`${backendURL}/api/dev/console/tail?limit=100`, {
           credentials: 'include'
         });
 
@@ -163,7 +165,8 @@ export const useConsoleStream = (filters?: any) => {
   const setupLiveConnection = useCallback(() => {
     try {
       // Build URL with filter parameters
-      const url = new URL('/api/dev/console/stream', window.location.origin);
+      const backendURL = getBackendBaseURL() || window.location.origin;
+      const url = new URL('/api/dev/console/stream', backendURL);
       if (filters?.source && filters.source !== 'all') {
         url.searchParams.set('source', filters.source);
       }
