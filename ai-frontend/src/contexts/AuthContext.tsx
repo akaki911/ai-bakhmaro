@@ -804,7 +804,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Try passkey authentication first if available
         try {
-          await loginWithPasskey(trustDevice);
+          await loginWithPasskey(trustDevice, email);
           return;
         } catch (passkeyError) {
           console.warn('⚠️ [AUTH] Passkey login failed, trying fallback');
@@ -942,10 +942,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // WebAuthn Methods (SUPER_ADMIN only) - Simplified
-  const loginWithPasskey = async (trustDevice: boolean = false): Promise<void> => {
+  const loginWithPasskey = async (trustDevice: boolean = false, identifier?: string): Promise<void> => {
     try {
       const advice = await fetchRouteAdvice();
-      const result = await authenticateWithPasskey(false);
+      const resolvedIdentifier = (identifier || user?.email || personalId || 'admin@bakhmaro.co').trim();
+      const result = await authenticateWithPasskey(false, resolvedIdentifier);
 
       if (!result.success || !result.user) {
         throw new Error('Passkey ავტორიზაცია ვერ მოხერხდა');

@@ -374,6 +374,9 @@ router.post('/login-options', async (req, res) => {
   try {
     console.log('🔐 [Passkey Login] Generating authentication options');
 
+    const { identifier } = req.body || {};
+    const loginIdentifier = typeof identifier === 'string' ? identifier.trim() : '';
+
     const config = getWebAuthnConfig(req);
     const originValidation = validateWebAuthnRequest(req, config);
 
@@ -388,10 +391,35 @@ router.post('/login-options', async (req, res) => {
       });
     }
 
-    const allCredentials = await credentialService.getAllCredentials();
+    if (!loginIdentifier) {
+      return res.status(400).json({
+        success: false,
+        error: 'Passkey შესასვლელად საჭიროა ელფოსტა ან პირადი ნომერი',
+        code: 'LOGIN_IDENTIFIER_REQUIRED',
+      });
+    }
 
-    const allowCredentials = allCredentials.map((cred) => ({
-      id: Buffer.from(cred.credentialId, 'base64url'),
+    if (!superAdminService.matchesKnownId(loginIdentifier)) {
+      return res.status(404).json({
+        success: false,
+        error: 'მითითებული მომხმარებელი ვერ მოიძებნა Passkey ავტორიზაციისთვის',
+        code: 'UNKNOWN_USER',
+      });
+    }
+
+    const superAdminProfile = superAdminService.getProfileClone();
+    const credentials = await credentialService.getUserCredentials(superAdminProfile.userId);
+
+    if (!credentials.length) {
+      return res.status(404).json({
+        success: false,
+        error: 'მომხმარებლისთვის Passkey არ არის დარეგისტრირებული',
+        code: 'NO_CREDENTIALS',
+      });
+    }
+
+    const allowCredentials = credentials.map((cred) => ({
+      id: Buffer.from(cred.credentialId || cred.credentialID, 'base64url'),
       type: 'public-key',
       transports: cred.transports || ['internal', 'hybrid']
     }));
@@ -414,6 +442,9 @@ router.post('/login-options', async (req, res) => {
 
     sessionState.login = {
       challenge: options.challenge,
+      expectedUserId: superAdminProfile.userId,
+      expectedPersonalId: superAdminProfile.personalId,
+      expectedEmail: superAdminProfile.email,
       createdAt: Date.now()
     };
 
@@ -486,6 +517,27 @@ router.post('/login-verify', webauthnVerifyLimiter, async (req, res) => {
     }
 
     const credentialPersonalId = normalisePersonalId(storedCredential.personalId, storedCredential.userId);
+
+    if (loginState?.expectedUserId && storedCredential.userId !== loginState.expectedUserId) {
+      await auditService.logPasskeyVerification(storedCredential.userId, credentialIdBase64url, req, false);
+      return res.status(403).json({
+        success: false,
+        error: 'Credential does not belong to requested user',
+        code: 'USER_MISMATCH'
+      });
+    }
+
+    if (loginState?.expectedPersonalId) {
+      const normalizedExpected = normalisePersonalId(loginState.expectedPersonalId, loginState.expectedUserId);
+      if (normalizedExpected && credentialPersonalId && credentialPersonalId !== normalizedExpected) {
+        await auditService.logPasskeyVerification(credentialPersonalId, credentialIdBase64url, req, false);
+        return res.status(403).json({
+          success: false,
+          error: 'Credential does not match requested personal ID',
+          code: 'PERSONAL_ID_MISMATCH'
+        });
+      }
+    }
 
     await auditService.logPasskeyVerification(
       credentialPersonalId || storedCredential.userId,
