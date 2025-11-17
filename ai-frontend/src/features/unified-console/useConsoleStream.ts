@@ -69,6 +69,31 @@ export const useConsoleStream = (filters?: any) => {
 
   const connectRef = useRef<(forceRefresh?: boolean) => void>(() => {});
 
+  // Prime UI with cached logs for instant load (Replit-style experience)
+  useEffect(() => {
+    let isCancelled = false;
+
+    const hydrateFromCache = async () => {
+      try {
+        const cachedLogs = storage.getCachedData<LogEntry[]>('LOGS', []);
+        if (!isCancelled && Array.isArray(cachedLogs) && cachedLogs.length > 0) {
+          setLogs(cachedLogs);
+          setBufferSize(cachedLogs.length);
+          setIsLoadingFromCache(true);
+          setConnectionStatus((prev) => (prev === 'connected' ? prev : 'connecting'));
+        }
+      } catch (error) {
+        console.warn('⚠️ Failed to hydrate DevConsole logs from cache', error);
+      }
+    };
+
+    hydrateFromCache();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [setBufferSize, setConnectionStatus, setIsLoadingFromCache, setLogs]);
+
   const startPollingFallback = useCallback(() => {
     console.log('🔄 Starting polling fallback for DevConsole');
 
