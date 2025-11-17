@@ -1,11 +1,17 @@
 // Device Management Service for Role-based Authentication
 const admin = require('../firebase');
-const { FieldValue } = require('firebase-admin/firestore');
 const crypto = require('crypto');
 
 class DeviceService {
   constructor() {
-    this.db = admin.firestore();
+    if (admin.disabled) {
+      this.db = null;
+      console.warn('⚠️ [DeviceService] Firebase disabled - device management unavailable');
+    } else {
+      const { FieldValue } = require('firebase-admin/firestore');
+      this.db = admin.firestore();
+      this.FieldValue = FieldValue;
+    }
     this.SALT = process.env.DEVICE_FINGERPRINT_SALT || 'bakhmaro-device-salt-2024';
   }
 
@@ -55,6 +61,11 @@ class DeviceService {
     aaguid = null,
     trustDevice = false
   }) {
+    if (!this.db) {
+      console.warn('⚠️ [DEVICE] Device registration skipped - Firebase disabled');
+      return null;
+    }
+    
     try {
       const deviceId = this.generateDeviceId(credentialId, clientId, uaInfo.hash);
       const fingerprintHash = this.hashFingerprint(fingerprint);
@@ -75,15 +86,15 @@ class DeviceService {
         aaguid,
         platform: uaInfo.platform || 'unknown',
         os: uaInfo.os || 'unknown',
-        trusted: trustDevice, // SOL-422: Respect user's trust preference
-        firstSeenAt: FieldValue.serverTimestamp(),
-        lastSeenAt: FieldValue.serverTimestamp(),
+        trusted: trustDevice,
+        firstSeenAt: this.FieldValue.serverTimestamp(),
+        lastSeenAt: this.FieldValue.serverTimestamp(),
         firstSeenIP: truncatedIP,
         lastSeenIP: truncatedIP,
         ipHistory: [truncatedIP],
         loginCount: 1,
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp()
+        createdAt: this.FieldValue.serverTimestamp(),
+        updatedAt: this.FieldValue.serverTimestamp()
       };
 
       await this.db.collection('devices').doc(deviceId).set(deviceData, { merge: true });
