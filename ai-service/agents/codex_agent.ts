@@ -24,6 +24,7 @@ interface CodexCompletionRequest extends Partial<BuildCodexPromptOptions> {
   onChunk?: (chunk: string) => void;
   onMeta?: (meta: Record<string, unknown>) => void;
   signal?: AbortSignal;
+  prompt?: string;
 }
 
 interface CodexCompletionResult {
