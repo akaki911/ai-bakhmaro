@@ -708,7 +708,7 @@ const AIAssistantEnhanced: React.FC = () => {
   const authorizedAccount = user && (
     (user.personalId && AUTHORIZED_AI_USERS.includes(user.personalId)) ||
     (user.role && AUTHORIZED_AI_ROLES.includes(user.role)) ||
-    (user.email && user.email === "admin@bakhmaro.com") // Admin email fallback
+    (user.email && user.email === "admin@bakhmaro.co") // Admin email fallback
   );
 
   const isAuthorized = Boolean(authorizedAccount) || guestAccessEnabled;
