@@ -34,6 +34,13 @@ const requiredSecrets = {
     'FIREBASE_PROJECT_ID': 'Firebase Project ID (fallback)',
     'AI_SERVICE_URL': 'AI Service URL override',
     'ALLOWED_BACKEND_IPS': 'Allowed IPs for Backend communication'
+  },
+
+  database: {
+    POSTGRES_USER: 'PostgreSQL username',
+    POSTGRES_PASSWORD: 'PostgreSQL password',
+    POSTGRES_DB: 'PostgreSQL database name',
+    DATABASE_URL: 'Connection string for pg/pgvector'
   }
 };
 
