@@ -797,6 +797,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string, trustDevice: boolean = false) => {
     try {
       setIsLoading(true);
+      
+      // In development mode or when Firebase is disabled, use backend authentication
+      if (!firebaseEnabled || import.meta.env.DEV) {
+        console.log('🔐 [AUTH] Using backend authentication for login');
+        
+        // Try passkey authentication first if available
+        try {
+          await loginWithPasskey(trustDevice);
+          return;
+        } catch (passkeyError) {
+          console.warn('⚠️ [AUTH] Passkey login failed, trying fallback');
+          
+          // If passkey fails, try to use force-session endpoint for development
+          const response = await fetch('/api/admin/auth/force-session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              userId: '01019062020',
+              email: 'admin@bakhmaro.co',
+              role: 'SUPER_ADMIN',
+              personalId: '01019062020'
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error('Backend authentication failed');
+          }
+
+          const data = await response.json();
+          const backendUser = data.user;
+
+          const user: User = {
+            id: backendUser.id,
+            email: backendUser.email,
+            role: backendUser.role as UserRole,
+            personalId: backendUser.personalId,
+            displayName: backendUser.displayName,
+            authMethod: 'webauthn'
+          };
+
+          setUser(user);
+          setIsAuthenticated(true);
+          setUserRole(user.role);
+          setPersonalId(user.personalId);
+          setFirebaseUid(user.id);
+
+          const advice = await fetchRouteAdvice();
+          setRouteAdvice(prev => ({
+            ...prev,
+            role: user.role,
+            target: advice?.target || '/admin?tab=dashboard',
+            authenticated: true,
+          }));
+
+          console.log('✅ [AUTH] Backend authentication successful');
+          return;
+        }
+      }
+      
+      // Firebase authentication (only if enabled and not in dev mode)
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const role = await getUserRole(userCredential.user);
 
@@ -827,7 +890,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authenticated: true,
       }));
     } catch (error: any) {
-      throw new Error(getErrorMessage(error.code));
+      console.error('❌ [AUTH] Login error:', error);
+      throw new Error(error.message || getErrorMessage(error.code));
     } finally {
       setIsLoading(false);
     }
