@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { startAuthentication } from '@simplewebauthn/browser';
 import { Chrome, Fingerprint, Github, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
 
 import { useAuth } from '../contexts/useAuth';
 import { ensureWebAuthnReady, getWebAuthnErrorMessage } from '../utils/webauthn_support';
@@ -126,9 +125,9 @@ const AdminPasskeyLogin: React.FC = () => {
 
       // Show helpful error message
       if (import.meta.env.DEV) {
-        toast.error('Development Mode: გთხოვთ გამოიყენოთ Passkey ავტორიზაცია');
+        console.error('Development Mode: გთხოვთ გამოიყენოთ Passkey ავტორიზაცია');
+        setFormError('Development Mode: გთხოვთ გამოიყენოთ Passkey ავტორიზაცია');
       } else {
-        toast.error(`შესვლა ვერ მოხერხდა: ${error?.message || 'ავტორიზაცია ვერ მოხერხდა. სცადეთ ხელახლა.'}`);
         setFormError(error?.message || 'ავტორიზაცია ვერ მოხერხდა. სცადეთ ხელახლა.');
       }
     } finally {
