@@ -270,6 +270,9 @@ importers:
       redis:
         specifier: ^5.8.2
         version: 5.9.0
+      sonne:
+        specifier: ^0.0.0
+        version: 0.0.0
       swr:
         specifier: ^2.3.6
         version: 2.3.6(react@18.3.1)
@@ -4998,6 +5001,9 @@ packages:
 
   sonic-boom@4.2.0:
     resolution: {integrity: sha512-INb7TM37/mAcsGmc9hyyI6+QR3rR1zVRu36B0NeGXKnOOLiZOfER5SA+N7X7k3yUYRzLWafduTDvJAfDswwEww==}
+
+  sonne@0.0.0:
+    resolution: {integrity: sha512-mYkeNfcf2It2a6m2R7cc3GztOQA3MfA7bZIvhIJjx8wAo4HMRD4wfRujsiSwdRQsqXCqisFG9I9eEYrGSyaG4g==}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -11047,6 +11053,8 @@ snapshots:
   sonic-boom@4.2.0:
     dependencies:
       atomic-sleep: 1.0.0
+
+  sonne@0.0.0: {}
 
   source-map-js@1.2.1: {}
 
