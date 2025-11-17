@@ -11,11 +11,17 @@ const {
   requireRole: guruloRequireRole,
   allowSuperAdmin: guruloAllowSuperAdmin,
 } = require('../../shared/gurulo-auth');
+const { getUserPermissions } = require('../../shared/gurulo-core/gurulo.policy');
 const { runtimeSummary } = require('../config/runtimeConfig');
 
 const BACKEND_URL_MISSING_ERROR = 'BACKEND_BASE_URL_MISSING';
 
 const normalizeUrl = (value) => (typeof value === 'string' ? value.trim() : '');
+
+const attachPolicyPermissions = (user = {}) => ({
+  ...user,
+  policyPermissions: getUserPermissions(user),
+});
 
 function resolveBackendBaseUrl() {
   const envUrl = normalizeUrl(process.env.BACKEND_INTERNAL_URL);
@@ -85,13 +91,14 @@ async function requireAssistantAuth(req, res, next) {
     // Development mode უპირველეს ყოვლისა
     if (process.env.NODE_ENV !== 'production') {
       console.log('🔧 [DEV] Development mode - bypassing authentication');
-      req.user = {
+      req.user = attachPolicyPermissions({
         id: req.headers['x-user-id'] || '01019062020',
+        personalId: req.headers['x-personal-id'] || req.headers['x-user-id'] || '01019062020',
         role: req.headers['x-user-role'] || 'SUPER_ADMIN',
         permissions: ['assistant:read', 'assistant:write', 'assistant:admin'],
         authenticated: true,
         authMethod: 'development-bypass'
-      };
+      });
       return next();
     }
 
@@ -103,11 +110,14 @@ async function requireAssistantAuth(req, res, next) {
         if (decoded.type === 'api_access') {
           req.user = {
             id: decoded.userId,
+            personalId: decoded.personalId || decoded.userId || decoded.id,
             role: decoded.role,
             permissions: decoded.permissions || [],
             authenticated: true,
             authMethod: 'jwt'
           };
+
+          req.user = attachPolicyPermissions(req.user);
           
           console.log('✅ [AUTHZ] JWT authentication successful:', req.user.id);
           return next();
@@ -135,7 +145,10 @@ async function requireAssistantAuth(req, res, next) {
     }
 
     if (sessionUser) {
-      req.user = sessionUser;
+      req.user = attachPolicyPermissions({
+        ...sessionUser,
+        personalId: sessionUser.personalId || sessionUser.id,
+      });
       console.log('✅ [AUTHZ] Session authentication successful:', req.user.id);
       return next();
     }
