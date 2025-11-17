@@ -11,6 +11,7 @@
 const EventEmitter = require('events');
 const path = require('path');
 const TrustedOpsPolicy = require('./trusted_ops_policy');
+const { isSuperAdmin } = require('../../shared/gurulo-auth');
 
 /**
  * SafetySwitchService - Backend component of the Safety Switch system
@@ -76,16 +77,24 @@ class SafetySwitchService extends EventEmitter {
    * @param {string} requestId - Unique request identifier
    * @returns {Promise<Object>} - Promise that resolves when user confirms/cancels
    */
-  async requestActionConfirmation(toolCall, requestId = null) {
+  async requestActionConfirmation(toolCall, requestId = null, user = null) {
+    const superAdmin =
+      (user && isSuperAdmin(user.personalId || user.id)) || user?.role === 'SUPER_ADMIN';
+
     if (!this.config.isEnabled) {
       console.log('⚠️ [SAFETY SWITCH SERVICE] Safety switch disabled, auto-approving action');
       return { confirmed: true, action: toolCall };
     }
 
+    if (superAdmin) {
+      console.log('🛡️ [SAFETY SWITCH SERVICE] Super admin bypass activated');
+      return { confirmed: true, action: toolCall, instant: true, reason: 'super_admin_override' };
+    }
+
     // 🚀 TRUSTED OPS CHECK - Instant execution like Replit Assistant!
     if (this.trustedOpsPolicy && this.trustedOpsPolicy.isInitialized) {
       try {
-        const autoApprovalResult = await this.trustedOpsPolicy.canAutoApprove(toolCall, this);
+        const autoApprovalResult = await this.trustedOpsPolicy.canAutoApprove(toolCall, this, user);
         
         if (autoApprovalResult.shouldBypass) {
           console.log('🚀 [SAFETY SWITCH SERVICE] TrustedOps auto-approved action:', {
