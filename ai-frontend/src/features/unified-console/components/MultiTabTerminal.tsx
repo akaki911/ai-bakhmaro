@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { 
-  Plus, 
-  X, 
-  Terminal as TerminalIcon, 
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import {
+  Plus,
+  X,
+  Terminal as TerminalIcon,
   Play, 
   Square, 
   RotateCcw,
@@ -16,16 +16,32 @@ import {
 } from 'lucide-react';
 import { TerminalTab, TerminalSession, TerminalEventMessage, TerminalOutput } from '../types/terminal';
 import { useTerminalStore } from '../hooks/useTerminalStore';
+import { useAuth } from '../../../contexts/useAuth';
 
 interface MultiTabTerminalProps {
   className?: string;
   onTabChange?: (tabId: string) => void;
 }
 
-export const MultiTabTerminal: React.FC<MultiTabTerminalProps> = ({ 
-  className = '', 
-  onTabChange 
+export const MultiTabTerminal: React.FC<MultiTabTerminalProps> = ({
+  className = '',
+  onTabChange
 }) => {
+  const { user } = useAuth();
+  const terminalUser = useMemo(
+    () => ({
+      userId:
+        user?.uid ||
+        user?.id ||
+        user?.personalId ||
+        user?.email ||
+        user?.displayName ||
+        undefined,
+      personalId: user?.personalId || undefined
+    }),
+    [user?.displayName, user?.email, user?.id, user?.personalId, user?.uid]
+  );
+
   const {
     tabs,
     activeTabId,
@@ -38,7 +54,7 @@ export const MultiTabTerminal: React.FC<MultiTabTerminalProps> = ({
     renameTab,
     getTabHistory,
     clearTabOutput
-  } = useTerminalStore();
+  } = useTerminalStore(terminalUser);
 
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -48,9 +64,23 @@ export const MultiTabTerminal: React.FC<MultiTabTerminalProps> = ({
   
   const terminalOutputRef = useRef<HTMLDivElement>(null);
   const commandInputRef = useRef<HTMLInputElement>(null);
+  const initialTabRequestedRef = useRef(false);
 
   const activeTab = tabs.find(tab => tab.id === activeTabId);
   const activeSession = activeTab ? sessions.get(activeTab.sessionId) : null;
+
+  useEffect(() => {
+    if (initialTabRequestedRef.current) return;
+    if (tabs.length > 0 || sessions.size > 0) {
+      initialTabRequestedRef.current = true;
+      return;
+    }
+
+    initialTabRequestedRef.current = true;
+    handleCreateTab().catch((error) => {
+      console.warn('⚠️ Failed to auto-create initial terminal session', error);
+    });
+  }, [handleCreateTab, sessions.size, tabs.length]);
 
   // Auto-scroll to bottom when new output arrives
   useEffect(() => {

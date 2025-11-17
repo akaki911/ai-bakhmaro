@@ -1,8 +1,13 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { getApiBase } from '../../../lib/apiBase';
 import { TerminalTab, TerminalSession, TerminalEventMessage, TerminalState } from '../types/terminal';
 
-export const useTerminalStore = (): TerminalState => {
+interface TerminalUserContext {
+  userId?: string;
+  personalId?: string;
+}
+
+export const useTerminalStore = (userContext?: TerminalUserContext): TerminalState => {
   const [tabs, setTabs] = useState<TerminalTab[]>([]);
   const [activeTabId, setActiveTabIdState] = useState<string | null>(null);
   const [sessions, setSessions] = useState<Map<string, TerminalSession>>(new Map());
@@ -10,6 +15,35 @@ export const useTerminalStore = (): TerminalState => {
 
   const connectionsRef = useRef(connections);
   connectionsRef.current = connections;
+
+  const resolvedUserHeaders = useMemo(() => {
+    const normalizedUserId = userContext?.userId?.trim();
+    const normalizedPersonalId = userContext?.personalId?.trim();
+
+    return {
+      userId: normalizedUserId && normalizedUserId.length > 0 ? normalizedUserId : 'dev-user',
+      personalId: normalizedPersonalId && normalizedPersonalId.length > 0 ? normalizedPersonalId : undefined
+    } as const;
+  }, [userContext?.personalId, userContext?.userId]);
+
+  const buildHeaders = useCallback(
+    (options: { includeJson?: boolean } = {}) => {
+      const headers: Record<string, string> = {
+        'X-User-Id': resolvedUserHeaders.userId
+      };
+
+      if (resolvedUserHeaders.personalId) {
+        headers['X-Personal-Id'] = resolvedUserHeaders.personalId;
+      }
+
+      if (options.includeJson) {
+        headers['Content-Type'] = 'application/json';
+      }
+
+      return headers;
+    },
+    [resolvedUserHeaders]
+  );
 
   // Helper function to get the correct API base URL
   const getApiBaseUrl = useCallback(() => {
@@ -33,10 +67,7 @@ export const useTerminalStore = (): TerminalState => {
 
       const response = await fetch(`${currentApiBase}/terminal/sessions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': 'dev-user' // TODO: Get from auth context
-        },
+        headers: buildHeaders({ includeJson: true }),
         body: JSON.stringify({
           name: name || `Terminal ${tabs.length + 1}`,
           workingDirectory: workingDirectory || '/home/runner/workspace'
@@ -89,7 +120,7 @@ export const useTerminalStore = (): TerminalState => {
       console.error('❌ Failed to create terminal tab:', error);
       throw error;
     }
-  }, [tabs.length, getApiBaseUrl]); // Added getApiBaseUrl to dependencies
+  }, [buildHeaders, tabs.length, getApiBaseUrl]); // Added getApiBaseUrl to dependencies
 
   // Connect to terminal session stream
   const connectToSession = useCallback(async (sessionId: string, tabId: string) => {
@@ -277,13 +308,13 @@ export const useTerminalStore = (): TerminalState => {
     fetch(`${currentApiBase}/terminal/sessions/${tab.sessionId}`, {
       method: 'DELETE',
       headers: {
-        'X-User-Id': 'dev-user'
+        ...buildHeaders({ includeJson: false })
       },
       credentials: 'include',
     }).catch(error => {
       console.warn(`⚠️ Failed to destroy session ${tab.sessionId}:`, error);
     });
-  }, [tabs, connections, activeTabId, getApiBaseUrl]); // Added getApiBaseUrl to dependencies
+  }, [activeTabId, buildHeaders, connections, getApiBaseUrl, tabs]); // Added getApiBaseUrl to dependencies
 
   // Set active tab
   const setActiveTab = useCallback((tabId: string) => {
@@ -303,10 +334,7 @@ export const useTerminalStore = (): TerminalState => {
 
       const response = await fetch(`${currentApiBase}/terminal/sessions/${sessionId}/execute`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': 'dev-user'
-        },
+        headers: buildHeaders({ includeJson: true }),
         body: JSON.stringify({
           command,
           safetyConfirmed: options.safetyConfirmed || false
@@ -331,7 +359,7 @@ export const useTerminalStore = (): TerminalState => {
       console.error('❌ Failed to execute command:', error);
       throw error;
     }
-  }, [getApiBaseUrl]); // Added getApiBaseUrl to dependencies
+  }, [buildHeaders, getApiBaseUrl]); // Added getApiBaseUrl to dependencies
 
   // Rename terminal tab
   const renameTab = useCallback((tabId: string, newName: string) => {
@@ -347,17 +375,14 @@ export const useTerminalStore = (): TerminalState => {
     if (tab) {
       fetch(`${currentApiBase}/terminal/sessions/${tab.sessionId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': 'dev-user'
-        },
+        headers: buildHeaders({ includeJson: true }),
         body: JSON.stringify({ name: newName }),
         credentials: 'include',
       }).catch(error => {
         console.warn(`⚠️ Failed to rename session ${tab.sessionId}:`, error);
       });
     }
-  }, [tabs, getApiBaseUrl]); // Added getApiBaseUrl to dependencies
+  }, [buildHeaders, getApiBaseUrl, tabs]); // Added getApiBaseUrl to dependencies
 
   // Get command history for a tab
   const getTabHistory = useCallback((tabId: string): { command: string; timestamp: string; }[] => {
@@ -392,9 +417,7 @@ export const useTerminalStore = (): TerminalState => {
       try {
         const currentApiBase = getApiBaseUrl();
         const response = await fetch(`${currentApiBase}/terminal/sessions`, {
-          headers: {
-            'X-User-Id': 'dev-user'
-          },
+          headers: buildHeaders(),
           credentials: 'include',
         });
 
@@ -445,7 +468,7 @@ export const useTerminalStore = (): TerminalState => {
     };
 
     loadExistingSessions();
-  }, [connectToSession, getApiBaseUrl]); // Added getApiBaseUrl to dependencies
+  }, [buildHeaders, connectToSession, getApiBaseUrl]); // Added getApiBaseUrl to dependencies
 
   return {
     tabs,
