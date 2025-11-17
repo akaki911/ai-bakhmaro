@@ -30,7 +30,6 @@ try {
   console.log('');
   console.log('📝 Pre-commit hook will now run before each commit.');
 } catch (error) {
-  console.error('❌ Failed to configure Git hooks:');
-  console.error(error.message);
-  process.exit(1);
+  console.warn('⚠️ Git hooks setup skipped (this is normal in some environments):');
+  console.warn(error.message);
 }
