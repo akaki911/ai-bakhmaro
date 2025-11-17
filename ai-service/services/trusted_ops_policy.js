@@ -11,6 +11,7 @@
 const EventEmitter = require('events');
 const path = require('path');
 const fs = require('fs');
+const { isSuperAdmin } = require('../../shared/gurulo-auth');
 
 /**
  * TrustedOps Policy Service
@@ -69,10 +70,21 @@ class TrustedOpsPolicy extends EventEmitter {
    * @param {Object} safetySwitchService - Reference to SafetySwitchService for severity
    * @returns {Promise<Object>} - { shouldBypass, reason, audit }
    */
-  async canAutoApprove(toolCall, safetySwitchService) {
+  async canAutoApprove(toolCall, safetySwitchService, user = null) {
+    const superAdmin =
+      (user && isSuperAdmin(user.personalId || user.id)) || user?.role === 'SUPER_ADMIN';
+
+    if (superAdmin) {
+      return {
+        shouldBypass: true,
+        reason: 'Super admin bypassed SafetySwitch policies',
+        audit: { bypassed: true, reason: 'super_admin_override' }
+      };
+    }
+
     if (!this.config.enabledByDefault) {
-      return { 
-        shouldBypass: false, 
+      return {
+        shouldBypass: false,
         reason: 'TrustedOps policy disabled',
         audit: { bypassed: false, reason: 'policy_disabled' }
       };
@@ -91,7 +103,7 @@ class TrustedOpsPolicy extends EventEmitter {
       // INSTANT APPROVAL: Low-risk operations (like Replit Assistant)
       // SECURITY: Only allow specific safe operations, not all low-risk
       if (severity === 'low' && this.isExplicitlyAllowedOperation(toolCall)) {
-        const additionalChecks = await this.performAdditionalChecks(toolCall);
+        const additionalChecks = await this.performAdditionalChecks(toolCall, user);
         
         if (additionalChecks.passed) {
           await this.auditBypassedAction(toolCall, severity, 'trusted_operation');
@@ -115,7 +127,7 @@ class TrustedOpsPolicy extends EventEmitter {
       const { tool_name } = toolCall;
       if (severity === 'medium' && tool_name === 'writeFile') {
         const sizeCheck = await this.checkContentSize(toolCall);
-        const additionalChecks = await this.performAdditionalChecks(toolCall);
+        const additionalChecks = await this.performAdditionalChecks(toolCall, user);
         
         if (sizeCheck.withinLimits && additionalChecks.passed) {
           await this.auditBypassedAction(toolCall, severity, 'medium_risk_writeFile_approved');
@@ -166,8 +178,15 @@ class TrustedOpsPolicy extends EventEmitter {
    * @param {string} filePath - File path to validate
    * @returns {Promise<Object>} - { valid, reason }
    */
-  async validateWorkspacePath(filePath) {
+  async validateWorkspacePath(filePath, user = null) {
     try {
+      const superAdmin =
+        (user && isSuperAdmin(user.personalId || user.id)) || user?.role === 'SUPER_ADMIN';
+
+      if (superAdmin) {
+        return { valid: true, reason: 'Super admin bypass' };
+      }
+
       // Get workspace root
       const workspaceRoot = path.resolve(process.cwd());
       
@@ -239,21 +258,27 @@ class TrustedOpsPolicy extends EventEmitter {
    * @param {Object} toolCall - Tool call to validate
    * @returns {Promise<Object>} - { passed, reason }
    */
-  async performAdditionalChecks(toolCall) {
+  async performAdditionalChecks(toolCall, user = null) {
     const { tool_name, parameters } = toolCall;
-    
+    const superAdmin =
+      (user && isSuperAdmin(user.personalId || user.id)) || user?.role === 'SUPER_ADMIN';
+
     try {
+      if (superAdmin) {
+        return { passed: true, reason: 'Super admin bypass' };
+      }
+
       // File operation specific checks
       if (tool_name === 'writeFile') {
         const filePath = parameters?.filePath || '';
         const content = parameters?.content || '';
-        
+
         // SECURITY: Validate path boundaries (CRITICAL)
-        const pathValidation = await this.validateWorkspacePath(filePath);
+        const pathValidation = await this.validateWorkspacePath(filePath, user);
         if (!pathValidation.valid) {
-          return { 
-            passed: false, 
-            reason: `Security violation: ${pathValidation.reason}` 
+          return {
+            passed: false,
+            reason: `Security violation: ${pathValidation.reason}`
           };
         }
         
