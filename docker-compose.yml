@@ -1,6 +1,28 @@
 version: "3.9"
 
 services:
+  postgres:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bakhmaro}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-bakhmaro_dev}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./config/postgres/init.sql:/docker-entrypoint-initdb.d/10_pgvector.sql:ro
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - "pg_isready -U ${POSTGRES_USER:-bakhmaro} -d ${POSTGRES_DB:-bakhmaro_dev} -h localhost"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - ai-stack
+
   ai-frontend:
     build:
       context: ./ai-frontend
@@ -59,3 +81,6 @@ services:
 networks:
   ai-stack:
     driver: bridge
+
+volumes:
+  postgres_data:
