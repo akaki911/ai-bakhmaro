@@ -109,6 +109,14 @@ class DeviceService {
 
   // Recognize device by client fingerprint
   async recognizeDevice(clientId, fingerprint, uaInfo) {
+    if (!this.db) {
+      return {
+        recognized: false,
+        device: null,
+        suggestedAuthMethod: 'standard'
+      };
+    }
+    
     try {
       const fingerprintHash = this.hashFingerprint(fingerprint);
       const deviceId = this.generateDeviceId(null, clientId, uaInfo.hash);
@@ -166,13 +174,17 @@ class DeviceService {
 
   // Update device on successful login
   async updateDeviceLogin(deviceId, ip, credentialId = null) {
+    if (!this.db) {
+      return;
+    }
+    
     try {
       const truncatedIP = this.truncateIP(ip);
       const updateData = {
-        lastSeenAt: FieldValue.serverTimestamp(),
+        lastSeenAt: this.FieldValue.serverTimestamp(),
         lastSeenIP: truncatedIP,
-        loginCount: FieldValue.increment(1),
-        updatedAt: FieldValue.serverTimestamp()
+        loginCount: this.FieldValue.increment(1),
+        updatedAt: this.FieldValue.serverTimestamp()
       };
       
       // Add to IP history if new
@@ -180,7 +192,7 @@ class DeviceService {
       if (deviceDoc.exists) {
         const currentIPs = deviceDoc.data().ipHistory || [];
         if (!currentIPs.includes(truncatedIP)) {
-          updateData.ipHistory = FieldValue.arrayUnion(truncatedIP);
+          updateData.ipHistory = this.FieldValue.arrayUnion(truncatedIP);
           // Keep only last 10 IPs
           if (currentIPs.length >= 10) {
             updateData.ipHistory = [...currentIPs.slice(-9), truncatedIP];
@@ -204,10 +216,14 @@ class DeviceService {
 
   // Set device trust status
   async setDeviceTrust(deviceId, trusted) {
+    if (!this.db) {
+      return;
+    }
+    
     try {
       await this.db.collection('devices').doc(deviceId).update({
         trusted,
-        updatedAt: FieldValue.serverTimestamp()
+        updatedAt: this.FieldValue.serverTimestamp()
       });
       console.log(`📱 [DEVICE] Set trust=${trusted} for device ${deviceId}`);
     } catch (error) {
@@ -218,6 +234,10 @@ class DeviceService {
 
   // Get all devices for a user
   async getUserDevices(userId) {
+    if (!this.db) {
+      return [];
+    }
+    
     try {
       const snapshot = await this.db.collection('devices')
         .where('userId', '==', userId)
@@ -250,6 +270,10 @@ class DeviceService {
 
   // Remove a user's device
   async removeUserDevice(userId, deviceId) {
+    if (!this.db) {
+      return;
+    }
+    
     try {
       // Verify device belongs to user
       const deviceDoc = await this.db.collection('devices').doc(deviceId).get();
@@ -266,8 +290,8 @@ class DeviceService {
       // Soft delete - mark as removed instead of actual deletion for audit trail
       await this.db.collection('devices').doc(deviceId).update({
         removed: true,
-        removedAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp()
+        removedAt: this.FieldValue.serverTimestamp(),
+        updatedAt: this.FieldValue.serverTimestamp()
       });
 
       console.log(`📱 [DEVICE] Removed device ${deviceId} for user ${userId}`);

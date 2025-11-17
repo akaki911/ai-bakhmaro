@@ -1,5 +1,6 @@
 const { Octokit } = require('@octokit/rest');
 const admin = require('../firebase');
+const hasFirebase = !admin.disabled;
 
 const DEFAULT_STATUS = {
   connected: false,
@@ -15,7 +16,7 @@ const DEFAULT_STATUS = {
 const COLLECTION = process.env.GITHUB_STATE_COLLECTION || 'github-configs';
 const DEFAULT_SESSION_KEY = 'global-admin';
 
-const firestore = typeof admin?.firestore === 'function' ? admin.firestore() : null;
+const firestore = (hasFirebase && typeof admin?.firestore === 'function') ? admin.firestore() : null;
 const stateCache = new Map();
 
 const isIntegrationEnabled = () => {
@@ -257,9 +258,10 @@ const saveState = async (sessionKey, state) => {
     return state;
   }
 
+  const FieldValue = hasFirebase ? admin.firestore.FieldValue : null;
   const payload = {
     ...state,
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: FieldValue ? FieldValue.serverTimestamp() : new Date().toISOString(),
   };
 
   await docRef.set(payload, { merge: true });
