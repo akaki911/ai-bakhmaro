@@ -107,6 +107,63 @@ const MemoryPage: React.FC = () => {
   const enhancerRef = useRef<GeorgianLanguageEnhancer | null>(null);
   const serverSnapshotRef = useRef<any>({});
 
+  type ModuleState = 'active' | 'attention' | 'paused' | 'syncing' | 'stale';
+
+  const moduleHealth = useMemo(
+    () => [
+      {
+        id: 'main',
+        label: 'მთავარი მეხსიერება',
+        state: (memoryState.mainMemory || '').trim() ? ('active' as ModuleState) : ('attention' as ModuleState),
+          note: (memoryState.mainMemory || '').trim()
+            ? 'ძირითადი კონტექსტი შევსებულია'
+            : 'შეავსეთ ტექსტი, რომ გურულოს ძირითადი კონტექსტი იყოს ნათელი',
+      },
+      {
+        id: 'facts',
+        label: 'ფაქტების მოდული',
+        state: memoryState.facts.length > 0 ? ('active' as ModuleState) : ('attention' as ModuleState),
+        note: `${memoryState.facts.length} აქტიური ფაქტი` + (memoryState.facts.length === 0 ? ' — დაიწყეთ დამატება' : ''),
+      },
+      {
+        id: 'grammar',
+        label: 'გრამატიკის მოდული',
+        state: memoryState.grammar.length > 0 ? ('active' as ModuleState) : ('attention' as ModuleState),
+        note:
+          memoryState.grammar.length > 0
+            ? 'გრამატიკული გაუმჯობესებები მზადაა'
+            : 'გრამატიკული შესწორებები ჯერ არ არის დამატებული',
+      },
+      {
+        id: 'analysis',
+        label: 'ენობრივი ანალიზი',
+        state: memoryState.mainMemoryAnalysis ? ('active' as ModuleState) : ('paused' as ModuleState),
+        note: memoryState.mainMemoryAnalysis ? 'შინაარსი ანალიზზეა დაყრდნობილი' : 'ანალიზი გამოჩნდება შენახვის შემდეგ',
+      },
+      {
+        id: 'sync',
+        label: 'სინქრონიზაცია',
+        state: saving
+          ? ('syncing' as ModuleState)
+          : memoryState.stats.lastSync
+            ? ('active' as ModuleState)
+            : ('stale' as ModuleState),
+        note: saving
+          ? 'შენახვა მიმდინარეობს'
+          : memoryState.stats.lastSync
+            ? `ბოლო სინქი: ${memoryState.stats.lastSync}`
+            : 'სინქი ჯერ არ მომხდარა',
+      },
+      {
+        id: 'mode',
+        label: 'რეჟიმი',
+        state: isReadOnly ? ('paused' as ModuleState) : ('active' as ModuleState),
+        note: isReadOnly ? 'Plan Mode – ცვლილებები დაბლოკილია' : 'Build Mode – რედაქტირება ნებადართულია',
+      },
+    ],
+    [isReadOnly, memoryState.facts.length, memoryState.grammar.length, memoryState.mainMemory, memoryState.mainMemoryAnalysis, memoryState.stats.lastSync, saving],
+  );
+
   useEffect(() => {
     if (user?.personalId && !targetUserId) {
       setTargetUserId(user.personalId);
@@ -800,6 +857,14 @@ const MemoryPage: React.FC = () => {
     }
   };
 
+  const statusStyles: Record<ModuleState, { label: string; className: string }> = {
+    active: { label: 'აქტიური', className: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100' },
+    attention: { label: 'მოსაწესრიგებელია', className: 'border-amber-400/40 bg-amber-500/10 text-amber-100' },
+    paused: { label: 'შეჩერებულია', className: 'border-slate-600/60 bg-slate-800 text-slate-100' },
+    syncing: { label: 'სინქი მიმდინარეობს', className: 'border-blue-500/40 bg-blue-500/10 text-blue-100' },
+    stale: { label: 'სინქი არ არის', className: 'border-red-500/40 bg-red-500/10 text-red-100' },
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <div className="max-w-6xl mx-auto px-6 py-10">
@@ -891,6 +956,52 @@ const MemoryPage: React.FC = () => {
           </div>
         )}
 
+        <section className="mb-10 grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2 rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <ShieldCheck className="h-4 w-4 text-blue-300" />
+              <div>
+                <p className="text-sm font-semibold">მეხსიერების მართვის გზამკვლევი</p>
+                <p className="text-xs text-slate-400">გაერკვიეთ რა სჭირს თითოეულ მოდულს და რა ქმედებაა საჭირო</p>
+              </div>
+            </div>
+            <ol className="space-y-2 text-sm text-slate-300 list-decimal list-inside">
+              <li>დააზუსტეთ რომელ მომხმარებელზე მუშაობთ და დააჭირეთ „განახლება“ მონაცემების სინქრონიზაციისთვის.</li>
+              <li>გადაამოწმეთ გურულოს მთავარი მეხსიერება და შეინახეთ ცვლილებები, რომ ანალიზი განახლდეს.</li>
+              <li>ფაქტებსა და გრამატიკაში დაამატეთ მხოლოდ ის ჩანაწერები, რომლებიც საჭიროა მიმდინარე დიოლოგებისთვის.</li>
+              <li>შემდეგი შესვლისას გამოიყენეთ სტატუსების პანელი, რომლითაც მარტივად გაიგებთ რა მუშაობს და რა არა.</li>
+            </ol>
+          </div>
+
+          <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-sm font-semibold">მოდულების მდგომარეობა</p>
+                <p className="text-xs text-slate-400">დაწკაპეთ ქვემოთ ჩამოთვლილი ბარათები დააფიქსირეთ პრობლემები.</p>
+              </div>
+              <Sparkles className="h-4 w-4 text-blue-300" />
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {moduleHealth.map(module => (
+                <div
+                  key={module.id}
+                  className={`rounded-lg border px-3 py-3 text-sm ${statusStyles[module.state].className}`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-200/80">{module.label}</p>
+                      <p className="mt-1 text-slate-50 text-sm leading-5">{module.note}</p>
+                    </div>
+                    <span className="rounded-full bg-slate-900/60 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide border border-slate-700">
+                      {statusStyles[module.state].label}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="grid gap-4 md:grid-cols-3 mb-10">
           <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
             <p className="text-xs uppercase tracking-wide text-slate-500 mb-2">ფაქტები</p>
@@ -929,6 +1040,21 @@ const MemoryPage: React.FC = () => {
               {saving ? 'შენახვა…' : isReadOnly ? 'დაბლოკილია' : 'შენახვა'}
             </button>
           </div>
+          <div className="mb-4 grid gap-3 lg:grid-cols-3">
+            <div className="lg:col-span-2 rounded-lg border border-slate-800 bg-slate-900/60 px-4 py-3 text-sm text-slate-200">
+              <p className="font-semibold text-slate-100">რა უნდა ჩავწეროთ?</p>
+              <p className="mt-1 text-slate-400">
+                აქ იყრის თავს გურულოს ის ამოცანები და კონტექსტი, რომელიც მუდმივად უნდა გახსოვდეს. გამოიყენეთ მკაფიო ფრაზები,
+                მიუთითეთ პროექტის სახელები, კრიტიკული წესები და ის დეტალები, რასაც ხშირად ეკითხებით.
+              </p>
+            </div>
+            <div className="rounded-lg border border-slate-800 bg-slate-900/60 px-4 py-3 text-xs text-slate-300 space-y-1">
+              <p className="font-semibold text-slate-100">სწრაფი წესები</p>
+              <p>• ცვლილების შემდეგ დააჭირეთ „შენახვა“, რომ ანალიზი განახლდეს.</p>
+              <p>• თუ Plan Mode აქტიურია, რედაქტირება დაიბლოკება.</p>
+              <p>• Markdown შეიძლება გამოიყენოთ, რომ სექციები მკაფიოდ გამოჩნდეს.</p>
+            </div>
+          </div>
           <textarea
             value={memoryState.mainMemory}
             onChange={event => setMemoryState(prev => ({ ...prev, mainMemory: event.target.value }))}
@@ -966,11 +1092,26 @@ const MemoryPage: React.FC = () => {
         </section>
 
         <section className="mb-12">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
             <div className="flex items-center gap-2 bg-slate-900/60 border border-slate-800 rounded-lg p-1">
-              <TabButton label="ფაქტები" active={activeTab === 'facts'} onClick={() => setActiveTab('facts')} />
-              <TabButton label="გრამატიკა" active={activeTab === 'grammar'} onClick={() => setActiveTab('grammar')} />
-              <TabButton label="ყველა" active={activeTab === 'all'} onClick={() => setActiveTab('all')} />
+              <TabButton
+                label="ფაქტები"
+                badge={memoryState.stats.totalFacts}
+                active={activeTab === 'facts'}
+                onClick={() => setActiveTab('facts')}
+              />
+              <TabButton
+                label="გრამატიკა"
+                badge={memoryState.stats.totalGrammar}
+                active={activeTab === 'grammar'}
+                onClick={() => setActiveTab('grammar')}
+              />
+              <TabButton
+                label="ყველა"
+                badge={memoryState.stats.totalFacts + memoryState.stats.totalGrammar}
+                active={activeTab === 'all'}
+                onClick={() => setActiveTab('all')}
+              />
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <div className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-2">
@@ -1002,8 +1143,11 @@ const MemoryPage: React.FC = () => {
 
           <div className="grid gap-4">
             {filteredEntries.length === 0 && (
-              <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 text-center text-sm text-slate-400">
-                ჩანაწერები ვერ მოიძებნა
+              <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 text-center text-sm text-slate-300 space-y-2">
+                <p className="font-medium text-slate-100">ჩანაწერები ვერ მოიძებნა</p>
+                <p className="text-slate-400">
+                  შეცვალეთ ფილტრი, გამოიყენეთ ძიება ან დაამატეთ ახალი ჩანაწერი, რომ გვერდზე თავიდან გაჩნდეს საჭირო ინფორმაცია.
+                </p>
               </div>
             )}
 
@@ -1205,14 +1349,28 @@ const MemoryPage: React.FC = () => {
   );
 };
 
-const TabButton: React.FC<{ label: string; active: boolean; onClick: () => void }> = ({ label, active, onClick }) => (
+const TabButton: React.FC<{ label: string; active: boolean; onClick: () => void; badge?: string | number }> = ({
+  label,
+  active,
+  onClick,
+  badge,
+}) => (
   <button
     onClick={onClick}
-    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+    className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
       active ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' : 'text-slate-400 hover:text-slate-200'
     }`}
   >
-    {label}
+    <span>{label}</span>
+    {badge !== undefined && (
+      <span
+        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
+          active ? 'bg-blue-500/30 text-white' : 'bg-slate-800 text-slate-200'
+        }`}
+      >
+        {badge}
+      </span>
+    )}
   </button>
 );
 
