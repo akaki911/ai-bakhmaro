@@ -400,7 +400,7 @@ export interface PasskeyAuthResult {
 // Global variable to track active WebAuthn requests
 let activeWebAuthnRequest: AbortController | null = null;
 
-export async function authenticateWithPasskey(conditional: boolean = false): Promise<PasskeyAuthResult> {
+export async function authenticateWithPasskey(conditional: boolean = false, identifier?: string): Promise<PasskeyAuthResult> {
   try {
     console.log(`🔐 [Passkey Login] Starting ${conditional ? 'conditional' : 'modal'} authentication`);
     console.log('🔐 [Passkey Login] Current domain:', window.location.hostname);
@@ -422,9 +422,17 @@ export async function authenticateWithPasskey(conditional: boolean = false): Pro
     await ensureWebAuthnReady();
 
     // Step 1: Get authentication options from server
+    const normalizedIdentifier = typeof identifier === 'string' && identifier.trim().length > 0
+      ? identifier.trim()
+      : undefined;
+
+    if (!normalizedIdentifier) {
+      throw new Error('Passkey შესასვლელად საჭიროა ელფოსტა ან პირადი ნომერი');
+    }
+
     const optionsResult = await postPasskeyJson(
       PASSKEY_ENDPOINTS.loginOptions,
-      {},
+      { identifier: normalizedIdentifier },
       {
         signal: activeWebAuthnRequest.signal,
       }
@@ -578,7 +586,7 @@ export async function initializeConditionalUI(userRole?: string, deviceTrust?: b
 
     // Start conditional authentication automatically
     // This will trigger when user interacts with email input
-    authenticateWithPasskey(true).then((result) => {
+    authenticateWithPasskey(true, 'admin@bakhmaro.co').then((result) => {
       if (result.success && result.user) {
         console.log('🎉 [Conditional UI] Auto-login successful!');
         // Trigger a custom event that Login component can listen to
