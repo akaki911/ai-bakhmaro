@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { startAuthentication } from '@simplewebauthn/browser';
 import { Chrome, Fingerprint, Github, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { useAuth } from '../contexts/useAuth';
 import { ensureWebAuthnReady, getWebAuthnErrorMessage } from '../utils/webauthn_support';
@@ -121,8 +122,15 @@ const AdminPasskeyLogin: React.FC = () => {
       const target = getAutoRouteTarget?.() ?? '/admin?tab=dashboard';
       navigate(target, { replace: true });
     } catch (error: any) {
-      console.warn('Email/password login failed:', error);
-      setFormError(error?.message || 'ავტორიზაცია ვერ მოხერხდა. სცადეთ ხელახლა.');
+      console.error('Email/password login failed:', error);
+
+      // Show helpful error message
+      if (import.meta.env.DEV) {
+        toast.error('Development Mode: გთხოვთ გამოიყენოთ Passkey ავტორიზაცია');
+      } else {
+        toast.error(`შესვლა ვერ მოხერხდა: ${error?.message || 'ავტორიზაცია ვერ მოხერხდა. სცადეთ ხელახლა.'}`);
+        setFormError(error?.message || 'ავტორიზაცია ვერ მოხერხდა. სცადეთ ხელახლა.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -266,6 +274,13 @@ const AdminPasskeyLogin: React.FC = () => {
               <p className="text-xs uppercase tracking-[0.35em] text-white/60">ai.bakhmaro.co · გურულო</p>
               <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">შესვლა</h1>
               <p className="text-sm text-white/70">შესვლა AI დეველოპერ კონსოლში</p>
+              {import.meta.env.DEV && (
+                <div className="mt-4 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+                  <p className="text-yellow-200 text-sm">
+                    🔧 Development Mode: გამოიყენეთ Passkey ავტორიზაცია
+                  </p>
+                </div>
+              )}
             </header>
 
             {banner ? (
@@ -500,4 +515,3 @@ const AdminPasskeyLogin: React.FC = () => {
 };
 
 export default AdminPasskeyLogin;
-
