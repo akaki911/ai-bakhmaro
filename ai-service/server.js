@@ -107,7 +107,7 @@ const PORT =
   process.env.PORT ||
   process.env.AI_SERVICE_PORT ||
   process.env.AI_PORT ||
-  5001;
+  8008;
 const DISABLE_FILE_WATCHERS = process.env.DISABLE_FILE_WATCHERS === 'true' || process.env.NODE_ENV === 'test';
 
 logWithTimestamp(`🔧 Port configuration: ${PORT}`);
@@ -349,7 +349,8 @@ app.use('/api/ai', (req, res, next) => {
 app.use('/api/ai', aiChatRoute);           // POST /chat, /intelligent-chat
 app.use('/api/ai', aiStreamRoute);         // POST /stream
 app.use('/api/ai', aiModelsRoute);         // GET /models
-app.use('/api/ai', require('./routes/execute')); // POST /execute (Phase 2: Workspace Executor)
+// Disabled execute route in development due to isolated-vm compilation issues
+// app.use('/api/ai', require('./routes/execute')); // POST /execute (Phase 2: Workspace Executor)
 app.use('/api/ai/vector-memory', require('./routes/vector_memory')); // Vector Memory API (Phase 3)
 app.use('/api/ai/recovery', aiRecoveryRoute); // POST /recover/:id
 
