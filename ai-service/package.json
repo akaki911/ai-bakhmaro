@@ -7,7 +7,6 @@
     "dev": "NODE_ENV=development node -r dotenv/config server.js"
   },
   "dependencies": {
-    "@openai/codex": "^0.3.0",
     "@opentelemetry/api": "^1.7.0",
     "@opentelemetry/exporter-jaeger": "^1.18.0",
     "@opentelemetry/exporter-prometheus": "^0.45.0",
