@@ -28,7 +28,7 @@ class VectorMemoryService {
     });
     
     this.isInitialized = false;
-    this.embeddingDimensions = 1536; // OpenAI ada-002 / Groq embeddings
+    this.embeddingDimensions = parseInt(process.env.EMBEDDINGS_DIMENSIONS || '1536', 10); // OpenAI ada-002 / Groq embeddings
     
     // Cache for frequently accessed embeddings
     this.cache = new Map();
