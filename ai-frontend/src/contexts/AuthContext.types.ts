@@ -41,7 +41,7 @@ export interface AuthContextType {
   login: (email: string, password: string, trustDevice?: boolean) => Promise<void>;
   register: (email: string, password: string, role?: UserRole, additionalData?: RegistrationMetadata) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-  loginWithPasskey: (trustDevice?: boolean) => Promise<void>;
+  loginWithPasskey: (trustDevice?: boolean, identifier?: string) => Promise<void>;
   registerPasskey: () => Promise<void>;
   generateFallbackCode: (reason: string) => Promise<void>;
   verifyFallbackCode: (reason: string, fallbackCode: string) => Promise<void>;
