@@ -197,32 +197,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // DEV-ONLY: Ensure development session is initialized ONCE before any auth checks
-  const ensureDevSession = async () => {
-    return singleFlight('dev-session-init', async () => {
-      if (!import.meta.env.DEV) return;
-      
-      const hostname = window.location.hostname;
-      const isLocalDev = hostname === 'localhost' || hostname === '127.0.0.1' || 
-                        hostname.includes('.replit.dev') || hostname.includes('.repl.co');
-      
-      if (!isLocalDev) return;
-      
-      try {
-        const devInitResponse = await fetch('/api/mail/dev/init-session', {
-          method: 'POST',
-          credentials: 'include',
-        });
-        if (devInitResponse.ok) {
-          console.log('✅ [Auth] Development session initialized');
-        } else {
-          console.warn('⚠️ [Auth] Dev session init failed with status:', devInitResponse.status);
-        }
-      } catch (error) {
-        console.warn('⚠️ [Auth] Dev session init failed (non-fatal):', error);
-      }
-    });
-  };
 
   // SOL-431: Fetch route advice from backend
   const fetchRouteAdvice = async () => {
@@ -472,15 +446,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const initDevAuth = async () => {
           console.log('🚀 [DevAuth] Starting development authentication initialization');
           try {
-            console.log('🔄 [DevAuth] Step 1: Ensuring dev session...');
-            await ensureDevSession();
-            console.log('✅ [DevAuth] Dev session ensured');
-            
-            console.log('🔄 [DevAuth] Step 2: Fetching route advice...');
+            console.log('🔄 [DevAuth] Step 1: Fetching route advice...');
             const advice = await fetchRouteAdvice();
             console.log('✅ [DevAuth] Route advice fetched:', advice);
             
-            console.log('🔄 [DevAuth] Step 3: Checking backend session...');
+            console.log('🔄 [DevAuth] Step 2: Checking backend session...');
             const backendUser = await checkBackendSession();
             console.log('✅ [DevAuth] Backend session check complete:', backendUser ? 'User found' : 'No user');
             
@@ -592,11 +562,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }, authTimeout);
 
       try {
-        // CRITICAL: Ensure dev session is initialized BEFORE any other requests
-        // This prevents race conditions where multiple requests create different session IDs
-        await ensureDevSession();
-
-        // SOL-431: Fetch route advice first (now using the authenticated dev session)
+        // SOL-431: Fetch route advice first
         const advice = await fetchRouteAdvice();
 
         // Backend session check with timeout
