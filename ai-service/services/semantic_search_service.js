@@ -102,7 +102,7 @@ class SemanticSearchService {
   async searchVector(query, options = {}) {
     if (!this.vectorMemoryEnabled) {
       console.warn('⚠️ Vector memory not enabled, falling back to local search');
-      return this.findSimilarChunks(query, options.limit || 5);
+      return await this.findSimilarChunks(query, options.limit || 5);
     }
 
     try {
@@ -111,7 +111,7 @@ class SemanticSearchService {
       
       if (!embeddingResult.success) {
         console.error('❌ Failed to generate query embedding');
-        return this.findSimilarChunks(query, options.limit || 5);
+        return await this.findSimilarChunks(query, options.limit || 5);
       }
 
       // Search vector memory
@@ -128,14 +128,14 @@ class SemanticSearchService {
 
       if (!searchResult.success) {
         console.error('❌ Vector search failed');
-        return this.findSimilarChunks(query, options.limit || 5);
+        return await this.findSimilarChunks(query, options.limit || 5);
       }
 
       console.log(`✅ Found ${searchResult.results.length} vector results`);
       return searchResult.results;
     } catch (error) {
       console.error('❌ Vector search error:', error);
-      return this.findSimilarChunks(query, options.limit || 5);
+      return await this.findSimilarChunks(query, options.limit || 5);
     }
   }
 
@@ -202,38 +202,20 @@ class SemanticSearchService {
   }
 
   /**
-   * Generate a simple embedding for a string (replace with a real embedding model)
-   * This is a placeholder and should be replaced with a proper embedding generation mechanism.
-   * For demonstration purposes, it returns a fixed-length array of numbers.
-   * @param {string} text - The input text
-   * @returns {number[]} A simple embedding vector
-   */
-  generateSimpleEmbedding(text) {
-    // In a real application, you would use an NLP library or API to generate embeddings.
-    // For this example, we'll create a basic vector based on character codes.
-    const embedding = new Array(this.knowledgeBase.embeddingDimensions || 10).fill(0);
-    for (let i = 0; i < text.length; i++) {
-      const charCode = text.charCodeAt(i);
-      // Distribute character codes across the embedding dimensions
-      embedding[i % embedding.length] = (embedding[i % embedding.length] + charCode) / 255.0;
-    }
-    // Normalize the embedding (simple normalization)
-    const norm = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
-    if (norm === 0) return embedding;
-    return embedding.map(val => val / norm);
-  }
-
-
-  /**
    * Find the most similar chunks to a query (string or embedding vector)
    * @param {string|number[]} query - The user's query string or embedding vector
    * @param {number} limit - Number of top results to return (default: 5)
    * @returns {Array} Array of similar chunks with similarity scores
    */
-  findSimilarChunks(query, limit = 5) {
-    // Handle both embedding and string inputs
-    const queryEmbedding = typeof query === 'string' ? 
-      this.generateSimpleEmbedding(query) : query;
+  async findSimilarChunks(query, limit = 5) {
+    const queryEmbedding = typeof query === 'string'
+      ? await this.buildQueryEmbedding(query)
+      : query;
+
+    if (!Array.isArray(queryEmbedding) || queryEmbedding.length === 0) {
+      console.warn('⚠️ Could not generate query embedding for semantic search');
+      return [];
+    }
 
     if (!this.isLoaded) {
       console.warn('⚠️ Knowledge base not loaded');
@@ -284,6 +266,32 @@ class SemanticSearchService {
     });
 
     return results;
+  }
+
+  /**
+   * Build an embedding for a query using the embeddings service.
+   * @param {string} query - Query text
+   * @returns {Promise<number[]|null>} Embedding vector or null on failure
+   */
+  async buildQueryEmbedding(query) {
+    try {
+      const embeddingResult = await embeddingsService.generateEmbedding(query);
+      if (!embeddingResult.success) {
+        return null;
+      }
+
+      if (this.knowledgeBase?.embeddingDimensions &&
+          embeddingResult.embedding.length !== this.knowledgeBase.embeddingDimensions) {
+        console.warn(
+          `⚠️ Embedding dimension mismatch: KB expects ${this.knowledgeBase.embeddingDimensions}, got ${embeddingResult.embedding.length}`
+        );
+      }
+
+      return embeddingResult.embedding;
+    } catch (error) {
+      console.error('❌ Failed to build query embedding:', error.message);
+      return null;
+    }
   }
 
   /**
