@@ -44,6 +44,15 @@ The platform features a multi-service architecture:
         - **Pending Backend**: Custom folders, tags, and drafts temporarily use localStorage (marked with TODO comments)
         - **Fixed**: ComposeModal auto-save timeout cleanup to prevent memory leaks
         - **Fixed (Nov 16)**: Frontend API routing - apiBase.shared.js now detects local development (localhost, .replit.dev) and forces relative URLs to use Vite proxy instead of production backend. Development session auto-initialization in MailTab.tsx for personalId 01019062020 (SUPER_ADMIN)
+    -   **Authentication Security Hardening (Nov 17, 2025)**: Eliminated critical security vulnerability where unauthorized users could access the system as SUPER_ADMIN without authentication. Changes include:
+        - **Removed Development Bypasses**: Deleted auto-session creation endpoint `/api/mail/dev/init-session` from backend/routes/mail.js
+        - **Frontend Protection**: Removed `ensureDevSession()` function and all invocations from AuthContext.tsx
+        - **Route Guard Hardening**: Removed development mode authentication bypass from ProtectedRoute.tsx (lines 25-27)
+        - **Guest Access Disabled**: Set `VITE_ENABLE_PUBLIC_CHAT=false` environment variable
+        - **Email Validation Fixed**: Corrected admin email from `admin@bakhmaro.com` to `admin@bakhmaro.co`
+        - **Access Restriction**: Only Akaki Tsintadze (personal ID: 01019062020, email: admin@bakhmaro.co) can access as SUPER_ADMIN
+        - **Authentication Enforced**: Unauthenticated users now see login page with WebAuthn (Passkey) and Fallback code options
+        - **Verified Protection**: Backend returns 401 Unauthorized for unauthenticated requests, frontend properly enforces authentication checks
 
 ## External Dependencies
 -   **PostgreSQL**: Primary database for persistence, including pgvector extension.
