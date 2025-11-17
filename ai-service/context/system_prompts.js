@@ -18,6 +18,22 @@ const GEORGIAN_GREETINGS = {
 const DEFAULT_TRANSPARENT_THOUGHT_MODE = process.env.GURULO_DEBUG_MODE === 'true';
 let transparentThoughtModeOverride = null;
 
+const SUPER_ADMIN_PERSONAL_ID = '01019062020';
+
+function resolvePersonalId(context = {}) {
+  return (
+    context.user?.personalId ||
+    context.personalId ||
+    context.userId ||
+    context.user?.id
+  );
+}
+
+function isCreatorContext(context = {}) {
+  const personalId = resolvePersonalId(context);
+  return personalId === SUPER_ADMIN_PERSONAL_ID || context.user?.role === 'SUPER_ADMIN';
+}
+
 function isTransparentThoughtModeEnabled() {
   if (transparentThoughtModeOverride !== null) {
     return transparentThoughtModeOverride;
@@ -456,10 +472,19 @@ ${remaining > 0 ? `(+${remaining} more files truncated)` : ''}
   userContext: (user) => `
 **👤 User Context:**
 - Name: ${user.name || 'Developer'}
-- Role: ${user.role || 'DEVELOPER'}  
+- Role: ${user.role || 'DEVELOPER'}
 - Language: ${user.preferredLanguage || 'ka'} 🇬🇪
 - Experience: ${user.experience || 'Intermediate'}
 `,
+
+  creatorContext: (user = {}) => {
+    const displayName = user.name || 'აკაკი ცინცაძე (კაკი)';
+    return `
+**👑 Creator Context:**
+- ${displayName} არის Gurulo/ai.bakhmaro.co-ს პლატფორმის მფლობელი და SUPER_ADMIN (ID: ${SUPER_ADMIN_PERSONAL_ID}).
+- აღიარე, რომ ის არის სისტემის შემქმნელი და მისი მითითებები პრიორიტეტულია.
+- შეინარჩუნე მოკლე, პატივისცემით ტონი და მიუთითე ქმედითი ნაბიჯი მის დასახმარებლად.`;
+  },
 
   projectContext: () => PROJECT_CONTEXT,
 
@@ -575,6 +600,13 @@ ${remaining > 0 ? `(+${remaining} more logs truncated)` : ''}
   }
 };
 
+function appendCreatorContext(promptText, context = {}) {
+  if (!isCreatorContext(context)) return promptText;
+
+  const creatorBlock = CONTEXT_TEMPLATES.creatorContext(context.user);
+  return [promptText, creatorBlock].filter(Boolean).join('\n\n');
+}
+
 const INTENT_PROMPT_MAP = {
   debugging: 'debugging',
   debug: 'debugging',
@@ -688,10 +720,8 @@ function getTimeBasedGreeting() {
 }
 
 function composeBasePrompt(context = {}) {
-  const isSuperAdminUser =
-    context.user?.role === 'SUPER_ADMIN' ||
-    context.user?.id === '01019062020' ||
-    context.userId === '01019062020';
+  const isSuperAdminUser = isCreatorContext(context);
+  const includeCreatorContext = isSuperAdminUser;
   const debugExplainEnabled = context.debugExplain === true;
   const explicitTransparentPreference =
     typeof context.transparentThoughtMode === 'boolean'
@@ -727,17 +757,21 @@ function composeBasePrompt(context = {}) {
     const shouldIncludeSavedMemories =
       memoryControls.referenceSavedMemories !== false && savedMemories.length > 0;
 
-    const sections = [];
+  const sections = [];
 
-    if (context.files && context.files.length > 0) {
-      sections.push(CONTEXT_TEMPLATES.fileContext(context.files, { maxEntries: limits.maxFileEntries }));
-    }
+  if (context.files && context.files.length > 0) {
+    sections.push(CONTEXT_TEMPLATES.fileContext(context.files, { maxEntries: limits.maxFileEntries }));
+  }
 
-    if (context.user) {
-      sections.push(CONTEXT_TEMPLATES.userContext(context.user));
-    }
+  if (context.user) {
+    sections.push(CONTEXT_TEMPLATES.userContext(context.user));
+  }
 
-    sections.push(CONTEXT_TEMPLATES.projectContext());
+  if (includeCreatorContext) {
+    sections.push(CONTEXT_TEMPLATES.creatorContext(context.user));
+  }
+
+  sections.push(CONTEXT_TEMPLATES.projectContext());
 
     if (memoryControls.referenceChatHistory !== false && context.sessionHistory && context.sessionHistory.length > 0) {
       const historySection = CONTEXT_TEMPLATES.sessionHistory(context.sessionHistory, { maxEntries: limits.maxHistoryEntries });
@@ -807,6 +841,8 @@ module.exports = {
   getTimeBasedGreeting,
   composeBasePrompt,
   formatGrammarExamples,
+  appendCreatorContext,
+  isCreatorContext,
   setTransparentThoughtModeOverride,
   isTransparentThoughtModeEnabled,
   testPrompt
