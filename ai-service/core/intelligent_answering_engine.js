@@ -1,53 +1,3 @@
-// Simple embedding function using text statistics - same as in build script
-function generateSimpleEmbedding(text, dimensions = 384) {
-  const words = text.toLowerCase().split(/\s+/);
-  const wordFreq = {};
-
-  // Count word frequencies
-  words.forEach(word => {
-    wordFreq[word] = (wordFreq[word] || 0) + 1;
-  });
-
-  // Count character frequencies
-  const charFreq = {};
-  for (const char of text.toLowerCase()) {
-    if (char.match(/[ა-ჰ]/) || char.match(/[a-z]/)) {
-      charFreq[char] = (charFreq[char] || 0) + 1;
-    }
-  }
-
-  // Create embedding vector
-  const embedding = new Array(dimensions).fill(0);
-
-  // Fill with statistical features
-  const textLen = text.length;
-  const wordCount = words.length;
-  const uniqueWords = Object.keys(wordFreq).length;
-  const avgWordLen = words.reduce((sum, word) => sum + word.length, 0) / wordCount;
-
-  // Distribute features across dimensions
-  embedding[0] = textLen / 1000; // Normalized text length
-  embedding[1] = wordCount / 100; // Normalized word count
-  embedding[2] = uniqueWords / wordCount; // Lexical diversity
-  embedding[3] = avgWordLen / 10; // Average word length
-
-  // Use hash-based features for remaining dimensions
-  for (let i = 4; i < dimensions; i++) {
-    let hash = 0;
-    const str = text + i.toString();
-    for (let j = 0; j < str.length; j++) {
-      const char = str.charCodeAt(j);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    embedding[i] = (hash % 2000 - 1000) / 1000; // Normalize to [-1, 1]
-  }
-
-  // Normalize the embedding vector
-  const norm = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
-  return embedding.map(val => val / (norm || 1));
-}
-
 'use strict';
 
 // Required modules for enhanced file system access
@@ -189,7 +139,7 @@ async function buildEnhancedContext(queryMessage, options = {}) {
   try {
     console.log('📚 [SEMANTIC SEARCH] Searching knowledge base...');
     // Use the imported semanticSearchService
-    const semanticChunks = semanticSearchService.findSimilarChunks(queryMessage, 5);
+    const semanticChunks = await semanticSearchService.searchVector(queryMessage, { limit: 5 });
     const prioritizedChunks = prioritizeKnowledgeChunks(semanticChunks, 2);
 
     console.log('🧾 [SEMANTIC SEARCH] Injecting trimmed knowledge snippets:',
@@ -493,8 +443,7 @@ async function buildUnifiedContextForRouting(queryMessage, options = {}) {
     // Fallback to knowledge base if no real files found
     if (budgetedFiles.length === 0 && semanticSearchService) {
       console.log('📚 [FALLBACK] Using knowledge base as fallback...');
-      const queryEmbedding = generateSimpleEmbedding(ragQuery);
-      const top = semanticSearchService.findSimilarChunks(queryEmbedding, 5);
+      const top = await semanticSearchService.searchVector(ragQuery, { limit: 5 });
       const prioritizedKnowledge = prioritizeKnowledgeChunks(top, 2);
 
       if (prioritizedKnowledge && prioritizedKnowledge.length > 0) {
@@ -520,8 +469,7 @@ async function buildUnifiedContextForRouting(queryMessage, options = {}) {
     console.warn('⚠️ [REAL FILE ACCESS] Error in dynamic file analysis:', error.message);
     // Fallback to original knowledge base approach
     if (semanticSearchService) {
-      const queryEmbedding = generateSimpleEmbedding(ragQuery);
-      const top = semanticSearchService.findSimilarChunks(queryEmbedding, 5);
+      const top = await semanticSearchService.searchVector(ragQuery, { limit: 5 });
       const prioritizedKnowledge = prioritizeKnowledgeChunks(top, 2);
 
       if (prioritizedKnowledge && prioritizedKnowledge.length > 0) {

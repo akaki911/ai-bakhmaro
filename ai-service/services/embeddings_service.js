@@ -16,8 +16,8 @@
 class EmbeddingsService {
   constructor() {
     this.openaiApiKey = process.env.OPENAI_API_KEY;
-    this.model = 'text-embedding-ada-002'; // OpenAI's embeddings model
-    this.dimensions = 1536;
+    this.model = process.env.EMBEDDINGS_MODEL || 'text-embedding-3-small';
+    this.dimensions = parseInt(process.env.EMBEDDINGS_DIMENSIONS || '1536', 10);
     this.useLocalFallback = !this.openaiApiKey;
     
     // Metrics
