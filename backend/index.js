@@ -117,7 +117,7 @@ const { buildModeGuard } = require('./middleware/build_mode_guard');
 const { serviceAuth } = require('./middleware/service_auth');
 
 const app = express();
-const PORT = process.env.PORT || 5002; // SOL-311: Fixed port configuration
+const PORT = process.env.PORT || 8000; // Replit environment port configuration
 
 const { setupGuruloWebSocket } = require('./services/gurulo_ws');
 const versionRoute = require('./routes/version');

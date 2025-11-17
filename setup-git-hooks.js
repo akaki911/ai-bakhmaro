@@ -5,6 +5,11 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { platform } from 'node:process';
 
+if (process.env.REPL_ID || process.env.REPLIT_ENV) {
+  console.log('⚠️ Skipping Git hooks setup in Replit environment');
+  process.exit(0);
+}
+
 console.log('🔧 Setting up Git hooks...');
 
 try {
