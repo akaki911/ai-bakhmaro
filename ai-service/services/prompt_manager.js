@@ -3,7 +3,9 @@ const {
   SYSTEM_PROMPTS,
   getTimeBasedGreeting,
   formatGrammarExamples,
-  setTransparentThoughtModeOverride
+  setTransparentThoughtModeOverride,
+  appendCreatorContext,
+  isCreatorContext
 } = require('../context/system_prompts');
 
 const guruloCore = require('../../shared/gurulo-core');
@@ -190,10 +192,7 @@ class PromptManager {
   getPrompt(type, context = {}) {
     const basePrompt = this.prompts.get(type) || this.prompts.get('general');
 
-    const isSuperAdminUser =
-      context.user?.role === 'SUPER_ADMIN' ||
-      context.user?.id === '01019062020' ||
-      context.userId === '01019062020';
+    const isSuperAdminUser = isCreatorContext(context);
     const debugExplainEnabled = context.debugExplain === true;
     const explicitTransparentPreference =
       typeof context.transparentThoughtMode === 'boolean'
@@ -226,6 +225,8 @@ class PromptManager {
       if (context.siteContext) {
         systemPrompt += `\n\nკონტექსტი: ${context.siteContext.substring(0, 100)}`;
       }
+
+      systemPrompt = appendCreatorContext(systemPrompt, context);
 
       return {
         system: systemPrompt,
