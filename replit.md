@@ -12,12 +12,12 @@ This project powers the internal Bakhmaro AI operations workspace, focusing on d
 ## System Architecture
 The platform features a multi-service architecture:
 -   **Frontend**: React + TypeScript + Vite (Port 5000), styled with Tailwind CSS.
--   **Backend**: Node.js + Express (Port 5002) for API requests and authentication.
--   **AI Service**: Node.js microservice (Port 5001) with advanced Retrieval-Augmented Generation (RAG) for codebase understanding, real-time file monitoring, and intelligent safety switches.
+-   **Backend**: Node.js + Express v5 (Port 5002) for API requests and authentication.
+-   **AI Service**: Node.js + Express v5 microservice (Port 5001) with advanced Retrieval-Augmented Generation (RAG) for codebase understanding, real-time file monitoring, and intelligent safety switches.
 -   **Database**: PostgreSQL with pgvector extension for semantic search and vector memory.
 -   **UI/UX**: Clean, modern design with full Georgian language support across all interfaces.
 -   **Technical Implementations**:
-    -   **Firebase Integration**: Unified configuration for data persistence (Firestore) and session management.
+    -   **Firebase Integration**: Unified configuration for data persistence (Firestore) and session management. All services use Firebase Admin SDK v13.5.0.
     -   **Proxy Routing**: Vite proxy for seamless communication.
     -   **Authentication**: Secure endpoint migration and authentication guards.
     -   **Port Management Security**: Industrial-grade port management with advanced security and service restart capabilities.
@@ -53,6 +53,12 @@ The platform features a multi-service architecture:
         - **Access Restriction**: Only Akaki Tsintadze (personal ID: 01019062020, email: admin@bakhmaro.co) can access as SUPER_ADMIN
         - **Authentication Enforced**: Unauthenticated users now see login page with WebAuthn (Passkey) and Fallback code options
         - **Verified Protection**: Backend returns 401 Unauthorized for unauthenticated requests, frontend properly enforces authentication checks
+    -   **Major Version Upgrades (Nov 17, 2025)**: Successfully migrated to latest major versions of critical dependencies:
+        - **Express v5 Migration**: Both Backend and AI Service upgraded from Express v4 to v5.0.0/v5.0.1
+        - **Firebase Admin SDK v13.5.0**: All services synchronized to use the same Firebase Admin SDK version (upgraded from v11.9.0 in AI Service, v13.4.0 in Backend)
+        - **No Breaking Changes**: All existing code was compatible with new versions, no deprecated APIs were in use
+        - **Performance Validated**: Memory usage stable, all health endpoints operational, no regressions detected
+        - **Architect Review**: Confirmed compatibility, proper middleware ordering, and recommended monitoring for edge cases
 
 ## External Dependencies
 -   **PostgreSQL**: Primary database for persistence, including pgvector extension.
@@ -60,6 +66,7 @@ The platform features a multi-service architecture:
 -   **OpenAI API**: Used for embeddings generation (text-embedding-ada-002).
 -   **Chokidar**: For real-time file system monitoring.
 -   **React-Syntax-Highlighter**: For code preview.
--   **Firebase**: For data persistence and session management.
+-   **Firebase**: For data persistence and session management (v13.5.0 Admin SDK).
 -   **Nodemailer**: For SMTP email sending functionality.
 -   **PrivateEmail.com**: Mail server for gurulo@bakhmaro.co (IMAP: mail.privateemail.com:993, SMTP: mail.privateemail.com:465).
+-   **Express v5**: Web framework for backend and AI service endpoints.
