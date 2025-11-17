@@ -1,11 +1,11 @@
 [
   {
-    "title": "AI-Generated: Code Complexity Reduction for context/git_prompts.js",
-    "description": "🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "title": "AI-Generated: Code Complexity Reduction for core/model-router.ts",
+    "description": "🧮 კოდის სირთულე მაღალია (22): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (22): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია",
     "files": [
       {
-        "path": "context/git_prompts.js",
+        "path": "core/model-router.ts",
         "action": "modify",
         "content": "// AI suggested improvement"
       }
@@ -13,10 +13,10 @@
     "priority": "medium",
     "evidence": [
       {
-        "file": "context/git_prompts.js",
+        "file": "core/model-router.ts",
         "line": 1,
         "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)"
+        "note": "🧮 კოდის სირთულე მაღალია (22): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია"
       }
     ],
     "risk": "safe",
@@ -24,12 +24,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1763379828859_kx9qxrwm4",
-    "createdAt": "2025-11-17T11:43:48.859Z",
+    "id": "ai_prop_1763380308876_tsw9qjoha",
+    "createdAt": "2025-11-17T11:51:48.876Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1763379828859",
+    "correlationId": "cid_1763380308876",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -37,1985 +37,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-17T11:43:48.859Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for context/code_context.js",
-    "description": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)",
-    "files": [
-      {
-        "path": "context/code_context.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "context/code_context.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379828854_i8rvwz35l",
-    "createdAt": "2025-11-17T11:43:48.854Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379828854",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:43:48.854Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for config/runtimeConfig.js",
-    "description": "🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)",
-    "files": [
-      {
-        "path": "config/runtimeConfig.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "config/runtimeConfig.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379828849_h4kftd0se",
-    "createdAt": "2025-11-17T11:43:48.849Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379828848",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:43:48.849Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for config/cloudrun_config.js",
-    "description": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "config/cloudrun_config.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "config/cloudrun_config.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379828843_817oh9jx7",
-    "createdAt": "2025-11-17T11:43:48.843Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379828843",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:43:48.843Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for code_index.json",
-    "description": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
-    "files": [
-      {
-        "path": "code_index.json",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "code_index.json",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "config"
-    ],
-    "id": "ai_prop_1763379828835_q7blwncan",
-    "createdAt": "2025-11-17T11:43:48.835Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379828835",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:43:48.835Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.ts",
-    "description": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "agents/codex_agent.ts",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "agents/codex_agent.ts",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379828826_wfc6a7r9f",
-    "createdAt": "2025-11-17T11:43:48.826Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379828826",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:43:48.826Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.js",
-    "description": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "agents/codex_agent.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "agents/codex_agent.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379828810_1zbcwb1js",
-    "createdAt": "2025-11-17T11:43:48.810Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379828810",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:43:48.810Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for README.md",
-    "description": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "README.md",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "README.md",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "documentation"
-    ],
-    "id": "ai_prop_1763379828803_y57jrbhlc",
-    "createdAt": "2025-11-17T11:43:48.803Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379828803",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:43:48.803Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for context/git_prompts.js",
-    "description": "🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
-    "files": [
-      {
-        "path": "context/git_prompts.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "context/git_prompts.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379768837_eoz274mxw",
-    "createdAt": "2025-11-17T11:42:48.837Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379768837",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:42:48.837Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for context/code_context.js",
-    "description": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)",
-    "files": [
-      {
-        "path": "context/code_context.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "context/code_context.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379768833_0vkvo51qk",
-    "createdAt": "2025-11-17T11:42:48.833Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379768833",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:42:48.833Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for config/runtimeConfig.js",
-    "description": "🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)",
-    "files": [
-      {
-        "path": "config/runtimeConfig.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "config/runtimeConfig.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379768828_phprq62r9",
-    "createdAt": "2025-11-17T11:42:48.828Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379768827",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:42:48.828Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for config/cloudrun_config.js",
-    "description": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "config/cloudrun_config.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "config/cloudrun_config.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379768823_qz7hidfp1",
-    "createdAt": "2025-11-17T11:42:48.823Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379768823",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:42:48.823Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for code_index.json",
-    "description": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
-    "files": [
-      {
-        "path": "code_index.json",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "code_index.json",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "config"
-    ],
-    "id": "ai_prop_1763379768819_5cxt0d0kr",
-    "createdAt": "2025-11-17T11:42:48.819Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379768819",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:42:48.819Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.ts",
-    "description": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "agents/codex_agent.ts",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "agents/codex_agent.ts",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379768815_iflz23kdb",
-    "createdAt": "2025-11-17T11:42:48.815Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379768815",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:42:48.815Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.js",
-    "description": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "agents/codex_agent.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "agents/codex_agent.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379768808_33gydd6pn",
-    "createdAt": "2025-11-17T11:42:48.808Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379768808",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:42:48.808Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for README.md",
-    "description": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "README.md",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "README.md",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "documentation"
-    ],
-    "id": "ai_prop_1763379768804_7ggj7xbli",
-    "createdAt": "2025-11-17T11:42:48.804Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379768803",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:42:48.804Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for context/code_context.js",
-    "description": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)",
-    "files": [
-      {
-        "path": "context/code_context.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "context/code_context.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379708859_n4repu4xu",
-    "createdAt": "2025-11-17T11:41:48.859Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379708859",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:41:48.859Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for config/runtimeConfig.js",
-    "description": "🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)",
-    "files": [
-      {
-        "path": "config/runtimeConfig.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "config/runtimeConfig.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379708852_96okamghd",
-    "createdAt": "2025-11-17T11:41:48.852Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379708852",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:41:48.852Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for config/cloudrun_config.js",
-    "description": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "config/cloudrun_config.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "config/cloudrun_config.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379708842_51xz8uqpi",
-    "createdAt": "2025-11-17T11:41:48.842Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379708841",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:41:48.842Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for code_index.json",
-    "description": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
-    "files": [
-      {
-        "path": "code_index.json",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "code_index.json",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "config"
-    ],
-    "id": "ai_prop_1763379708835_uef5pyv7z",
-    "createdAt": "2025-11-17T11:41:48.835Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379708835",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:41:48.835Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.ts",
-    "description": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "agents/codex_agent.ts",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "agents/codex_agent.ts",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379708829_u60xzz711",
-    "createdAt": "2025-11-17T11:41:48.829Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379708829",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:41:48.830Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.js",
-    "description": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "agents/codex_agent.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "agents/codex_agent.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379708821_r9yam0glv",
-    "createdAt": "2025-11-17T11:41:48.821Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379708821",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:41:48.821Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for README.md",
-    "description": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "README.md",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "README.md",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "documentation"
-    ],
-    "id": "ai_prop_1763379708808_j2iamey4m",
-    "createdAt": "2025-11-17T11:41:48.808Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379708808",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:41:48.808Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for config/runtimeConfig.js",
-    "description": "🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)",
-    "files": [
-      {
-        "path": "config/runtimeConfig.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "config/runtimeConfig.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379648841_u600skpp7",
-    "createdAt": "2025-11-17T11:40:48.841Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379648841",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:40:48.841Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for config/cloudrun_config.js",
-    "description": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "config/cloudrun_config.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "config/cloudrun_config.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379648836_sw4wdrczn",
-    "createdAt": "2025-11-17T11:40:48.836Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379648836",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:40:48.836Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for code_index.json",
-    "description": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
-    "files": [
-      {
-        "path": "code_index.json",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "code_index.json",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "config"
-    ],
-    "id": "ai_prop_1763379648828_p2nbd4c9l",
-    "createdAt": "2025-11-17T11:40:48.828Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379648828",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:40:48.828Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.ts",
-    "description": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "agents/codex_agent.ts",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "agents/codex_agent.ts",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379648821_p22oe5hp3",
-    "createdAt": "2025-11-17T11:40:48.821Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379648820",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:40:48.821Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.js",
-    "description": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "agents/codex_agent.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "agents/codex_agent.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379648811_olmj5ru2y",
-    "createdAt": "2025-11-17T11:40:48.811Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379648811",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:40:48.811Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for README.md",
-    "description": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "README.md",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "README.md",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "documentation"
-    ],
-    "id": "ai_prop_1763379648804_15j8x7snj",
-    "createdAt": "2025-11-17T11:40:48.804Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379648803",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:40:48.804Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for config/cloudrun_config.js",
-    "description": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "config/cloudrun_config.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "config/cloudrun_config.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379588853_g46oep3u5",
-    "createdAt": "2025-11-17T11:39:48.853Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379588852",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:39:48.853Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for code_index.json",
-    "description": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
-    "files": [
-      {
-        "path": "code_index.json",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "code_index.json",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "config"
-    ],
-    "id": "ai_prop_1763379588845_emko9c29e",
-    "createdAt": "2025-11-17T11:39:48.845Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379588845",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:39:48.845Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.ts",
-    "description": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "agents/codex_agent.ts",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "agents/codex_agent.ts",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379588837_9e49jy0bi",
-    "createdAt": "2025-11-17T11:39:48.837Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379588836",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:39:48.837Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.js",
-    "description": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "agents/codex_agent.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "agents/codex_agent.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379588822_4dsp27mxz",
-    "createdAt": "2025-11-17T11:39:48.822Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379588822",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:39:48.822Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for README.md",
-    "description": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "README.md",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "README.md",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "documentation"
-    ],
-    "id": "ai_prop_1763379588813_7t5nf0ixp",
-    "createdAt": "2025-11-17T11:39:48.813Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379588812",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:39:48.813Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for code_index.json",
-    "description": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
-    "files": [
-      {
-        "path": "code_index.json",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "code_index.json",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "config"
-    ],
-    "id": "ai_prop_1763379528855_ipwy0731h",
-    "createdAt": "2025-11-17T11:38:48.855Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379528854",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:38:48.855Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.ts",
-    "description": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "agents/codex_agent.ts",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "agents/codex_agent.ts",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379528841_z682nleer",
-    "createdAt": "2025-11-17T11:38:48.841Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379528840",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:38:48.841Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.js",
-    "description": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "agents/codex_agent.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "agents/codex_agent.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379528830_bzdy0bysk",
-    "createdAt": "2025-11-17T11:38:48.830Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379528829",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:38:48.830Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for README.md",
-    "description": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "README.md",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "README.md",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "documentation"
-    ],
-    "id": "ai_prop_1763379528808_4bf47l640",
-    "createdAt": "2025-11-17T11:38:48.808Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379528806",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:38:48.808Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.ts",
-    "description": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "agents/codex_agent.ts",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "agents/codex_agent.ts",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379468831_s2xz022qn",
-    "createdAt": "2025-11-17T11:37:48.831Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379468830",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:37:48.831Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.js",
-    "description": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "agents/codex_agent.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "agents/codex_agent.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379468820_9c6yzrjhs",
-    "createdAt": "2025-11-17T11:37:48.820Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379468820",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:37:48.820Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for README.md",
-    "description": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "README.md",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "README.md",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "documentation"
-    ],
-    "id": "ai_prop_1763379468806_gz71t068g",
-    "createdAt": "2025-11-17T11:37:48.806Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379468806",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:37:48.806Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.js",
-    "description": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "agents/codex_agent.js",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "medium",
-    "evidence": [
-      {
-        "file": "agents/codex_agent.js",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "javascript"
-    ],
-    "id": "ai_prop_1763379408816_kdr2y41sz",
-    "createdAt": "2025-11-17T11:36:48.816Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379408816",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:36:48.816Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for README.md",
-    "description": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "README.md",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "README.md",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "documentation"
-    ],
-    "id": "ai_prop_1763379408809_hoqbz7eb8",
-    "createdAt": "2025-11-17T11:36:48.809Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379408809",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:36:48.809Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for README.md",
-    "description": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "README.md",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "README.md",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "documentation"
-    ],
-    "id": "ai_prop_1763379348802_oekuvqui7",
-    "createdAt": "2025-11-17T11:35:48.802Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379348802",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:35:48.802Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for README.md",
-    "description": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "README.md",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "README.md",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "documentation"
-    ],
-    "id": "ai_prop_1763379288820_uccanrlga",
-    "createdAt": "2025-11-17T11:34:48.820Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763379288820",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:34:48.820Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for README.md",
-    "description": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "README.md",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "README.md",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "documentation"
-    ],
-    "id": "ai_prop_1763378876608_31bjnwjrs",
-    "createdAt": "2025-11-17T11:27:56.608Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763378876607",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:27:56.608Z"
-      }
-    ],
-    "feedbackHistory": []
-  },
-  {
-    "title": "AI-Generated: Code Quality Improvement for README.md",
-    "description": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
-    "files": [
-      {
-        "path": "README.md",
-        "action": "modify",
-        "content": "// AI suggested improvement"
-      }
-    ],
-    "priority": "low",
-    "evidence": [
-      {
-        "file": "README.md",
-        "line": 1,
-        "rule": "ai-enhancement",
-        "note": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
-      }
-    ],
-    "risk": "safe",
-    "scope": [
-      "ai-generated",
-      "documentation"
-    ],
-    "id": "ai_prop_1763378816621_a0zyncidn",
-    "createdAt": "2025-11-17T11:26:56.621Z",
-    "source": "ai-enhanced-monitor",
-    "status": "pending",
-    "aiGenerated": true,
-    "correlationId": "cid_1763378816620",
-    "kpiKey": "autoimprove:unknown",
-    "routeDecision": "simple",
-    "modelUsed": "llama3-8b-8192",
-    "memoryContext": [],
-    "statusHistory": [
-      {
-        "status": "pending",
-        "at": "2025-11-17T11:26:56.621Z"
+        "at": "2025-11-17T11:51:48.876Z"
       }
     ],
     "feedbackHistory": []
@@ -2045,12 +67,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1763362079383_zmh5cba8y",
-    "createdAt": "2025-11-17T06:47:59.383Z",
+    "id": "ai_prop_1763380308871_s8daevyfa",
+    "createdAt": "2025-11-17T11:51:48.871Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1763362079383",
+    "correlationId": "cid_1763380308871",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -2058,7 +80,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-17T06:47:59.383Z"
+        "at": "2025-11-17T11:51:48.871Z"
       }
     ],
     "feedbackHistory": []
@@ -2088,12 +110,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1763362079373_sfrftzqm9",
-    "createdAt": "2025-11-17T06:47:59.373Z",
+    "id": "ai_prop_1763380308867_rpgzr2m2e",
+    "createdAt": "2025-11-17T11:51:48.867Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1763362079372",
+    "correlationId": "cid_1763380308867",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -2101,7 +123,7 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-17T06:47:59.373Z"
+        "at": "2025-11-17T11:51:48.867Z"
       }
     ],
     "feedbackHistory": []
@@ -2131,12 +153,12 @@
       "ai-generated",
       "javascript"
     ],
-    "id": "ai_prop_1763362079362_blsb48c8f",
-    "createdAt": "2025-11-17T06:47:59.362Z",
+    "id": "ai_prop_1763380308863_bqy1h9mv0",
+    "createdAt": "2025-11-17T11:51:48.863Z",
     "source": "ai-enhanced-monitor",
     "status": "pending",
     "aiGenerated": true,
-    "correlationId": "cid_1763362079362",
+    "correlationId": "cid_1763380308863",
     "kpiKey": "autoimprove:unknown",
     "routeDecision": "simple",
     "modelUsed": "llama3-8b-8192",
@@ -2144,7 +166,1985 @@
     "statusHistory": [
       {
         "status": "pending",
-        "at": "2025-11-17T06:47:59.362Z"
+        "at": "2025-11-17T11:51:48.863Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Security Enhancement for contracts/openapi.yaml",
+    "description": "🔐 Security danger: 1 საკითხი ნაპოვნია; ⚠️ 5 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🔐 Security danger: 1 საკითხი ნაპოვნია; ⚠️ 5 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "files": [
+      {
+        "path": "contracts/openapi.yaml",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "high",
+    "evidence": [
+      {
+        "file": "contracts/openapi.yaml",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🔐 Security danger: 1 საკითხი ნაპოვნია; ⚠️ 5 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)"
+      }
+    ],
+    "risk": "danger",
+    "scope": [
+      "ai-generated",
+      "config"
+    ],
+    "id": "ai_prop_1763380308859_wf3cshgd1",
+    "createdAt": "2025-11-17T11:51:48.859Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380308859",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:51:48.859Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for context/user_preferences.js",
+    "description": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (487 სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (487 სიმბოლო)",
+    "files": [
+      {
+        "path": "context/user_preferences.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "context/user_preferences.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (487 სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380308854_rftldtbxi",
+    "createdAt": "2025-11-17T11:51:48.854Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380308854",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:51:48.854Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Security Enhancement for context/system_prompts.js",
+    "description": "🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (94): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (94): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "files": [
+      {
+        "path": "context/system_prompts.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "high",
+    "evidence": [
+      {
+        "file": "context/system_prompts.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (94): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)"
+      }
+    ],
+    "risk": "danger",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380308851_gfshcjr1v",
+    "createdAt": "2025-11-17T11:51:48.851Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380308851",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:51:48.851Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for context/git_prompts.js",
+    "description": "🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "files": [
+      {
+        "path": "context/git_prompts.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "context/git_prompts.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380308847_8i6v02y19",
+    "createdAt": "2025-11-17T11:51:48.847Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380308847",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:51:48.847Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for context/code_context.js",
+    "description": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)",
+    "files": [
+      {
+        "path": "context/code_context.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "context/code_context.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380308843_vy3emyl0s",
+    "createdAt": "2025-11-17T11:51:48.843Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380308843",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:51:48.843Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for config/runtimeConfig.js",
+    "description": "🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)",
+    "files": [
+      {
+        "path": "config/runtimeConfig.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "config/runtimeConfig.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380308837_jyzj1b6lm",
+    "createdAt": "2025-11-17T11:51:48.837Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380308837",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:51:48.837Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for config/cloudrun_config.js",
+    "description": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "files": [
+      {
+        "path": "config/cloudrun_config.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "config/cloudrun_config.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380308833_hc3m8l8v3",
+    "createdAt": "2025-11-17T11:51:48.833Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380308833",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:51:48.833Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Quality Improvement for code_index.json",
+    "description": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
+    "files": [
+      {
+        "path": "code_index.json",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "low",
+    "evidence": [
+      {
+        "file": "code_index.json",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "config"
+    ],
+    "id": "ai_prop_1763380308828_u15c3zzmz",
+    "createdAt": "2025-11-17T11:51:48.828Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380308828",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:51:48.828Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.ts",
+    "description": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "files": [
+      {
+        "path": "agents/codex_agent.ts",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "agents/codex_agent.ts",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380308823_vwc3ooxlz",
+    "createdAt": "2025-11-17T11:51:48.823Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380308823",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:51:48.823Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.js",
+    "description": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "files": [
+      {
+        "path": "agents/codex_agent.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "agents/codex_agent.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380308815_wvhhxtlw7",
+    "createdAt": "2025-11-17T11:51:48.815Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380308815",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:51:48.816Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Quality Improvement for README.md",
+    "description": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "files": [
+      {
+        "path": "README.md",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "low",
+    "evidence": [
+      {
+        "file": "README.md",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "documentation"
+    ],
+    "id": "ai_prop_1763380308810_6l261z32n",
+    "createdAt": "2025-11-17T11:51:48.810Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380308810",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:51:48.810Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for core/model-router.js",
+    "description": "🧮 კოდის სირთულე მაღალია (70): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (87 სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (70): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (87 სიმბოლო)",
+    "files": [
+      {
+        "path": "core/model-router.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "core/model-router.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (70): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (87 სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380248914_flnypkkfy",
+    "createdAt": "2025-11-17T11:50:48.914Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380248914",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:50:48.914Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for core/intelligent_answering_engine.js",
+    "description": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო); 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო); 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ",
+    "files": [
+      {
+        "path": "core/intelligent_answering_engine.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "core/intelligent_answering_engine.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო); 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380248910_5mr0o2soq",
+    "createdAt": "2025-11-17T11:50:48.910Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380248910",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:50:48.910Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Security Enhancement for controllers/ai_controller.js",
+    "description": "🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო); 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო); 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ",
+    "files": [
+      {
+        "path": "controllers/ai_controller.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "high",
+    "evidence": [
+      {
+        "file": "controllers/ai_controller.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო); 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ"
+      }
+    ],
+    "risk": "danger",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380248903_rs1tx15zo",
+    "createdAt": "2025-11-17T11:50:48.903Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380248903",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:50:48.903Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Security Enhancement for contracts/openapi.yaml",
+    "description": "🔐 Security danger: 1 საკითხი ნაპოვნია; ⚠️ 5 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🔐 Security danger: 1 საკითხი ნაპოვნია; ⚠️ 5 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "files": [
+      {
+        "path": "contracts/openapi.yaml",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "high",
+    "evidence": [
+      {
+        "file": "contracts/openapi.yaml",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🔐 Security danger: 1 საკითხი ნაპოვნია; ⚠️ 5 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)"
+      }
+    ],
+    "risk": "danger",
+    "scope": [
+      "ai-generated",
+      "config"
+    ],
+    "id": "ai_prop_1763380248896_qeqsw2m76",
+    "createdAt": "2025-11-17T11:50:48.896Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380248895",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:50:48.896Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for context/user_preferences.js",
+    "description": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (487 სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (487 სიმბოლო)",
+    "files": [
+      {
+        "path": "context/user_preferences.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "context/user_preferences.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (487 სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380248889_mm4agggwg",
+    "createdAt": "2025-11-17T11:50:48.889Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380248889",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:50:48.889Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Security Enhancement for context/system_prompts.js",
+    "description": "🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (94): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (94): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "files": [
+      {
+        "path": "context/system_prompts.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "high",
+    "evidence": [
+      {
+        "file": "context/system_prompts.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (94): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)"
+      }
+    ],
+    "risk": "danger",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380248884_6v3nlibpa",
+    "createdAt": "2025-11-17T11:50:48.884Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380248883",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:50:48.884Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for context/git_prompts.js",
+    "description": "🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "files": [
+      {
+        "path": "context/git_prompts.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "context/git_prompts.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380248875_w4xidy62l",
+    "createdAt": "2025-11-17T11:50:48.875Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380248874",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:50:48.875Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for context/code_context.js",
+    "description": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)",
+    "files": [
+      {
+        "path": "context/code_context.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "context/code_context.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380248868_ki3jqwxvj",
+    "createdAt": "2025-11-17T11:50:48.868Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380248867",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:50:48.868Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for config/runtimeConfig.js",
+    "description": "🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)",
+    "files": [
+      {
+        "path": "config/runtimeConfig.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "config/runtimeConfig.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380248861_dtsernydd",
+    "createdAt": "2025-11-17T11:50:48.861Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380248861",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:50:48.861Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for config/cloudrun_config.js",
+    "description": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "files": [
+      {
+        "path": "config/cloudrun_config.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "config/cloudrun_config.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380248854_h9burc4m6",
+    "createdAt": "2025-11-17T11:50:48.854Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380248854",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:50:48.854Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Quality Improvement for code_index.json",
+    "description": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
+    "files": [
+      {
+        "path": "code_index.json",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "low",
+    "evidence": [
+      {
+        "file": "code_index.json",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "config"
+    ],
+    "id": "ai_prop_1763380248847_0dj2kk0sk",
+    "createdAt": "2025-11-17T11:50:48.847Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380248847",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:50:48.847Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.ts",
+    "description": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "files": [
+      {
+        "path": "agents/codex_agent.ts",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "agents/codex_agent.ts",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380248839_gls3r6jyv",
+    "createdAt": "2025-11-17T11:50:48.839Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380248839",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:50:48.839Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.js",
+    "description": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "files": [
+      {
+        "path": "agents/codex_agent.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "agents/codex_agent.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380248818_4903iiaa8",
+    "createdAt": "2025-11-17T11:50:48.818Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380248818",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:50:48.818Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Quality Improvement for README.md",
+    "description": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "files": [
+      {
+        "path": "README.md",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "low",
+    "evidence": [
+      {
+        "file": "README.md",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "documentation"
+    ],
+    "id": "ai_prop_1763380248813_l3prck1md",
+    "createdAt": "2025-11-17T11:50:48.813Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380248813",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:50:48.813Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for core/intelligent_answering_engine.js",
+    "description": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო); 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო); 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ",
+    "files": [
+      {
+        "path": "core/intelligent_answering_engine.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "core/intelligent_answering_engine.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო); 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380188957_6l9bz7x4a",
+    "createdAt": "2025-11-17T11:49:48.957Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380188957",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:49:48.957Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Security Enhancement for controllers/ai_controller.js",
+    "description": "🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო); 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო); 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ",
+    "files": [
+      {
+        "path": "controllers/ai_controller.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "high",
+    "evidence": [
+      {
+        "file": "controllers/ai_controller.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო); 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ"
+      }
+    ],
+    "risk": "danger",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380188949_zy6fk6wo2",
+    "createdAt": "2025-11-17T11:49:48.949Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380188949",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:49:48.949Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Security Enhancement for contracts/openapi.yaml",
+    "description": "🔐 Security danger: 1 საკითხი ნაპოვნია; ⚠️ 5 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🔐 Security danger: 1 საკითხი ნაპოვნია; ⚠️ 5 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "files": [
+      {
+        "path": "contracts/openapi.yaml",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "high",
+    "evidence": [
+      {
+        "file": "contracts/openapi.yaml",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🔐 Security danger: 1 საკითხი ნაპოვნია; ⚠️ 5 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)"
+      }
+    ],
+    "risk": "danger",
+    "scope": [
+      "ai-generated",
+      "config"
+    ],
+    "id": "ai_prop_1763380188939_0tdhe4pbp",
+    "createdAt": "2025-11-17T11:49:48.939Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380188939",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:49:48.939Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for context/user_preferences.js",
+    "description": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (487 სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (487 სიმბოლო)",
+    "files": [
+      {
+        "path": "context/user_preferences.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "context/user_preferences.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (487 სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380188931_uk2fta9u6",
+    "createdAt": "2025-11-17T11:49:48.931Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380188930",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:49:48.931Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Security Enhancement for context/system_prompts.js",
+    "description": "🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (94): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (94): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "files": [
+      {
+        "path": "context/system_prompts.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "high",
+    "evidence": [
+      {
+        "file": "context/system_prompts.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (94): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)"
+      }
+    ],
+    "risk": "danger",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380188920_hfqwbb245",
+    "createdAt": "2025-11-17T11:49:48.920Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380188920",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:49:48.920Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for context/git_prompts.js",
+    "description": "🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "files": [
+      {
+        "path": "context/git_prompts.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "context/git_prompts.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380188907_n497vyh97",
+    "createdAt": "2025-11-17T11:49:48.907Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380188907",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:49:48.907Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for context/code_context.js",
+    "description": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)",
+    "files": [
+      {
+        "path": "context/code_context.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "context/code_context.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380188889_ap94st1by",
+    "createdAt": "2025-11-17T11:49:48.889Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380188888",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:49:48.889Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for config/runtimeConfig.js",
+    "description": "🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)",
+    "files": [
+      {
+        "path": "config/runtimeConfig.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "config/runtimeConfig.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380188871_31v68ljgx",
+    "createdAt": "2025-11-17T11:49:48.871Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380188871",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:49:48.871Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for config/cloudrun_config.js",
+    "description": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "files": [
+      {
+        "path": "config/cloudrun_config.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "config/cloudrun_config.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380188862_mmgf1paev",
+    "createdAt": "2025-11-17T11:49:48.862Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380188861",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:49:48.862Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Quality Improvement for code_index.json",
+    "description": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)",
+    "files": [
+      {
+        "path": "code_index.json",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "low",
+    "evidence": [
+      {
+        "file": "code_index.json",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 22% (273 სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "config"
+    ],
+    "id": "ai_prop_1763380188853_4399ypvyd",
+    "createdAt": "2025-11-17T11:49:48.853Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380188853",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:49:48.853Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.ts",
+    "description": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "files": [
+      {
+        "path": "agents/codex_agent.ts",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "agents/codex_agent.ts",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (95): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380188841_y4jo1gi7n",
+    "createdAt": "2025-11-17T11:49:48.841Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380188841",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:49:48.841Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for agents/codex_agent.js",
+    "description": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "files": [
+      {
+        "path": "agents/codex_agent.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "agents/codex_agent.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (99): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380188827_9dl7wjuyh",
+    "createdAt": "2025-11-17T11:49:48.827Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380188827",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:49:48.827Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Quality Improvement for README.md",
+    "description": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "summary": "კოდის ხარისხის გაუმჯობესება - ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "files": [
+      {
+        "path": "README.md",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "low",
+    "evidence": [
+      {
+        "file": "README.md",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "documentation"
+    ],
+    "id": "ai_prop_1763380188816_wrmiyx6e8",
+    "createdAt": "2025-11-17T11:49:48.816Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380188815",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:49:48.816Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Security Enhancement for controllers/ai_controller.js",
+    "description": "🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო); 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო); 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ",
+    "files": [
+      {
+        "path": "controllers/ai_controller.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "high",
+    "evidence": [
+      {
+        "file": "controllers/ai_controller.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო); 🖥️ ბევრი console.log ნაპოვნია - production-ისთვის წაშლა განიხილეთ"
+      }
+    ],
+    "risk": "danger",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380128883_4ojr559nd",
+    "createdAt": "2025-11-17T11:48:48.883Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380128883",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:48:48.883Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Security Enhancement for contracts/openapi.yaml",
+    "description": "🔐 Security danger: 1 საკითხი ნაპოვნია; ⚠️ 5 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🔐 Security danger: 1 საკითხი ნაპოვნია; ⚠️ 5 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "files": [
+      {
+        "path": "contracts/openapi.yaml",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "high",
+    "evidence": [
+      {
+        "file": "contracts/openapi.yaml",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🔐 Security danger: 1 საკითხი ნაპოვნია; ⚠️ 5 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)"
+      }
+    ],
+    "risk": "danger",
+    "scope": [
+      "ai-generated",
+      "config"
+    ],
+    "id": "ai_prop_1763380128877_efmxw661w",
+    "createdAt": "2025-11-17T11:48:48.877Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380128877",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:48:48.877Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for context/user_preferences.js",
+    "description": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (487 სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (487 სიმბოლო)",
+    "files": [
+      {
+        "path": "context/user_preferences.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "context/user_preferences.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (487 სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380128873_ubjparcyg",
+    "createdAt": "2025-11-17T11:48:48.873Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380128872",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:48:48.873Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Security Enhancement for context/system_prompts.js",
+    "description": "🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (94): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (94): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "files": [
+      {
+        "path": "context/system_prompts.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "high",
+    "evidence": [
+      {
+        "file": "context/system_prompts.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🔐 Security danger: 1 საკითხი ნაპოვნია; 🧮 კოდის სირთულე მაღალია (94): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)"
+      }
+    ],
+    "risk": "danger",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380128868_063rakqce",
+    "createdAt": "2025-11-17T11:48:48.868Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380128867",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:48:48.868Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for context/git_prompts.js",
+    "description": "🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)",
+    "files": [
+      {
+        "path": "context/git_prompts.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "context/git_prompts.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (29): რეფაქტორინგი შეიძლება საჭირო იყოს; 🇬🇪 ქართული ტექსტი: undefined% (undefined სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380128862_cckvjmz0z",
+    "createdAt": "2025-11-17T11:48:48.862Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380128862",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:48:48.862Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for context/code_context.js",
+    "description": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)",
+    "files": [
+      {
+        "path": "context/code_context.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "context/code_context.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (100): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 1 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (231 სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380128858_2092q0lpw",
+    "createdAt": "2025-11-17T11:48:48.858Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380128858",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:48:48.858Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for config/runtimeConfig.js",
+    "description": "🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)",
+    "files": [
+      {
+        "path": "config/runtimeConfig.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "config/runtimeConfig.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (49): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 3 უსაფრთხოების pattern ნაპოვნია; 🇬🇪 ქართული ტექსტი: 1% (55 სიმბოლო)"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380128852_115k8bn63",
+    "createdAt": "2025-11-17T11:48:48.852Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380128852",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:48:48.852Z"
+      }
+    ],
+    "feedbackHistory": []
+  },
+  {
+    "title": "AI-Generated: Code Complexity Reduction for config/cloudrun_config.js",
+    "description": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "summary": "კოდის ხარისხის გაუმჯობესება - 🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია",
+    "files": [
+      {
+        "path": "config/cloudrun_config.js",
+        "action": "modify",
+        "content": "// AI suggested improvement"
+      }
+    ],
+    "priority": "medium",
+    "evidence": [
+      {
+        "file": "config/cloudrun_config.js",
+        "line": 1,
+        "rule": "ai-enhancement",
+        "note": "🧮 კოდის სირთულე მაღალია (52): რეფაქტორინგი შეიძლება საჭირო იყოს; ⚠️ 2 უსაფრთხოების pattern ნაპოვნია"
+      }
+    ],
+    "risk": "safe",
+    "scope": [
+      "ai-generated",
+      "javascript"
+    ],
+    "id": "ai_prop_1763380128845_ii6cpxpwp",
+    "createdAt": "2025-11-17T11:48:48.845Z",
+    "source": "ai-enhanced-monitor",
+    "status": "pending",
+    "aiGenerated": true,
+    "correlationId": "cid_1763380128845",
+    "kpiKey": "autoimprove:unknown",
+    "routeDecision": "simple",
+    "modelUsed": "llama3-8b-8192",
+    "memoryContext": [],
+    "statusHistory": [
+      {
+        "status": "pending",
+        "at": "2025-11-17T11:48:48.845Z"
       }
     ],
     "feedbackHistory": []
