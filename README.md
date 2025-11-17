@@ -72,6 +72,11 @@ npm install
 npm run dev
 ```
 
+### PostgreSQL + pgvector
+
+লোকალური განვითარებისთვის `docker compose up postgres -d` ააქტიურებს pgvector-ით მომზადებულ მონაცემთა ბაზას (`config/postgres/init.sql`).
+`.env.example` შეიცავს ნაგულისხმევ კავშირებს (`DATABASE_URL`) და Firebase client პარამეტრებს. დეტალური ნაბიჯები: [docs/database-setup.md](docs/database-setup.md).
+
 ### Git Hooks Configuration
 
 This project uses pre-commit hooks to ensure code quality. Running `npm install` now auto-configures the hooks via the `prepare` script. To manually (re)enable them:
