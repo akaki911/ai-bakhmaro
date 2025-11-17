@@ -21,11 +21,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { user, isAuthenticated, isLoading, authInitialized } = useAuth();
   const location = useLocation();
 
-  // Development mode bypass: allow access to all protected routes for debugging
-  if (import.meta.env.DEV || import.meta.env.MODE === 'development') {
-    return <>{children}</>;
-  }
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
