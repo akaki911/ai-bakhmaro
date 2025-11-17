@@ -32,7 +32,7 @@ const AdminPasskeyQuickLogin: React.FC = () => {
     try {
       console.log('🔐 [QUICK LOGIN] Starting quick passkey authentication...');
       
-      const result = await authenticateWithPasskey(false);
+      const result = await authenticateWithPasskey(false, 'admin@bakhmaro.co');
       
       if (result.success && result.user) {
         console.log('✅ [QUICK LOGIN] Quick passkey login successful');

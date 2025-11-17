@@ -140,6 +140,12 @@ const AdminPasskeyLogin: React.FC = () => {
       return;
     }
 
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
+      setBanner({ tone: 'error', message: 'გთხოვთ შეიყვანოთ ადმინის ელფოსტა Passkey შესვლამდე' });
+      return;
+    }
+
     setBanner(null);
     setFormError('');
     setPasskeyLoading(true);
@@ -147,7 +153,7 @@ const AdminPasskeyLogin: React.FC = () => {
     try {
       await ensureWebAuthnReady();
 
-      const optionsResponse = await fetch(PASSKEY_OPTIONS_ENDPOINT, createBackendPostInit({})).catch((error) => {
+      const optionsResponse = await fetch(PASSKEY_OPTIONS_ENDPOINT, createBackendPostInit({ identifier: normalizedEmail })).catch((error) => {
         console.warn('Passkey options fetch failed:', error);
         throw new Error('passkey-options-network');
       });
