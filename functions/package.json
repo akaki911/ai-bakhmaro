@@ -2,7 +2,7 @@
   "name": "ai-bakhmaro-functions",
   "description": "Cloud Functions for Firebase - AI Bakhmaro",
   "scripts": {
-    "lint": "eslint .",
+    "lint": "eslint \"src/**/*.{js,ts}\"",
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
     "start": "npm run shell",
