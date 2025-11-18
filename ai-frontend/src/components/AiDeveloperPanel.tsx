@@ -6,6 +6,7 @@ import { useAuth } from "../contexts/useAuth";
 import {
   Activity,
   Brain,
+  User,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -55,6 +56,7 @@ type AiDeveloperChatPanelProps = {
 
 type TabKey =
   | "dashboard"
+  | "profile"
   | "chat"
   | "console"
   | "explorer"
@@ -100,6 +102,7 @@ type StatCard = {
 };
 
 const CORE_TABS: TabKey[] = [
+  "profile",
   "dashboard",
   "chat",
   "console",
@@ -126,6 +129,7 @@ const normalizeTabKey = (value: string | null, validTabs: readonly TabKey[]): Ta
 const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
   onEmotionalStateChange,
 }) => {
+  const ProfileTab = React.lazy(() => import('./AIDeveloper/tabs/ProfileTab'));
   const {
     user: authUser,
     isAuthenticated,
@@ -1128,6 +1132,15 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
         title: "Settings",
         href: "/admin?tab=settings",
       },
+      {
+        key: "profile",
+        action: "tab",
+        tabKey: "profile",
+        icon: User,
+        label: "ჩემი სივრცე",
+        title: "ჩემი სივრცე",
+        href: "/admin?tab=profile",
+      },
     ];
   }, [hasDevConsoleAccess, isSuperAdminUser, secretsQueueBadge]);
 
@@ -1610,6 +1623,12 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
 
                     {activeTab === "mail" && (
                       <MailTab />
+                    )}
+
+                    {activeTab === "profile" && (
+                      <React.Suspense fallback={<div className="p-6">პროფილი იტვირთება...</div>}>
+                        <ProfileTab />
+                      </React.Suspense>
                     )}
 
                     {activeTab === "settings" && (

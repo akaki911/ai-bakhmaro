@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, ChevronDown, LogOut, Menu, Shield, Sparkles, User as UserIcon } from 'lucide-react';
+import { Bell, ChevronDown, LogOut, Menu, Shield, Sparkles, User as UserIcon, BadgeCheck } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
 import { useAIMode } from '../contexts/useAIMode';
 import type { UserRole } from '../contexts/AuthContext.types';
@@ -27,6 +27,12 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
+  {
+    label: 'ჩემი სივრცე',
+    to: '/admin?tab=profile',
+    requiresAuth: true,
+    roles: ['SUPER_ADMIN']
+  },
   {
     label: 'AI პანელი',
     to: '/admin?tab=dashboard',
@@ -455,6 +461,7 @@ const Header: React.FC<HeaderProps> = () => {
                   }}
                 >
                   <Shield size={16} aria-hidden="true" />
+                  <BadgeCheck size={14} style={{ color: '#93c5fd' }} aria-hidden="true" />
                   <span className="hidden sm:inline">ადმინ პანელი</span>
                 </Link>
               )}
@@ -472,28 +479,40 @@ const Header: React.FC<HeaderProps> = () => {
                     aria-haspopup="menu"
                     aria-expanded={isUserMenuOpen}
                   >
-                    <div
-                      className="flex h-8 w-8 items-center justify-center rounded-full"
-                      style={{
-                        backgroundColor: 'rgba(34,197,94,0.16)',
-                        color: headerTokens.colors.accent
-                      }}
-                    >
-                      {userInitial}
-                    </div>
-                    <div className="hidden min-w-0 flex-col text-left lg:flex">
-                      <span className="truncate text-xs font-semibold" style={{ color: headerTokens.colors.textPrimary }}>
-                        {user.displayName || user.firstName || user.email || 'მომხმარებელი'}
-                      </span>
-                      <span
-                        className="truncate text-xs"
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="flex h-8 w-8 items-center justify-center rounded-full"
                         style={{
-                          color: headerTokens.colors.textSecondary,
-                          maxWidth: isCompactTabs ? 140 : 180
+                          backgroundColor: user?.role === 'SUPER_ADMIN' ? 'rgba(16,185,129,0.18)' : 'rgba(241,245,249,0.08)',
+                          color: user?.role === 'SUPER_ADMIN' ? '#059669' : headerTokens.colors.accent
                         }}
+                        title={user?.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : undefined}
                       >
-                        {emailDisplay}
-                      </span>
+                        {userInitial}
+                      </div>
+
+                      <div className="hidden min-w-0 flex-col text-left lg:flex">
+                        <span className="truncate text-xs font-semibold" style={{ color: headerTokens.colors.textPrimary }}>
+                          {user.displayName || user.firstName || user.email || 'მომხმარებელი'}
+                          {user?.role === 'SUPER_ADMIN' && (
+                            <BadgeCheck size={14} style={{ marginLeft: 8, color: '#60a5fa' }} />
+                          )}
+                        </span>
+                        <span
+                          className="truncate text-xs"
+                          style={{
+                            color: headerTokens.colors.textSecondary,
+                            maxWidth: isCompactTabs ? 140 : 180
+                          }}
+                        >
+                          {emailDisplay}
+                        </span>
+                        {user?.role === 'SUPER_ADMIN' && (
+                          <span className="text-[11px]" style={{ color: headerTokens.colors.textSecondary }}>
+                            პირადი ნომერი: {user.personalId ?? '01019062020'}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <ChevronDown size={16} aria-hidden="true" style={{ color: headerTokens.colors.textSecondary }} />
                   </button>
@@ -529,6 +548,7 @@ const Header: React.FC<HeaderProps> = () => {
                         style={{ color: headerTokens.colors.textPrimary }}
                       >
                         <Shield size={16} />
+                        <BadgeCheck size={14} style={{ color: '#60a5fa' }} />
                         ადმინ პანელი
                       </Link>
                     )}
