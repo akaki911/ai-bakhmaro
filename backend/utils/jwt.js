@@ -2,7 +2,29 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const auditService = require('../services/audit_service');
+const superAdminService = require('../services/super_admin_service');
+const { getFirestore } = require('firebase-admin/firestore');
 const { requireRole: guruloRequireRole, allowSuperAdmin: guruloAllowSuperAdmin } = require('../../shared/gurulo-auth');
+
+let bcrypt;
+try {
+  // bcryptjs is pure JS and avoids native compilation in constrained environments
+  bcrypt = require('bcryptjs');
+} catch (error) {
+  console.error('⚠️ [AUTH] bcryptjs dependency missing - password verification disabled', error.message);
+}
+
+let db;
+const getDb = () => {
+  if (db) return db;
+  try {
+    db = getFirestore();
+  } catch (error) {
+    console.warn('⚠️ [AUTH] Firestore unavailable for credential checks:', error.message);
+    db = null;
+  }
+  return db;
+};
 
 // JWT Configuration
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
@@ -184,6 +206,44 @@ const requirePermission = (requiredPermission) => {
   };
 };
 
+const findUserRecord = async ({ email, personalId, userId }) => {
+  const database = getDb();
+  if (!database) {
+    return null;
+  }
+
+  const usersRef = database.collection('users');
+
+  const attemptDocLookup = async (id) => {
+    if (!id) return null;
+    const doc = await usersRef.doc(id).get();
+    if (doc.exists) {
+      return { id: doc.id, ...doc.data() };
+    }
+    return null;
+  };
+
+  const byId = await attemptDocLookup(userId);
+  if (byId) return byId;
+
+  const queries = [
+    { field: 'email', value: typeof email === 'string' ? email.trim().toLowerCase() : null },
+    { field: 'personalId', value: typeof personalId === 'string' ? personalId.trim() : null },
+    { field: 'userId', value: typeof userId === 'string' ? userId.trim() : null },
+  ];
+
+  for (const { field, value } of queries) {
+    if (!value) continue;
+    const snapshot = await usersRef.where(field, '==', value).limit(1).get();
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      return { id: doc.id, ...doc.data() };
+    }
+  }
+
+  return null;
+};
+
 // Token refresh endpoint logic
 const refreshTokenLogic = async (refreshToken) => {
   try {
@@ -211,33 +271,111 @@ const refreshTokenLogic = async (refreshToken) => {
 // Regular API token endpoint
 const generateTokenForRegularAPI = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    
-    // Validate against Firebase (this would be replaced with your user validation)
-    // For now, simple validation
-    if (!email || !password) {
+    const { email, password, personalId, userId } = req.body || {};
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : null;
+    const normalizedPersonalId = typeof personalId === 'string' ? personalId.trim() : null;
+    const normalizedUserId = typeof userId === 'string' ? userId.trim() : null;
+    const loginIdentifier = normalizedEmail || normalizedUserId || normalizedPersonalId || '';
+
+    const logFailure = async (reason, status = 401, code = 'NOT_AUTHORIZED', auditUserId = loginIdentifier) => {
+      await auditService.logLoginFail(auditUserId, reason, req, 'password');
+      return res.status(status).json({ error: 'Not authorized', code });
+    };
+
+    if (!bcrypt) {
+      return logFailure('Password verifier unavailable', 503, 'AUTH_DEPENDENCY_MISSING');
+    }
+
+    if (!password || (!normalizedEmail && !normalizedPersonalId && !normalizedUserId)) {
       return res.status(400).json({
-        error: 'Email and password required',
+        error: 'Email, personalId or userId and password required',
         code: 'MISSING_CREDENTIALS'
       });
     }
 
-    // Mock user validation - replace with actual Firebase/DB check
-    const userId = email; // This should be actual user ID
-    const role = 'SUPER_ADMIN';
-    
-    const accessToken = generateApiToken(userId, role);
-    const refreshToken = generateRefreshToken(userId);
+    const isSuperAdminLogin = superAdminService.matchesKnownId(loginIdentifier);
+    let resolvedUserId = loginIdentifier;
+    let resolvedRole = 'USER';
+    let permissions = [];
+    let userRecord = null;
+
+    if (isSuperAdminLogin) {
+      const profile = superAdminService.getProfileClone();
+      resolvedUserId = profile.userId;
+      const personalIdMatches = !normalizedPersonalId || normalizedPersonalId === profile.personalId;
+      const emailMatches = !normalizedEmail || normalizedEmail === profile.email.toLowerCase();
+
+      if (!personalIdMatches || !emailMatches) {
+        return logFailure('Super admin identity mismatch', 401, 'NOT_AUTHORIZED', profile.userId);
+      }
+
+      userRecord = await findUserRecord({
+        email: profile.email,
+        personalId: profile.personalId,
+        userId: profile.userId,
+      });
+
+      const hashedPassword = process.env.SUPER_ADMIN_HASHED_PASSWORD || userRecord?.hashedPassword || userRecord?.passwordHash;
+      if (!hashedPassword) {
+        return logFailure('Super admin password not configured', 401, 'NOT_AUTHORIZED', profile.userId);
+      }
+
+      const passwordValid = await bcrypt.compare(password, hashedPassword);
+      if (!passwordValid) {
+        return logFailure('Invalid super admin credentials', 401, 'NOT_AUTHORIZED', profile.userId);
+      }
+
+      resolvedRole = 'SUPER_ADMIN';
+      permissions = Array.isArray(userRecord?.permissions) ? userRecord.permissions : ['*'];
+      userRecord = { ...profile, permissions };
+    } else {
+      userRecord = await findUserRecord({ email: normalizedEmail, personalId: normalizedPersonalId, userId: normalizedUserId });
+
+      if (!userRecord) {
+        return logFailure('User not found', 401, 'NOT_AUTHORIZED', loginIdentifier || normalizedEmail || normalizedUserId);
+      }
+
+      const storedHash = userRecord.hashedPassword || userRecord.passwordHash;
+      if (!storedHash) {
+        return logFailure('Missing stored credentials', 401, 'NOT_AUTHORIZED', userRecord.id || userRecord.userId);
+      }
+
+      const personalIdMatches = !normalizedPersonalId || normalizedPersonalId === userRecord.personalId;
+      if (!personalIdMatches) {
+        return logFailure('Personal ID mismatch', 401, 'NOT_AUTHORIZED', userRecord.id || userRecord.userId);
+      }
+
+      const passwordValid = await bcrypt.compare(password, storedHash);
+      if (!passwordValid) {
+        return logFailure('Invalid credentials', 401, 'NOT_AUTHORIZED', userRecord.id || userRecord.userId);
+      }
+
+      resolvedUserId = userRecord.userId || userRecord.id || normalizedEmail || normalizedUserId;
+      resolvedRole = userRecord.role || 'USER';
+      permissions = Array.isArray(userRecord.permissions) ? userRecord.permissions : [];
+    }
+
+    const accessToken = generateApiToken(resolvedUserId, resolvedRole, permissions);
+    const refreshToken = generateRefreshToken(resolvedUserId);
+
+    await auditService.logLoginSuccess(resolvedUserId, resolvedRole, null, req, 'password');
 
     res.json({
       success: true,
       accessToken,
       refreshToken,
       expiresIn: JWT_EXPIRES_IN,
-      user: { id: userId, email, role }
+      user: {
+        id: resolvedUserId,
+        email: userRecord?.email || normalizedEmail,
+        personalId: userRecord?.personalId || normalizedPersonalId,
+        role: resolvedRole,
+        permissions,
+      }
     });
   } catch (error) {
     console.error('Token generation error:', error);
+    await auditService.logLoginFail('unknown', error.message, req, 'password');
     res.status(500).json({
       error: 'Token generation failed',
       code: 'TOKEN_GENERATION_ERROR'
