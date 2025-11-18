@@ -52,7 +52,9 @@ class SuperAdminService {
       return false;
     }
     const normalized = candidate.trim();
-    return normalized === this.profile.userId || normalized === this.profile.personalId || normalized === this.profile.email;
+    return normalized === this.profile.userId ||
+           normalized === this.profile.personalId ||
+           normalized.toLowerCase() === this.profile.email.toLowerCase();
   }
 
   async createUser({ userId, personalId, email, role = 'SUPER_ADMIN', status = 'active', displayName }) {

@@ -19,6 +19,7 @@ const {
 } = require("../middleware/admin_guards");
 
 const router = express.Router();
+  const { SUPER_ADMIN_PERSONAL_ID } = require('../../shared/gurulo-auth/gurulo.auth.js');
 
 const log = (...a) => console.log("🟡[admin_auth]", ...a);
 
@@ -82,6 +83,17 @@ function getDeviceFingerprint(req) {
     customFingerprint,
     xForwardedFor,
   ].join("|");
+
+      // Ensure the session belongs to the configured single super-admin by personalId
+      if (req.session.user.personalId !== SUPER_ADMIN_PERSONAL_ID) {
+        console.log('❌ [ADMIN AUTH] Session personalId does not match configured SUPER_ADMIN');
+        return res.status(403).json({
+          success: false,
+          error: 'Insufficient privileges',
+          authenticated: true,
+          code: 'INSUFFICIENT_PRIVILEGES'
+        });
+      }
 
   const fingerprint = Buffer.from(fingerprintData).toString("base64");
 

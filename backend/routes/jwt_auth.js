@@ -2,11 +2,12 @@
 const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
-const { generateTokenForRegularAPI, authenticateJWT, requireRole, refreshTokenLogic } = require('../utils/jwt');
+const { generateTokenForRegularAPI, authenticateJWT, requireRole, allowSuperAdmin, refreshTokenLogic } = require('../utils/jwt');
 
 const loginLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000, // 10 minutes
-  max: process.env.NODE_ENV === 'development' ? 10 : 3,
+  // რომ ავიღოთ უფრო მკაცრი ლიმიტი: შემოხაზვა მოკლე ფანჯრით
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: process.env.NODE_ENV === 'development' ? 5 : 3,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -54,7 +55,7 @@ router.get('/profile', authenticateJWT, (req, res) => {
 });
 
 // Admin-only endpoint example
-router.get('/admin-only', authenticateJWT, requireRole(['SUPER_ADMIN']), (req, res) => {
+router.get('/admin-only', authenticateJWT, allowSuperAdmin(), (req, res) => {
   res.json({
     success: true,
     message: 'Admin access granted',

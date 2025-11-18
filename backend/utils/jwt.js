@@ -32,10 +32,11 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
 const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 
 // Generate JWT token for API access
-const generateApiToken = (userId, role, permissions = []) => {
+const generateApiToken = (userId, role, permissions = [], personalId = null) => {
   const payload = {
     userId,
     role,
+    personalId: personalId || null,
     permissions,
     type: 'api_access',
     iat: Math.floor(Date.now() / 1000)
@@ -48,10 +49,12 @@ const generateApiToken = (userId, role, permissions = []) => {
   });
 };
 
-// Generate refresh token
-const generateRefreshToken = (userId) => {
+// Generate refresh token (keeps minimal user info to re-issue access tokens)
+const generateRefreshToken = (userId, role = null, personalId = null) => {
   const payload = {
     userId,
+    role: role || null,
+    personalId: personalId || null,
     type: 'refresh',
     iat: Math.floor(Date.now() / 1000)
   };
@@ -119,10 +122,11 @@ const authenticateJWT = (req, res, next) => {
       });
     }
 
-    // Attach user info to request
+    // Attach user info to request (include personalId for downstream checks)
     req.user = {
       id: decoded.userId,
       role: decoded.role,
+      personalId: decoded.personalId || null,
       permissions: decoded.permissions || []
     };
 
@@ -254,9 +258,11 @@ const refreshTokenLogic = async (refreshToken) => {
     }
 
     // In production, verify refresh token against database/Redis
-    // For now, generate new tokens
-    const newAccessToken = generateApiToken(decoded.userId, 'SUPER_ADMIN');
-    const newRefreshToken = generateRefreshToken(decoded.userId);
+    // For now, generate new tokens using stored role/personalId from the refresh token
+    const role = decoded.role || 'USER';
+    const personalId = decoded.personalId || null;
+    const newAccessToken = generateApiToken(decoded.userId, role, decoded.permissions || [], personalId);
+    const newRefreshToken = generateRefreshToken(decoded.userId, role, personalId);
 
     return {
       accessToken: newAccessToken,
@@ -293,7 +299,18 @@ const generateTokenForRegularAPI = async (req, res) => {
       });
     }
 
-    const isSuperAdminLogin = superAdminService.matchesKnownId(loginIdentifier);
+    // Robust super-admin detection: check all normalized identifiers and
+    // do a case-insensitive email comparison against the stored profile.
+    const profile = superAdminService.getProfileClone();
+    const isSuperAdminLogin = (() => {
+      if (superAdminService.matchesKnownId(loginIdentifier)) return true;
+      if (normalizedUserId && superAdminService.matchesKnownId(normalizedUserId)) return true;
+      if (normalizedPersonalId && superAdminService.matchesKnownId(normalizedPersonalId)) return true;
+      if (normalizedEmail && superAdminService.matchesKnownId(normalizedEmail)) return true;
+      // Fallback: profile email may have different casing - compare lowercased
+      if (normalizedEmail && profile?.email && normalizedEmail === String(profile.email).trim().toLowerCase()) return true;
+      return false;
+    })();
     let resolvedUserId = loginIdentifier;
     let resolvedRole = 'USER';
     let permissions = [];
@@ -355,8 +372,8 @@ const generateTokenForRegularAPI = async (req, res) => {
       permissions = Array.isArray(userRecord.permissions) ? userRecord.permissions : [];
     }
 
-    const accessToken = generateApiToken(resolvedUserId, resolvedRole, permissions);
-    const refreshToken = generateRefreshToken(resolvedUserId);
+    const accessToken = generateApiToken(resolvedUserId, resolvedRole, permissions, userRecord?.personalId || normalizedPersonalId);
+    const refreshToken = generateRefreshToken(resolvedUserId, resolvedRole, userRecord?.personalId || normalizedPersonalId);
 
     await auditService.logLoginSuccess(resolvedUserId, resolvedRole, null, req, 'password');
 
