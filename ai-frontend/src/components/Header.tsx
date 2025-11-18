@@ -333,8 +333,7 @@ const Header: React.FC<HeaderProps> = () => {
 
                   {isDesktopNavOpen && (
                     <nav
-                      role="menu"
-                      aria-label="Primary"
+                      aria-label="Primary navigation"
                       className="absolute left-0 z-50 mt-3 min-w-[220px] rounded-2xl border bg-white p-2 shadow-xl"
                     >
                       {availableNavItems.map(item => {
@@ -345,7 +344,6 @@ const Header: React.FC<HeaderProps> = () => {
                           <NavLink
                             key={item.to}
                             to={item.to}
-                            role="menuitem"
                             className={({ isActive }) =>
                               [
                                 'flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold',
@@ -390,21 +388,21 @@ const Header: React.FC<HeaderProps> = () => {
                   </button>
                   {isMobileNavOpen && (
                     <div
-                      role="menu"
+                      aria-label="Mobile navigation"
                       className="absolute right-0 z-50 mt-3 min-w-[220px] rounded-2xl border bg-white p-2 shadow-xl"
                     >
                       {availableNavItems.map(item => (
                         <NavLink
                           key={item.to}
                           to={item.to}
-                          role="menuitem"
                           className={({ isActive }) =>
                             [
                               'block rounded-xl px-3 py-2 text-sm font-medium',
                               isActive
                                 ? 'bg-emerald-50 text-emerald-600'
-                                : 'text-slate-600 hover:bg-slate-100 hover:text-emerald-600'
-                            , 'header-tab-size'].join(' ')
+                                : 'text-slate-600 hover:bg-slate-100 hover:text-emerald-600',
+                              'header-tab-size'
+                            ].join(' ')
                           }
                         >
                           {item.label}
