@@ -1,10 +1,23 @@
 
 const express = require('express');
 const router = express.Router();
+const rateLimit = require('express-rate-limit');
 const { generateTokenForRegularAPI, authenticateJWT, requireRole, refreshTokenLogic } = require('../utils/jwt');
 
+const loginLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: process.env.NODE_ENV === 'development' ? 10 : 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: 'Too many login attempts',
+    code: 'AUTH_RATE_LIMITED',
+    retryAfter: '10 minutes'
+  }
+});
+
 // Login endpoint for regular users (returns JWT)
-router.post('/login', generateTokenForRegularAPI);
+router.post('/login', loginLimiter, generateTokenForRegularAPI);
 
 // Token refresh endpoint
 router.post('/refresh', async (req, res) => {
