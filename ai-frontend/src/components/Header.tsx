@@ -8,6 +8,32 @@ import DiagnosticBanner from './layout/DiagnosticBanner';
 import { headerTokens } from './layout/headerTokens';
 import { useDailyGreeting } from '../hooks/useDailyGreeting';
 
+type StatusVariant = 'super' | 'admin' | 'user' | 'guest';
+
+function StatusPill({ role, personalId }: { role?: string | null; personalId?: string | null }) {
+  const variant: StatusVariant = role === 'SUPER_ADMIN' ? 'super' : role === 'ADMIN' ? 'admin' : role ? 'user' : 'guest';
+
+  const bg = variant === 'super' ? 'bg-emerald-100' : variant === 'admin' ? 'bg-sky-100' : 'bg-slate-100';
+  const text = variant === 'super' ? 'სუპერ ადმინ' : variant === 'admin' ? 'ადმინ' : variant === 'user' ? 'მომხმარებელი' : 'სტუმარი';
+
+  return (
+    <div className={`inline-flex items-center gap-2 rounded-full px-2 py-0.5 ${bg} text-xs font-semibold`} role="status" aria-label={`${text} status`}>
+      {variant === 'super' ? (
+        <>
+          <BadgeCheck size={14} style={{ color: '#60a5fa' }} aria-hidden="true" />
+          <span>{text}</span>
+          {personalId ? <span className="ml-2 text-[11px] text-slate-600">ID: {personalId}</span> : null}
+        </>
+      ) : (
+        <>
+          <Shield size={14} aria-hidden="true" />
+          <span>{text}</span>
+        </>
+      )}
+    </div>
+  );
+}
+
 interface HeaderProps {
   onMenuToggle?: () => void;
   isMobileMenuOpen?: boolean;
@@ -492,12 +518,16 @@ const Header: React.FC<HeaderProps> = () => {
                       </div>
 
                       <div className="hidden min-w-0 flex-col text-left lg:flex">
-                        <span className="truncate text-xs font-semibold" style={{ color: headerTokens.colors.textPrimary }}>
-                          {user.displayName || user.firstName || user.email || 'მომხმარებელი'}
+                        <div className="flex items-center gap-2">
+                          <span className="truncate text-xs font-semibold" style={{ color: headerTokens.colors.textPrimary }}>
+                            {user.displayName || user.firstName || user.email || 'მომხმარებელი'}
+                          </span>
                           {user?.role === 'SUPER_ADMIN' && (
-                            <BadgeCheck size={14} style={{ marginLeft: 8, color: '#60a5fa' }} />
+                            <span title="SUPER_ADMIN" aria-hidden="false">
+                              <BadgeCheck size={14} style={{ color: '#60a5fa' }} />
+                            </span>
                           )}
-                        </span>
+                        </div>
                         <span
                           className="truncate text-xs"
                           style={{
@@ -508,9 +538,9 @@ const Header: React.FC<HeaderProps> = () => {
                           {emailDisplay}
                         </span>
                         {user?.role === 'SUPER_ADMIN' && (
-                          <span className="text-[11px]" style={{ color: headerTokens.colors.textSecondary }}>
-                            პირადი ნომერი: {user.personalId ?? '01019062020'}
-                          </span>
+                          <div className="mt-1">
+                            <StatusPill role={user.role} personalId={user.personalId ?? '01019062020'} />
+                          </div>
                         )}
                       </div>
                     </div>
