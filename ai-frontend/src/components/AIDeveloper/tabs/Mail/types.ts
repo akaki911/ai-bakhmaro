@@ -18,7 +18,7 @@ export interface MailAccountConfig {
     smtpHost: string;
     smtpPort: number;
     user: string;
-    pass: string;
+    pass?: string;
     undoSendDelay?: number;
 }
 

@@ -66,6 +66,7 @@ export function useAuth() {
       loginWithPhoneAndPassword: async () => {},
       checkUserExists: async () => false,
       updateUserPreferences: async () => {},
+      updateUserProfile: async () => {},
     };
   }
   return context;

@@ -69,6 +69,13 @@ export const MultiTabTerminal: React.FC<MultiTabTerminalProps> = ({
   const activeTab = tabs.find(tab => tab.id === activeTabId);
   const activeSession = activeTab ? sessions.get(activeTab.sessionId) : null;
 
+  const handleCreateTab = useCallback(async () => {
+    const tabId = await createTab(`Terminal ${tabs.length + 1}`);
+    if (commandInputRef.current) {
+      commandInputRef.current.focus();
+    }
+  }, [createTab, tabs.length]);
+
   useEffect(() => {
     if (initialTabRequestedRef.current) return;
     if (tabs.length > 0 || sessions.size > 0) {
@@ -95,13 +102,6 @@ export const MultiTabTerminal: React.FC<MultiTabTerminalProps> = ({
       onTabChange(activeTabId);
     }
   }, [activeTabId, onTabChange]);
-
-  const handleCreateTab = useCallback(async () => {
-    const tabId = await createTab(`Terminal ${tabs.length + 1}`);
-    if (commandInputRef.current) {
-      commandInputRef.current.focus();
-    }
-  }, [createTab, tabs.length]);
 
   const handleTabClick = useCallback((tabId: string) => {
     setActiveTab(tabId);

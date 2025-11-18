@@ -204,6 +204,41 @@
   --toggle-halo-highlight: radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0));
 }
 
+/* Header token variable helpers (set by Header.tsx at runtime) */
+:root {
+  --header-bg: var(--admin-surface);
+  --header-border: var(--admin-border);
+  --header-text-primary: var(--admin-text-primary);
+  --header-text-secondary: var(--admin-text-secondary);
+  --header-accent: rgba(16,185,129,0.95);
+  --badge-info-bg: rgba(99,102,241,0.12);
+  --badge-info-text: #4338ca;
+  --badge-success-bg: rgba(34,197,94,0.12);
+  --badge-success-text: #065f46;
+  --badge-warning-bg: rgba(250,204,21,0.12);
+  --badge-warning-text: #92400e;
+  --header-tab-font-size: 14px;
+}
+
+/* Utility classes used by Header to avoid inline styles */
+.header-surface {
+  background-color: var(--header-bg) !important;
+  border-bottom: 1px solid var(--header-border) !important;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04) !important;
+}
+
+.header-text-primary { color: var(--header-text-primary) !important; }
+.header-text-secondary { color: var(--header-text-secondary) !important; }
+.header-accent { background-color: var(--header-accent) !important; }
+.header-accent-text { color: #ffffff !important; }
+.header-tab-size { font-size: var(--header-tab-font-size) !important; }
+
+.badge-tone-info { background-color: var(--badge-info-bg); color: var(--badge-info-text); }
+.badge-tone-success { background-color: var(--badge-success-bg); color: var(--badge-success-text); }
+.badge-tone-warning { background-color: var(--badge-warning-bg); color: var(--badge-warning-text); }
+
+.shadow-admin-accent { box-shadow: 0 12px 24px rgba(34,197,94,0.18) !important; }
+
 :root.dark {
   --admin-bg-start: #0e1116;
   --admin-bg-mid: #2c214e;

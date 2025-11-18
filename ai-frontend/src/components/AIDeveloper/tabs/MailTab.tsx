@@ -182,10 +182,10 @@ const MailTab: React.FC = () => {
 
   const handleSetEmailRead = useCallback(async (emailId: string, read: boolean) => {
     if (!activeAccountId) return;
-    const updatedEmail = await guruloService.updateEmail(activeAccountId, emailId, { read });
+    await guruloService.updateEmail(activeAccountId, emailId, { read });
     setEmails(prevEmails =>
       prevEmails.map(email =>
-        email.id === emailId ? updatedEmail : email
+        email.id === emailId ? { ...email, read } : email
       )
     );
   }, [activeAccountId]);
@@ -306,8 +306,8 @@ const MailTab: React.FC = () => {
   const handleBulkMarkUnread = useCallback(async () => {
     if (!activeAccountId || selectedEmailIds.size === 0) return;
     try {
-      const updatedEmails = await guruloService.updateEmails(activeAccountId, Array.from(selectedEmailIds), { read: false });
-      setEmails(prev => prev.map(e => updatedEmails.find(u => u.id === e.id) || e));
+      await guruloService.updateEmails(activeAccountId, Array.from(selectedEmailIds), { read: false });
+      setEmails(prev => prev.map(e => selectedEmailIds.has(e.id) ? { ...e, read: false } : e));
       setSelectedEmailIds(new Set());
       showToast({ message: 'მონიშნულია როგორც წაუკითხავი' });
     } catch (error) {
@@ -355,7 +355,7 @@ const MailTab: React.FC = () => {
       try {
         const affectedEmails = await guruloService.deleteCustomFolder(activeAccountId, folderId);
         setCustomFolders(prev => prev.filter(f => f.id !== folderId));
-        setEmails(prev => prev.map(e => affectedEmails.find(ae => ae.id === e.id) || e));
+        setEmails(prev => prev.map(e => affectedEmails.find((ae: Email) => ae.id === e.id) || e));
         if (activeFolder === folderId) {
           setActiveFolder(Folder.Inbox);
         }

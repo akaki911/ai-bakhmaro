@@ -1,76 +1,7 @@
 import { buildApiUrl } from '@/lib/apiBase';
 import { envFeatureFlag } from '@/lib/featureFlags';
 import { rateLimitedJsonFetch } from '@/utils/rateLimitedFetch';
-
-export interface MailAccountConfig {
-  imapHost: string;
-  imapPort: number;
-  smtpHost: string;
-  smtpPort: number;
-  user: string;
-  hasPassword?: boolean;
-  useSecureImap?: boolean;
-  useSecureSmtp?: boolean;
-}
-
-export interface MailAccountSummary {
-  id: string;
-  name: string;
-  email: string;
-  isDefault: boolean;
-  config: MailAccountConfig;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-}
-
-export interface MailAccountPayload {
-  name: string;
-  email: string;
-  isDefault?: boolean;
-  config: {
-    imapHost: string;
-    imapPort: number;
-    smtpHost: string;
-    smtpPort: number;
-    user: string;
-    pass?: string;
-    useSecureImap?: boolean;
-    useSecureSmtp?: boolean;
-  };
-}
-
-export interface MailSyncResponse {
-  success: boolean;
-  folder: string;
-  accountId: string;
-  messages: Array<{
-    id: string;
-    subject: string;
-    from: string;
-    to: string;
-    date: string | null;
-    snippet: string;
-    flags: string[];
-  }>;
-}
-
-export interface MailSendPayload {
-  to: string | string[];
-  cc?: string | string[];
-  bcc?: string | string[];
-  subject: string;
-  text?: string;
-  html?: string;
-  attachments?: Array<{ filename: string; content: string; encoding?: string }>;
-}
-
-export interface OfflineMailData {
-  accounts: MailAccountSummary[];
-  activeAccountId: string | null;
-  emails: any[];
-  customFolders: any[];
-  tags: any[];
-}
+import { MailAccountConfig, MailAccountSummary, MailAccountPayload, MailSyncResponse, MailSendPayload, OfflineMailData } from './types';
 
 const jsonHeaders = { 'Content-Type': 'application/json' } as const;
 const BASE_KEY = 'gurulo:mail';
@@ -166,6 +97,47 @@ const HttpMailService = {
     ),
 
   loadOfflineData: (): OfflineMailData | null => null,
+
+  createFilterRule: async (accountId: string, rule: { sender: string; folderId: string; }) => {
+    console.warn('createFilterRule not yet implemented');
+    return Promise.resolve({ success: true });
+  },
+  createCustomFolder: async (accountId: string, name: string) => {
+    console.warn('createCustomFolder not yet implemented');
+    return Promise.resolve({ id: 'new-folder', name });
+  },
+  updateCustomFolder: async (accountId: string, folderId: string, newName: string) => {
+    console.warn('updateCustomFolder not yet implemented');
+    return Promise.resolve({ id: folderId, name: newName });
+  },
+  deleteCustomFolder: async (accountId: string, folderId: string) => {
+    console.warn('deleteCustomFolder not yet implemented');
+    return Promise.resolve([]);
+  },
+  addAccount: async (name: string, email: string) => {
+    console.warn('addAccount not yet implemented');
+    return Promise.resolve({ id: 'new-account', name, email, isDefault: false, config: {} as MailAccountConfig, createdAt: '', updatedAt: '' });
+  },
+  saveAccountConfig: async (accountId: string, config: MailAccountConfig) => {
+    console.warn('saveAccountConfig not yet implemented');
+    return Promise.resolve({ id: accountId, name: 'account', email: 'email', isDefault: false, config, createdAt: '', updatedAt: '' });
+  },
+  saveDraft: async (accountId: string, draftData: any, draftId: string | null) => {
+    console.warn('saveDraft not yet implemented');
+    return Promise.resolve({ id: draftId || 'new-draft', ...draftData });
+  },
+  createTag: async (accountId: string, name: string, color: string) => {
+    console.warn('createTag not yet implemented');
+    return Promise.resolve({ id: 'new-tag', name, color });
+  },
+  updateTag: async (accountId: string, tagId: string, newName: string, newColor: string) => {
+    console.warn('updateTag not yet implemented');
+    return Promise.resolve({ id: tagId, name: newName, color: newColor });
+  },
+  deleteTag: async (accountId: string, tagId: string) => {
+    console.warn('deleteTag not yet implemented');
+    return Promise.resolve({ success: true });
+  },
 };
 
 type MailboxByFolder = Record<string, MailSyncResponse>;
@@ -282,6 +254,7 @@ const getPrototypeSyncResponse = (folder: string, accountId?: string): MailSyncR
 };
 
 const PrototypeMailService: typeof HttpMailService = {
+  ...HttpMailService,
   listAccounts: async () => ({ success: true, accounts: deepClone(demoAccounts) }),
 
   createAccount: async (payload: MailAccountPayload) => {
@@ -380,13 +353,15 @@ const PrototypeMailService: typeof HttpMailService = {
 
     return { success: true };
   },
-
-  loadOfflineData: (): OfflineMailData | null => null,
 };
 
 export const GuruloMailService = USE_MAIL_PROTOTYPE ? PrototypeMailService : HttpMailService;
 
 export type GuruloMailServiceType = typeof GuruloMailService;
+
+export function loadOfflineData(): OfflineMailData | null {
+  return GuruloMailService.loadOfflineData();
+}
 
 export async function getAccounts(): Promise<MailAccountSummary[]> {
   const response = await GuruloMailService.listAccounts();
@@ -442,4 +417,41 @@ export async function updateEmail(_accountId: string, _emailId: string, _updates
 
 export async function updateEmails(_accountId: string, _emailIds: string[], _updates: any): Promise<void> {
   console.warn('updateEmails not yet implemented');
+}
+
+export async function createFilterRule(accountId: string, rule: { sender: string; folderId: string; }): Promise<any> {
+    return GuruloMailService.createFilterRule(accountId, rule);
+}
+export async function createCustomFolder(accountId: string, name: string): Promise<any> {
+    return GuruloMailService.createCustomFolder(accountId, name);
+}
+export async function updateCustomFolder(accountId: string, folderId: string, newName: string): Promise<any> {
+    return GuruloMailService.updateCustomFolder(accountId, folderId, newName);
+}
+export async function deleteCustomFolder(accountId: string, folderId: string): Promise<any> {
+    return GuruloMailService.deleteCustomFolder(accountId, folderId);
+}
+export async function addAccount(name: string, email: string): Promise<any> {
+    return GuruloMailService.addAccount(name, email);
+}
+export async function saveAccountConfig(accountId: string, config: MailAccountConfig): Promise<any> {
+    return GuruloMailService.saveAccountConfig(accountId, config);
+}
+export async function saveDraft(accountId: string, draftData: any, draftId: string | null): Promise<any> {
+    return GuruloMailService.saveDraft(accountId, draftData, draftId);
+}
+export async function createTag(accountId: string, name: string, color: string): Promise<any> {
+    return GuruloMailService.createTag(accountId, name, color);
+}
+export async function updateTag(accountId: string, tagId: string, newName: string, newColor: string): Promise<any> {
+    return GuruloMailService.updateTag(accountId, tagId, newName, newColor);
+}
+export async function deleteTag(accountId: string, tagId: string): Promise<any> {
+    return GuruloMailService.deleteTag(accountId, tagId);
+}
+export async function testConnection(accountId: string): Promise<any> {
+    return GuruloMailService.testConnection(accountId);
+}
+export async function deleteAccount(accountId: string): Promise<any> {
+    return GuruloMailService.deleteAccount(accountId);
 }

@@ -1541,6 +1541,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [firebaseUid]);
 
+  // Update user profile (shallow merge) and persist to Firestore or backend
+  const updateUserProfile = useCallback(async (patch: Partial<User>) => {
+    if (!patch || typeof patch !== 'object') return;
+
+    // Update local state immediately for snappy UX
+    setUser(current => (current ? { ...current, ...patch } : current));
+
+    const docId = firebaseUid || auth.currentUser?.uid;
+
+    // Try Firestore first (when available)
+    if (docId) {
+      try {
+        await setDoc(doc(db, 'users', docId), { ...patch, updatedAt: new Date() }, { merge: true });
+        return;
+      } catch (err) {
+        console.warn('⚠️ [Auth] Firestore updateUserProfile failed, falling back to /api/user/update', err);
+      }
+    }
+
+    // Fallback to backend API
+    try {
+      const res = await fetch('/api/user/update', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch)
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.warn('⚠️ [Auth] /api/user/update failed:', res.status, text);
+      }
+    } catch (err) {
+      console.error('❌ [Auth] updateUserProfile network error:', err);
+    }
+  }, [firebaseUid]);
+
   const checkUserRole = async () => {
     try {
       const data = await singleFlight("checkUserRole", async () => {
@@ -1798,6 +1835,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUserRole,
     checkUserRole,
     updateUserPreferences
+    , updateUserProfile
   }), [
     user, isAuthenticated, isLoading, authInitialized, deviceRecognition, deviceTrust,
     userRole, isAuthReady, personalId, firebaseUid,
@@ -1806,6 +1844,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     routeAdvice, // Include routeAdvice in dependencies
     retryPreflightChecks,
     updateUserPreferences,
+    updateUserProfile,
     fallbackAuthState,
   ]);
 

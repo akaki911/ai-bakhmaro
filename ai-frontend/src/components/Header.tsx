@@ -20,7 +20,7 @@ function StatusPill({ role, personalId }: { role?: string | null; personalId?: s
     <div className={`inline-flex items-center gap-2 rounded-full px-2 py-0.5 ${bg} text-xs font-semibold`} role="status" aria-label={`${text} status`}>
       {variant === 'super' ? (
         <>
-          <BadgeCheck size={14} style={{ color: '#60a5fa' }} aria-hidden="true" />
+          <BadgeCheck size={14} className="text-sky-400" aria-hidden="true" />
           <span>{text}</span>
           {personalId ? <span className="ml-2 text-[11px] text-slate-600">ID: {personalId}</span> : null}
         </>
@@ -258,19 +258,27 @@ const Header: React.FC<HeaderProps> = () => {
     root.style.setProperty('--header-h', `${headerHeight}px`);
     root.style.setProperty('--safe-padding', `${safePadding}px`);
 
+    // expose header color tokens to CSS variables so we can avoid inline styles
+    root.style.setProperty('--header-bg', headerTokens.colors.headerBackground);
+    root.style.setProperty('--header-border', headerTokens.colors.border);
+    root.style.setProperty('--header-text-primary', headerTokens.colors.textPrimary);
+    root.style.setProperty('--header-text-secondary', headerTokens.colors.textSecondary);
+    root.style.setProperty('--header-accent', headerTokens.colors.accent);
+    root.style.setProperty('--badge-info-bg', headerTokens.colors.badgeInfoBg);
+    root.style.setProperty('--badge-info-text', headerTokens.colors.badgeInfoText);
+    root.style.setProperty('--badge-success-bg', headerTokens.colors.badgeSuccessBg);
+    root.style.setProperty('--badge-success-text', headerTokens.colors.badgeSuccessText);
+    root.style.setProperty('--badge-warning-bg', headerTokens.colors.badgeWarningBg);
+    root.style.setProperty('--badge-warning-text', headerTokens.colors.badgeWarningText);
+    root.style.setProperty('--header-tab-font-size', `${headerTokens.typography.tab.size}px`);
+
     return () => {
       root.style.removeProperty('--header-h');
       root.style.removeProperty('--safe-padding');
     };
   }, [headerHeight, safePadding]);
 
-  const headerStyle: HeaderCSSProperties = {
-    backgroundColor: headerTokens.colors.headerBackground,
-    borderBottom: `1px solid ${headerTokens.colors.border}`,
-    boxShadow: '0 1px 0 rgba(15,23,42,0.04)',
-    '--header-h': `${headerHeight}px`,
-    '--safe-padding': `${safePadding}px`
-  };
+  
   const isCompactTabs = viewportWidth >= 920 && viewportWidth < 1200;
 
   const handleLogout = async () => {
@@ -290,34 +298,20 @@ const Header: React.FC<HeaderProps> = () => {
 
   return (
     <>
-      <header className={`${HEADER_CLASS} relative`} style={headerStyle}>
-        <div className="border-b" style={{ borderColor: headerTokens.colors.border }}>
+      <header className={`${HEADER_CLASS} relative header-surface`}>
+        <div className="border-b">
           <div className="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-3 px-4 py-2 sm:gap-4 sm:py-2.5 lg:px-6">
             <div className="flex flex-1 items-center gap-6">
               <Link
                 to="/"
-                className={`flex items-center gap-3 ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
-                style={{ color: headerTokens.colors.textPrimary }}
+                className={`flex items-center gap-3 ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 header-text-primary`}
               >
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-full shadow-sm sm:h-11 sm:w-11"
-                  style={{
-                    backgroundColor: headerTokens.colors.accent,
-                    color: '#FFFFFF'
-                  }}
-                >
+                <div className="flex h-10 w-10 items-center justify-center rounded-full shadow-sm sm:h-11 sm:w-11 header-accent header-accent-text">
                   <Sparkles size={22} />
                 </div>
                 <div className="min-w-0">
-                  <p
-                    className="truncate text-base font-semibold sm:text-lg"
-                    style={{ color: headerTokens.colors.textPrimary }}
-                  >
-                    AI სივრცე
-                  </p>
-                  <p className="text-[11px] sm:text-xs" style={{ color: headerTokens.colors.textSecondary }}>
-                    {pageTitle}
-                  </p>
+                  <p className="truncate text-base font-semibold sm:text-lg header-text-primary">AI სივრცე</p>
+                  <p className="text-[11px] sm:text-xs header-text-secondary">{pageTitle}</p>
                 </div>
               </Link>
 
@@ -326,22 +320,14 @@ const Header: React.FC<HeaderProps> = () => {
                   <button
                     type="button"
                     onClick={() => setIsDesktopNavOpen(prev => !prev)}
-                    className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold shadow-sm ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
-                    style={{
-                      backgroundColor: '#FFFFFF',
-                      borderColor: isDesktopNavOpen
-                        ? 'rgba(16,185,129,0.4)'
-                        : headerTokens.colors.border,
-                      color: headerTokens.colors.textPrimary,
-                      fontSize: headerTokens.typography.tab.size
-                    }}
+                    className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold shadow-sm ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 bg-white header-text-primary header-tab-size`}
                     aria-expanded={isDesktopNavOpen}
                     aria-haspopup="menu"
                   >
                     <span>მენიუ</span>
                     <ChevronDown
                       size={16}
-                      className={`transition-transform ${isDesktopNavOpen ? 'rotate-180' : ''}`}
+                      className={`transition-transform ${isDesktopNavOpen ? 'rotate-180' : ''} header-text-secondary`}
                     />
                   </button>
 
@@ -350,7 +336,6 @@ const Header: React.FC<HeaderProps> = () => {
                       role="menu"
                       aria-label="Primary"
                       className="absolute left-0 z-50 mt-3 min-w-[220px] rounded-2xl border bg-white p-2 shadow-xl"
-                      style={{ borderColor: headerTokens.colors.border }}
                     >
                       {availableNavItems.map(item => {
                         const tone: BadgeTone = item.badge?.tone ?? 'info';
@@ -366,17 +351,14 @@ const Header: React.FC<HeaderProps> = () => {
                                 'flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold',
                                 isActive
                                   ? 'bg-emerald-50 text-emerald-600'
-                                  : 'text-slate-600 hover:bg-slate-100 hover:text-emerald-600'
+                                  : 'text-slate-600 hover:bg-slate-100 hover:text-emerald-600',
+                                'header-tab-size'
                               ].join(' ')
                             }
-                            style={{ fontSize: headerTokens.typography.tab.size }}
                           >
                             <span>{item.label}</span>
                             {item.badge && (
-                              <span
-                                className="rounded-full px-2 py-0.5 text-xs font-semibold"
-                                style={badgeStyle}
-                              >
+                              <span className={`rounded-full px-2 py-0.5 text-xs font-semibold badge-tone-${tone}`}>
                                 {item.badge.text}
                               </span>
                             )}
@@ -391,14 +373,7 @@ const Header: React.FC<HeaderProps> = () => {
 
             <div className="flex items-center gap-3">
               {!isLiveMode && (
-                <span
-                  className="inline-flex items-center whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold"
-                  style={{
-                    borderColor: headerTokens.colors.accent,
-                    backgroundColor: '#FEF3C7',
-                    color: headerTokens.colors.accent
-                  }}
-                >
+                <span className="inline-flex items-center whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold bg-yellow-100 header-accent-text">
                   ⚠️ Demo fallback active
                 </span>
               )}
@@ -409,11 +384,7 @@ const Header: React.FC<HeaderProps> = () => {
                     onClick={() => setIsMobileNavOpen(prev => !prev)}
                     aria-expanded={isMobileNavOpen}
                     aria-haspopup="menu"
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl text-xl ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
-                    style={{
-                      backgroundColor: '#F1F5F9',
-                      color: headerTokens.colors.textPrimary
-                    }}
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl text-xl ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 bg-slate-100 header-text-primary`}
                   >
                     <Menu size={20} />
                   </button>
@@ -421,7 +392,6 @@ const Header: React.FC<HeaderProps> = () => {
                     <div
                       role="menu"
                       className="absolute right-0 z-50 mt-3 min-w-[220px] rounded-2xl border bg-white p-2 shadow-xl"
-                      style={{ borderColor: headerTokens.colors.border }}
                     >
                       {availableNavItems.map(item => (
                         <NavLink
@@ -434,9 +404,8 @@ const Header: React.FC<HeaderProps> = () => {
                               isActive
                                 ? 'bg-emerald-50 text-emerald-600'
                                 : 'text-slate-600 hover:bg-slate-100 hover:text-emerald-600'
-                            ].join(' ')
+                            , 'header-tab-size'].join(' ')
                           }
-                          style={{ fontSize: headerTokens.typography.tab.size }}
                         >
                           {item.label}
                         </NavLink>
@@ -449,11 +418,7 @@ const Header: React.FC<HeaderProps> = () => {
               <div className="hidden items-center gap-2 md:flex">
                 <button
                   type="button"
-                  className={`flex h-10 w-10 items-center justify-center rounded-xl ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
-                  style={{
-                    backgroundColor: '#F1F5F9',
-                    color: headerTokens.colors.textSecondary
-                  }}
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 bg-slate-100 header-text-secondary`}
                   aria-label="შეტყობინებები"
                 >
                   <Bell size={18} />
@@ -462,32 +427,18 @@ const Header: React.FC<HeaderProps> = () => {
 
               {isAuthenticated && (
                 <div className="hidden min-w-[140px] flex-col text-right md:flex">
-                  <span
-                    className="truncate text-sm font-semibold"
-                    style={{ color: headerTokens.colors.textPrimary }}
-                  >
-                    {displayName}
-                  </span>
-                  <span
-                    className="truncate text-xs"
-                    style={{ color: headerTokens.colors.textSecondary }}
-                  >
-                    {dailyGreeting}
-                  </span>
+                  <span className="truncate text-sm font-semibold header-text-primary">{displayName}</span>
+                  <span className="truncate text-xs header-text-secondary">{dailyGreeting}</span>
                 </div>
               )}
 
               {user && user.role === 'SUPER_ADMIN' && (
                 <Link
                   to="/admin"
-                  className={`hidden h-10 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold text-white shadow-sm md:flex ${motionClass}`}
-                  style={{
-                    backgroundColor: headerTokens.colors.accent,
-                    boxShadow: '0 12px 24px rgba(34,197,94,0.18)'
-                  }}
+                  className={`hidden h-10 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold text-white shadow-sm md:flex ${motionClass} header-accent header-accent-text shadow-admin-accent`}
                 >
                   <Shield size={16} aria-hidden="true" />
-                  <BadgeCheck size={14} style={{ color: '#93c5fd' }} aria-hidden="true" />
+                  <BadgeCheck size={14} className="text-sky-300" aria-hidden="true" />
                   <span className="hidden sm:inline">ადმინ პანელი</span>
                 </Link>
               )}
@@ -497,21 +448,13 @@ const Header: React.FC<HeaderProps> = () => {
                   <button
                     type="button"
                     onClick={() => setIsUserMenuOpen(prev => !prev)}
-                    className={`flex h-11 items-center gap-2 rounded-full px-3 text-left text-sm ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
-                    style={{
-                      backgroundColor: '#F1F5F9',
-                      color: headerTokens.colors.textPrimary
-                    }}
+                    className={`flex h-11 items-center gap-2 rounded-full px-3 text-left text-sm ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 bg-slate-100 header-text-primary`}
                     aria-haspopup="menu"
                     aria-expanded={isUserMenuOpen}
                   >
                     <div className="flex items-center gap-2">
                       <div
-                        className="flex h-8 w-8 items-center justify-center rounded-full"
-                        style={{
-                          backgroundColor: user?.role === 'SUPER_ADMIN' ? 'rgba(16,185,129,0.18)' : 'rgba(241,245,249,0.08)',
-                          color: user?.role === 'SUPER_ADMIN' ? '#059669' : headerTokens.colors.accent
-                        }}
+                        className={`flex h-8 w-8 items-center justify-center rounded-full ${user?.role === 'SUPER_ADMIN' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 header-accent-text'}`}
                         title={user?.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : undefined}
                       >
                         {userInitial}
@@ -519,22 +462,16 @@ const Header: React.FC<HeaderProps> = () => {
 
                       <div className="hidden min-w-0 flex-col text-left lg:flex">
                         <div className="flex items-center gap-2">
-                          <span className="truncate text-xs font-semibold" style={{ color: headerTokens.colors.textPrimary }}>
+                          <span className="truncate text-xs font-semibold header-text-primary">
                             {user.displayName || user.firstName || user.email || 'მომხმარებელი'}
                           </span>
                           {user?.role === 'SUPER_ADMIN' && (
-                            <span title="SUPER_ADMIN" aria-hidden="false">
-                              <BadgeCheck size={14} style={{ color: '#60a5fa' }} />
+                            <span title="SUPER_ADMIN" aria-hidden="false" className="text-sky-400">
+                              <BadgeCheck size={14} />
                             </span>
                           )}
                         </div>
-                        <span
-                          className="truncate text-xs"
-                          style={{
-                            color: headerTokens.colors.textSecondary,
-                            maxWidth: isCompactTabs ? 140 : 180
-                          }}
-                        >
+                        <span className={`truncate text-xs header-text-secondary ${isCompactTabs ? 'max-w-[140px]' : 'max-w-[180px]'}`}>
                           {emailDisplay}
                         </span>
                         {user?.role === 'SUPER_ADMIN' && (
@@ -544,17 +481,13 @@ const Header: React.FC<HeaderProps> = () => {
                         )}
                       </div>
                     </div>
-                    <ChevronDown size={16} aria-hidden="true" style={{ color: headerTokens.colors.textSecondary }} />
+                    <ChevronDown size={16} aria-hidden="true" className="header-text-secondary" />
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={handleSmartLogin}
-                    className={`flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white shadow-sm ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
-                    style={{
-                      backgroundColor: headerTokens.colors.accent,
-                      boxShadow: '0 12px 24px rgba(34,197,94,0.18)'
-                    }}
+                    className={`flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white shadow-sm ${motionClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 header-accent header-accent-text shadow-admin-accent`}
                   >
                     <UserIcon size={16} />
                     სისტემაში შესვლა
@@ -565,20 +498,16 @@ const Header: React.FC<HeaderProps> = () => {
                   <div
                     role="menu"
                     className="absolute right-0 z-50 mt-3 min-w-[240px] space-y-1 rounded-2xl border bg-white p-3 text-sm shadow-xl"
-                    style={{ borderColor: headerTokens.colors.border }}
                   >
-                    <div className="px-2 py-1 text-xs uppercase tracking-wide" style={{ color: headerTokens.colors.textSecondary }}>
-                      {user.email}
-                    </div>
+                    <div className="px-2 py-1 text-xs uppercase tracking-wide header-text-secondary">{user.email}</div>
                     {user.role === 'SUPER_ADMIN' && (
                       <Link
                         to="/admin"
                         role="menuitem"
-                        className={`flex items-center gap-2 rounded-xl px-3 py-2 text-left text-sm ${motionClass}`}
-                        style={{ color: headerTokens.colors.textPrimary }}
+                        className={`flex items-center gap-2 rounded-xl px-3 py-2 text-left text-sm ${motionClass} header-text-primary`}
                       >
                         <Shield size={16} />
-                        <BadgeCheck size={14} style={{ color: '#60a5fa' }} />
+                        <BadgeCheck size={14} className="text-sky-400" />
                         ადმინ პანელი
                       </Link>
                     )}
@@ -586,8 +515,7 @@ const Header: React.FC<HeaderProps> = () => {
                       type="button"
                       onClick={handleLogout}
                       role="menuitem"
-                      className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm ${motionClass}`}
-                      style={{ color: '#DC2626' }}
+                      className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm ${motionClass} text-red-600`}
                     >
                       <LogOut size={16} />
                       გამოსვლა

@@ -13,7 +13,7 @@ const ProfileSchema = z.object({
 });
 
 export default function ProfileTab() {
-  const { user, refreshUserRole, updateUserPreferences } = useAuth();
+  const { user, updateUserProfile, updateUserPreferences } = useAuth();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [fields, setFields] = useState({ firstName: '', lastName: '', email: '', phoneNumber: '', personalId: '', language: 'ka' });
@@ -95,7 +95,7 @@ export default function ProfileTab() {
 
       toast.success('პირადი ინფორმაცია განახლდა');
       setEditing(false);
-      try { await refreshUserRole(); } catch (e) { console.warn('failed to refresh user role', e); }
+      try { await updateUserProfile?.(payload); } catch (e) { console.warn('failed to update user profile', e); }
       try { updateUserPreferences?.({ language: fields.language }); } catch (e) { /* ignore */ }
     } catch (error) {
       console.error('Profile save failed', error);
@@ -113,7 +113,7 @@ export default function ProfileTab() {
       const res = await fetch('/api/user/update', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (!res.ok) { const txt = await res.text(); throw new Error(txt || `HTTP ${res.status}`); }
       toast.success('აირჩეული ინფორმაცია წაიშალა');
-      try { await refreshUserRole(); } catch (e) { console.warn('failed to refresh user role', e); }
+      try { await updateUserProfile?.({ firstName: null, lastName: null, phoneNumber: null }); } catch (e) { console.warn('failed to update user profile', e); }
     } catch (error) {
       console.error('Delete optional failed', error);
       toast.error('ინფორმაციის წაშლა ვერ მოხდა');
