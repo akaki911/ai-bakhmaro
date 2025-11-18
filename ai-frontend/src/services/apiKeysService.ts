@@ -1,5 +1,7 @@
+import { buildApiUrl } from '../lib/apiBase';
+import { rateLimitedJsonFetch } from '../utils/rateLimitedFetch';
 
-import { apiBase } from '../lib/apiBase';
+const BASE_KEY = 'gurulo:apiKeys';
 
 export interface ApiKey {
   keyId: string;
@@ -38,7 +40,8 @@ class ApiKeysService {
   private readonly baseUrl = '/api/keys';
 
   async createKey(request: CreateKeyRequest): Promise<CreateKeyResponse> {
-    const response = await apiBase<CreateKeyResponse>(`${this.baseUrl}/create`, {
+    const response = await rateLimitedJsonFetch<CreateKeyResponse>(buildApiUrl(`${this.baseUrl}/create`), {
+      key: `${BASE_KEY}:create`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
@@ -47,7 +50,8 @@ class ApiKeysService {
   }
 
   async listKeys(): Promise<ApiKey[]> {
-    const response = await apiBase<ListKeysResponse>(`${this.baseUrl}/list`, {
+    const response = await rateLimitedJsonFetch<ListKeysResponse>(buildApiUrl(`${this.baseUrl}/list`), {
+      key: `${BASE_KEY}:list`,
       method: 'GET',
     });
     return response.keys.map(key => ({
@@ -58,7 +62,8 @@ class ApiKeysService {
   }
 
   async revokeKey(keyId: string): Promise<void> {
-    await apiBase<RevokeKeyResponse>(`${this.baseUrl}/revoke/${keyId}`, {
+    await rateLimitedJsonFetch<RevokeKeyResponse>(buildApiUrl(`${this.baseUrl}/revoke/${keyId}`), {
+      key: `${BASE_KEY}:revoke:${keyId}`,
       method: 'DELETE',
     });
   }
