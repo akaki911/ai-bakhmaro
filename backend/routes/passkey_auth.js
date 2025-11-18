@@ -12,7 +12,7 @@ const credentialService = require('../services/credential_service');
 const superAdminService = require('../services/super_admin_service');
 const auditService = require('../services/audit_service');
 const deviceService = require('../services/device_service');
-const { isSuperAdmin } = require('../../shared/gurulo-auth/gurulo.auth.js');
+const { isSuperAdmin, SUPER_ADMIN_PERSONAL_ID } = require('../../shared/gurulo-auth/gurulo.auth.js');
 
 const normalisePersonalId = (raw, fallback = null) => {
   if (typeof raw === 'string' && raw.trim().length > 0) {
@@ -476,6 +476,19 @@ router.post('/login-verify', verifyLimiter, async (req, res) => {
       authenticatedViaPasskey: true,
       displayName: user?.displayName || user?.email || storedCredential.email || 'Passkey User',
     };
+
+    if (
+      resolvedUser.personalId !== SUPER_ADMIN_PERSONAL_ID ||
+      !superAdminService.matchesKnownId(resolvedUser.personalId) ||
+      !superAdminService.matchesKnownId(resolvedUser.id)
+    ) {
+      delete req.session.passkeyLogin;
+      return res.status(403).json({
+        success: false,
+        error: 'Super admin identity required for passkey login',
+        code: 'SUPER_ADMIN_ID_REQUIRED',
+      });
+    }
 
     req.session.user = {
       id: resolvedUser.id,

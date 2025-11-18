@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
-const { generateTokenForRegularAPI, authenticateJWT, requireRole, refreshTokenLogic } = require('../utils/jwt');
+const { generateTokenForRegularAPI, authenticateJWT, allowSuperAdmin, refreshTokenLogic } = require('../utils/jwt');
 
 const loginLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
@@ -54,7 +54,7 @@ router.get('/profile', authenticateJWT, (req, res) => {
 });
 
 // Admin-only endpoint example
-router.get('/admin-only', authenticateJWT, requireRole(['SUPER_ADMIN']), (req, res) => {
+router.get('/admin-only', authenticateJWT, allowSuperAdmin(), (req, res) => {
   res.json({
     success: true,
     message: 'Admin access granted',

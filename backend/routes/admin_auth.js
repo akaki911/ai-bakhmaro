@@ -17,6 +17,8 @@ const {
   rateLimitSimple,
   requireAdminAuth,
 } = require("../middleware/admin_guards");
+const superAdminService = require("../services/super_admin_service");
+const { SUPER_ADMIN_PERSONAL_ID } = require("../../shared/gurulo-auth/gurulo.auth.js");
 
 const router = express.Router();
 
@@ -216,6 +218,22 @@ router.get('/me', (req, res) => {
       });
     }
 
+    const sessionPersonalId = req.session.user.personalId;
+    const sessionUserId = req.session.user.id || req.session.userId;
+    if (
+      sessionPersonalId !== SUPER_ADMIN_PERSONAL_ID ||
+      !superAdminService.matchesKnownId(sessionPersonalId) ||
+      !superAdminService.matchesKnownId(sessionUserId)
+    ) {
+      console.log('❌ [ADMIN AUTH] Session identity mismatch for super admin');
+      return res.status(403).json({
+        success: false,
+        error: 'Super admin identity required',
+        authenticated: true,
+        code: 'SUPER_ADMIN_ID_REQUIRED'
+      });
+    }
+
     // Device trust derivation for Super Admin
     let deviceTrust = false;
     if (req.session.user.role === 'SUPER_ADMIN') {
@@ -294,7 +312,12 @@ router.get("/check-role", (req, res) => {
 router.post("/force-session", (req, res) => {
   const { userId, email, role, personalId } = req.body;
 
-  if (personalId !== "01019062020" || role !== "SUPER_ADMIN") {
+  if (
+    personalId !== SUPER_ADMIN_PERSONAL_ID ||
+    role !== "SUPER_ADMIN" ||
+    !superAdminService.matchesKnownId(personalId) ||
+    !superAdminService.matchesKnownId(userId)
+  ) {
     return res.status(403).json({
       ok: false,
       error: "Force session only allowed for SUPER_ADMIN",

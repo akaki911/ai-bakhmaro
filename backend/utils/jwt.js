@@ -4,7 +4,12 @@ const crypto = require('crypto');
 const auditService = require('../services/audit_service');
 const superAdminService = require('../services/super_admin_service');
 const { getFirestore } = require('firebase-admin/firestore');
-const { requireRole: guruloRequireRole, allowSuperAdmin: guruloAllowSuperAdmin } = require('../../shared/gurulo-auth');
+const {
+  requireRole: guruloRequireRole,
+  allowSuperAdmin: guruloAllowSuperAdmin,
+  extractExpressClaims,
+  SUPER_ADMIN_PERSONAL_ID,
+} = require('../../shared/gurulo-auth');
 
 let bcrypt;
 try {
@@ -26,15 +31,24 @@ const getDb = () => {
   return db;
 };
 
+const normalizeString = (value) => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
 // JWT Configuration
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
 const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 
 // Generate JWT token for API access
-const generateApiToken = (userId, role, permissions = []) => {
+const generateApiToken = (userId, role, permissions = [], personalId = null) => {
   const payload = {
     userId,
+    personalId: normalizeString(personalId),
     role,
     permissions,
     type: 'api_access',
@@ -49,9 +63,12 @@ const generateApiToken = (userId, role, permissions = []) => {
 };
 
 // Generate refresh token
-const generateRefreshToken = (userId) => {
+const generateRefreshToken = (userId, role = 'USER', personalId = null, permissions = []) => {
   const payload = {
     userId,
+    personalId: normalizeString(personalId),
+    role,
+    permissions,
     type: 'refresh',
     iat: Math.floor(Date.now() / 1000)
   };
@@ -119,11 +136,29 @@ const authenticateJWT = (req, res, next) => {
       });
     }
 
+    if (
+      decoded.role === 'SUPER_ADMIN' &&
+      (!superAdminService.matchesKnownId(decoded.personalId || decoded.userId) ||
+        decoded.personalId !== SUPER_ADMIN_PERSONAL_ID)
+    ) {
+      return res.status(403).json({
+        error: 'Super admin identity mismatch',
+        code: 'SUPER_ADMIN_ID_MISMATCH'
+      });
+    }
+
     // Attach user info to request
     req.user = {
       id: decoded.userId,
       role: decoded.role,
+      personalId: decoded.personalId,
       permissions: decoded.permissions || []
+    };
+
+    req.claims = {
+      personalId: decoded.personalId,
+      roles: [decoded.role].filter(Boolean),
+      userId: decoded.userId,
     };
 
     next();
@@ -173,14 +208,54 @@ const applyBackendGuardOptions = (options = {}) => {
   };
 };
 
+const enforceKnownIdentities = (allowedRoles = []) => (req, res, next) => {
+  const normalizedRoles = Array.isArray(allowedRoles)
+    ? allowedRoles.map((role) => String(role || '').toUpperCase())
+    : [];
+
+  if (normalizedRoles.includes('SUPER_ADMIN')) {
+    const claims = extractExpressClaims(req);
+    const personalId = normalizeString(claims.personalId || req.body?.personalId || req.user?.personalId);
+    const hasSuperAdminRole = claims.roles.some((role) => String(role).toUpperCase() === 'SUPER_ADMIN');
+
+    if (
+      !hasSuperAdminRole ||
+      !superAdminService.matchesKnownId(personalId) ||
+      personalId !== SUPER_ADMIN_PERSONAL_ID
+    ) {
+      return res.status(403).json({
+        error: 'Super admin identity required',
+        code: 'SUPER_ADMIN_ID_REQUIRED',
+      });
+    }
+  }
+
+  return next();
+};
+
+const wrapGuardWithIdentityCheck = (guard, allowedRoles = []) => (req, res, next) => {
+  const postCheck = (err) => {
+    if (err) return next(err);
+    return enforceKnownIdentities(allowedRoles)(req, res, next);
+  };
+
+  return guard(req, res, postCheck);
+};
+
 const requireRole = (allowedRoles = [], options = {}) => {
   const guardOptions = applyBackendGuardOptions(options);
-  return guruloRequireRole(allowedRoles, guardOptions);
+  return wrapGuardWithIdentityCheck(
+    guruloRequireRole(allowedRoles, guardOptions),
+    allowedRoles,
+  );
 };
 
 const allowSuperAdmin = (options = {}) => {
   const guardOptions = applyBackendGuardOptions(options);
-  return guruloAllowSuperAdmin(guardOptions);
+  return wrapGuardWithIdentityCheck(
+    guruloAllowSuperAdmin(guardOptions),
+    ['SUPER_ADMIN'],
+  );
 };
 
 // Permission-based authorization middleware
@@ -253,10 +328,19 @@ const refreshTokenLogic = async (refreshToken) => {
       throw new Error('Invalid refresh token type');
     }
 
-    // In production, verify refresh token against database/Redis
-    // For now, generate new tokens
-    const newAccessToken = generateApiToken(decoded.userId, 'SUPER_ADMIN');
-    const newRefreshToken = generateRefreshToken(decoded.userId);
+    const personalId = normalizeString(decoded.personalId) || normalizeString(decoded.userId);
+    const role = decoded.role || 'USER';
+    const permissions = Array.isArray(decoded.permissions) ? decoded.permissions : [];
+
+    if (
+      role === 'SUPER_ADMIN' &&
+      (!superAdminService.matchesKnownId(personalId) || personalId !== SUPER_ADMIN_PERSONAL_ID)
+    ) {
+      throw new Error('Super admin identity mismatch');
+    }
+
+    const newAccessToken = generateApiToken(decoded.userId, role, permissions, personalId);
+    const newRefreshToken = generateRefreshToken(decoded.userId, role, personalId, permissions);
 
     return {
       accessToken: newAccessToken,
@@ -296,6 +380,7 @@ const generateTokenForRegularAPI = async (req, res) => {
     const isSuperAdminLogin = superAdminService.matchesKnownId(loginIdentifier);
     let resolvedUserId = loginIdentifier;
     let resolvedRole = 'USER';
+    let resolvedPersonalId = normalizedPersonalId;
     let permissions = [];
     let userRecord = null;
 
@@ -326,6 +411,7 @@ const generateTokenForRegularAPI = async (req, res) => {
       }
 
       resolvedRole = 'SUPER_ADMIN';
+      resolvedPersonalId = profile.personalId;
       permissions = Array.isArray(userRecord?.permissions) ? userRecord.permissions : ['*'];
       userRecord = { ...profile, permissions };
     } else {
@@ -352,11 +438,12 @@ const generateTokenForRegularAPI = async (req, res) => {
 
       resolvedUserId = userRecord.userId || userRecord.id || normalizedEmail || normalizedUserId;
       resolvedRole = userRecord.role || 'USER';
+      resolvedPersonalId = userRecord.personalId || normalizedPersonalId;
       permissions = Array.isArray(userRecord.permissions) ? userRecord.permissions : [];
     }
 
-    const accessToken = generateApiToken(resolvedUserId, resolvedRole, permissions);
-    const refreshToken = generateRefreshToken(resolvedUserId);
+    const accessToken = generateApiToken(resolvedUserId, resolvedRole, permissions, resolvedPersonalId);
+    const refreshToken = generateRefreshToken(resolvedUserId, resolvedRole, resolvedPersonalId, permissions);
 
     await auditService.logLoginSuccess(resolvedUserId, resolvedRole, null, req, 'password');
 
@@ -368,7 +455,7 @@ const generateTokenForRegularAPI = async (req, res) => {
       user: {
         id: resolvedUserId,
         email: userRecord?.email || normalizedEmail,
-        personalId: userRecord?.personalId || normalizedPersonalId,
+        personalId: resolvedPersonalId,
         role: resolvedRole,
         permissions,
       }
