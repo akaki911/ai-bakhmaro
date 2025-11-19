@@ -273,6 +273,9 @@ const memoryUpdate = require('./routes/memory_update_main');
 const memorySync = require('./routes/memory_sync');
 const memoryRecovery = require('./routes/memory_recovery');
 const aiModelsRoute = require('./routes/ai_models');
+const gitOperationsRoute = require('./routes/git_operations');
+const githubIntegrationRoute = require('./routes/github_integration');
+const workspaceRoute = require('./routes/workspace');
 
 // Import routes for auto-improve
 let autoImproveRoute = null;
@@ -349,6 +352,9 @@ app.use('/api/ai', (req, res, next) => {
 app.use('/api/ai', aiChatRoute);           // POST /chat, /intelligent-chat
 app.use('/api/ai', aiStreamRoute);         // POST /stream
 app.use('/api/ai', aiModelsRoute);         // GET /models
+app.use('/api/ai/git', gitOperationsRoute);
+app.use('/api/ai/github', githubIntegrationRoute);
+app.use('/api/ai/workspace', workspaceRoute);
 // Disabled execute route in development due to isolated-vm compilation issues
 // app.use('/api/ai', require('./routes/execute')); // POST /execute (Phase 2: Workspace Executor)
 app.use('/api/ai/vector-memory', require('./routes/vector_memory')); // Vector Memory API (Phase 3)

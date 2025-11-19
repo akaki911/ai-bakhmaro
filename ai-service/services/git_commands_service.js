@@ -16,17 +16,25 @@ class GitCommandsService {
     this.conflictFiles = [];
   }
 
+  resolveProjectRoot(customRoot) {
+    if (typeof customRoot === 'string' && customRoot.trim() !== '') {
+      return customRoot;
+    }
+    return this.projectRoot;
+  }
+
   /**
    * Execute git command safely
    */
-  async executeGitCommand(command, options = {}) {
+  async executeGitCommand(command, repoPath = null, spawnOptions = {}) {
     return new Promise((resolve, reject) => {
       const fullCommand = `git ${command}`;
+      const cwd = this.resolveProjectRoot(repoPath);
       
       exec(fullCommand, { 
-        cwd: this.projectRoot,
+        cwd,
         maxBuffer: 1024 * 1024 * 10, // 10MB buffer
-        ...options 
+        ...spawnOptions 
       }, (error, stdout, stderr) => {
         if (error) {
           reject(new Error(`Git command failed: ${error.message}\nStderr: ${stderr}`));
@@ -691,5 +699,15 @@ class GitCommandsService {
 
 // Create singleton instance
 const gitCommandsService = new GitCommandsService();
+
+gitCommandsService.createScopedService = (rootPath) => {
+  const scoped = new GitCommandsService();
+  if (rootPath && typeof rootPath === 'string' && rootPath.trim() !== '') {
+    scoped.projectRoot = rootPath;
+  }
+  return scoped;
+};
+
+gitCommandsService.GitCommandsService = GitCommandsService;
 
 module.exports = gitCommandsService;

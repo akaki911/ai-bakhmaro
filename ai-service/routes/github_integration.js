@@ -2,10 +2,26 @@
 const express = require('express');
 const router = express.Router();
 const gitHubService = require('../services/github_integration_service');
+const githubRepositoryService = require('../services/github_repository_service');
 const { requireAssistantAuth } = require('../middleware/authz');
 
 // Use requireAssistantAuth as authenticateUser
 const authenticateUser = requireAssistantAuth;
+
+router.get('/repositories', authenticateUser, async (req, res) => {
+  try {
+    const perPage = Math.min(parseInt(req.query.per_page, 10) || 50, 100);
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const repositories = await githubRepositoryService.listRepositories({ perPage, page });
+    res.json({
+      success: true,
+      repositories,
+      pagination: { perPage, page },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // Initialize Git repository
 router.post('/init', authenticateUser, async (req, res) => {
