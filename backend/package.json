@@ -9,7 +9,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "env:verify": "node scripts/verifyEnv.js",
-    "test": "jest",
+    "test": "node --test ./__tests__",
     "migrate:webauthn": "node scripts/runMigration.js"
   },
   "dependencies": {
