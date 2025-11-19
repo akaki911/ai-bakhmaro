@@ -293,7 +293,15 @@ const GitHubManagementHub: React.FC = () => {
       case 'performance':
         return <GitPerformanceMetrics />;
       case 'settings':
-        return <GitHubSettingsTab {...commonProps} connection={gitHubConnection} />;
+        return (
+          <GitHubSettingsTab
+            {...commonProps}
+            connection={gitHubConnection}
+            onTestSuccess={async () => {
+              await loadRepositories();
+            }}
+          />
+        );
       default:
         return <GitHubOverviewTab {...commonProps} onConnectionStateChange={gitHubConnection.refreshStatus} />;
     }

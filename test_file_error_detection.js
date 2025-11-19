@@ -56,7 +56,8 @@ async function testFileErrorDetection() {
 
   for (const testCase of ERROR_DETECTION_QUERIES) {
     console.log(`💬 კითხვა: "${testCase.query}"`);
-    console.log(`🎯 მოსალოდნელი შეცდომები/გასწორებები: ${testCase.expectedErrors.join(', ')}`);
+    const expectedItems = testCase.expectedErrors || testCase.expectedFixes || [];
+    console.log(`🎯 მოსალოდნელი შეცდომები/გასწორებები: ${expectedItems.join(', ')}`);
 
     try {
       const startTime = Date.now();
@@ -78,16 +79,19 @@ async function testFileErrorDetection() {
         const responseText = response.data.response.toLowerCase();
 
         let detectedErrors = 0;
-        testCase.expectedErrors.forEach(expectedError => {
-          const errorKey = expectedError.toLowerCase();
+        const itemsToCheck = testCase.expectedErrors || testCase.expectedFixes || [];
+        itemsToCheck.forEach(expectedItem => {
+          const itemKey = expectedItem.toLowerCase();
           if (responseText.includes('შეცდომ') || responseText.includes('error') ||
               responseText.includes('result') || responseText.includes('greetuser') ||
-              responseText.includes('iseven') || responseText.includes('=')) {
+              responseText.includes('iseven') || responseText.includes('=') ||
+              responseText.includes('გაასწორე') || responseText.includes('შეცვალე') ||
+              responseText.includes('დაამატე') || responseText.includes('fix')) {
             detectedErrors++;
           }
         });
 
-        console.log(`🔍 აღმოჩენილი შეცდომები: ${detectedErrors}/${testCase.expectedErrors.length}`);
+        console.log(`🔍 აღმოჩენილი შეცდომები/გასწორებები: ${detectedErrors}/${itemsToCheck.length}`);
 
         // შეამოწმე გასწორების შეთავაზებები
         const hasFixSuggestions = responseText.includes('გაასწორე') ||

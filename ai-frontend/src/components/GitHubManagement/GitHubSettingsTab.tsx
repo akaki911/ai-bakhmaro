@@ -34,6 +34,7 @@ interface GitHubSettingsTabProps {
   showMessage: (type: 'success' | 'error', text: string) => void;
   refetch: () => void;
   connection: GitHubConnectionControls;
+  onTestSuccess?: () => Promise<void> | void;
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -117,7 +118,8 @@ const GitHubSettingsTab: React.FC<GitHubSettingsTabProps> = ({
   loading,
   showMessage,
   refetch,
-  connection
+  connection,
+  onTestSuccess,
 }) => {
   const [settings, setSettings] = useState({
     autoSync: status?.autoSync || false,
@@ -149,6 +151,11 @@ const GitHubSettingsTab: React.FC<GitHubSettingsTabProps> = ({
   const [integrationSettingsDirty, setIntegrationSettingsDirty] = useState(false);
   const [savingIntegrationSettings, setSavingIntegrationSettings] = useState(false);
   const [lastConnectionToast, setLastConnectionToast] = useState<string | null>(null);
+  const [connectionTestState, setConnectionTestState] = useState<{
+    status: 'idle' | 'running' | 'success' | 'error';
+    message?: string;
+    testedAt?: Date;
+  }>({ status: 'idle' });
 
   const connectionStatus = connection.status;
   const isConnected = Boolean(connectionStatus?.connected);
@@ -180,7 +187,16 @@ const GitHubSettingsTab: React.FC<GitHubSettingsTabProps> = ({
     : [];
   const integrationUpdatedLabel = integrationSettingsData?.updatedAt
     ? `განახლდა: ${formatDateTime(integrationSettingsData.updatedAt)}`
-    : 'პარამეტრები არ არის შენახული';
+    : 'პარამეტრები არ არის შენახული';  const isTestRunning = connectionTestState.status === 'running';
+  const testButtonLabel = isTestRunning ? 'Testing...' : 'Test connection';
+  const testStatusTone =
+    connectionTestState.status === 'success'
+      ? 'border-green-500/40 bg-green-500/10 text-green-200'
+      : connectionTestState.status === 'error'
+        ? 'border-red-500/40 bg-red-500/10 text-red-200'
+        : 'border-blue-500/40 bg-blue-500/10 text-blue-200';
+
+
 
   useEffect(() => {
     if (connection.error && connection.error !== lastConnectionToast) {
@@ -482,27 +498,42 @@ const GitHubSettingsTab: React.FC<GitHubSettingsTabProps> = ({
   };
 
   const handleTestConnection = async () => {
+    setConnectionTestState({ status: 'running', message: 'Testing GitHub access...' });
     const result = await connection.test();
 
     if (!result) {
+      const message = connection.error || 'Unable to complete the GitHub test.';
+      setConnectionTestState({ status: 'error', message });
       if (connection.error) {
         notifyError(connection.error);
+      } else {
+        notifyError(message);
       }
       return;
     }
 
     if (result.integrationDisabled) {
-      notifyError('GitHub integration is disabled');
+      const message = 'GitHub integration is disabled';
+      setConnectionTestState({ status: 'error', message });
+      notifyError(message);
       return;
     }
 
     if (result.connected) {
-      notifySuccess('GitHub connection verified');
+      const testedAt = new Date();
+      const message = 'GitHub connection verified';
+      setConnectionTestState({ status: 'success', message, testedAt });
+      notifySuccess(message);
       await connection.refreshStatus();
+      if (typeof onTestSuccess === 'function') {
+        await onTestSuccess();
+      }
       return;
     }
 
-    notifyError(result.error || 'GitHub connection test failed');
+    const fallbackMessage = result.error || 'GitHub connection test failed';
+    setConnectionTestState({ status: 'error', message: fallbackMessage });
+    notifyError(fallbackMessage);
   };
 
   const handleDisconnect = async () => {
@@ -522,6 +553,7 @@ const GitHubSettingsTab: React.FC<GitHubSettingsTabProps> = ({
 
     notifySuccess('GitHub credentials disconnected');
     setPatToken('');
+    setConnectionTestState({ status: 'idle' });
     await connection.refreshStatus();
   };
 
@@ -752,8 +784,8 @@ const GitHubSettingsTab: React.FC<GitHubSettingsTabProps> = ({
             disabled={connectionLoading || integrationDisabled}
             className="flex items-center gap-2 rounded-lg border border-blue-500 px-3 py-2 text-xs font-semibold text-blue-300 transition hover:bg-blue-500/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {connectionLoading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-            Test connection
+            {isTestRunning ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+            {testButtonLabel}
           </button>
           <button
             onClick={handleDisconnect}
@@ -763,6 +795,19 @@ const GitHubSettingsTab: React.FC<GitHubSettingsTabProps> = ({
             Disconnect
           </button>
         </div>
+
+        {connectionTestState.status !== 'idle' && (
+          <div className={`w-full rounded-lg border px-3 py-2 text-xs ${testStatusTone}`}>
+            <div className="flex items-center justify-between gap-3">
+              <span>{connectionTestState.message}</span>
+              {connectionTestState.testedAt && (
+                <span className="text-[10px] uppercase tracking-wide text-gray-300">
+                  Tested at {connectionTestState.testedAt.toLocaleTimeString()}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {scopes.length > 0 && (
           <div className="text-xs text-gray-400">
