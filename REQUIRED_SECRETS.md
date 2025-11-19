@@ -34,6 +34,9 @@ SECRETS_ENC_KEY=32_byte_base64_encryption_key (e.g. configure with the shared pr
 ADMIN_SETUP_TOKEN=your_admin_setup_token
 ```
 
+> `FIREBASE_TOKEN` (**Firebase CLI CI token**) is required for the Deploy tab + `/api/ai/deploy/firebase` endpoint.  
+> Store the token alongside `FIREBASE_SERVICE_ACCOUNT_KEY` so the backend runner can invoke `firebase deploy`.
+
 | Secret | სად გამოიყენება | რეფერენსი |
 | --- | --- | --- |
 | `AI_INTERNAL_TOKEN` | Backend-სა და AI Service-ს შორის ავტორიზაცია. | [`backend/services/secretsRequiredService.js`](backend/services/secretsRequiredService.js) 【F:backend/services/secretsRequiredService.js†L34-L38】, [`shared/config/envValidator.js`](shared/config/envValidator.js) 【F:shared/config/envValidator.js†L8-L68】 |

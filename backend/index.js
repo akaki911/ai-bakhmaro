@@ -880,7 +880,15 @@ try {
   console.log('✅ Secrets manager routes mounted at /api/admin/secrets');
 } catch (error) {
   console.error('❌ Failed to load secrets routes:', error.message);
+}try {
+  const deployRoutes = require('./routes/deploy');
+  app.use('/api/ai/deploy', deployRoutes);
+  console.log('?o. Deploy routes mounted at /api/ai/deploy');
+} catch (error) {
+  console.error('??O Failed to load deploy routes:', error.message);
 }
+
+
 
 // Primary AI chat router (reused from Firebase Functions)
 try {
@@ -1249,3 +1257,4 @@ console.log('✅ Backend-only AI architecture - no external AI service dependenc
 
 module.exports = app;
 module.exports.server = server;
+

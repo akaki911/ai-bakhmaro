@@ -16,6 +16,23 @@ This guide covers the staged release process for Gurulo AI Space across developm
 2. `pnpm build` – compiles the AI console and shared packages.
 3. `pnpm test` – optional but recommended prior to staging promotions.
 
+## In-App Deploy Runner
+
+Super Admins can trigger Firebase updates directly from the **Deploy** tab in the admin console. The UI calls
+`POST /api/ai/deploy/firebase`, streams every `pnpm`/`firebase` log line over SSE, and mirrors the steps from this guide:
+
+1. `pnpm install --frozen-lockfile` (optional toggle in the UI).
+2. `pnpm build`.
+3. `firebase deploy --only hosting,functions --project <FIREBASE_PROJECT_ID>`.
+
+Before using the Deploy tab:
+
+- Configure `FIREBASE_SERVICE_ACCOUNT_KEY`, `FIREBASE_PROJECT_ID`, and `FIREBASE_TOKEN` in secrets/env.
+- Ensure the repo is up to date locally (Deploy tab uses the current workspace).
+- Capture the streamed logs from the UI and attach them to the release ticket.
+
+The Deploy tab does **not** replace the smoke tests or approval workflow – complete the checks below after every run.
+
 ## Deploy to Staging
 
 ```bash

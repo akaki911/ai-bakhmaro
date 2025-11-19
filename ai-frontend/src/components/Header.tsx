@@ -82,6 +82,16 @@ const NAV_ITEMS: NavItem[] = [
     to: '/admin?tab=secrets',
     requiresAuth: true,
     roles: ['SUPER_ADMIN']
+  },
+  {
+    label: 'Deploy',
+    to: '/admin?tab=deploy',
+    requiresAuth: true,
+    roles: ['SUPER_ADMIN'],
+    badge: {
+      text: 'NEW',
+      tone: 'warning'
+    }
   }
 ];
 
@@ -591,3 +601,4 @@ const Header: React.FC<HeaderProps> = () => {
 };
 
 export default Header;
+

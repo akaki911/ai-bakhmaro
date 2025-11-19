@@ -8,3 +8,4 @@ export { default as SettingsTab } from './SettingsTab';
 export { default as GitHubTab } from './GitHubTab';
 export { default as BackupTab } from './BackupTab';
 export { default as AutoImproveTab } from './AutoImproveTab';
+export { default as DeployTab } from './DeployTab';

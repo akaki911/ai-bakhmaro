@@ -35,6 +35,7 @@ import MemoryTab from "./AIDeveloper/tabs/MemoryTab";
 import LogsTab from "./AIDeveloper/tabs/LogsTab";
 import SettingsTab from "./AIDeveloper/tabs/SettingsTab";
 import AutoImproveTab from "./AIDeveloper/tabs/AutoImproveTab";
+import DeployTab from "./AIDeveloper/tabs/DeployTab";
 import { SecretsPage } from "./AIDeveloper/tabs/Secrets";
 import GitHubTab from "./AIDeveloper/tabs/GitHubTab";
 import MailTab from "./AIDeveloper/tabs/MailTab";
@@ -61,6 +62,7 @@ type TabKey =
   | "console"
   | "explorer"
   | "autoImprove"
+  | "deploy"
   | "memory"
   | "logs"
   | "secrets"
@@ -108,6 +110,7 @@ const CORE_TABS: TabKey[] = [
   "console",
   "explorer",
   "autoImprove",
+  "deploy",
   "memory",
   "logs",
   "secrets",
@@ -143,6 +146,10 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
   const navigate = useNavigate();
   const { t } = useTranslation();
   const allowedSuperAdminIds = useMemo(() => ["01019062020"], []);
+  const defaultFirebaseProjectId = useMemo(
+    () => import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
+    [],
+  );
   const [superAdminOverrideId, setSuperAdminOverrideId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -830,6 +837,12 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
     [location.pathname, location.search, navigate],
   );
 
+  useEffect(() => {
+    if (!isSuperAdminUser && activeTab === "deploy") {
+      handleTabChange("dashboard");
+    }
+  }, [activeTab, handleTabChange, isSuperAdminUser]);
+
   const handleOpenFileFromActivity = useCallback(
     async (path: string) => {
       if (!path) {
@@ -1076,6 +1089,16 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
         isOff: !hasDevConsoleAccess,
       },
       {
+        key: "deploy",
+        action: "tab",
+        tabKey: "deploy",
+        icon: RefreshCcw,
+        label: "Firebase Deploy",
+        title: "Firebase Deploy",
+        href: "/admin?tab=deploy",
+        isOff: !isSuperAdminUser,
+      },
+      {
         key: "memory",
         action: "tab",
         tabKey: "memory",
@@ -1231,6 +1254,14 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
         icon: Sparkles,
         accent: "pink",
         disabled: !hasDevConsoleAccess,
+      },
+      {
+        key: "deploy",
+        label: "Deploy",
+        description: "Deploy hosting + functions to Firebase",
+        icon: RefreshCcw,
+        accent: "green",
+        disabled: !isSuperAdminUser,
       },
       {
         key: "memory",
@@ -1604,6 +1635,13 @@ const AiDeveloperChatPanel: React.FC<AiDeveloperChatPanelProps> = ({
                         aiFetch={aiFetch}
                         loadFile={loadFile}
                         saveFile={saveFile}
+                      />
+                    )}
+
+                    {activeTab === "deploy" && (
+                      <DeployTab
+                        defaultProjectId={defaultFirebaseProjectId}
+                        isSuperAdmin={isSuperAdminUser}
                       />
                     )}
 
