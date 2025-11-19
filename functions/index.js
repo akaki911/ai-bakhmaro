@@ -16,5 +16,5 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.use("/api", backendApp);
-exports.api = functions.region("europe-west1").https.onRequest(app);
+app.use("/", backendApp);
+exports.backendApi = functions.region("europe-west1").https.onRequest(app);

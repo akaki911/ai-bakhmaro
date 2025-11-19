@@ -8,7 +8,8 @@ import {
 } from '../../shared/config/envReader.js';
 
 const DEFAULT_SESSION_COOKIES = ['ai-space.sid', 'bk_admin.sid', '__Secure-bk_admin.sid'];
-const DEFAULT_PROXY_BASE = 'http://127.0.0.1:5002';
+const DEFAULT_AI_PROXY_BASE = 'http://127.0.0.1:5001';
+const DEFAULT_BACKEND_PROXY_BASE = 'http://127.0.0.1:5002';
 
 export type GatewayEnv = {
   NODE_ENV: 'development' | 'test' | 'production';
@@ -135,10 +136,10 @@ export const getEnv = (): GatewayEnv => {
     (apiProxyBaseRaw && apiProxyBaseRaw.trim().length > 0 ? apiProxyBaseRaw : null) ??
     (upstreamApiUrl && upstreamApiUrl.trim().length > 0 ? upstreamApiUrl : null) ??
     (remoteSiteBase && remoteSiteBase.trim().length > 0 ? remoteSiteBase : null) ??
-    DEFAULT_PROXY_BASE;
+    DEFAULT_AI_PROXY_BASE;
 
   const backendProxyBase =
-    (backendProxyRaw && backendProxyRaw.trim().length > 0 ? backendProxyRaw : null) ?? DEFAULT_PROXY_BASE;
+    (backendProxyRaw && backendProxyRaw.trim().length > 0 ? backendProxyRaw : null) ?? DEFAULT_BACKEND_PROXY_BASE;
 
   const publicOrigin = publicOriginExplicit ?? aiDomain;
 

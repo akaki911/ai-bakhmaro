@@ -127,6 +127,64 @@ const sendMetaEvent = (res, payload) => {
   writeSseData(res, JSON.stringify(payload));
 };
 
+const streamGroqResponse = async (response, onChunk) => {
+  const stream = response?.data;
+  if (!stream || typeof stream.on !== 'function') {
+    return false;
+  }
+
+  await new Promise((resolve, reject) => {
+    let buffer = '';
+
+    const handleChunk = (raw) => {
+      buffer += raw.toString('utf8');
+      const segments = buffer.split('\n\n');
+      buffer = segments.pop() ?? '';
+
+      for (const segment of segments) {
+        const trimmed = segment.trim();
+        if (!trimmed) {
+          continue;
+        }
+
+        const lines = trimmed.split('\n');
+        for (const line of lines) {
+          const dataLine = line.trim();
+          if (!dataLine || dataLine.startsWith(':')) {
+            continue;
+          }
+          if (!dataLine.startsWith('data:')) {
+            continue;
+          }
+
+          const payload = dataLine.slice(5).trim();
+          if (!payload || payload === '[DONE]') {
+            continue;
+          }
+
+          try {
+            const parsed = JSON.parse(payload);
+            const delta = parsed?.choices?.[0]?.delta;
+            const text = delta?.content ?? delta?.text ?? '';
+            if (text && typeof onChunk === 'function') {
+              onChunk(text);
+            }
+          } catch (error) {
+            console.warn('�s��,? Groq stream chunk parse failed:', error.message);
+          }
+        }
+      }
+    };
+
+    stream.on('data', handleChunk);
+    stream.once('end', resolve);
+    stream.once('close', resolve);
+    stream.once('error', reject);
+  });
+
+  return true;
+};
+
 const splitFallbackIntoSegments = (content) => {
   const normalized = (content || '').toString().trim();
   if (!normalized) {
@@ -428,35 +486,46 @@ File Guidance: თუ კონკრეტული ფაილის ნა�
         { role: 'user', content: message }
       ], true); // Enable streaming
 
-      if (typeof streamResponse === 'string') {
-        // Simple string response - chunk it
-        const chunks = streamResponse.match(/.{1,50}/g) || [streamResponse];
-
-        for (let i = 0; i < chunks.length; i++) {
-          sendTextChunk(res, chunks[i], message, streamCollector);
-
-          // Small delay for natural streaming effect
-          await new Promise(resolve => setTimeout(resolve, 90));
-        }
-      } else {
-        // Full response fallback
-        const fallbackContent = resolveContent(streamResponse) || 'No response';
-        const segments = splitFallbackIntoSegments(fallbackContent);
-        const safeSegments = segments.length ? segments : [''];
-        const total = safeSegments.length;
-        for (let index = 0; index < total; index += 1) {
-          sendMetaEvent(res, {
-            chunk: index + 1,
-            total,
-            mode: 'offline'
-          });
-          sendTextChunk(res, safeSegments[index], message, streamCollector);
-          // Slight delay for natural streaming effect
-          await new Promise((resolve) => setTimeout(resolve, 90));
-        }
+      let groqStreamHandled = false;
+      try {
+        groqStreamHandled = await streamGroqResponse(streamResponse, (chunk) => {
+          sendTextChunk(res, chunk, message, streamCollector);
+        });
+      } catch (streamParseError) {
+        console.warn('�s��,? Groq streaming parse error:', streamParseError.message);
       }
 
-      emitCoreMeta(activeMode, { engine: 'groq', responseType: typeof streamResponse });
+      if (!groqStreamHandled) {
+        if (typeof streamResponse === 'string') {
+          const chunks = streamResponse.match(/.{1,50}/g) || [streamResponse];
+          for (let i = 0; i < chunks.length; i++) {
+            sendTextChunk(res, chunks[i], message, streamCollector);
+            // Small delay for natural streaming effect
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise(resolve => setTimeout(resolve, 90));
+          }
+        } else {
+          const fallbackContent = resolveContent(streamResponse) || 'No response';
+          const segments = splitFallbackIntoSegments(fallbackContent);
+          const safeSegments = segments.length ? segments : [''];
+          const total = safeSegments.length;
+          for (let index = 0; index < total; index += 1) {
+            sendMetaEvent(res, {
+              chunk: index + 1,
+              total,
+              mode: 'offline'
+            });
+            sendTextChunk(res, safeSegments[index], message, streamCollector);
+            // Slight delay for natural streaming effect
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise((resolve) => setTimeout(resolve, 90));
+          }
+        }
+      } else {
+        streamMetadataExtras.groqStream = true;
+      }
+
+      emitCoreMeta(activeMode, { engine: 'groq', responseType: groqStreamHandled ? 'stream' : typeof streamResponse });
 
       // Send completion event without leaking forbidden markers
       res.write('event: end\n');

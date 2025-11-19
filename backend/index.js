@@ -122,6 +122,7 @@ const PORT = process.env.PORT || 8000; // Replit environment port configuration
 const { setupGuruloWebSocket } = require('./services/gurulo_ws');
 const versionRoute = require('./routes/version');
 const aiTraceRoutes = require('../functions/src/routes/ai_trace');
+const aiChatRoutes = require('../functions/src/routes/ai_chat');
 
 const httpServer = http.createServer(app);
 const shouldDisableHttpListen = process.env.DISABLE_EXPRESS_LISTEN === 'true';
@@ -879,6 +880,14 @@ try {
   console.log('✅ Secrets manager routes mounted at /api/admin/secrets');
 } catch (error) {
   console.error('❌ Failed to load secrets routes:', error.message);
+}
+
+// Primary AI chat router (reused from Firebase Functions)
+try {
+  app.use('/api/ai', aiChatRoutes);
+  console.log('�o. AI chat routes mounted at /api/ai');
+} catch (error) {
+  console.error('�?O Failed to mount AI chat routes:', error.message);
 }
 
 // Mount Auto-Improve routes
