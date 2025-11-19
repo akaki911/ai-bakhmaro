@@ -40,6 +40,7 @@ interface GitHubGitOpsTabProps {
   data?: GitHubDataState | null;
   error?: string | null;
   isLoading?: boolean;
+  repo: string;
 }
 
 interface FileStatus {
@@ -444,7 +445,8 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
   refetch,
   data,
   error,
-  isLoading
+  isLoading,
+  repo,
 }) => {
   const [gitStatus, setGitStatus] = useState<GitStatus | null>(null);
   const [commits, setCommits] = useState<Commit[]>([]);
@@ -458,6 +460,41 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
   const [diffData, setDiffData] = useState<DiffLine[]>([]);
   const [recentFiles, setRecentFiles] = useState<string[]>([]);
   const [expandedCommit, setExpandedCommit] = useState<string | null>(null);
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [pushState, setPushState] = useState<{
+    status: 'idle' | 'running' | 'success' | 'error';
+    logs: string[];
+    metadata?: { branch?: string; remote?: string; commit?: string | null };
+  }>({ status: 'idle', logs: [] });
+  const [zipUploadState, setZipUploadState] = useState<{
+    status: 'idle' | 'running' | 'success' | 'error';
+    message?: string;
+  }>({ status: 'idle' });
+  const [workspaceMeta, setWorkspaceMeta] = useState<{ path?: string; type?: string } | null>(null);
+
+  const resolveRepoValue = useCallback(() => (typeof repo === 'string' && repo.trim() ? repo.trim() : 'local'), [repo]);
+
+  const buildRepoQuery = useCallback(
+    (extra: Record<string, string | number | boolean | undefined> = {}) => {
+      const params = new URLSearchParams();
+      params.set('repo', resolveRepoValue());
+      Object.entries(extra).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.set(key, String(value));
+        }
+      });
+      return params.toString();
+    },
+    [resolveRepoValue],
+  );
+
+  const withRepo = useCallback(
+    (payload: Record<string, unknown> = {}) => ({
+      repo: resolveRepoValue(),
+      ...payload,
+    }),
+    [resolveRepoValue],
+  );
   const [rollbackLoading, setRollbackLoading] = useState<string | null>(null);
   const [newBranchName, setNewBranchName] = useState('');
   const [showCreateBranch, setShowCreateBranch] = useState(false);

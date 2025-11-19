@@ -4,7 +4,7 @@ import { startAuthentication } from '@simplewebauthn/browser';
 import { Chrome, Fingerprint, Github, Loader2 } from 'lucide-react';
 
 import { useAuth } from '../contexts/useAuth';
-import { ensureWebAuthnReady, getWebAuthnErrorMessage } from '../utils/webauthn_support';
+import { ensureWebAuthnReady, getWebAuthnErrorMessage, authenticateWithPasskey, initializeConditionalUI } from '../utils/webauthn_support';
 import { isDirectBackendDebugEnabled } from '../lib/env';
 import type { BackendAwareRequestInit } from '../setupFetch';
 
@@ -51,6 +51,7 @@ const AdminPasskeyLogin: React.FC = () => {
     generateFallbackCode,
     verifyFallbackCode,
     fallbackAuth,
+    deviceRecognition,
   } = auth;
   const refreshUserRole = 'refreshUserRole' in auth ? auth.refreshUserRole : undefined;
 
@@ -90,6 +91,22 @@ const AdminPasskeyLogin: React.FC = () => {
       setShowFallbackPanel(false);
     }
   }, [fallbackAuth]);
+
+  // ავტომატური Passkey დეტექცია კომპონენტის ჩატვირთვისას
+  useEffect(() => {
+    if (authInitialized && !isAuthenticated) {
+      console.log('🔍 [AUTO LOGIN] კომპონენტი ჩატვირთულია, ვცდილობთ ავტომატურ დეტექციას');
+      autoDetectAndLogin();
+    }
+  }, [authInitialized, isAuthenticated]);
+
+  // კონდიციური UI ინიციალიზაცია
+  useEffect(() => {
+    if (authInitialized && !isAuthenticated) {
+      console.log('🔍 [CONDITIONAL UI] ვცდილობთ კონდიციური UI ინიციალიზაციას');
+      initializeConditionalUI('SUPER_ADMIN', deviceRecognition.currentDevice?.trusted);
+    }
+  }, [authInitialized, isAuthenticated, deviceRecognition.currentDevice?.trusted]);
 
   const isGeneratingFallback = fallbackAuth?.status === 'generating';
   const isVerifyingFallback = fallbackAuth?.status === 'verifying';
@@ -132,6 +149,55 @@ const AdminPasskeyLogin: React.FC = () => {
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // ავტომატური Passkey დეტექცია და შესვლა
+  const autoDetectAndLogin = async () => {
+    if (passkeyLoading) return;
+
+    try {
+      // შევამოწმოთ მოწყობილობის სანდოობა
+      if (deviceRecognition.isRecognizedDevice &&
+          deviceRecognition.currentDevice?.registeredRole === 'SUPER_ADMIN' &&
+          deviceRecognition.currentDevice?.trusted) {
+
+        console.log('🔐 [AUTO LOGIN] სანდო მოწყობილობა დადასტურებულია, ვცდილობთ ავტომატურ შესვლას');
+
+        setPasskeyLoading(true);
+        setBanner({ tone: 'success', message: 'ბიომეტრიული ავტორიზაცია...' });
+
+        const result = await authenticateWithPasskey(false, 'admin@bakhmaro.co');
+
+        if (result.success && result.user) {
+          console.log('✅ [AUTO LOGIN] ავტომატური შესვლა წარმატებული');
+          const target = getAutoRouteTarget?.() ?? '/admin?tab=dashboard';
+          navigate(target, { replace: true });
+          return;
+        }
+      }
+
+      // თუ ავტომატური შესვლა ვერ მოხერხდა, შევამოწმოთ კონდიციური UI
+      if (window.PublicKeyCredential?.isConditionalMediationAvailable) {
+        const available = await window.PublicKeyCredential.isConditionalMediationAvailable();
+        if (available) {
+          console.log('🔐 [CONDITIONAL UI] ვცდილობთ კონდიციურ ავტორიზაციას');
+          const result = await authenticateWithPasskey(true, 'admin@bakhmaro.co');
+
+          if (result.success && result.user) {
+            console.log('✅ [CONDITIONAL UI] კონდიციური შესვლა წარმატებული');
+            const target = getAutoRouteTarget?.() ?? '/admin?tab=dashboard';
+            navigate(target, { replace: true });
+            return;
+          }
+        }
+      }
+
+    } catch (error: any) {
+      console.log('ℹ️ [AUTO LOGIN] ავტომატური შესვლა ვერ მოხერხდა, მომხმარებელს შეეძლება ხელით შესვლა');
+      setBanner(null);
+    } finally {
+      setPasskeyLoading(false);
     }
   };
 
@@ -388,7 +454,7 @@ const AdminPasskeyLogin: React.FC = () => {
               ) : (
                 <>
                   <Fingerprint className="h-4 w-4" />
-                  Use Passkey
+                  Passkey ავტორიზაცია
                 </>
               )}
             </button>

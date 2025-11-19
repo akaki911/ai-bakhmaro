@@ -39,6 +39,21 @@ const GitHubManagementHub: React.FC = () => {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [lastConnectionError, setLastConnectionError] = useState<string | null>(null);
+  const [repositoryOptions, setRepositoryOptions] = useState<Array<{ value: string; label: string; description?: string }>>([
+    { value: 'local', label: 'Local Workspace', description: 'Primary development workspace' }
+  ]);
+  const [repoLoading, setRepoLoading] = useState(false);
+  const [repoError, setRepoError] = useState<string | null>(null);
+  const [selectedRepo, setSelectedRepo] = useState<string>(() => {
+    if (typeof window === 'undefined') {
+      return 'local';
+    }
+    try {
+      return window.localStorage?.getItem('gurulo.selectedRepo') || 'local';
+    } catch {
+      return 'local';
+    }
+  });
 
   // Custom hooks for data management
   const { data, loading: dataLoading, error: dataError, refetch } = useGitHubData();
@@ -57,6 +72,72 @@ const GitHubManagementHub: React.FC = () => {
     : isConnected
       ? 'border-green-500/40 bg-green-500/10 text-green-200'
       : 'border-gray-600 bg-gray-800 text-gray-300';
+
+  const loadRepositories = useCallback(async () => {
+    setRepoLoading(true);
+    setRepoError(null);
+
+    try {
+      const response = await fetch('/api/ai/github/repositories?per_page=50', {
+        headers: {
+          Accept: 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to load repositories (${response.status})`);
+      }
+
+      const payload = await response.json();
+      const remoteRepos: Array<Record<string, any>> = Array.isArray(payload.repositories)
+        ? payload.repositories
+        : [];
+
+      const options = [
+        { value: 'local', label: 'Local Workspace', description: 'Primary workspace on this environment' },
+        ...remoteRepos.map((repo) => ({
+          value: repo.fullName || `${repo.owner}/${repo.name}`,
+          label: repo.fullName || repo.name,
+          description: repo.private ? 'Private repository' : 'Public repository',
+        })),
+      ];
+
+      setRepositoryOptions(options);
+    } catch (error) {
+      setRepoError(error instanceof Error ? error.message : 'Failed to load repositories');
+    } finally {
+      setRepoLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRepositories().catch((error) => {
+      console.warn('�s��,? Failed to prefetch GitHub repositories:', error);
+    });
+  }, [loadRepositories]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    try {
+      window.localStorage?.setItem('gurulo.selectedRepo', selectedRepo);
+    } catch (error) {
+      console.warn('�s��,? Failed to persist selected repository:', error);
+    }
+  }, [selectedRepo]);
+
+  const handleRepoChange = useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      const nextRepo = event.target.value;
+      setSelectedRepo(nextRepo);
+      showMessage('success', `Repository switched to ${nextRepo === 'local' ? 'local workspace' : nextRepo}`);
+    },
+    [showMessage],
+  );
+
+  const selectedRepoMeta = repositoryOptions.find((option) => option.value === selectedRepo);
 
   const showMessage = useCallback((type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
@@ -171,6 +252,7 @@ const GitHubManagementHub: React.FC = () => {
             data={data}
             error={dataError}
             isLoading={dataLoading}
+            repo={selectedRepo}
           />
         );
       case 'operations':
@@ -211,7 +293,36 @@ const GitHubManagementHub: React.FC = () => {
           </div>
 
           {/* Quick Status */}
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-end gap-6 text-sm">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs uppercase tracking-wide text-gray-400">Repository</span>
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedRepo}
+                  onChange={handleRepoChange}
+                  className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white min-w-[220px] focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  disabled={repoLoading}
+                >
+                  {repositoryOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={loadRepositories}
+                  disabled={repoLoading}
+                  className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title="Refresh repositories"
+                >
+                  <RefreshCw size={14} className={repoLoading ? 'animate-spin' : ''} />
+                </button>
+              </div>
+              {selectedRepoMeta?.description && (
+                <span className="text-xs text-gray-400">{selectedRepoMeta.description}</span>
+              )}
+              {repoError && <span className="text-xs text-red-400">{repoError}</span>}
+            </div>
             <div
               className={`flex items-center gap-2 border rounded-full px-3 py-1 transition-colors ${connectionPillStyles}`}
             >
