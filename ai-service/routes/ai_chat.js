@@ -327,6 +327,18 @@ const handleChatRequest = async (req, res) => {
       return respondWithPayload(buildLegacyFeatureResponse(metadata, builderOptions));
     }
 
+    if (intent.name === 'file_error_detection') {
+      return respondWithPayload(buildFileErrorDetectionResponse(metadata, builderOptions));
+    }
+
+    if (intent.name === 'hallucination_check') {
+      return respondWithPayload(buildHallucinationCheckResponse(metadata, builderOptions));
+    }
+
+    if (intent.name === 'deep_thinking') {
+      return respondWithPayload(buildDeepThinkingResponse(metadata, builderOptions));
+    }
+
     if (intent.name === 'general_query') {
       try {
         console.log('🔍 [CONTEXT-AWARE] Processing general_query with file context...');

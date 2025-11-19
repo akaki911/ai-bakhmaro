@@ -107,7 +107,7 @@ const PORT =
   process.env.PORT ||
   process.env.AI_SERVICE_PORT ||
   process.env.AI_PORT ||
-  8008;
+  5001;
 const DISABLE_FILE_WATCHERS = process.env.DISABLE_FILE_WATCHERS === 'true' || process.env.NODE_ENV === 'test';
 
 logWithTimestamp(`🔧 Port configuration: ${PORT}`);

@@ -13,6 +13,9 @@ const KEYWORD_GROUPS = {
   transport: ['transport', 'road', 'travel'],
   attractions: ['attraction', 'tour', 'sightseeing'],
   legacy: ['legacy', 'deprecated', 'old feature', 'archived module', 'removed feature'],
+  file_errors: ['შეცდომა', 'error', 'bug', 'fix', 'გაასწორე', 'შეამოწმე', 'კოდი'],
+  hallucinations: ['ჰალუცინაცია', 'hallucination', 'ფაქტი', 'fact', 'სიმართლე', 'truth'],
+  deep_thinking: ['აზროვნება', 'thinking', 'ლოგიკა', 'logic', 'გამოთვლა', 'calculation', 'პრობლემა', 'problem'],
 };
 
 const containsKeyword = (text = '', keywords = []) =>
