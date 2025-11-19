@@ -10,6 +10,18 @@ export default defineConfig({
     react({
       include: '**/*.{jsx,tsx}',
     }),
+    {
+      name: 'configure-response-headers',
+      configureServer: (server) => {
+        server.middlewares.use((_req, res, next) => {
+          res.setHeader(
+            'Content-Security-Policy-Report-Only',
+            "default-src 'self' 'unsafe-inline' 'unsafe-eval' unsafe-dynamic https: data: blob:; connect-src 'self' https: wss:; img-src 'self' https: data: blob:; report-uri https://sentry.io/api/4509669501698048/security/"
+          );
+          next();
+        });
+      },
+    },
   ],
   server: {
     host: true,

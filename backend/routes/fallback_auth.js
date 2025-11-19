@@ -159,45 +159,34 @@ router.post('/fallback/verify', async (req, res) => {
 
 // General auth /me endpoint - MUST be accessible
 router.get('/me', (req, res) => {
-  try {
-    console.log('🔍 [FALLBACK AUTH] /me endpoint called:', {
-      hasSession: !!req.session,
-      hasUser: !!req.session?.user,
-      isAuthenticated: req.session?.isAuthenticated,
-      sessionId: req.sessionID?.substring(0, 8) || null,
-      path: req.path,
-      originalUrl: req.originalUrl
-    });
+  console.log('🔍 [FALLBACK AUTH] /me endpoint called:', {
+    hasSession: !!req.session,
+    hasUser: !!req.session?.user,
+    isAuthenticated: req.session?.isAuthenticated,
+    sessionId: req.sessionID,
+    path: req.path,
+    originalUrl: req.originalUrl,
+    sessionData: req.session ? JSON.stringify(req.session).substring(0, 200) : null
+  });
 
-    if (!req.session?.user || !req.session?.isAuthenticated) {
-      return res.status(401).json({
-        success: false,
-        error: 'Not authenticated',
-        authenticated: false,
-        user: null,
-        endpoint: '/api/auth/me',
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    res.json({
-      success: true,
-      user: req.session.user,
-      authenticated: true,
+  if (!req.session?.user || !req.session?.isAuthenticated) {
+    return res.status(401).json({
+      success: false,
+      error: 'Not authenticated',
+      authenticated: false,
+      user: null,
       endpoint: '/api/auth/me',
       timestamp: new Date().toISOString()
     });
-  } catch (error) {
-    const errorId = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Math.random().toString(36).slice(2);
-    console.error('❌ General auth /me error:', { errorId, message: error.message, stack: error.stack });
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      authenticated: false,
-      endpoint: '/api/auth/me',
-      errorId
-    });
   }
+
+  res.json({
+    success: true,
+    user: req.session.user,
+    authenticated: true,
+    endpoint: '/api/auth/me',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Auth status endpoint that works for both authenticated and unauthenticated users
@@ -213,7 +202,7 @@ router.get('/status', (req, res) => {
 router.post('/logout', (req, res) => {
   try {
     console.log('🚪 [FALLBACK AUTH] Logout request received');
-    
+
     req.session.destroy((err) => {
       if (err) {
         console.error('❌ [FALLBACK AUTH] Session destroy error:', err);
@@ -227,7 +216,7 @@ router.post('/logout', (req, res) => {
       res.clearCookie('connect.sid');
       res.clearCookie('bk_admin.sid');
       console.log('✅ [FALLBACK AUTH] Logout successful');
-      
+
       res.json({
         success: true,
         message: 'Logged out successfully'

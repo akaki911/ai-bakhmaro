@@ -153,7 +153,7 @@ const AdminPasskeyLogin: React.FC = () => {
     try {
       await ensureWebAuthnReady();
 
-      const optionsResponse = await fetch(PASSKEY_OPTIONS_ENDPOINT, createBackendPostInit({ identifier: normalizedEmail })).catch((error) => {
+      const optionsResponse = await fetch('/api/auth/passkey/login-options', createBackendPostInit({ identifier: normalizedEmail })).catch((error) => {
         console.warn('Passkey options fetch failed:', error);
         throw new Error('passkey-options-network');
       });
@@ -180,7 +180,7 @@ const AdminPasskeyLogin: React.FC = () => {
       });
 
       const verifyResponse = await fetch(
-        PASSKEY_VERIFY_ENDPOINT,
+        '/api/auth/passkey/login-verify',
         createBackendPostInit({ credential }),
       ).catch((error) => {
         console.warn('Passkey verify fetch failed:', error);
