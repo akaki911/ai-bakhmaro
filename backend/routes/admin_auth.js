@@ -181,39 +181,15 @@ router.get('/me', (req, res) => {
       }
     });
 
-    // Development mode fallback - create admin session if needed
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const isReplit = req.get('Host')?.includes('replit.dev') || req.get('Host')?.includes('repl.co');
-    
-    if ((isDevelopment || isReplit) && (!req.session?.isAuthenticated || !req.session?.user)) {
-      console.log('🔧 [ADMIN AUTH] DEV MODE: Creating emergency admin session');
-
-      const userData = { 
-        id: '01019062020', 
-        role: 'SUPER_ADMIN',
-        personalId: '01019062020',
-        email: 'admin@bakhmaro.co',
-        displayName: 'სუპერ ადმინისტრატორი'
-      };
-
-      req.session.user = userData;
-      req.session.isAuthenticated = true;
-      req.session.isSuperAdmin = true;
-      req.session.userRole = 'SUPER_ADMIN';
-      req.session.userId = '01019062020';
-      req.session.deviceTrusted = true;
-
-      console.log('✅ [ADMIN AUTH] Emergency admin session created');
-    }
-
     // Check if user is authenticated and has admin role
     if (!req.session || !req.session.isAuthenticated || !req.session.user) {
-      console.log('❌ [ADMIN AUTH] Invalid or missing session');
+      console.log('❌ [ADMIN AUTH] Invalid or missing session - authentication required');
       return res.status(401).json({
         success: false,
         error: 'Not authenticated',
         authenticated: false,
-        code: 'NOT_AUTHENTICATED'
+        code: 'NOT_AUTHENTICATED',
+        message: 'გთხოვთ გაიაროთ ავტორიზაცია Passkey-ით'
       });
     }
 
@@ -273,6 +249,75 @@ router.get('/me', (req, res) => {
   }
 });
 
+// Development-only login endpoint with strict controls
+router.post("/dev-login", (req, res) => {
+  // Only allow in true development environment (server-side validation only)
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const bypassEnabled = process.env.ENABLE_DEV_BYPASS === 'true';
+  
+  // Must be both development mode AND explicitly enabled
+  if (!isDevelopment || !bypassEnabled) {
+    console.warn('⚠️ [DEV LOGIN] Rejected - not in development mode or bypass not enabled', {
+      NODE_ENV: process.env.NODE_ENV,
+      bypassEnabled
+    });
+    return res.status(403).json({
+      success: false,
+      error: 'Development bypass not available',
+      code: 'DEV_BYPASS_DISABLED'
+    });
+  }
+
+  // Require ADMIN_SETUP_TOKEN for security
+  const providedToken = req.headers['x-admin-setup-token'] || req.body?.setupToken;
+  const expectedToken = process.env.ADMIN_SETUP_TOKEN;
+  
+  if (!providedToken || !expectedToken || providedToken !== expectedToken) {
+    console.error('❌ [DEV LOGIN] Invalid or missing setup token');
+    return res.status(401).json({
+      success: false,
+      error: 'Invalid setup token',
+      code: 'INVALID_SETUP_TOKEN'
+    });
+  }
+
+  console.warn('⚠️ [DEV LOGIN] Creating development admin session with SETUP TOKEN');
+  
+  const userData = { 
+    id: '01019062020', 
+    role: 'SUPER_ADMIN',
+    personalId: '01019062020',
+    email: 'admin@bakhmaro.co',
+    displayName: 'სუპერ ადმინისტრატორი (Development)',
+    isDevelopmentSession: true
+  };
+
+  req.session.user = userData;
+  req.session.isAuthenticated = true;
+  req.session.isSuperAdmin = true;
+  req.session.userRole = 'SUPER_ADMIN';
+  req.session.userId = '01019062020';
+  req.session.deviceTrusted = false; // Explicit no device trust for dev sessions
+
+  req.session.save((err) => {
+    if (err) {
+      console.error('❌ [DEV LOGIN] Session save error:', err);
+      return res.status(500).json({ 
+        success: false,
+        error: 'Session save failed' 
+      });
+    }
+
+    console.log('✅ [DEV LOGIN] Development session created successfully');
+    
+    res.json({
+      success: true,
+      user: userData,
+      warning: 'This is a development session. Use Passkey authentication in production.'
+    });
+  });
+});
+
 router.post("/test-session", (req, res) => {
   res.json({ ok: true, message: "Session test successful" });
 });
@@ -303,41 +348,9 @@ router.get("/check-role", (req, res) => {
   });
 });
 
-router.post("/force-session", (req, res) => {
-  const { userId, email, role, personalId } = req.body;
-
-  if (personalId !== "01019062020" || role !== "SUPER_ADMIN") {
-    return res.status(403).json({
-      ok: false,
-      error: "Force session only allowed for SUPER_ADMIN",
-    });
-  }
-
-  const userData = {
-    id: userId,
-    role: "SUPER_ADMIN",
-    personalId: personalId,
-    email: email,
-    displayName: "სუპერ ადმინისტრატორი",
-  };
-
-  req.session.user = userData;
-  req.session.isAuthenticated = true;
-  req.session.isSuperAdmin = true;
-  req.session.userRole = "SUPER_ADMIN";
-  req.session.userId = userId;
-
-  req.session.save((err) => {
-    if (err) {
-      return res.status(500).json({ error: "Session save failed" });
-    }
-    res.json({
-      ok: true,
-      message: "Session forced successfully",
-      user: userData,
-    });
-  });
-});
+// REMOVED: /force-session endpoint was a critical security vulnerability
+// It allowed unauthenticated users to create SUPER_ADMIN sessions
+// Use /dev-login with ADMIN_SETUP_TOKEN for development purposes instead
 
 router.post("/logout", (req, res) => {
   req.session.destroy((err) => {
