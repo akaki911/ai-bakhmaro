@@ -495,6 +495,63 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
     }),
     [resolveRepoValue],
   );
+
+  const withRepoQuery = useCallback(
+    (url: string, extra: Record<string, string | number | boolean | undefined> = {}) => {
+      const query = buildRepoQuery(extra);
+      return url.includes('?') ? `${url}&${query}` : `${url}?${query}`;
+    },
+    [buildRepoQuery],
+  );
+
+  const repoValue = resolveRepoValue();
+  const isLocalRepo = repoValue === 'local';
+
+  const broadcastWorkspaceContext = useCallback(
+    (meta: { path?: string; type?: string } | null) => {
+      if (typeof window === 'undefined') {
+        return;
+      }
+      try {
+        window.dispatchEvent(
+          new CustomEvent('workspace:repo-changed', {
+            detail: {
+              repo: resolveRepoValue(),
+              workspace: meta,
+              updatedAt: Date.now(),
+            },
+          }),
+        );
+      } catch (error) {
+        console.warn('workspace:repo-changed event failed:', error);
+      }
+    },
+    [resolveRepoValue],
+  );
+
+  const updateWorkspaceContext = useCallback(
+    (input: unknown) => {
+      if (isRecord(input)) {
+        const normalizedMeta = {
+          path: toStringOrUndefined(input.path),
+          type: toStringOrUndefined(input.type),
+        };
+        setWorkspaceMeta(normalizedMeta);
+        broadcastWorkspaceContext(normalizedMeta);
+        return;
+      }
+      setWorkspaceMeta(null);
+      broadcastWorkspaceContext(null);
+    },
+    [broadcastWorkspaceContext],
+  );
+
+  const logPushEvent = useCallback((message: string) => {
+    setPushState((prev) => ({
+      ...prev,
+      logs: [...prev.logs, message],
+    }));
+  }, []);
   const [rollbackLoading, setRollbackLoading] = useState<string | null>(null);
   const [newBranchName, setNewBranchName] = useState('');
   const [showCreateBranch, setShowCreateBranch] = useState(false);
@@ -539,10 +596,22 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
 
   const loadGitStatus = useCallback(async () => {
     try {
-      const { ok, data } = await getJsonOnce('/api/ai/git/status');
+      const { ok, data } = await getJsonOnce(withRepoQuery('/api/ai/git/status'));
       if (!ok) {
+        const errorMessage =
+          (isRecord(data) && typeof data.error === 'string' && data.error) ||
+          'Unable to load git status.';
+        setWorkspaceError(errorMessage);
+        updateWorkspaceContext(isRecord(data) ? data.workspace : null);
         return;
       }
+
+      if (isRecord(data)) {
+        updateWorkspaceContext(data.workspace ?? null);
+      } else {
+        updateWorkspaceContext(null);
+      }
+      setWorkspaceError(null);
 
       const normalizedStatus = normalizeGitStatusResponse(data);
       if (normalizedStatus) {
@@ -553,15 +622,17 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
         return;
       }
       console.error('Failed to load git status:', error);
-      showMessage('error', 'Git სტატუსის ჩატვირთვა ვერ მოხერხდა');
+      const fallback = 'Unable to load git status.';
+      setWorkspaceError(fallback);
+      showMessage('error', fallback);
     }
-  }, [showMessage]);
+  }, [showMessage, updateWorkspaceContext, withRepoQuery]);
 
   const loadCommitHistory = useCallback(async () => {
     try {
-      const { ok, data } = await getJsonOnce('/api/ai/git/log?limit=20');
+      const { ok, data } = await getJsonOnce(withRepoQuery('/api/ai/git/log', { limit: 20 }));
       if (!ok || !isRecord(data)) {
-        return;
+        return [];
       }
 
       const commits = Array.isArray(data.commits) ? data.commits : [];
@@ -569,17 +640,19 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
         .map(normalizeCommitResponse)
         .filter(Boolean) as Commit[];
       setCommits(normalizedCommits);
+      return normalizedCommits;
     } catch (error) {
       if (isAbortError(error)) {
-        return;
+        return [];
       }
       console.error('Failed to load commit history:', error);
+      return [];
     }
-  }, []);
+  }, [withRepoQuery]);
 
   const loadBranches = useCallback(async () => {
     try {
-      const { ok, data } = await getJsonOnce('/api/ai/git/branches');
+      const { ok, data } = await getJsonOnce(withRepoQuery('/api/ai/git/branches'));
       if (!ok) {
         return;
       }
@@ -591,7 +664,7 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
       }
       console.error('Failed to load branches:', error);
     }
-  }, []);
+  }, [withRepoQuery]);
 
   const loadRecentFiles = useCallback(async () => {
     try {
@@ -610,6 +683,16 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
   }, []);
 
   useEffect(() => {
+    setGitStatus(null);
+    setCommits([]);
+    setBranchCollections(createEmptyBranchState());
+    setWorkspaceMeta(null);
+    setWorkspaceError(null);
+    setPushState({ status: 'idle', logs: [] });
+    setZipUploadState({ status: 'idle' });
+  }, [repoValue]);
+
+  useEffect(() => {
     loadGitStatus();
     loadCommitHistory();
     loadBranches();
@@ -622,7 +705,7 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
         `/api/ai/version-control/history/${encodeURIComponent(filePath)}`
       );
       if (!ok || !isRecord(data)) {
-        showMessage('error', 'ფაილის ისტორიის ჩატვირთვის შეცდომა');
+        showMessage('error', 'áƒ¤áƒáƒ˜áƒšáƒ˜áƒ¡ áƒ˜áƒ¡áƒ¢áƒáƒ áƒ˜áƒ˜áƒ¡ áƒ©áƒáƒ¢áƒ•áƒ˜áƒ áƒ—áƒ•áƒ˜áƒ¡ áƒ¨áƒ”áƒªáƒ“áƒáƒ›áƒ');
         return;
       }
 
@@ -637,7 +720,7 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
         return;
       }
       console.error('Failed to load file history:', error);
-      showMessage('error', 'ფაილის ისტორიის ჩატვირთვის შეცდომა');
+      showMessage('error', 'áƒ¤áƒáƒ˜áƒšáƒ˜áƒ¡ áƒ˜áƒ¡áƒ¢áƒáƒ áƒ˜áƒ˜áƒ¡ áƒ©áƒáƒ¢áƒ•áƒ˜áƒ áƒ—áƒ•áƒ˜áƒ¡ áƒ¨áƒ”áƒªáƒ“áƒáƒ›áƒ');
     }
   };
 
@@ -656,7 +739,7 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
       });
 
       if (!ok || !isRecord(data)) {
-        showMessage('error', 'Diff-ის გენერაციის შეცდომა');
+        showMessage('error', 'Diff-áƒ˜áƒ¡ áƒ’áƒ”áƒœáƒ”áƒ áƒáƒªáƒ˜áƒ˜áƒ¡ áƒ¨áƒ”áƒªáƒ“áƒáƒ›áƒ');
         return;
       }
 
@@ -670,7 +753,7 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
         return;
       }
       console.error('Failed to generate diff:', error);
-      showMessage('error', 'Diff-ის გენერაციის შეცდომა');
+      showMessage('error', 'Diff-áƒ˜áƒ¡ áƒ’áƒ”áƒœáƒ”áƒ áƒáƒªáƒ˜áƒ˜áƒ¡ áƒ¨áƒ”áƒªáƒ“áƒáƒ›áƒ');
     }
   };
 
@@ -689,14 +772,14 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
       if (ok) {
         const message = isRecord(data) && typeof data?.message === 'string'
           ? data.message
-          : 'Rollback წარმატებით შესრულდა';
+          : 'Rollback áƒ¬áƒáƒ áƒ›áƒáƒ¢áƒ”áƒ‘áƒ˜áƒ— áƒ¨áƒ”áƒ¡áƒ áƒ£áƒšáƒ“áƒ';
         showMessage('success', message);
         loadFileHistory(filePath);
         refetch();
       } else {
         const errorMessage =
           (isRecord(data) && typeof data?.error === 'string' && data.error) ||
-          'Rollback შეცდომა';
+          'Rollback áƒ¨áƒ”áƒªáƒ“áƒáƒ›áƒ';
         showMessage('error', errorMessage);
       }
     } catch (error) {
@@ -704,100 +787,260 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
         return;
       }
       console.error('Failed to rollback file version:', error);
-      showMessage('error', 'Rollback შეცდომა');
+      showMessage('error', 'Rollback áƒ¨áƒ”áƒªáƒ“áƒáƒ›áƒ');
     } finally {
       setRollbackLoading(null);
     }
   };
 
-  const stageFiles = async (files: string[]) => {
+  const stageFiles = async (files: string[], action: 'stage' | 'unstage' = 'stage') => {
+    if (!Array.isArray(files) || files.length === 0) {
+      return;
+    }
     setActionLoading(true);
+    setWorkspaceError(null);
     try {
       const response = await fetch(
-        '/api/ai/git/add',
+        action === 'stage' ? '/api/ai/git/add' : '/api/ai/git/unstage',
         withAdminHeaders({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ files })
+          body: JSON.stringify(withRepo({ files }))
         })
       );
 
       if (response.ok) {
         await loadGitStatus();
-        showMessage('success', 'ფაილები წარმატებით დაემატა staging area-ში');
+        showMessage('success', action === 'stage'
+          ? 'Files added to staging.'
+          : 'Files moved back to unstaged.');
+      } else {
+        const payload = await response.json().catch(() => null);
+        const errorMessage =
+          (payload && typeof payload.error === 'string' && payload.error) ||
+          'Unable to update file status.';
+        setWorkspaceError(errorMessage);
+        showMessage('error', errorMessage);
       }
     } catch (error) {
       if (isAbortError(error)) {
         return;
       }
       console.error('Failed to stage files:', error);
-      showMessage('error', 'ფაილების staging ვერ მოხერხდა');
+      const fallback =
+        action === 'stage'
+          ? 'Staging operation failed.'
+          : 'Unstage operation failed.';
+      setWorkspaceError(fallback);
+      showMessage('error', fallback);
     } finally {
       setActionLoading(false);
     }
   };
 
   const commitChanges = async () => {
-    if (!commitMessage.trim()) return;
+    if (!commitMessage.trim()) {
+      setWorkspaceError('Please enter a commit message.');
+      return;
+    }
 
     setActionLoading(true);
+    setWorkspaceError(null);
     try {
       const response = await fetch(
         '/api/ai/git/commit',
         withAdminHeaders({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: commitMessage })
+          body: JSON.stringify(withRepo({ message: commitMessage.trim() }))
         })
       );
+
+      const payload = await response.json().catch(() => null);
 
       if (response.ok) {
         setCommitMessage('');
         await loadGitStatus();
         await loadCommitHistory();
-        showMessage('success', 'ცვლილებები წარმატებით commit გაუკეთდა');
+        showMessage('success', 'Commit completed successfully.');
+      } else {
+        const errorMessage =
+          (payload && typeof payload.error === 'string' && payload.error) ||
+          'Commit failed.';
+        setWorkspaceError(errorMessage);
+        showMessage('error', errorMessage);
       }
     } catch (error) {
       if (isAbortError(error)) {
         return;
       }
       console.error('Failed to commit changes:', error);
-      showMessage('error', 'Commit-ის შექმნა ვერ მოხერხდა');
+      const fallback = 'Commit could not be completed.';
+      setWorkspaceError(fallback);
+      showMessage('error', fallback);
     } finally {
       setActionLoading(false);
     }
   };
 
   const pushChanges = async () => {
+    if (pushState.status === 'running') {
+      return;
+    }
+
+    const branch = gitStatus?.branch || DEFAULT_BRANCH;
     setActionLoading(true);
+    setWorkspaceError(null);
+    setPushState({
+      status: 'running',
+      logs: [`${branch} branch push started...`],
+      metadata: { branch, remote: 'origin', commit: null }
+    });
+    logPushEvent('Preparing local changes...');
+
     try {
       const response = await fetch(
         '/api/ai/git/push',
         withAdminHeaders({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ remote: 'origin', branch: gitStatus?.branch })
+          body: JSON.stringify(withRepo({ remote: 'origin', branch }))
         })
       );
 
-      if (response.ok) {
-        await loadGitStatus();
-        showMessage('success', 'ცვლილებები წარმატებით გაიგზავნა GitHub-ზე');
+      let payload: Record<string, any> | null = null;
+      try {
+        payload = await response.json();
+      } catch {
+        payload = null;
+      }
+
+      if (!response.ok || (payload && payload.success === false)) {
+        const errorMessage =
+          (payload && typeof payload.error === 'string' && payload.error) ||
+          'Push failed.';
+        logPushEvent(errorMessage);
+        setPushState((prev) => ({ ...prev, status: 'error' }));
+        setWorkspaceError(errorMessage);
+        showMessage('error', errorMessage);
+        return;
+      }
+
+      const metadata = {
+        branch: (payload && payload.branch) || branch,
+        remote: (payload && payload.remote) || 'origin',
+        commit: payload && typeof payload.commit === 'string' ? payload.commit : null
+      };
+      const remoteMessage = (payload && payload.message) || 'Push finished.';
+      logPushEvent(remoteMessage);
+      setPushState((prev) => ({ ...prev, status: 'success', metadata }));
+      showMessage('success', remoteMessage);
+
+      await loadGitStatus();
+      const latestCommits = await loadCommitHistory();
+      const latestCommit = Array.isArray(latestCommits) && latestCommits.length > 0
+        ? latestCommits[0]
+        : undefined;
+      if (latestCommit && !metadata.commit) {
+        setPushState((prev) => ({
+          ...prev,
+          metadata: {
+            ...prev.metadata,
+            commit: latestCommit.hash,
+          }
+        }));
       }
     } catch (error) {
       if (isAbortError(error)) {
         return;
       }
       console.error('Failed to push changes:', error);
-      showMessage('error', 'GitHub-ზე გაგზავნა ვერ მოხერხდა');
+      const fallback = 'Push to GitHub failed.';
+      logPushEvent(fallback);
+      setPushState((prev) => ({ ...prev, status: 'error' }));
+      setWorkspaceError(fallback);
+      showMessage('error', fallback);
     } finally {
       setActionLoading(false);
     }
   };
 
+const uploadWorkspaceArchive = useCallback(
+    async (file: File) => {
+      if (!isLocalRepo) {
+        const message = 'ZIP upload is available only for the local workspace.';
+        setZipUploadState({ status: 'error', message });
+        setWorkspaceError(message);
+        return;
+      }
+
+      setZipUploadState({ status: 'running', message: `${file.name} is uploading...` });
+      setWorkspaceError(null);
+
+      try {
+        const formData = new FormData();
+        formData.append('archive', file);
+        formData.append('repo', resolveRepoValue());
+
+        const response = await fetch(
+          '/api/ai/workspace/upload',
+          withAdminHeaders({
+            method: 'POST',
+            body: formData
+          })
+        );
+
+        let payload: Record<string, any> | null = null;
+        try {
+          payload = await response.json();
+        } catch {
+          payload = null;
+        }
+
+        if (!response.ok || (payload && payload.success === false)) {
+          const errorMessage =
+            (payload && typeof payload.error === 'string' && payload.error) ||
+            'ZIP upload failed.';
+          setZipUploadState({ status: 'error', message: errorMessage });
+          setWorkspaceError(errorMessage);
+          showMessage('error', errorMessage);
+          return;
+        }
+
+        setZipUploadState({ status: 'success', message: `${file.name} uploaded and workspace refreshed.` });
+        showMessage('success', 'Workspace files refreshed successfully.');
+        await loadGitStatus();
+        refetch();
+      } catch (error) {
+        if (isAbortError(error)) {
+          return;
+        }
+        console.error('Failed to upload workspace ZIP:', error);
+        const fallback = 'ZIP upload failed.';
+        setZipUploadState({ status: 'error', message: fallback });
+        setWorkspaceError(fallback);
+        showMessage('error', fallback);
+      }
+    },
+    [isLocalRepo, loadGitStatus, refetch, resolveRepoValue, showMessage],
+  );
+
+  const handleZipInputChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0] ?? null;
+      if (event.target) {
+        event.target.value = '';
+      }
+      if (!file) {
+        return;
+      }
+      uploadWorkspaceArchive(file);
+    },
+    [uploadWorkspaceArchive],
+  );
   const createFeatureBranch = async () => {
     if (!newBranchName.trim()) {
-      showMessage('error', 'Branch name აუცილებელია');
+      showMessage('error', 'Branch name áƒáƒ£áƒªáƒ˜áƒšáƒ”áƒ‘áƒ”áƒšáƒ˜áƒ');
       return;
     }
 
@@ -807,24 +1050,24 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
         withAdminHeaders({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ featureName: newBranchName })
+          body: JSON.stringify(withRepo({ featureName: newBranchName }))
         })
       );
 
       if (response.ok) {
-        showMessage('success', 'Feature branch შექმნილი წარმატებით');
+        showMessage('success', 'Feature branch áƒ¨áƒ”áƒ¥áƒ›áƒœáƒ˜áƒšáƒ˜ áƒ¬áƒáƒ áƒ›áƒáƒ¢áƒ”áƒ‘áƒ˜áƒ—');
         setNewBranchName('');
         setShowCreateBranch(false);
         loadBranches();
       } else {
-        showMessage('error', 'Branch შექმნის შეცდომა');
+        showMessage('error', 'Branch áƒ¨áƒ”áƒ¥áƒ›áƒœáƒ˜áƒ¡ áƒ¨áƒ”áƒªáƒ“áƒáƒ›áƒ');
       }
     } catch (error) {
       if (isAbortError(error)) {
         return;
       }
       console.error('Failed to create feature branch:', error);
-      showMessage('error', 'Branch შექმნის შეცდომა');
+      showMessage('error', 'Branch áƒ¨áƒ”áƒ¥áƒ›áƒœáƒ˜áƒ¡ áƒ¨áƒ”áƒªáƒ“áƒáƒ›áƒ');
     }
   };
 
@@ -835,24 +1078,24 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
         withAdminHeaders({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ targetBranch: branchName })
+          body: JSON.stringify(withRepo({ targetBranch: branchName }))
         })
       );
 
       if (response.ok) {
-        showMessage('success', `${branchName}-ზე გადართულია`);
+        showMessage('success', `${branchName}-áƒ–áƒ” áƒ’áƒáƒ“áƒáƒ áƒ—áƒ£áƒšáƒ˜áƒ`);
         loadBranches();
         loadGitStatus();
         refetch();
       } else {
-        showMessage('error', 'Branch switching შეცდომა');
+        showMessage('error', 'Branch switching áƒ¨áƒ”áƒªáƒ“áƒáƒ›áƒ');
       }
     } catch (error) {
       if (isAbortError(error)) {
         return;
       }
       console.error('Failed to switch branch:', error);
-      showMessage('error', 'Branch switching შეცდომა');
+      showMessage('error', 'Branch switching áƒ¨áƒ”áƒªáƒ“áƒáƒ›áƒ');
     }
   };
 
@@ -879,122 +1122,213 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
     return new Date(timestamp).toLocaleString('ka-GE');
   };
 
-  const renderWorkspaceView = () => (
-    <div className="space-y-6">
-      {/* Repository Status */}
-      <div className="bg-gray-800 rounded-lg p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <GitBranch size={20} />
-            Git Workspace
-          </h3>
-          <button
-            onClick={loadGitStatus}
-            disabled={actionLoading}
-            className="p-2 text-gray-400 hover:text-white"
-          >
-            <RefreshCw size={16} className={actionLoading ? 'animate-spin' : ''} />
-          </button>
-        </div>
+  const renderWorkspaceView = () => {
+    const pushProgress = pushState.status === 'success'
+      ? 100
+      : pushState.status === 'error'
+        ? 100
+        : pushState.status === 'running'
+          ? 65
+          : 0;
+    const pushBarColor = pushState.status === 'success'
+      ? 'bg-green-500'
+      : pushState.status === 'error'
+        ? 'bg-red-500'
+        : 'bg-blue-500';
+    const disableGitActions = Boolean(
+      actionLoading || zipUploadState.status === 'running' || pushState.status === 'running'
+    );
 
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <div className="text-sm text-gray-400">მიმდინარე ბრენჩი</div>
-            <div className="text-lg font-medium">{gitStatus?.branch || 'main'}</div>
+    return (
+      <div className="space-y-6">
+        {workspaceError && (
+          <div className="rounded border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm text-red-200">
+            {workspaceError}
           </div>
-          <div>
-            <div className="text-sm text-gray-400">სტატუსი</div>
-            <div className={`text-lg font-medium ${gitStatus?.clean ? 'text-green-400' : 'text-orange-400'}`}>
-              {gitStatus?.clean ? 'სუფთა' : `${gitStatusFiles.length} ცვლილება`}
+        )}
+
+        <div className="bg-gray-800 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <GitBranch size={20} />
+              Git Workspace
+            </h3>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-400 border border-gray-700 rounded-full px-3 py-1">
+                {repoValue === 'local' ? 'Local workspace' : repoValue}
+              </span>
+              <button
+                onClick={loadGitStatus}
+                disabled={actionLoading}
+                className="p-2 text-gray-400 hover:text-white disabled:opacity-50"
+              >
+                <RefreshCw size={16} className={actionLoading ? 'animate-spin' : ''} />
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* Quick Actions */}
-        <div className="flex gap-2">
-          <button
-            onClick={pushChanges}
-            disabled={actionLoading || gitStatus?.clean}
-            className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
-          >
-            <Upload size={16} />
-            Push to GitHub
-          </button>
-        </div>
-      </div>
+          {workspaceMeta?.path && (
+            <div className="text-xs text-gray-400 mb-4">
+              Active path:
+              <span className="font-mono text-gray-200 ml-2">{workspaceMeta.path}</span>
+              {workspaceMeta?.type && (
+                <span className="ml-2 text-gray-500">{workspaceMeta.type}</span>
+              )}
+            </div>
+          )}
 
-      {/* File Changes */}
-      {gitStatus && gitStatusFiles.length > 0 && (
-        <div className="bg-gray-800 rounded-lg p-4">
-          <h3 className="text-lg font-semibold mb-4">შეცვლილი ფაილები</h3>
-
-          <div className="space-y-2 mb-4">
-            {gitStatusFiles.map((file) => (
-              <div
-                key={file.path}
-                className="flex items-center justify-between p-2 bg-gray-700 rounded"
-              >
-                <div className="flex items-center gap-3">
-                  {getStatusIcon(file.status)}
-                  <span className="font-mono text-sm">{file.path}</span>
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    file.staged ? 'bg-green-900 text-green-300' : 'bg-gray-600 text-gray-300'
-                  }`}>
-                    {file.staged ? 'Staged' : 'Modified'}
-                  </span>
-                </div>
-
-                <div className="flex gap-2">
-                  {!file.staged ? (
-                    <button
-                      onClick={() => stageFiles([file.path])}
-                      className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700"
-                    >
-                      Stage
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => stageFiles([file.path])}
-                      className="px-2 py-1 bg-orange-600 text-white rounded text-xs hover:bg-orange-700"
-                    >
-                      Unstage
-                    </button>
-                  )}
-                </div>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <div className="text-sm text-gray-400">Current branch</div>
+              <div className="text-lg font-medium">{gitStatus?.branch || 'main'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-400">Working tree</div>
+              <div className={`text-lg font-medium ${gitStatus?.clean ? 'text-green-400' : 'text-orange-400'}`}>
+                {gitStatus?.clean ? 'Clean' : `${gitStatusFiles.length} changes`}
               </div>
-            ))}
+            </div>
           </div>
 
-          {/* Commit Section */}
-          <div className="border-t border-gray-600 pt-4">
-            <textarea
-              value={commitMessage}
-              onChange={(e) => setCommitMessage(e.target.value)}
-              placeholder="შეიყვანეთ commit მესიჯი..."
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 mb-2"
-              rows={3}
-            />
+          <div className="flex gap-2">
             <button
-              onClick={commitChanges}
-              disabled={!commitMessage.trim() || actionLoading}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+              onClick={pushChanges}
+              disabled={Boolean(gitStatus?.clean) || disableGitActions}
+              className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-2 disabled:cursor-not-allowed"
             >
-              <GitCommit size={16} />
-              Commit ცვლილებები
+              <Upload size={16} />
+              Push to GitHub
             </button>
           </div>
-        </div>
-      )}
-    </div>
-  );
 
-  const renderHistoryView = () => (
+          {pushState.status !== 'idle' && (
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center justify-between text-xs text-gray-400">
+                <span>
+                  {pushState.status === 'running'
+                    ? 'Pushing changes to remote...'
+                    : pushState.status === 'success'
+                      ? 'Push completed'
+                      : 'Push failed'}
+                </span>
+                <div className="text-right text-gray-300 space-x-3">
+                  {pushState.metadata?.branch && <span>Branch: {pushState.metadata.branch}</span>}
+                  {pushState.metadata?.commit && <span>Commit: {pushState.metadata.commit}</span>}
+                </div>
+              </div>
+              <div className="h-2 rounded bg-gray-700 overflow-hidden">
+                <div className={`h-full ${pushBarColor}`} style={{ width: `${pushProgress}%` }} />
+              </div>
+              <div className="max-h-32 overflow-auto rounded bg-gray-900/70 p-2 text-xs font-mono text-gray-100 space-y-1">
+                {pushState.logs.map((line, index) => (
+                  <div key={index}>{line}</div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {isLocalRepo && (
+            <div className="mt-6 border-t border-gray-700 pt-4">
+              <h4 className="text-sm font-semibold text-gray-200 mb-2 flex items-center gap-2">
+                <Upload size={14} />
+                Upload ZIP to local workspace
+              </h4>
+              <p className="text-xs text-gray-400 mb-3">
+                Replace the local workspace by uploading a zipped snapshot of your project.
+              </p>
+              <label className="inline-flex items-center gap-2 rounded border border-dashed border-gray-600 px-4 py-2 text-sm text-gray-200 hover:border-gray-400 cursor-pointer">
+                <input
+                  type="file"
+                  accept=".zip"
+                  className="hidden"
+                  onChange={handleZipInputChange}
+                  disabled={zipUploadState.status === 'running'}
+                />
+                <Upload size={14} />
+                {zipUploadState.status === 'running' ? 'Uploading...' : 'Select ZIP archive'}
+              </label>
+              {zipUploadState.message && (
+                <p className={`mt-2 text-xs ${zipUploadState.status === 'error' ? 'text-red-300' : zipUploadState.status === 'success' ? 'text-green-300' : 'text-gray-400'}`}>
+                  {zipUploadState.message}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {gitStatus && gitStatusFiles.length > 0 && (
+          <div className="bg-gray-800 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-4">Changed files</h3>
+
+            <div className="space-y-2 mb-4">
+              {gitStatusFiles.map((file) => (
+                <div
+                  key={file.path}
+                  className="flex items-center justify-between p-2 bg-gray-700 rounded"
+                >
+                  <div className="flex items-center gap-3">
+                    {getStatusIcon(file.status)}
+                    <span className="font-mono text-sm">{file.path}</span>
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      file.staged ? 'bg-green-900 text-green-300' : 'bg-gray-600 text-gray-300'
+                    }`}>
+                      {file.staged ? 'Staged' : 'Modified'}
+                    </span>
+                  </div>
+
+                  <div className="flex gap-2">
+                    {!file.staged ? (
+                      <button
+                        onClick={() => stageFiles([file.path])}
+                        disabled={disableGitActions}
+                        className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:opacity-50"
+                      >
+                        Stage
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => stageFiles([file.path], 'unstage')}
+                        disabled={disableGitActions}
+                        className="px-2 py-1 bg-orange-600 text-white rounded text-xs hover:bg-orange-700 disabled:opacity-50"
+                      >
+                        Unstage
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-gray-600 pt-4">
+              <textarea
+                value={commitMessage}
+                onChange={(e) => setCommitMessage(e.target.value)}
+                placeholder="Describe the commit..."
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 mb-2"
+                rows={3}
+                disabled={disableGitActions}
+              />
+              <button
+                onClick={commitChanges}
+                disabled={!commitMessage.trim() || disableGitActions}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                <GitCommit size={16} />
+                Commit changes
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+const renderHistoryView = () => (
     <div className="space-y-6">
       {/* Commit History */}
       <div className="bg-gray-800 rounded-lg p-4">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Clock size={20} />
-          Commit ისტორია
+          Commit áƒ˜áƒ¡áƒ¢áƒáƒ áƒ˜áƒ
         </h3>
 
         <div className="space-y-3">
@@ -1026,9 +1360,9 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
               <div className="flex items-center gap-2 text-xs text-gray-400">
                 <User size={12} />
                 <span>{commit.author}</span>
-                <span>•</span>
+                <span>â€¢</span>
                 <span>{commit.date.toLocaleDateString()}</span>
-                <span>•</span>
+                <span>â€¢</span>
                 <span>{commit.date.toLocaleTimeString()}</span>
               </div>
 
@@ -1068,7 +1402,7 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
             className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 text-sm"
           >
             <Plus size={14} />
-            ახალი Feature
+            áƒáƒ®áƒáƒšáƒ˜ Feature
           </button>
         </div>
 
@@ -1087,13 +1421,13 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
                 onClick={createFeatureBranch}
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
               >
-                შექმნა
+                áƒ¨áƒ”áƒ¥áƒ›áƒœáƒ
               </button>
               <button
                 onClick={() => setShowCreateBranch(false)}
                 className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
               >
-                გაუქმება
+                áƒ’áƒáƒ£áƒ¥áƒ›áƒ”áƒ‘áƒ
               </button>
             </div>
           </div>
@@ -1109,7 +1443,7 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className="text-lg">🌿</span>
+                <span className="text-lg">ðŸŒ¿</span>
                 <div>
                   <div className="flex items-center gap-2">
                     <span className={`font-medium ${branch.current ? 'text-blue-400' : 'text-white'}`}>
@@ -1125,8 +1459,8 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
                     local
                     {(branch.ahead || branch.behind) && (
                       <span className="ml-2">
-                        {branch.ahead ? `↑${branch.ahead}` : ''}
-                        {branch.behind ? `↓${branch.behind}` : ''}
+                        {branch.ahead ? `â†‘${branch.ahead}` : ''}
+                        {branch.behind ? `â†“${branch.behind}` : ''}
                       </span>
                     )}
                   </div>
@@ -1159,7 +1493,7 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
 
         {/* Recent Files Quick Access */}
         <div className="mb-4">
-          <div className="text-sm text-gray-400 mb-2">ახლახან შეცვლილი ფაილები:</div>
+          <div className="text-sm text-gray-400 mb-2">áƒáƒ®áƒšáƒáƒ®áƒáƒœ áƒ¨áƒ”áƒªáƒ•áƒšáƒ˜áƒšáƒ˜ áƒ¤áƒáƒ˜áƒšáƒ”áƒ‘áƒ˜:</div>
           <div className="flex flex-wrap gap-2">
             {recentFiles.slice(0, 8).map((file) => (
               <button
@@ -1179,14 +1513,14 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
             type="text"
             value={selectedFile}
             onChange={(e) => setSelectedFile(e.target.value)}
-            placeholder="ფაილის path (მაგ: src/components/Header.tsx)"
+            placeholder="áƒ¤áƒáƒ˜áƒšáƒ˜áƒ¡ path (áƒ›áƒáƒ’: src/components/Header.tsx)"
             className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400"
           />
           <button
             onClick={() => selectedFile && loadFileHistory(selectedFile)}
             className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
-            ისტორიის ჩატვირთვა
+            áƒ˜áƒ¡áƒ¢áƒáƒ áƒ˜áƒ˜áƒ¡ áƒ©áƒáƒ¢áƒ•áƒ˜áƒ áƒ—áƒ•áƒ
           </button>
         </div>
 
@@ -1194,7 +1528,7 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
         {fileVersions.length > 0 && (
           <div className="space-y-3">
             <div className="text-sm font-medium text-gray-300">
-              ფაილი: {selectedFile} - {fileVersions.length} ვერსია
+              áƒ¤áƒáƒ˜áƒšáƒ˜: {selectedFile} - {fileVersions.length} áƒ•áƒ”áƒ áƒ¡áƒ˜áƒ
             </div>
 
             {fileVersions.map((version, index) => (
@@ -1261,7 +1595,7 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
     return (
       <EmptyState
         icon={Clock}
-        title="Loading GitOps…"
+        title="Loading GitOpsâ€¦"
         description="Fetching the latest GitHub automation data."
       />
     );
@@ -1309,7 +1643,7 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
             <div className={`px-3 py-1 rounded text-sm ${
               gitStatus.clean ? 'bg-green-900 text-green-300' : 'bg-orange-900 text-orange-300'
             }`}>
-              {gitStatus.clean ? 'Repository სუფთაა' : `${gitStatusFiles.length} ცვლილება`}
+              {gitStatus.clean ? 'Repository áƒ¡áƒ£áƒ¤áƒ—áƒáƒ' : `${gitStatusFiles.length} áƒªáƒ•áƒšáƒ˜áƒšáƒ”áƒ‘áƒ`}
             </div>
           )}
         </div>
@@ -1324,7 +1658,7 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
         <span>Workflows: {hookCounts.workflows}</span>
         <span>Branches: {hookCounts.branches}</span>
         <span>Commits: {commitCount}</span>
-        {hubLoading && <span className="text-blue-300">Refreshing…</span>}
+        {hubLoading && <span className="text-blue-300">Refreshingâ€¦</span>}
         {hubStatus?.branch && <span>Active Hub Branch: {hubStatus.branch}</span>}
       </div>
 
@@ -1370,12 +1704,12 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
                 onClick={() => setShowDiffViewer(false)}
                 className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
               >
-                დახურვა
+                áƒ“áƒáƒ®áƒ£áƒ áƒ•áƒ
               </button>
             </div>
 
             <div className="mb-4 text-sm text-gray-400">
-              Comparing {selectedFromVersion.substring(0, 8)} → {selectedToVersion.substring(0, 8)}
+              Comparing {selectedFromVersion.substring(0, 8)} â†’ {selectedToVersion.substring(0, 8)}
             </div>
 
             <div className="bg-gray-900 rounded-lg p-4 font-mono text-sm max-h-96 overflow-auto">
@@ -1405,3 +1739,14 @@ const GitHubGitOpsTab: React.FC<GitHubGitOpsTabProps> = ({
 };
 
 export default GitHubGitOpsTab;
+
+
+
+
+
+
+
+
+
+
+

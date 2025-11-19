@@ -128,13 +128,33 @@ const GitHubManagementHub: React.FC = () => {
     }
   }, [selectedRepo]);
 
+  const broadcastRepoSelection = useCallback((nextRepo: string) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    try {
+      window.dispatchEvent(
+        new CustomEvent('workspace:repo-changed', {
+          detail: {
+            repo: nextRepo,
+            workspace: null,
+            updatedAt: Date.now(),
+          },
+        }),
+      );
+    } catch (error) {
+      console.warn('workspace:repo-changed dispatch failed:', error);
+    }
+  }, []);
+
   const handleRepoChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const nextRepo = event.target.value;
       setSelectedRepo(nextRepo);
+      broadcastRepoSelection(nextRepo);
       showMessage('success', `Repository switched to ${nextRepo === 'local' ? 'local workspace' : nextRepo}`);
     },
-    [showMessage],
+    [broadcastRepoSelection, showMessage],
   );
 
   const selectedRepoMeta = repositoryOptions.find((option) => option.value === selectedRepo);

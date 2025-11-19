@@ -2,6 +2,13 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { getApiBase } from '../../../lib/apiBase';
 import { TerminalTab, TerminalSession, TerminalEventMessage, TerminalState } from '../types/terminal';
 
+type WorkspaceEventDetail = {
+  repo?: string;
+  workspace?: {
+    path?: string;
+  };
+};
+
 interface TerminalUserContext {
   userId?: string;
   personalId?: string;
@@ -12,9 +19,30 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
   const [activeTabId, setActiveTabIdState] = useState<string | null>(null);
   const [sessions, setSessions] = useState<Map<string, TerminalSession>>(new Map());
   const [connections, setConnections] = useState<Map<string, EventSource>>(new Map());
+  const [defaultWorkingDirectory, setDefaultWorkingDirectory] = useState<string>('/home/runner/workspace');
 
   const connectionsRef = useRef(connections);
   connectionsRef.current = connections;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const handleWorkspaceEvent = (event: Event) => {
+      const detail = (event as CustomEvent<WorkspaceEventDetail>).detail;
+      if (detail?.workspace?.path) {
+        setDefaultWorkingDirectory(detail.workspace.path);
+      } else if (detail?.repo && detail.repo.toLowerCase() === 'local') {
+        setDefaultWorkingDirectory('/home/runner/workspace');
+      }
+    };
+
+    window.addEventListener('workspace:repo-changed', handleWorkspaceEvent as EventListener);
+    return () => {
+      window.removeEventListener('workspace:repo-changed', handleWorkspaceEvent as EventListener);
+    };
+  }, []);
 
   const resolvedUserHeaders = useMemo(() => {
     const normalizedUserId = userContext?.userId?.trim();
@@ -62,7 +90,7 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
   // Create a new terminal tab and session
   const createTab = useCallback(async (name?: string, workingDirectory?: string): Promise<string> => {
     try {
-      console.log(`🔄 Creating new terminal session: ${name || 'Terminal'}`);
+      console.log(`ðŸ”„ Creating new terminal session: ${name || 'Terminal'}`);
       const currentApiBase = getApiBaseUrl();
 
       const response = await fetch(`${currentApiBase}/terminal/sessions`, {
@@ -70,7 +98,7 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
         headers: buildHeaders({ includeJson: true }),
         body: JSON.stringify({
           name: name || `Terminal ${tabs.length + 1}`,
-          workingDirectory: workingDirectory || '/home/runner/workspace'
+          workingDirectory: workingDirectory || defaultWorkingDirectory
         }),
         credentials: 'include',
       });
@@ -85,10 +113,10 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
         output: data.session.output || [],
         history: data.session.history || [],
         environment: data.session.environment || {},
-        workingDirectory: data.session.workingDirectory || '/home/runner/workspace'
+        workingDirectory: data.session.workingDirectory || defaultWorkingDirectory
       };
 
-      console.log(`✅ Terminal session created: ${session.id}`);
+      console.log(`âœ… Terminal session created: ${session.id}`);
 
       // Create tab
       const tabId = `tab_${Date.now()}`;
@@ -117,21 +145,21 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
 
       return tabId;
     } catch (error) {
-      console.error('❌ Failed to create terminal tab:', error);
+      console.error('âŒ Failed to create terminal tab:', error);
       throw error;
     }
-  }, [buildHeaders, tabs.length, getApiBaseUrl]); // Added getApiBaseUrl to dependencies
+  }, [buildHeaders, tabs.length, getApiBaseUrl, defaultWorkingDirectory]); // Added getApiBaseUrl to dependencies
 
   // Connect to terminal session stream
   const connectToSession = useCallback(async (sessionId: string, tabId: string) => {
     try {
-      console.log(`🔌 Connecting to terminal session stream: ${sessionId}`);
+      console.log(`ðŸ”Œ Connecting to terminal session stream: ${sessionId}`);
       const currentApiBase = getApiBaseUrl();
 
       const eventSource = new EventSource(`${currentApiBase}/terminal/sessions/${sessionId}/stream`);
 
       eventSource.onopen = () => {
-        console.log(`✅ Terminal stream connected: ${sessionId}`);
+        console.log(`âœ… Terminal stream connected: ${sessionId}`);
         setTabs(prev => prev.map(tab => 
           tab.id === tabId 
             ? { ...tab, status: 'idle' as const }
@@ -144,12 +172,12 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
           const message: TerminalEventMessage = JSON.parse(event.data);
           handleTerminalMessage(sessionId, tabId, message);
         } catch (error) {
-          console.error('❌ Failed to parse terminal message:', error);
+          console.error('âŒ Failed to parse terminal message:', error);
         }
       };
 
       eventSource.onerror = (error) => {
-        console.error(`❌ Terminal stream error for ${sessionId}:`, error);
+        console.error(`âŒ Terminal stream error for ${sessionId}:`, error);
         setTabs(prev => prev.map(tab => 
           tab.id === tabId 
             ? { ...tab, status: 'error' as const }
@@ -161,7 +189,7 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
       setConnections(prev => new Map(prev).set(sessionId, eventSource));
 
     } catch (error) {
-      console.error(`❌ Failed to connect to terminal session ${sessionId}:`, error);
+      console.error(`âŒ Failed to connect to terminal session ${sessionId}:`, error);
       setTabs(prev => prev.map(tab => 
         tab.id === tabId 
           ? { ...tab, status: 'error' as const }
@@ -174,7 +202,7 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
   const handleTerminalMessage = useCallback((sessionId: string, tabId: string, message: TerminalEventMessage) => {
     switch (message.type) {
       case 'connection_established':
-        console.log(`🔗 Terminal connection established: ${sessionId}`);
+        console.log(`ðŸ”— Terminal connection established: ${sessionId}`);
         if (message.session) {
           setSessions(prev => {
             const updated = new Map(prev);
@@ -222,7 +250,7 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
         break;
 
       case 'command_start':
-        console.log(`⚡ Command started: ${message.command}`);
+        console.log(`âš¡ Command started: ${message.command}`);
         setTabs(prev => prev.map(tab => 
           tab.id === tabId 
             ? { ...tab, status: 'running' as const, lastCommand: message.command }
@@ -231,7 +259,7 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
         break;
 
       case 'command_complete':
-        console.log(`✅ Command completed: ${message.result?.command}`);
+        console.log(`âœ… Command completed: ${message.result?.command}`);
         setTabs(prev => prev.map(tab => 
           tab.id === tabId 
             ? { ...tab, status: 'idle' as const }
@@ -240,7 +268,7 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
         break;
 
       case 'command_error':
-        console.error(`❌ Command error: ${message.error}`);
+        console.error(`âŒ Command error: ${message.error}`);
         setTabs(prev => prev.map(tab => 
           tab.id === tabId 
             ? { ...tab, status: 'error' as const }
@@ -249,7 +277,7 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
         break;
 
       case 'session_terminated':
-        console.log(`🔴 Session terminated: ${sessionId}`);
+        console.log(`ðŸ”´ Session terminated: ${sessionId}`);
         closeTab(tabId);
         break;
 
@@ -258,7 +286,7 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
         break;
 
       default:
-        console.log(`📡 Terminal message: ${message.type}`);
+        console.log(`ðŸ“¡ Terminal message: ${message.type}`);
     }
   }, []);
 
@@ -267,7 +295,7 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
     const tab = tabs.find(t => t.id === tabId);
     if (!tab) return;
 
-    console.log(`🗑️ Closing terminal tab: ${tab.name}`);
+    console.log(`ðŸ—‘ï¸ Closing terminal tab: ${tab.name}`);
     const currentApiBase = getApiBaseUrl();
 
     // Close SSE connection
@@ -312,7 +340,7 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
       },
       credentials: 'include',
     }).catch(error => {
-      console.warn(`⚠️ Failed to destroy session ${tab.sessionId}:`, error);
+      console.warn(`âš ï¸ Failed to destroy session ${tab.sessionId}:`, error);
     });
   }, [activeTabId, buildHeaders, connections, getApiBaseUrl, tabs]); // Added getApiBaseUrl to dependencies
 
@@ -329,7 +357,7 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
   // Execute command in terminal session
   const executeCommand = useCallback(async (sessionId: string, command: string, options: { safetyConfirmed?: boolean } = {}): Promise<void> => {
     try {
-      console.log(`⚡ Executing command in session ${sessionId}: ${command}`);
+      console.log(`âš¡ Executing command in session ${sessionId}: ${command}`);
       const currentApiBase = getApiBaseUrl();
 
       const response = await fetch(`${currentApiBase}/terminal/sessions/${sessionId}/execute`, {
@@ -353,10 +381,10 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
       }
 
       // Command execution events will be handled via SSE stream
-      console.log(`✅ Command execution initiated: ${command}`);
+      console.log(`âœ… Command execution initiated: ${command}`);
 
     } catch (error) {
-      console.error('❌ Failed to execute command:', error);
+      console.error('âŒ Failed to execute command:', error);
       throw error;
     }
   }, [buildHeaders, getApiBaseUrl]); // Added getApiBaseUrl to dependencies
@@ -379,7 +407,7 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
         body: JSON.stringify({ name: newName }),
         credentials: 'include',
       }).catch(error => {
-        console.warn(`⚠️ Failed to rename session ${tab.sessionId}:`, error);
+        console.warn(`âš ï¸ Failed to rename session ${tab.sessionId}:`, error);
       });
     }
   }, [buildHeaders, getApiBaseUrl, tabs]); // Added getApiBaseUrl to dependencies
@@ -426,7 +454,7 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
           const existingSessions: TerminalSession[] = data.sessions || [];
 
           if (existingSessions.length > 0) {
-            console.log(`📋 Loading ${existingSessions.length} existing terminal sessions`);
+            console.log(`ðŸ“‹ Loading ${existingSessions.length} existing terminal sessions`);
 
             // Create tabs for existing sessions and ensure proper session structure
             const existingTabs: TerminalTab[] = existingSessions.map((session, index) => ({
@@ -444,7 +472,7 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
               output: Array.isArray(session.output) ? session.output : [],
               history: Array.isArray(session.history) ? session.history : [],
               environment: session.environment || {},
-              workingDirectory: session.workingDirectory || '/home/runner/workspace'
+              workingDirectory: session.workingDirectory || defaultWorkingDirectory
             }));
 
             setTabs(existingTabs);
@@ -463,12 +491,12 @@ export const useTerminalStore = (userContext?: TerminalUserContext): TerminalSta
            console.warn('Failed to load existing terminal sessions:', response.statusText);
         }
       } catch (error) {
-        console.warn('⚠️ Failed to load existing terminal sessions:', error);
+        console.warn('âš ï¸ Failed to load existing terminal sessions:', error);
       }
     };
 
     loadExistingSessions();
-  }, [buildHeaders, connectToSession, getApiBaseUrl]); // Added getApiBaseUrl to dependencies
+  }, [buildHeaders, connectToSession, defaultWorkingDirectory, getApiBaseUrl]); // Added getApiBaseUrl to dependencies
 
   return {
     tabs,
