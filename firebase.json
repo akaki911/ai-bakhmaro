@@ -29,12 +29,6 @@
         "**/.*",
         "**/node_modules/**"
       ],
-      "rewrites": [
-        {
-          "source": "/api/**",
-          "function": "backendApi"
-        }
-      ],
       "headers": [
         {
           "source": "**",
