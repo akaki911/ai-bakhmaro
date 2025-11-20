@@ -13,6 +13,9 @@
       ".git",
       "firebase-debug.log",
       "firebase-debug.*.log"
+    ],
+    "predeploy": [
+      "node scripts/bundle-backend.js"
     ]
   },
   "hosting": [

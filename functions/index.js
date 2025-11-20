@@ -20,7 +20,8 @@ const buildApp = () => {
   });
 
   // Lazy-load the backend Express app to avoid heavy initialization during deploy analysis
-  const backendApp = require("../backend/app");
+  // Use bundled backend copy inside functions source (see scripts/bundle-backend.js)
+  const backendApp = require("./backend-dist/app");
   app.use("/", backendApp);
   return app;
 };
