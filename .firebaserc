@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "ai-bakhmaro"
-  }
+  },
+  "targets": {
+    "ai-bakhmaro": {
+      "hosting": {
+        "backend-ai-bakhmaro": [
+          "backend-ai-bakhmaro"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

@@ -22,8 +22,8 @@
       ]
     },
     {
-      "site": "backend-ai-bakhmaro",
-      "public": "backend/public-assets-only",
+      "target": "backend-ai-bakhmaro",
+      "public": "backend/public",
       "ignore": [
         "firebase.json",
         "**/.*",
