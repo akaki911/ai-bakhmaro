@@ -47,13 +47,39 @@ if (!runtimeConfig.integrations.firebase.enabled) {
         );
       }
 
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        projectId,
-      });
-
       const sourceSuffix = source ? ` [${source}]` : '';
-      console.log(`✅ Firebase Admin initialized successfully${sourceSuffix}`);
+      const tryInitialize = (credentialFactory, label) => {
+        try {
+          admin.initializeApp({
+            credential: credentialFactory(),
+            projectId,
+          });
+          console.log(`✅ Firebase Admin initialized${sourceSuffix} via ${label}`);
+          return true;
+        } catch (initError) {
+          console.error(`❌ Firebase Admin init failed via ${label}:`, initError.message);
+          return false;
+        }
+      };
+
+      // First attempt: explicit service account JSON
+      let initialized = tryInitialize(() => admin.credential.cert(serviceAccount), 'service account');
+
+      // Fallback: application default credentials (useful on Cloud Functions or gcloud-authenticated hosts)
+      if (!initialized) {
+        initialized = tryInitialize(() => admin.credential.applicationDefault(), 'applicationDefault');
+      }
+
+      // Final fallback for local/non-production: disable Admin instead of crashing deployment analysis
+      if (!initialized) {
+        if (runtimeConfig.env.isProduction) {
+          throw new Error('Firebase Admin initialization failed in production environment');
+        }
+
+        console.warn('⚠️ [Firebase] Switching to disabled Admin stub for non-production (init failures above).');
+        module.exports = createDisabledAdminStub();
+        return module.exports;
+      }
     } catch (error) {
       console.error('❌ Firebase Admin initialization failed:', error.message);
       throw error;
