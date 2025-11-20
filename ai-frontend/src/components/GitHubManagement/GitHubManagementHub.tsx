@@ -147,6 +147,11 @@ const GitHubManagementHub: React.FC = () => {
     }
   }, []);
 
+  const showMessage = useCallback((type: 'success' | 'error', text: string) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage(null), 5000);
+  }, []);
+
   const handleRepoChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const nextRepo = event.target.value;
@@ -158,11 +163,6 @@ const GitHubManagementHub: React.FC = () => {
   );
 
   const selectedRepoMeta = repositoryOptions.find((option) => option.value === selectedRepo);
-
-  const showMessage = useCallback((type: 'success' | 'error', text: string) => {
-    setMessage({ type, text });
-    setTimeout(() => setMessage(null), 5000);
-  }, []);
 
   useEffect(() => {
     if (gitHubConnection.error && gitHubConnection.error !== lastConnectionError) {

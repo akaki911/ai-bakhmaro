@@ -94,8 +94,10 @@ export const useFileTreeCore = (props?: FileTreeProps) => {
       let response;
       try {
         console.log('Attempting fetch to /api/files/tree...');
-        const repoQuery = workspaceContext.repo ? ?repo=${encodeURIComponent(workspaceContext.repo)} : '';
-        response = await fetch(/api/files/tree${repoQuery}, {
+        const repoQuery = workspaceContext.repo
+          ? `?repo=${encodeURIComponent(workspaceContext.repo)}`
+          : '';
+        response = await fetch(`/api/files/tree${repoQuery}`, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
@@ -310,6 +312,7 @@ export const useFileTreeCore = (props?: FileTreeProps) => {
       if (!detail || typeof detail.repo !== 'string') {
         return;
       }
+      const repoFromEvent = detail.repo;
       setWorkspaceContext((prev) => {
         const nextPath =
           detail.workspace && typeof detail.workspace.path === 'string'
@@ -319,7 +322,7 @@ export const useFileTreeCore = (props?: FileTreeProps) => {
           return prev;
         }
         return {
-          repo: detail.repo,
+          repo: repoFromEvent,
           path: nextPath,
         };
       });
