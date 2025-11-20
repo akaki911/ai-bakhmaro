@@ -4,23 +4,23 @@ const express = require("express");
 let cachedApp = null;
 
 const buildApp = () => {
-  // Force non-fatal "development" mode inside Cloud Functions bundle
-  process.env.NODE_ENV = 'development';
-  // Minimal env fallbacks for Cloud Functions runtime
-  const fallbackSecret = 'cloud-functions-session-secret-64chars-cloud-functions-session-secret';
-  if (!process.env.SESSION_SECRET) {
-    process.env.SESSION_SECRET = functions.config().app?.session_secret || fallbackSecret;
+  process.env.NODE_ENV = 'production';
+
+  // Load environment variables from Firebase function configuration
+  const appConfig = functions.config().app;
+  if (appConfig) {
+    process.env.SESSION_SECRET = appConfig.session_secret;
+    process.env.ADMIN_SETUP_TOKEN = appConfig.admin_setup_token;
+    process.env.AI_INTERNAL_TOKEN = appConfig.ai_internal_token;
   }
-  if (!process.env.ADMIN_SETUP_TOKEN) {
-    process.env.ADMIN_SETUP_TOKEN = functions.config().app?.admin_setup_token || 'cloud-functions-admin-token';
-  }
+
+  // Standard Google Cloud env var for project ID
   if (!process.env.FIREBASE_PROJECT_ID) {
-    process.env.FIREBASE_PROJECT_ID = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || 'ai-bakhmaro';
+    process.env.FIREBASE_PROJECT_ID = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
   }
-  if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-    // Let backend skip Admin bootstrap when running inside Functions bundle without full service account
-    process.env.FIREBASE_SERVICE_ACCOUNT_KEY = '';
-  }
+  // DO NOT set FIREBASE_SERVICE_ACCOUNT_KEY manually.
+  // The Functions runtime provides this automatically.
+
 
   const app = express();
   app.use(express.json());
