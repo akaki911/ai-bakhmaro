@@ -6,6 +6,8 @@ const targetDir = path.resolve(__dirname, '..', 'functions', 'backend-dist');
 const targetScriptsDir = path.resolve(__dirname, '..', 'functions', 'scripts');
 const ensureLocalSecretsSrc = path.resolve(__dirname, 'ensureLocalSecrets.js');
 const ensureLocalSecretsDest = path.join(targetScriptsDir, 'ensureLocalSecrets.js');
+const sharedSourceDir = path.resolve(__dirname, '..', 'shared');
+const sharedTargetDir = path.resolve(__dirname, '..', 'functions', 'shared');
 
 const EXCLUDE = new Set([
   'node_modules',
@@ -53,6 +55,11 @@ function main() {
     fs.mkdirSync(targetScriptsDir, { recursive: true });
   }
   fs.copyFileSync(ensureLocalSecretsSrc, ensureLocalSecretsDest);
+  // Copy shared helpers used by backend (internalToken, secretResolver, etc.)
+  if (fs.existsSync(sharedTargetDir)) {
+    fs.rmSync(sharedTargetDir, { recursive: true, force: true });
+  }
+  copyRecursive(sharedSourceDir, sharedTargetDir);
   console.log('✅ Bundled backend into', path.relative(process.cwd(), targetDir));
 }
 
