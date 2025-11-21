@@ -5,8 +5,14 @@ const { chmodSync, copyFileSync, existsSync, mkdirSync } = require('node:fs');
 const { join } = require('node:path');
 const { platform } = require('node:process');
 
-if (process.env.REPL_ID || process.env.REPLIT_ENV) {
-  console.log('⚠️ Skipping Git hooks setup in Replit environment');
+const isCiEnv =
+  process.env.CI === 'true' ||
+  process.env.RAILWAY_STATIC_URL ||
+  process.env.RAILWAY_PROJECT_ID ||
+  process.env.RAILWAY_ENVIRONMENT_ID;
+
+if (process.env.REPL_ID || process.env.REPLIT_ENV || isCiEnv) {
+  console.log('⚠️ Skipping Git hooks setup in CI/hosted environment');
   process.exit(0);
 }
 
