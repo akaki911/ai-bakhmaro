@@ -6,7 +6,7 @@ const { createServiceToken, getServiceAuthConfigs } = require('../../shared/serv
 
 const router = express.Router();
 
-const AI_SERVICE_URL = (process.env.AI_SERVICE_URL || 'http://localhost:5001').replace(/\/$/, '');
+const AI_SERVICE_URL = (process.env.AI_SERVICE_URL || 'https://backend.ai.bakhmaro.co').replace(/\/$/, '');
 const DEFAULT_TIMEOUT_MS = Number(process.env.AI_HEALTH_TIMEOUT_MS || 5000);
 const serviceAuthConfig = getServiceAuthConfigs()[0] || null;
 

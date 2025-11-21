@@ -46,7 +46,7 @@ echo $BACKEND_PID > ../backend.pid
 # Health check
 sleep 5
 echo "🔍 Backend health check..."
-if curl -f http://127.0.0.1:5002/api/health >/dev/null 2>&1; then
+if curl -f https://backend.ai.bakhmaro.co/api/health >/dev/null 2>&1; then
     echo "✅ Backend is healthy and ready"
     exit 0
 else

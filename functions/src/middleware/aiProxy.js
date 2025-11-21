@@ -1,6 +1,6 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
-const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://127.0.0.1:5001';
+const aiServiceUrl = process.env.AI_SERVICE_URL || 'https://backend.ai.bakhmaro.co';
 
 const aiProxyMiddleware = createProxyMiddleware({
   target: aiServiceUrl,

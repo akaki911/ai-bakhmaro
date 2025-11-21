@@ -43,7 +43,7 @@ The platform features a multi-service architecture:
         - **Default Account**: gurulo@bakhmaro.co (PrivateEmail.com IMAP/SMTP) for system notifications
         - **Pending Backend**: Custom folders, tags, and drafts temporarily use localStorage (marked with TODO comments)
         - **Fixed**: ComposeModal auto-save timeout cleanup to prevent memory leaks
-        - **Fixed (Nov 16)**: Frontend API routing - apiBase.shared.js now detects local development (localhost, .replit.dev) and forces relative URLs to use Vite proxy instead of production backend. Development session auto-initialization in MailTab.tsx for personalId 01019062020 (SUPER_ADMIN)
+        - **Fixed (Nov 16)**: Frontend API routing - apiBase.shared.js now detects development hosts (.replit.dev) and forces relative URLs to use Vite proxy instead of production backend. Development session auto-initialization in MailTab.tsx for personalId 01019062020 (SUPER_ADMIN)
     -   **Authentication Security Hardening (Nov 17, 2025)**: Eliminated critical security vulnerability where unauthorized users could access the system as SUPER_ADMIN without authentication. Changes include:
         - **Removed Development Bypasses**: Deleted auto-session creation endpoint `/api/mail/dev/init-session` from backend/routes/mail.js
         - **Frontend Protection**: Removed `ensureDevSession()` function and all invocations from AuthContext.tsx
@@ -61,7 +61,7 @@ The platform features a multi-service architecture:
         - **Architect Review**: Confirmed compatibility, proper middleware ordering, and recommended monitoring for edge cases
     -   **Replit Platform Migration (Nov 17, 2025)**: Successfully deployed entire platform to Replit environment with full multi-service architecture:
         - **Port Reconfiguration**: Backend migrated from port 5002 to 8000, AI Service from 5001 to 8008, Frontend remains on 5000
-        - **Vite Proxy Update**: Frontend proxy targets updated to localhost:8000 (/api) and localhost:8008 (/api/ai)
+        - **Vite Proxy Update**: Frontend proxy targets aligned to https://backend.ai.bakhmaro.co/api and https://backend.ai.bakhmaro.co/api/ai
         - **Git Hooks Bypass**: setup-git-hooks.js enhanced with REPL_ID/REPLIT_ENV detection to skip hook installation in Replit
         - **Execute Route Disabled**: AI Service /api/ai/execute route commented out to avoid isolated-vm C++ compilation issues
         - **pnpm Workspace**: All dependencies installed via pnpm workspace (ai-frontend, backend, ai-service, gateway, shared, functions)

@@ -4,7 +4,7 @@
 const fetch = require('node-fetch');
 
 const BASE_URL = 'https://ai.bakhmaro.co';
-const AI_BASE_URL = 'http://localhost:5001';
+const AI_BASE_URL = 'https://backend.ai.bakhmaro.co';
 
 const endpoints = [
   '/api/ai/github/status',

@@ -4,8 +4,8 @@ const path = require('path');
 const { setTimeout: delay } = require('timers/promises');
 const state = require('./state');
 
-const BASE_BACKEND_URL = process.env.AI_CHAT_BACKEND_URL || 'http://127.0.0.1:5002';
-const AI_SERVICE_URL = process.env.AI_CHAT_SERVICE_URL || 'http://127.0.0.1:5001';
+const BASE_BACKEND_URL = process.env.AI_CHAT_BACKEND_URL || 'https://backend.ai.bakhmaro.co';
+const AI_SERVICE_URL = process.env.AI_CHAT_SERVICE_URL || 'https://backend.ai.bakhmaro.co';
 
 const processes = [];
 let environmentReady = null;
@@ -63,7 +63,7 @@ const ensureEnvironment = async () => {
         AI_SERVICE_SHARED_SECRET: sharedSecret,
         AI_SERVICE_TOKEN_TTL: process.env.AI_SERVICE_TOKEN_TTL || '120',
         AI_INTERNAL_TOKEN: process.env.AI_INTERNAL_TOKEN || sharedSecret,
-        FRONTEND_URL: 'http://127.0.0.1:5000',
+        FRONTEND_URL: 'https://backend.ai.bakhmaro.co',
         DEBUG_LEVEL: 'warn',
         CORRELATION_ID: state.corrId,
       };
@@ -72,7 +72,7 @@ const ensureEnvironment = async () => {
         NODE_ENV: 'development',
         AI_SERVICE_URL,
         SESSION_SECRET: process.env.SESSION_SECRET || 'test-session-secret',
-        FRONTEND_URL: 'http://127.0.0.1:5000',
+        FRONTEND_URL: 'https://backend.ai.bakhmaro.co',
         DEV_TASKS_ENABLED: 'false',
         AI_SERVICE_SHARED_SECRET: sharedSecret,
         AI_SERVICE_TOKEN_TTL: aiEnv.AI_SERVICE_TOKEN_TTL,

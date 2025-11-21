@@ -137,27 +137,22 @@ echo "🎯 PHASE 4: Service Health Verification"
 check_service() {
     local PORT=$1
     local SERVICE=$2
+    local TARGET=""
     
-    # For frontend (Vite), just check if port is responding
     if [[ "$SERVICE" == "Frontend" ]]; then
-        if curl -s -f http://localhost:$PORT >/dev/null 2>&1 || \
-           nc -z localhost $PORT 2>/dev/null; then
-            echo "✅ $SERVICE მუშაობს port $PORT-ზე"
-            return 0
-        else
-            echo "❌ $SERVICE არ პასუხობს port $PORT-ზე" 
-            return 1
-        fi
+        TARGET="https://ai.bakhmaro.co/api/health"
+    elif [[ "$SERVICE" == "AI Service" ]]; then
+        TARGET="https://backend.ai.bakhmaro.co/api/ai/health"
     else
-        # For backend services, check health endpoint
-        if curl -s -f http://localhost:$PORT/api/health >/dev/null 2>&1 || \
-           curl -s -f http://localhost:$PORT/health >/dev/null 2>&1; then
-            echo "✅ $SERVICE მუშაობს port $PORT-ზე"
-            return 0
-        else
-            echo "❌ $SERVICE არ პასუხობს port $PORT-ზე" 
-            return 1
-        fi
+        TARGET="https://backend.ai.bakhmaro.co/api/health"
+    fi
+    
+    if curl -s -f "$TARGET" >/dev/null 2>&1; then
+        echo "✅ $SERVICE მუშაობს (${TARGET})"
+        return 0
+    else
+        echo "❌ $SERVICE არ პასუხობს (${TARGET})" 
+        return 1
     fi
 }
 
@@ -167,8 +162,8 @@ check_service $FRONTEND_PORT "Frontend"
 
 echo ""
 echo "🎊 გურულო Smart Recovery დასრულებული!"
-echo "🔗 Frontend: http://localhost:$FRONTEND_PORT"
-echo "🔗 Backend: http://localhost:$BACKEND_PORT"  
-echo "🔗 AI Service: http://localhost:$AI_PORT"
+echo "🔗 Frontend: https://ai.bakhmaro.co"
+echo "🔗 Backend: https://backend.ai.bakhmaro.co:$BACKEND_PORT"  
+echo "🔗 AI Service: https://backend.ai.bakhmaro.co:$AI_PORT"
 echo ""
 echo "📝 PIDs: Backend=$BACKEND_PID, AI=$AI_PID, Frontend=$FRONTEND_PID"

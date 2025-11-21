@@ -8,7 +8,7 @@ const execAsync = util.promisify(exec);
 
 // Assuming API_BASE is defined elsewhere or passed in configuration
 // For demonstration, let's assume a default or it's imported
-const API_BASE = process.env.API_BASE || 'http://localhost:3001'; // Example API base URL
+const API_BASE = process.env.API_BASE || 'https://backend.ai.bakhmaro.co'; // Example API base URL
 
 // 🛡️ Security: Admin authentication middleware
 const requireSuperAdmin = (req, res, next) => {
@@ -278,9 +278,9 @@ router.post('/port-kill/:port', portManagementLimiter, requireSuperAdmin, async 
 
     // 🛡️ Health Probe: Check if port hosts a managed service
     const managedServiceUrls = {
-      5000: 'http://127.0.0.1:5000/',                    // Frontend Vite
-      5001: 'http://127.0.0.1:5001/health',              // AI Service
-      5002: 'http://127.0.0.1:5002/api/health'           // Backend API
+      5000: 'https://ai.bakhmaro.co/',                            // Frontend
+      5001: 'https://backend.ai.bakhmaro.co/api/ai/health',       // AI Service
+      5002: 'https://backend.ai.bakhmaro.co/api/health'           // Backend API
     };
 
     if (managedServiceUrls[port]) {
@@ -594,9 +594,9 @@ router.post('/service/restart/:name', portManagementLimiter, requireSuperAdmin, 
     console.log(`🔄 [SERVICE RESTART] Restarting service: ${serviceName}`);
 
     const serviceConfig = {
-      frontend: { port: 5000, processPattern: '(vite.*5000|PORT=5000)', healthUrl: 'http://127.0.0.1:5000/' },
-      ai: { port: 5001, processPattern: '(PORT=5001.*server\\.js|server\\.js.*5001)', healthUrl: 'http://127.0.0.1:5001/health' },
-      backend: { port: 5002, processPattern: '(PORT=5002.*index\\.js|index\\.js.*5002)', healthUrl: 'http://127.0.0.1:5002/api/health' }
+      frontend: { port: 5000, processPattern: '(vite.*5000|PORT=5000)', healthUrl: 'https://ai.bakhmaro.co/' },
+      ai: { port: 5001, processPattern: '(PORT=5001.*server\\.js|server\\.js.*5001)', healthUrl: 'https://backend.ai.bakhmaro.co/api/ai/health' },
+      backend: { port: 5002, processPattern: '(PORT=5002.*index\\.js|index\\.js.*5002)', healthUrl: 'https://backend.ai.bakhmaro.co/api/health' }
     };
 
     const config = serviceConfig[serviceName];
@@ -706,9 +706,9 @@ router.post('/service/restart/:name', portManagementLimiter, requireSuperAdmin, 
 router.get('/service/status', async (req, res) => {
   try {
     const services = [
-      { name: 'frontend', port: 5000, healthUrl: 'http://127.0.0.1:5000/' },
-      { name: 'ai', port: 5001, healthUrl: 'http://127.0.0.1:5001/health' },
-      { name: 'backend', port: 5002, healthUrl: 'http://127.0.0.1:5002/api/health' }
+      { name: 'frontend', port: 5000, healthUrl: 'https://ai.bakhmaro.co/' },
+      { name: 'ai', port: 5001, healthUrl: 'https://backend.ai.bakhmaro.co/api/ai/health' },
+      { name: 'backend', port: 5002, healthUrl: 'https://backend.ai.bakhmaro.co/api/health' }
     ];
 
     const serviceStatuses = [];

@@ -8,7 +8,7 @@ info:
     name: AI Service Team
     email: support@bakhmaro.dev
 servers:
-  - url: http://localhost:5001/v1
+  - url: https://backend.ai.bakhmaro.co/v1
     description: Development server
   - url: https://ai-service.bakhmaro.dev/v1
     description: Production server

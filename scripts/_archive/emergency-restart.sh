@@ -27,7 +27,7 @@ echo "Backend PID: $BACKEND_PID"
 sleep 8
 
 # Test backend health
-curl -f http://127.0.0.1:5002/api/health > /dev/null 2>&1
+curl -f https://backend.ai.bakhmaro.co/api/health > /dev/null 2>&1
 if [ $? -eq 0 ]; then
   echo "✅ Backend health check passed"
 else
@@ -45,7 +45,7 @@ echo "AI Service PID: $AI_PID"
 sleep 8
 
 # Test AI service health
-curl -f http://127.0.0.1:5001/health > /dev/null 2>&1
+curl -f https://backend.ai.bakhmaro.co/health > /dev/null 2>&1
 if [ $? -eq 0 ]; then
   echo "✅ AI Service health check passed"
 else

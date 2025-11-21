@@ -8,8 +8,8 @@ import {
 } from '../../shared/config/envReader.js';
 
 const DEFAULT_SESSION_COOKIES = ['ai-space.sid', 'bk_admin.sid', '__Secure-bk_admin.sid'];
-const DEFAULT_AI_PROXY_BASE = 'http://127.0.0.1:5001';
-const DEFAULT_BACKEND_PROXY_BASE = 'http://127.0.0.1:5002';
+const DEFAULT_AI_PROXY_BASE = 'https://backend.ai.bakhmaro.co';
+const DEFAULT_BACKEND_PROXY_BASE = 'https://backend.ai.bakhmaro.co';
 
 export type GatewayEnv = {
   NODE_ENV: 'development' | 'test' | 'production';
@@ -104,7 +104,7 @@ export const getEnv = (): GatewayEnv => {
     }) ?? 60;
 
   const loginPath = readEnvString('LOGIN_PATH', { defaultValue: '/login' }) ?? '/login';
-  const rootDomain = readEnvString('ROOT_DOMAIN', { defaultValue: 'localhost' }) ?? 'localhost';
+  const rootDomain = readEnvString('ROOT_DOMAIN', { defaultValue: 'ai.bakhmaro.co' }) ?? 'ai.bakhmaro.co';
   const cookieDomain = ensureCookieDomain(rootDomain);
   const cookieSecure = readEnvBoolean('COOKIE_SECURE', { defaultValue: false }) ?? false;
 

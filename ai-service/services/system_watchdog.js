@@ -79,7 +79,7 @@ class SystemWatchdog {
   async checkViteHealth() {
     try {
       // Check if Vite dev server is responsive by trying to reach it
-      const response = await fetch('http://0.0.0.0:5000/', { 
+      const response = await fetch('https://ai.bakhmaro.co/', { 
         timeout: 3000,
         headers: { 'User-Agent': 'System-Watchdog-Health-Check' }
       });
@@ -108,9 +108,8 @@ class SystemWatchdog {
     try {
       const fetchFn = typeof fetch === 'function' ? fetch : (await import('node-fetch')).default;
       const endpoints = [
-        'http://127.0.0.1:5002/api/health',
-        'http://0.0.0.0:5002/api/health',
-        'http://127.0.0.1:5002/health'
+        'https://backend.ai.bakhmaro.co/api/health',
+        'https://backend.ai.bakhmaro.co/api/ai/health'
       ];
 
       let healthyEndpoint = null;

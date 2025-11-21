@@ -5,17 +5,17 @@ class AIRolloutManager {
   constructor() {
     this.instances = {
       blue: {
-        url: 'http://127.0.0.1:5001',
+        url: 'https://backend.ai.bakhmaro.co',
         version: 'stable',
         weight: 100
       },
       green: {
-        url: 'http://127.0.0.1:5003', // Green instance port
+        url: 'https://backend.ai.bakhmaro.co', // Green instance port
         version: 'canary',
         weight: 0
       },
       canary: {
-        url: 'http://127.0.0.1:5004', // Canary instance port
+        url: 'https://backend.ai.bakhmaro.co', // Canary instance port
         version: 'experimental',
         weight: 0
       }

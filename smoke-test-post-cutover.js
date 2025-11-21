@@ -3,9 +3,9 @@ const axios = require('axios');
 const { performance } = require('perf_hooks');
 
 // Service URLs
-const AI_SERVICE_URL = 'http://0.0.0.0:5001';
-const BACKEND_URL = 'http://0.0.0.0:5002';
-const FRONTEND_URL = 'http://0.0.0.0:5000';
+const AI_SERVICE_URL = 'https://backend.ai.bakhmaro.co';
+const BACKEND_URL = 'https://backend.ai.bakhmaro.co';
+const FRONTEND_URL = 'https://ai.bakhmaro.co';
 
 let testResults = {
   healthChain: { passed: 0, failed: 0, tests: [] },
@@ -47,7 +47,7 @@ async function testHealthChain() {
 
   // Test 1: AI Service Health
   try {
-    const aiHealthResponse = await axios.get(`${AI_SERVICE_URL}/health/ready`, {
+    const aiHealthResponse = await axios.get(`${AI_SERVICE_URL}/api/ai/health/ready`, {
       timeout: 5000
     });
     

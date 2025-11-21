@@ -29,7 +29,7 @@ AI_INTERNAL_TOKEN=same_jwt_secret_as_ai_service
 SESSION_SECRET=your_session_secret_256_bit
 FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account",...}
 FIREBASE_PROJECT_ID=your_firebase_project_id
-AI_SERVICE_URL=http://127.0.0.1:5001
+AI_SERVICE_URL=https://backend.ai.bakhmaro.co
 SECRETS_ENC_KEY=32_byte_base64_encryption_key (e.g. configure with the shared production value)
 ADMIN_SETUP_TOKEN=your_admin_setup_token
 ```
@@ -87,7 +87,7 @@ AI_SERVICE_URL=https://backend.ai.bakhmaro.co
 
 ## IP Allowlist
 Backend-ისთვის AI Service-ზე:
-- `127.0.0.1` (localhost)
+- `127.0.0.1` (loopback)
 - `10.0.0.0/8` (private network)
 - `172.16.0.0/12` (docker networks)
 - `192.168.0.0/16` (local networks)

@@ -123,7 +123,7 @@ class GitHubStressTester {
     
     for (let i = 0; i < 3; i++) {
       try {
-        const response = await fetch('http://localhost:5001/api/ai/backup-system/create', {
+        const response = await fetch('https://backend.ai.bakhmaro.co/api/ai/backup-system/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

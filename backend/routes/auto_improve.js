@@ -150,7 +150,7 @@ const evaluateKpiOutcome = ({ proposal, baseline, observed }) => {
 
 // --- Environment Variables ---
 // Assuming AI_SERVICE_URL is set in the environment
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:5003'; // Default to a local AI service
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'https://backend.ai.bakhmaro.co'; // Default to a local AI service
 const SERVICE_AUTH_CONFIG = getServiceAuthConfigs()[0] || null;
 
 if (SERVICE_AUTH_CONFIG?.isFallback) {

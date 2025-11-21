@@ -18,10 +18,9 @@ const deviceRateLimit = rateLimit({
 // CORS and origin validation middleware
 const validateOrigin = (req, res, next) => {
   const allowedOrigins = [
-    process.env.FRONTEND_URL,
+    process.env.FRONTEND_URL || 'https://ai.bakhmaro.co',
     process.env.REPLIT_DOMAIN,
-    'http://localhost:5000',
-    'https://localhost:5000'
+    'https://ai.bakhmaro.co'
   ].filter(Boolean);
 
   const origin = req.get('origin');

@@ -36,6 +36,6 @@ test('gateway CORS validator allows default origin and rejects others', async ()
   const allowPrimary = await runValidator(validator, 'https://ai.bakhmaro.co');
   assert.equal(allowPrimary, true);
 
-  const rejection = await expectRejected(validator, 'http://localhost:5173');
-  assert.match(rejection.message, /localhost:5173/);
+  const rejection = await expectRejected(validator, 'https://backend.ai.bakhmaro.co');
+  assert.match(rejection.message, /https:\\/\\/backend\\.ai\\.bakhmaro\\.co/);
 });

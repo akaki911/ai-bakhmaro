@@ -26,7 +26,7 @@ echo "AI Service PID: $AI_PID"
 
 sleep 6
 echo "🔍 AI Service health check..."
-if curl -f http://127.0.0.1:5001/health > /dev/null 2>&1; then
+if curl -f https://backend.ai.bakhmaro.co/health > /dev/null 2>&1; then
     echo "✅ AI Service მზად არის"
 else
     echo "❌ AI Service არ პასუხობს"
@@ -40,7 +40,7 @@ echo "Backend PID: $BACKEND_PID"
 
 sleep 6
 echo "🔍 Backend health check..."
-if curl -f http://127.0.0.1:5002/api/health > /dev/null 2>&1; then
+if curl -f https://backend.ai.bakhmaro.co/api/health > /dev/null 2>&1; then
     echo "✅ Backend მზად არის"
 else
     echo "❌ Backend არ პასუხობს"

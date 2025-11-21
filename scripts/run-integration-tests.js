@@ -24,9 +24,9 @@ const SKIP_REASONS = {
 };
 
 const REQUIRED_ENDPOINTS = {
-  "test_system_integration.js": ["http://127.0.0.1:5002/api/health", "http://127.0.0.1:5001/health"],
-  "smoke-test-post-cutover.js": ["http://127.0.0.1:5002/api/health", "http://127.0.0.1:5001/health", "http://127.0.0.1:5000/"],
-  "test_activity_full_system.js": ["http://127.0.0.1:5002/api/health"]
+  "test_system_integration.js": ["https://backend.ai.bakhmaro.co/api/health", "https://backend.ai.bakhmaro.co/api/ai/health"],
+  "smoke-test-post-cutover.js": ["https://backend.ai.bakhmaro.co/api/health", "https://backend.ai.bakhmaro.co/api/ai/health", "https://ai.bakhmaro.co/"],
+  "test_activity_full_system.js": ["https://backend.ai.bakhmaro.co/api/health", "https://backend.ai.bakhmaro.co/api/ai/health"]
 };
 
 // State

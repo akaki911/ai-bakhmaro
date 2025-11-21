@@ -33,28 +33,28 @@ check_service() {
 
 # 1. AI Service Health
 echo "🤖 AI Service (Port 5001):"
-check_service "  Ready Check" "http://0.0.0.0:5001/health/ready"
-check_service "  Live Check" "http://0.0.0.0:5001/health/live"
+check_service "  Ready Check" "https://backend.ai.bakhmaro.co/api/ai/health/ready"
+check_service "  Live Check" "https://backend.ai.bakhmaro.co/api/ai/health/live"
 
 echo ""
 
 # 2. Backend Health
 echo "🔗 Backend Gateway (Port 5002):"
-check_service "  Health Check" "http://0.0.0.0:5002/api/health"
-check_service "  System Status" "http://0.0.0.0:5002/api/health/system-status"
+check_service "  Health Check" "https://backend.ai.bakhmaro.co/api/health"
+check_service "  System Status" "https://backend.ai.bakhmaro.co/api/health/system-status"
 
 echo ""
 
 # 3. Frontend Proxy
 echo "🌐 Frontend Proxy (Port 5000):"
-check_service "  Proxy Health" "http://0.0.0.0:5000/api/health"
-check_service "  AI Models" "http://0.0.0.0:5000/api/ai/models"
+check_service "  Proxy Health" "https://ai.bakhmaro.co/api/health"
+check_service "  AI Models" "https://ai.bakhmaro.co/api/ai/models"
 
 echo ""
 
 # 4. Auto-Improve (Previously 404)
 echo "🔧 Auto-Improve Endpoints:"
-check_service "  Proposals" "http://0.0.0.0:5000/api/ai/autoimprove/proposals"
+check_service "  Proposals" "https://backend.ai.bakhmaro.co/api/ai/autoimprove/proposals"
 
 echo ""
 

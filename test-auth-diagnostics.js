@@ -1,17 +1,13 @@
 
-const http = require('http');
+const https = require('https');
+const BACKEND_URL = 'https://backend.ai.bakhmaro.co';
 
 console.log('🔍 Auth Diagnostics Test Starting...');
 
 // Test 1: Backend health check
 function testBackendHealth() {
   return new Promise((resolve) => {
-    const req = http.request({
-      hostname: 'localhost',
-      port: 5002,
-      path: '/api/health',
-      method: 'GET'
-    }, (res) => {
+    const req = https.get(`${BACKEND_URL}/api/health`, (res) => {
       console.log('🏥 Backend Health:', res.statusCode);
       resolve(res.statusCode === 200);
     });
@@ -28,26 +24,26 @@ function testBackendHealth() {
 // Test 2: Auth endpoint without session
 function testAuthEndpointNoSession() {
   return new Promise((resolve) => {
-    const req = http.request({
-      hostname: 'localhost',
-      port: 5002,
-      path: '/api/admin/auth/me',
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+    const req = https.get(
+      `${BACKEND_URL}/api/admin/auth/me`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      },
+      (res) => {
+        let data = '';
+        res.on('data', (chunk) => (data += chunk));
+        res.on('end', () => {
+          console.log('🔐 Auth Endpoint (No Session):');
+          console.log('   Status:', res.statusCode);
+          console.log('   Headers:', res.headers);
+          console.log('   Response:', data);
+          resolve(true);
+        });
       }
-    }, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        console.log('🔐 Auth Endpoint (No Session):');
-        console.log('   Status:', res.statusCode);
-        console.log('   Headers:', res.headers);
-        console.log('   Response:', data);
-        resolve(true);
-      });
-    });
+    );
     
     req.on('error', (err) => {
       console.log('❌ Auth Endpoint Error:', err.message);

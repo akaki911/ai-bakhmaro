@@ -158,8 +158,8 @@ function getVerificationStatus(verificationId) {
 // Individual check implementations
 async function runHealthChecks() {
   const checks = {
-    backend: { url: 'http://127.0.0.1:5002/api/health', status: 'unknown' },
-    aiService: { url: 'http://127.0.0.1:5001/health', status: 'unknown' }
+    backend: { url: 'https://backend.ai.bakhmaro.co/api/health', status: 'unknown' },
+    aiService: { url: 'https://backend.ai.bakhmaro.co/api/ai/health', status: 'unknown' }
   };
 
   for (const [service, check] of Object.entries(checks)) {
@@ -184,9 +184,9 @@ async function runHealthChecks() {
 
 async function runSmokeRoutes() {
   const routes = [
-    { name: 'AutoImprove Proposals', url: 'http://127.0.0.1:5002/api/ai/autoimprove/_debug/ping' },
-    { name: 'Health Status', url: 'http://127.0.0.1:5002/api/health' },
-    { name: 'AI Models', url: 'http://127.0.0.1:5002/api/ai/models' }
+    { name: 'AutoImprove Proposals', url: 'https://backend.ai.bakhmaro.co/api/ai/autoimprove/_debug/ping' },
+    { name: 'Health Status', url: 'https://backend.ai.bakhmaro.co/api/health' },
+    { name: 'AI Models', url: 'https://backend.ai.bakhmaro.co/api/ai/models' }
   ];
 
   const results = {};
@@ -271,7 +271,7 @@ async function runBuildCheck() {
 
 async function runFrontendPing() {
   try {
-    const response = await fetch('http://127.0.0.1:5000/', { timeout: 5000 });
+    const response = await fetch('https://ai.bakhmaro.co/', { timeout: 5000 });
     const success = response.ok;
     
     return {

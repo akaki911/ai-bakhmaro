@@ -8,7 +8,7 @@ router.get('/health', async (req, res) => {
     let aiModelStatus = 'unknown';
     try {
       const fetch = (await import('node-fetch')).default;
-      const aiHealthResponse = await fetch('http://localhost:5001/health');
+      const aiHealthResponse = await fetch('https://backend.ai.bakhmaro.co/api/ai/health');
       if (aiHealthResponse.ok) {
         const aiHealth = await aiHealthResponse.json();
         aiModelStatus = aiHealth.models || 'loaded';
@@ -68,7 +68,8 @@ router.get('/', (req, res) => {
 // System status endpoint with AI readiness check
 router.get('/system-status', async (req, res) => {
   try {
-    const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://0.0.0.0:5001';
+    const aiServiceOrigin = (process.env.AI_SERVICE_URL || 'https://backend.ai.bakhmaro.co').replace(/\/$/, '');
+    const aiServiceUrl = `${aiServiceOrigin}/api/ai`;
 
     // Check AI service health with circuit breaker status
     let aiServiceHealth = {

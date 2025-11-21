@@ -9,7 +9,7 @@ const services = [
 
 async function checkService(service) {
   return new Promise((resolve) => {
-    const req = http.get(`http://127.0.0.1:${service.port}${service.path}`, (res) => {
+    const req = http.get(`https://backend.ai.bakhmaro.co:${service.port}${service.path}`, (res) => {
       resolve({ ...service, status: res.statusCode, healthy: res.statusCode === 200 });
     });
     

@@ -313,9 +313,9 @@ async function checkWorkflowConflicts() {
 
 async function checkAllServicesHealth() {
   const services = [
-    { name: 'frontend', port: 5000, url: 'http://127.0.0.1:5000/' },
-    { name: 'backend', port: 5002, url: 'http://127.0.0.1:5002/api/health' },
-    { name: 'ai', port: 5001, url: 'http://127.0.0.1:5001/health' }
+    { name: 'frontend', port: 5000, url: 'https://ai.bakhmaro.co/' },
+    { name: 'backend', port: 5002, url: 'https://backend.ai.bakhmaro.co/api/health' },
+    { name: 'ai', port: 5001, url: 'https://backend.ai.bakhmaro.co/api/ai/health' }
   ];
   
   // node-fetch is not available, use built-in fetch if available or skip fetch tests

@@ -12,14 +12,11 @@ function originGuard(req, res, next) {
   };
 
   const allowedOrigins = [
-    `https://${devDomain}`,
-    'https://2c2cd970-4894-4549-bf8a-0ed98550093e-00-2lgecmi2xhw4g.janeway.replit.dev',
-    'http://localhost:5000',
-    'http://127.0.0.1:5000',
+    process.env.FRONTEND_URL || 'https://ai.bakhmaro.co',
     'https://ai.bakhmaro.co',
     'https://app.bakhmaro.co',
-    'http://bakhmaro.co:5173',
-    'https://api.ai.bakhmaro.co'
+    `https://${devDomain}`,
+    'https://2c2cd970-4894-4549-bf8a-0ed98550093e-00-2lgecmi2xhw4g.janeway.replit.dev'
   ]
     .map(normaliseOrigin)
     .filter(Boolean);

@@ -107,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Device recognition functionality
   const performDeviceRecognition = async () => {
     // Skip device recognition in development to avoid CORS errors with external APIs
-    if (import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    if (import.meta.env.DEV) {
       console.warn('⚠️ Device recognition skipped in development mode');
       return;
     }

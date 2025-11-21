@@ -6,8 +6,7 @@ function originGuard(req, res, next) {
   const allowedOrigins = [
     `https://${devDomain}`,
     'https://2c2cd970-4894-4549-bf8a-0ed98550093e-00-2lgecmi2xhw4g.janeway.replit.dev',
-    'http://localhost:5000',
-    'https://ai.bakhmaro.co'
+    process.env.FRONTEND_URL || 'https://ai.bakhmaro.co'
   ].filter(Boolean);
 
   // Add custom allowed origins from env

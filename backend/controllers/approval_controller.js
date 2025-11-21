@@ -264,9 +264,9 @@ class ApprovalController {
   // Perform service health verification after apply
   static async performServiceVerification(changeId, verificationId) {
     const services = [
-      { name: 'Backend', url: 'http://localhost:5002/api/health', port: 5002 },
+      { name: 'Backend', url: 'https://backend.ai.bakhmaro.co/api/health', port: 5002 },
       
-      { name: 'Frontend', url: 'http://localhost:5000', port: 5000 }
+      { name: 'Frontend', url: 'https://ai.bakhmaro.co', port: 5000 }
     ];
 
     const results = [];

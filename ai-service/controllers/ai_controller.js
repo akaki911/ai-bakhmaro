@@ -165,7 +165,7 @@ router.post('/stream', async (req, res) => {
         const payload = { message, conversationHistory, userId };
 
         // Use AI chat route (which has proper role-based messages)
-        const response = await fetch('http://localhost:5001/api/ai/chat', {
+        const response = await fetch('https://backend.ai.bakhmaro.co/api/ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)

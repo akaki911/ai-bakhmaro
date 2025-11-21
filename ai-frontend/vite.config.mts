@@ -26,12 +26,12 @@ export default defineConfig({
     },
     proxy: {
       '/api/ai': {
-        target: 'http://localhost:5001',
+        target: 'https://backend.ai.bakhmaro.co',
         changeOrigin: true,
         secure: false,
       },
       '/api': {
-        target: 'http://localhost:5002',
+        target: 'https://backend.ai.bakhmaro.co',
         changeOrigin: true,
         secure: false,
       },

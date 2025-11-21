@@ -134,23 +134,16 @@ class AIHealthMonitor {
   async checkProxyHealth() {
     try {
       const fetch = (await import('node-fetch')).default;
-      // Try multiple backend ports for resilience
-      const ports = [5003, 5002];
       
-      for (const port of ports) {
-        try {
-          const response = await fetch(`http://0.0.0.0:${port}/api/health`, {
-            timeout: 3000
-          });
-          if (response.ok) {
-            console.log(`✅ Backend health check success on port ${port}`);
-            return true;
-          }
-        } catch (portError) {
-          console.warn(`⚠️ Port ${port} check failed:`, portError.message);
-        }
+      const response = await fetch('https://backend.ai.bakhmaro.co/api/health', {
+        timeout: 3000
+      });
+
+      if (response.ok) {
+        console.log('✅ Backend health check success on production endpoint');
+        return true;
       }
-      
+
       return false;
     } catch (error) {
       console.error('❌ Proxy health check failed:', error.message);

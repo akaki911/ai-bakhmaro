@@ -45,7 +45,7 @@ const TEST_SCENARIOS = [
   }
 ];
 
-const BASE_URL = 'http://localhost:5001';
+const BASE_URL = 'https://backend.ai.bakhmaro.co';
 const AI_ENDPOINT = `${BASE_URL}/api/ai/chat`;
 
 class ComprehensiveAITester {

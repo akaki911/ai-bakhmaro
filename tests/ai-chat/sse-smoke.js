@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const { setTimeout: delay } = require('node:timers/promises');
 
-const CHAT_BASE_URL = process.env.CHAT_BASE_URL || 'http://localhost:5173';
+const CHAT_BASE_URL = process.env.CHAT_BASE_URL || 'https://backend.ai.bakhmaro.co';
 const MAX_ATTEMPTS = Number.parseInt(process.env.SSE_MAX_ATTEMPTS || '3', 10);
 const BACKOFF_BASE_MS = Number.parseInt(process.env.SSE_RETRY_BASE_MS || '750', 10);
 const FIRST_CHUNK_DEADLINE_MS = Number.parseInt(process.env.SSE_FIRST_CHUNK_MS || '1200', 10);
@@ -269,7 +269,7 @@ function formatStatus(label, result) {
 async function printDiagnostics(retries) {
   console.error('--- Diagnostics ---');
   console.error(`Retries attempted: ${retries}`);
-  const aiHealthUrl = process.env.AI_HEALTH_URL || 'http://localhost:5001/health';
+  const aiHealthUrl = process.env.AI_HEALTH_URL || 'https://backend.ai.bakhmaro.co/health';
   const proxyHealthPath = process.env.PROXY_HEALTH_PATH || '/api/health';
   const backendProxyUrl = new URL(proxyHealthPath, CHAT_BASE_URL).toString();
 

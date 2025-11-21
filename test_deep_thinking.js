@@ -5,7 +5,7 @@
 
 const axios = require('axios');
 
-const AI_SERVICE_URL = 'http://localhost:8008';
+const AI_SERVICE_URL = 'https://backend.ai.bakhmaro.co';
 
 const DEEP_THINKING_PROMPTS = [
   {

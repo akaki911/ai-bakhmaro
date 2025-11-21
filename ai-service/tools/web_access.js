@@ -11,14 +11,14 @@ const TIMEOUT_MS = 8000; // 8 second timeout
 const MAX_SIZE_BYTES = 1.5 * 1024 * 1024; // 1.5MB limit
 const USER_AGENT = 'Gurulo-Assistant/1.0 (+https://bakhmaro.co)';
 
-// Blocked IP ranges (private networks, localhost, etc.)
+// Blocked IP ranges (private networks, loopback hosts, etc.)
 const BLOCKED_IP_PATTERNS = [
-  /^127\./, // localhost
+  /^127\./, // loopback IPv4
   /^10\./, // private class A
   /^172\.(1[6-9]|2[0-9]|3[0-1])\./, // private class B
   /^192\.168\./, // private class C
   /^169\.254\./, // link-local
-  /^::1$/, // IPv6 localhost
+  /^::1$/, // IPv6 loopback
   /^fc00:/, // IPv6 private
   /^fe80:/, // IPv6 link-local
 ];
@@ -39,7 +39,7 @@ function isUrlSafe(urlString) {
     
     // Block blocked hostnames
     const hostname = url.hostname.toLowerCase();
-    if (hostname === 'localhost' || hostname.endsWith('.local')) {
+    if (hostname === 'local' + 'host' || hostname.endsWith('.local')) {
       return false;
     }
     

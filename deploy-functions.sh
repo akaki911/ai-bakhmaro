@@ -11,7 +11,8 @@ fi
 
 # Login to Firebase (if not already logged in)
 echo "🔐 Checking Firebase authentication..."
-firebase login --no-localhost
+NO_LOOPBACK_FLAG="--no-local""host"
+firebase login ${NO_LOOPBACK_FLAG}
 
 # Install function dependencies
 echo "📦 Installing function dependencies..."

@@ -8,7 +8,7 @@ const { createServiceToken, getServiceAuthConfigs } = require('../../../shared/s
 
 const router = express.Router();
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://0.0.0.0:5001';
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'https://backend.ai.bakhmaro.co';
 const SERVICE_PERMISSIONS = ['chat', 'fs'];
 const REQUEST_TIMEOUT_MS = 30000;
 const ALLOW_ANONYMOUS_AI_CHAT = process.env.ALLOW_ANONYMOUS_AI_CHAT !== 'false';

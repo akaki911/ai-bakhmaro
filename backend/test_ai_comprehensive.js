@@ -91,7 +91,7 @@ const testScenarios = [
 
 // Test configuration
 const TEST_CONFIG = {
-  baseURL: 'http://localhost:5001',
+  baseURL: 'https://backend.ai.bakhmaro.co',
   timeout: 30000, // 30 seconds timeout
   userId: '01019062020',
   retryAttempts: 2

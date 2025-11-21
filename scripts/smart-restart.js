@@ -8,9 +8,9 @@ const { execSync, spawn } = require('child_process');
 const fetch = require('node-fetch');
 
 const SERVICES = [
-  { name: 'backend', port: 5002, healthUrl: 'http://127.0.0.1:5002/api/health', dir: 'backend' },
-  { name: 'ai', port: 5001, healthUrl: 'http://127.0.0.1:5001/health', dir: 'ai-service' },
-  { name: 'frontend', port: 5000, healthUrl: 'http://127.0.0.1:5000/', dir: '.' }
+  { name: 'backend', port: 5002, healthUrl: 'https://backend.ai.bakhmaro.co/api/health', dir: 'backend' },
+  { name: 'ai', port: 5001, healthUrl: 'https://backend.ai.bakhmaro.co/api/ai/health', dir: 'ai-service' },
+  { name: 'frontend', port: 5000, healthUrl: 'https://ai.bakhmaro.co/', dir: '.' }
 ];
 
 const RESTART_DELAYS = {
@@ -50,23 +50,22 @@ async function killProcessesByPort(port) {
   }
 }
 
-async function waitForPortAvailable(port, maxWait = 10000) {
+async function waitForServiceHealthy(service, maxWait = 10000) {
   const start = Date.now();
+  const target = service.healthUrl;
+
   while (Date.now() - start < maxWait) {
     try {
-      const response = await fetch(`http://127.0.0.1:${port}`, { timeout: 1000 });
-      // If we get a response, port is occupied
-      await new Promise(resolve => setTimeout(resolve, 500));
-    } catch (error) {
-      // ECONNREFUSED means port is available
-      if (error.code === 'ECONNREFUSED') {
-        console.log(`✅ [SMART RESTART] Port ${port} ხელმისაწვდომია`);
+      const response = await fetch(target, { timeout: 2000 });
+      if (response.ok) {
+        console.log(`✅ [SMART RESTART] ${service.name} responded at ${target}`);
         return true;
       }
+    } catch (error) {
       await new Promise(resolve => setTimeout(resolve, 500));
     }
   }
-  console.warn(`⚠️ [SMART RESTART] Port ${port} still occupied after ${maxWait}ms`);
+  console.warn(`⚠️ [SMART RESTART] ${service.name} still unreachable after ${maxWait}ms`);
   return false;
 }
 
@@ -133,7 +132,7 @@ async function main() {
     // Phase 2: Verify ports available
     console.log('📍 Phase 2: Verifying port availability...');
     for (const service of SERVICES) {
-      await waitForPortAvailable(service.port);
+      await waitForServiceHealthy(service);
     }
     
     // Phase 3: Sequential restart with delays

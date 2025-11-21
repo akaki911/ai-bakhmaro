@@ -166,13 +166,9 @@ const buildAllowedOriginsMap = () => {
 
   const primaryFrontend = normaliseOriginValue(process.env.FRONTEND_URL) || DEFAULT_FRONTEND_ORIGIN;
   addOrigin(primaryFrontend);
+  addOrigin(DEFAULT_FRONTEND_ORIGIN);
 
   if (!isProductionEnv) {
-    addOrigin('http://127.0.0.1:3000');
-    addOrigin('http://localhost:3000');
-    addOrigin('http://127.0.0.1:5000');
-    addOrigin('http://localhost:5000');
-    
     if (process.env.REPLIT_DEV_DOMAIN) {
       addOrigin(`https://${process.env.REPLIT_DEV_DOMAIN}`);
       addOrigin(`http://${process.env.REPLIT_DEV_DOMAIN}`);
@@ -196,9 +192,7 @@ console.log('🔒 [CORS] Primary origin:', primaryAllowedOrigin);
 const websocketAllowlist = [
   FRONTEND_URL,
   process.env.ALT_FRONTEND_URL,
-  'http://127.0.0.1:5000',
-  'http://localhost:5000',
-  'https://127.0.0.1:5000',
+  DEFAULT_FRONTEND_ORIGIN,
   process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null,
   process.env.REPLIT_DEV_DOMAIN ? `http://${process.env.REPLIT_DEV_DOMAIN}` : null,
 ].filter(Boolean);
@@ -967,7 +961,7 @@ app.post('/api/ai/intelligent-chat', async (req, res) => {
   }
 });
 
-const AI_SERVICE_URL = (process.env.AI_SERVICE_URL || 'http://localhost:5001').replace(/\/$/, '');
+const AI_SERVICE_URL = (process.env.AI_SERVICE_URL || 'https://backend.ai.bakhmaro.co').replace(/\/$/, '');
 const AI_HEALTH_TIMEOUT_MS = Number(process.env.AI_HEALTH_TIMEOUT_MS || 5000);
 
 // AI Service proxy completely removed - all AI functionality handled locally in Backend
@@ -1207,7 +1201,8 @@ if (shouldDisableHttpListen) {
       process.exit(1);
     }
 
-    console.log(`🚀 Backend server running on http://0.0.0.0:${PORT}`);
+    const publicBackendUrl = process.env.BACKEND_PUBLIC_URL || 'https://backend.ai.bakhmaro.co';
+    console.log(`🚀 Backend server running at ${publicBackendUrl} (port ${PORT})`);
     console.log(`📊 Backend initialization complete`);
 
     // Test critical routes - with safe access
@@ -1271,4 +1266,3 @@ console.log('✅ Backend-only AI architecture - no external AI service dependenc
 
 module.exports = app;
 module.exports.server = server;
-

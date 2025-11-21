@@ -189,10 +189,10 @@ class CanaryApplyService {
   // Perform actual smoke tests
   async performSmokeTests() {
     const tests = [
-      { name: 'Backend Health', endpoint: 'http://127.0.0.1:5002/api/health' },
-      { name: 'AI Service Health', endpoint: 'http://127.0.0.1:5001/health' },
-      { name: 'AutoImprove API', endpoint: 'http://127.0.0.1:5002/api/ai/autoimprove/_debug/ping' },
-      { name: 'Frontend Load', endpoint: 'http://127.0.0.1:5000' }
+      { name: 'Backend Health', endpoint: 'https://backend.ai.bakhmaro.co/api/health' },
+      { name: 'AI Service Health', endpoint: 'https://backend.ai.bakhmaro.co/api/ai/health' },
+      { name: 'AutoImprove API', endpoint: 'https://backend.ai.bakhmaro.co/api/ai/autoimprove/_debug/ping' },
+      { name: 'Frontend Load', endpoint: 'https://ai.bakhmaro.co' }
     ];
 
     const results = [];

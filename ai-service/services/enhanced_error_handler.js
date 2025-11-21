@@ -356,8 +356,8 @@ class EnhancedErrorHandler {
       // Environment-aware BACKEND_URL configuration for production robustness
       this.backendUrl = process.env.BACKEND_URL || 
         (process.env.NODE_ENV === 'production' 
-          ? process.env.REPLIT_URL?.replace(':443', ':5002') || 'http://127.0.0.1:5002'
-          : 'http://127.0.0.1:5002');
+          ? process.env.REPLIT_URL?.replace(':443', ':5002') || 'https://backend.ai.bakhmaro.co'
+          : 'https://backend.ai.bakhmaro.co');
       console.log(`🔌 Enhanced Error Handler: SSE connection initialized to ${this.backendUrl}`);
       
       // Validate production configuration

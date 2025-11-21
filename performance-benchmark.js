@@ -2,7 +2,7 @@
 const axios = require('axios');
 const { performance } = require('perf_hooks');
 
-const FRONTEND_URL = 'http://0.0.0.0:5000';
+const FRONTEND_URL = 'https://backend.ai.bakhmaro.co';
 const CONCURRENT_REQUESTS = [5, 8, 10]; // Test different loads
 const TARGET_P95 = 900; // ms
 const TARGET_ERROR_RATE = 2; // %

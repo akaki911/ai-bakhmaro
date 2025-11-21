@@ -4,7 +4,7 @@ import { bootstrapEnv } from '../../../scripts/bootstrapEnv';
 
 bootstrapEnv({ silent: true });
 
-const AI_SERVICE_URL = (process.env.AI_SERVICE_URL || 'https://api.ai.bakhmaro.co/api/ai').replace(/\/+$/, '');
+const AI_SERVICE_URL = (process.env.AI_SERVICE_URL || 'https://backend.ai.bakhmaro.co/api/ai').replace(/\/+$/, '');
 
 // Rate limiting
 const rateLimitMap = new Map<string, number>();

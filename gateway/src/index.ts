@@ -212,11 +212,13 @@ const resolveWebAuthnPolicy = (req: Request) => {
   }
 
   if (!origin) {
-    origin = ensureHttpsForKnownHosts(directHostOrigin ?? forwardedOrigin ?? envOriginUrl?.origin ?? null, rpId) ?? 'https://localhost';
+    origin =
+      ensureHttpsForKnownHosts(directHostOrigin ?? forwardedOrigin ?? envOriginUrl?.origin ?? null, rpId) ??
+      'https://ai.bakhmaro.co';
   }
 
   if (!rpId) {
-    rpId = normaliseHost(parseUrl(origin)?.hostname ?? null) ?? 'localhost';
+    rpId = normaliseHost(parseUrl(origin)?.hostname ?? null) ?? 'ai.bakhmaro.co';
   }
 
   return {

@@ -66,7 +66,7 @@ class StartupGitHubCheck {
 
   async checkServices() {
     try {
-      const response = await fetch('http://127.0.0.1:5001/health');
+      const response = await fetch('https://backend.ai.bakhmaro.co/health');
       if (response.ok) {
         return 'AI service responding';
       } else {

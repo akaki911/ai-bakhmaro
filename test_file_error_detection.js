@@ -7,7 +7,7 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-const AI_SERVICE_URL = 'http://localhost:8008';
+const AI_SERVICE_URL = 'https://backend.ai.bakhmaro.co';
 
 // შექმენი დეფექტური კოდის ფაილი ტესტირებისთვის
 const buggyCode = `

@@ -29,14 +29,14 @@ check_service() {
 # Check all services
 echo "🚀 გურულო Service Health Check დაიწყო..."
 
-check_service 5002 "Backend" "http://localhost:5002/api/health" 20
+check_service 5002 "Backend" "https://backend.ai.bakhmaro.co/api/health" 20
 BACKEND_STATUS=$?
 
-check_service 5001 "AI-Service" "http://localhost:5001/health" 15
+check_service 5001 "AI-Service" "https://backend.ai.bakhmaro.co/health" 15
 AI_STATUS=$?
 
 # Frontend check (simple port probe)
-if curl -fsS "http://localhost:5000" >/dev/null 2>&1; then
+if curl -fsS "https://backend.ai.bakhmaro.co" >/dev/null 2>&1; then
   echo "✅ Frontend is responding"
   FRONTEND_STATUS=0
 else

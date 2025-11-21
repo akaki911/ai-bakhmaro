@@ -66,7 +66,7 @@ async function main() {
       Number(process.env.PORT) ||
       5002;
 
-    const endpoint = `http://127.0.0.1:${port}/api/admin/secrets/required`;
+    const endpoint = `https://backend.ai.bakhmaro.co:${port}/api/admin/secrets/required`;
 
     const response = await fetch(endpoint, {
       method: 'POST',

@@ -33,7 +33,7 @@ export default async function handler(
     
     if (isDev) {
       // In development, check if backend dev session exists
-      const backendUrl = process.env.BACKEND_INTERNAL_URL || 'http://localhost:5002';
+      const backendUrl = process.env.BACKEND_INTERNAL_URL || 'https://backend.ai.bakhmaro.co';
       
       try {
         const response = await fetch(`${backendUrl}/api/mail/dev/session-status`, {

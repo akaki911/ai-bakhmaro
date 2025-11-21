@@ -2,7 +2,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
 
-const BASE_URL = 'http://localhost:5002';
+const BASE_URL = 'https://backend.ai.bakhmaro.co';
 const SECRET = 'dev-secret';
 
 function signPayload(payload) {
@@ -182,7 +182,7 @@ async function testActivitySystem() {
 
   try {
     // AI Service health
-    const aiHealth = await axios.get('http://localhost:5001/api/health');
+    const aiHealth = await axios.get('https://backend.ai.bakhmaro.co/api/ai/health');
     console.log(JSON.stringify(aiHealth.data), '✅ AI Service Health: OK');
   } catch (error) {
     console.error('❌ AI Service Health: FAILED');

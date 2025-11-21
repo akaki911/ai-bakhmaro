@@ -57,8 +57,8 @@ describe('gateway integration', () => {
       JWT_SECRET: 'test-secret-key-1234567890',
       SERVICE_JWT_ISSUER: 'gateway-test',
       SERVICE_JWT_SUBJECT: 'gateway-service-test',
-      API_PROXY_BASE: 'http://127.0.0.1:5999',
-      BACKEND_PROXY_BASE: 'http://127.0.0.1:5999',
+      API_PROXY_BASE: 'https://backend.ai.bakhmaro.co',
+      BACKEND_PROXY_BASE: 'https://backend.ai.bakhmaro.co',
       STATIC_ROOT: '.',
     };
 
@@ -123,7 +123,7 @@ describe('gateway integration', () => {
       ];
 
       for (const scenario of scenarios) {
-        const response = await fetch(`http://127.0.0.1:${port}${scenario.path}`, scenario.init);
+        const response = await fetch(`https://backend.ai.bakhmaro.co:${port}${scenario.path}`, scenario.init);
 
         assert.ok(
           [502, 504].includes(response.status),

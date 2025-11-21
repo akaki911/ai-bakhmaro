@@ -193,7 +193,7 @@ function ensureLocalSecrets(options = {}) {
     { persist: true }
   );
 
-  ensureValue('AI_SERVICE_URL', () => stored.AI_SERVICE_URL || 'http://127.0.0.1:5001', { persist: true });
+  ensureValue('AI_SERVICE_URL', () => stored.AI_SERVICE_URL || 'https://backend.ai.bakhmaro.co', { persist: true });
   ensureValue('ALLOWED_BACKEND_IPS', () => stored.ALLOWED_BACKEND_IPS || DEFAULT_ALLOWED_IPS, { persist: true, allowInProduction: true });
 
   ensureValue('GROQ_API_KEY', () => stored.GROQ_API_KEY || 'gsk_local_dev_placeholder_key_please_override');

@@ -12,7 +12,7 @@
 
 const axios = require('axios');
 
-const AI_SERVICE_URL = 'http://localhost:5001';
+const AI_SERVICE_URL = 'https://backend.ai.bakhmaro.co';
 const TEST_SCENARIOS = [
   {
     name: 'Real-time File Analysis',

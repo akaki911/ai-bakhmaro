@@ -16,7 +16,7 @@ const sdk = new NodeSDK({
     [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: process.env.NODE_ENV || 'development'
   }),
   traceExporter: new JaegerExporter({
-    endpoint: process.env.JAEGER_ENDPOINT || 'http://localhost:14268/api/traces'
+    endpoint: process.env.JAEGER_ENDPOINT || 'https://backend.ai.bakhmaro.co/api/traces'
   })
 });
 

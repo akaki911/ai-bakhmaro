@@ -121,10 +121,10 @@ const resolveFromEnv = () => {
 };
 
 const resolveDefaults = () => {
-  const fallbackHost = 'localhost';
+  const fallbackHost = 'ai.bakhmaro.co';
   return {
     rpID: fallbackHost,
-    origin: 'http://localhost',
+    origin: 'https://ai.bakhmaro.co',
     source: 'default'
   };
 };

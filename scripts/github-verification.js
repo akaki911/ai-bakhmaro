@@ -260,7 +260,7 @@ class GitHubVerifier {
 
     // Test if our GitHub integration service handles 409 responses
     try {
-      const response = await fetch('http://127.0.0.1:5001/api/ai/github/pulls/999999/merge', {
+      const response = await fetch('https://backend.ai.bakhmaro.co/api/ai/github/pulls/999999/merge', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ merge_method: 'merge' })
@@ -292,7 +292,7 @@ class GitHubVerifier {
       const signature = 'sha256=' + hmac.update(testPayload, 'utf8').digest('hex');
 
       // Test our webhook security endpoint
-      const response = await fetch('http://127.0.0.1:5001/api/ai/github/webhook/test-security', {
+      const response = await fetch('https://backend.ai.bakhmaro.co/api/ai/github/webhook/test-security', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

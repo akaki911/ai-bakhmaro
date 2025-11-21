@@ -1,40 +1,18 @@
 
-const http = require('http');
+const https = require('https');
 
 console.log("🔍 [Startup Verification] Checking backend health...");
 
-// Check if port 5002 is available
-const testPort = (port) => {
-  return new Promise((resolve) => {
-    const server = http.createServer();
-    server.listen(port, () => {
-      server.close(() => {
-        console.log(`✅ Port ${port} is available`);
-        resolve(true);
-      });
-    });
-    server.on('error', (err) => {
-      if (err.code === 'EADDRINUSE') {
-        console.log(`🔄 Port ${port} is in use - this might be expected if backend is already running`);
-      }
-      resolve(false);
-    });
-  });
-};
-
-// Health check function
 const healthCheck = () => {
   return new Promise((resolve) => {
-    const req = http.request({
-      hostname: 'localhost',
-      port: 5002,
-      path: '/api/health',
-      method: 'GET',
-      timeout: 5000
-    }, (res) => {
-      console.log(`✅ Backend health check passed: ${res.statusCode}`);
-      resolve(true);
-    });
+    const req = https.get(
+      'https://backend.ai.bakhmaro.co/api/health',
+      { timeout: 5000 },
+      (res) => {
+        console.log(`✅ Backend health check passed: ${res.statusCode}`);
+        resolve(true);
+      }
+    );
     
     req.on('error', (err) => {
       console.log(`❌ Backend health check failed:`, err.message);

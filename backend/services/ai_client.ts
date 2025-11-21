@@ -124,7 +124,7 @@ export class AIServiceClient {
 
   constructor(config: AIClientConfig = {}) {
     this.config = {
-      baseURL: config.baseURL || process.env.AI_SERVICE_URL || 'http://localhost:5001',
+      baseURL: config.baseURL || process.env.AI_SERVICE_URL || 'https://backend.ai.bakhmaro.co',
       timeout: config.timeout || 5000, // 5s timeout as specified
       retries: config.retries || 2, // max 2 retries as specified  
       circuitBreakerThreshold: config.circuitBreakerThreshold || 3, // Lower threshold for Groq stability

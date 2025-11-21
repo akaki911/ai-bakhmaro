@@ -809,7 +809,7 @@ class EnhancedFileMonitorService extends EventEmitter { // Inherit from EventEmi
       console.log(`📤 [PROPOSALS] Submitting proposal: ${proposal.title}`);
 
       // Use absolute URL for inter-service communication
-      const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:5002';
+      const backendUrl = process.env.BACKEND_URL || 'https://backend.ai.bakhmaro.co';
       const fullUrl = `${backendUrl}/api/ai/autoimprove/proposals`;
 
       const internalToken = getInternalToken();

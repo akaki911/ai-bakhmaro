@@ -36,7 +36,7 @@ function resolveBackendBaseUrl() {
   }
 
   if (process.env.NODE_ENV !== 'production') {
-    return 'http://localhost:5002';
+    return 'https://backend.ai.bakhmaro.co';
   }
 
   const error = new Error(

@@ -34,7 +34,7 @@ npm start
 npm run dev
 ```
 
-The AI service will be available at: `http://0.0.0.0:5001`
+The AI service will be available at: `https://backend.ai.bakhmaro.co`
 
 ## API Endpoints
 
@@ -133,9 +133,9 @@ node test_ai_comprehensive.js
 ## Integration
 
 The main backend proxies AI requests to this microservice:
-- Main Backend: `http://0.0.0.0:5002`
-- AI Microservice: `http://0.0.0.0:5001`
-- Frontend: `http://0.0.0.0:3000`
+- Main Backend: `https://backend.ai.bakhmaro.co`
+- AI Microservice: `https://backend.ai.bakhmaro.co`
+- Frontend: `https://ai.bakhmaro.co`
 
 ## Production Deployment
 

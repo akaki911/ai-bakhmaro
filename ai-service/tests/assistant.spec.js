@@ -11,7 +11,7 @@ process.env.ASSISTANT_API_KEY = 'test-key-12345';
 
 class AssistantSecurityTests {
   constructor() {
-    this.baseURL = 'http://localhost:5001';
+    this.baseURL = 'https://backend.ai.bakhmaro.co';
     this.authHeaders = {
       'Content-Type': 'application/json',
       'x-assistant-key': 'test-key-12345'

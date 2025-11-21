@@ -1,18 +1,18 @@
 
 const axios = require('axios');
 
-// Ensure local service calls bypass any corporate proxies that may block 0.0.0.0
-const proxyBypassHosts = ['127.0.0.1', 'localhost', '0.0.0.0'];
+// Ensure production service calls bypass any corporate proxies
+const proxyBypassHosts = ['backend.ai.bakhmaro.co'];
 const existingNoProxy = process.env.NO_PROXY ? process.env.NO_PROXY.split(',') : [];
 const mergedNoProxy = Array.from(new Set([...existingNoProxy, ...proxyBypassHosts]));
 process.env.NO_PROXY = mergedNoProxy.filter(Boolean).join(',');
 axios.defaults.proxy = false;
-axios.defaults.headers.common['Origin'] = 'http://localhost:5000';
+axios.defaults.headers.common['Origin'] = 'https://ai.bakhmaro.co';
 
 class SystemIntegrationTest {
   constructor() {
-    this.baseURL = process.env.BASE_URL || 'http://127.0.0.1:5002';
-    this.aiServiceURL = process.env.AI_SERVICE_URL || 'http://127.0.0.1:5001';
+    this.baseURL = process.env.BASE_URL || 'https://backend.ai.bakhmaro.co';
+    this.aiServiceURL = process.env.AI_SERVICE_URL || 'https://backend.ai.bakhmaro.co';
     this.testResults = [];
   }
 
@@ -49,7 +49,7 @@ class SystemIntegrationTest {
   async testAIServiceHealth() {
     console.log('🏥 Testing AI Service Health...');
     
-    const response = await axios.get(`${this.aiServiceURL}/health`);
+    const response = await axios.get(`${this.aiServiceURL}/api/ai/health`);
     
     const serviceStatus = response.data?.status;
     const normalizedStatus = typeof serviceStatus === 'string'

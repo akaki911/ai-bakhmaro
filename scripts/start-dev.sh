@@ -50,9 +50,9 @@ echo ""
 echo "========================================="
 echo "✅ All services started!"
 echo "========================================="
-echo "Backend:  http://localhost:5002"
-echo "AI:       http://localhost:5001"
-echo "Frontend: http://localhost:5000"
+echo "Backend:  https://backend.ai.bakhmaro.co"
+echo "AI:       https://backend.ai.bakhmaro.co"
+echo "Frontend: https://backend.ai.bakhmaro.co"
 echo "========================================="
 
 # Wait for all background jobs

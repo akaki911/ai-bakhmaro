@@ -166,10 +166,10 @@ const main = async () => {
         
         log(`\n🎉 სერვერების გადატვირთვა დასრულებულია!`, 'green');
         log(`📊 სტატუსი:`, 'bold');
-        log(`   🎨 Frontend: http://localhost:5000`, 'green');
-        log(`   🤖 AI Service: http://localhost:5001`, 'green');  
-        log(`   🔧 Backend: http://localhost:5002`, 'green');
-        log(`\n💡 ადმინ პანელის მისამართი: http://localhost:5000/admin`, 'blue');
+        log(`   🎨 Frontend: https://backend.ai.bakhmaro.co`, 'green');
+        log(`   🤖 AI Service: https://backend.ai.bakhmaro.co`, 'green');  
+        log(`   🔧 Backend: https://backend.ai.bakhmaro.co`, 'green');
+        log(`\n💡 ადმინ პანელის მისამართი: https://backend.ai.bakhmaro.co/admin`, 'blue');
         
     } catch (error) {
         log(`\n❌ გადატვირთვის შეცდომა: ${error.message}`, 'red');

@@ -115,14 +115,11 @@ logWithTimestamp(`🔧 Port configuration: ${PORT}`);
 // Enhanced CORS configuration with production support
 // Build allowed origins array
 const allowedOrigins = [
-  'https://d2c296ba-6bdd-412e-987c-2af0f275fc6d-00-3mn8zz92vqke4.riker.replit.dev',
+  process.env.FRONTEND_URL || 'https://ai.bakhmaro.co',
+  process.env.DEPLOYMENT_URL,
   'https://ai.bakhmaro.co',
-  'http://localhost:5000',    // Frontend dev server
-  'http://0.0.0.0:3000',
-  'http://0.0.0.0:5000',      // Replit binding
-  'http://localhost:5002',    // Backend service
-  'http://0.0.0.0:5002',      // Backend binding alias
-];
+  'https://d2c296ba-6bdd-412e-987c-2af0f275fc6d-00-3mn8zz92vqke4.riker.replit.dev',
+].filter(Boolean);
 
 // Add environment-specific origins
 if (process.env.FRONTEND_URL) {
@@ -803,11 +800,13 @@ const server = app.listen(PORT, HOST, async () => {
 
   // Test port accessibility
   setTimeout(() => {
-    const testReq = require('http').get(`http://127.0.0.1:${PORT}/health`, (res) => {
-      console.log(`✅ AI Service self-test successful on port ${PORT}`);
-    }).on('error', (err) => {
-      console.error(`❌ AI Service self-test failed: ${err.message}`);
-    });
+    const testReq = require('https')
+      .get('https://backend.ai.bakhmaro.co/api/ai/health', (res) => {
+        console.log(`✅ AI Service self-test successful (status ${res.statusCode})`);
+      })
+      .on('error', (err) => {
+        console.error(`❌ AI Service self-test failed: ${err.message}`);
+      });
     testReq.setTimeout(5000);
   }, 2000);
 

@@ -23,33 +23,33 @@ const TARGETS = [
   {
     key: 'backend',
     label: 'Backend',
-    url: 'http://localhost:5002/health',
+    url: 'https://backend.ai.bakhmaro.co/api/health',
     expectJson: true,
   },
   {
     key: 'ai-service',
     label: 'AI Service',
-    url: 'http://localhost:5001/health',
+    url: 'https://backend.ai.bakhmaro.co/api/ai/health',
     expectJson: true,
   },
   {
     key: 'gateway',
     label: 'Gateway',
-    url: 'http://localhost:4000/health',
+    url: 'https://backend.ai.bakhmaro.co/api/health/system-status',
     expectJson: true,
     optional: true,
   },
   {
     key: 'webauthn-debug',
     label: 'WebAuthn Debug',
-    url: 'http://localhost:5002/api/admin/auth/webauthn/debug',
+    url: 'https://backend.ai.bakhmaro.co/api/admin/auth/webauthn/debug',
     expectJson: true,
     optional: true,
   },
   {
     key: 'admin-session',
     label: 'Admin Session',
-    url: 'http://localhost:5002/api/admin/auth/me',
+    url: 'https://backend.ai.bakhmaro.co/api/admin/auth/me',
     options: { headers: { Cookie: '' } },
     expectJson: true,
     interpret: (result) => {

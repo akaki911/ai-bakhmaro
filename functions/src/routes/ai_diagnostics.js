@@ -17,7 +17,7 @@ try {
 
 const router = express.Router();
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://0.0.0.0:5001';
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'https://backend.ai.bakhmaro.co';
 const SERVICE_PERMISSIONS = ['diagnostics', 'status', 'metrics', 'chat'];
 const SERVICE_AUTH_CONFIG = getServiceAuthConfigs()[0] || null;
 

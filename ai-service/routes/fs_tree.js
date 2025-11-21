@@ -10,7 +10,7 @@ router.get('/tree', async (req, res) => {
     console.log('📁 [AI-FS] File tree request - proxying to backend');
     
     // Proxy to backend service
-    const backendUrl = 'http://127.0.0.1:5002/api/files/tree';
+    const backendUrl = 'https://backend.ai.bakhmaro.co/api/files/tree';
     const response = await fetch(backendUrl, {
       method: 'GET',
       headers: {

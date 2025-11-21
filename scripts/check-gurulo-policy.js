@@ -2,7 +2,7 @@
 import process from 'node:process';
 import { createServiceToken } from '../shared/serviceToken.js';
 
-const DEFAULT_URL = 'http://0.0.0.0:5001/v1/ai/chat';
+const DEFAULT_URL = 'https://backend.ai.bakhmaro.co/v1/ai/chat';
 const DEFAULT_TIMEOUT_MS = Number.parseInt(process.env.GURULO_POLICY_TIMEOUT_MS ?? '6000', 10);
 
 function parseArgs(argv) {

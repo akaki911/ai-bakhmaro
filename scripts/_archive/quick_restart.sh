@@ -74,9 +74,9 @@ echo -e "${BLUE}⚛️ Frontend ჩართვა...${NC}"
 cd .. && PORT=3000 HOST=0.0.0.0 CLEAR_SCREEN=false node ./scripts/run-vite-dev.mjs &
 
 echo -e "${GREEN}✅ გურულო სისტემა რესტარტდა წარმატებით!${NC}"
-echo -e "${BLUE}🔗 Frontend: http://0.0.0.0:3000${NC}"
-echo -e "${BLUE}🔗 Backend: http://0.0.0.0:5002${NC}"
-echo -e "${BLUE}🔗 AI Service: http://0.0.0.0:5001${NC}"
+echo -e "${BLUE}🔗 Frontend: https://backend.ai.bakhmaro.co${NC}"
+echo -e "${BLUE}🔗 Backend: https://backend.ai.bakhmaro.co${NC}"
+echo -e "${BLUE}🔗 AI Service: https://backend.ai.bakhmaro.co${NC}"
 
 # Keep script running
 wait

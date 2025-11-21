@@ -83,7 +83,7 @@ class GroqEnvValidator {
   validateServiceUrls() {
     this.log('Validating service URLs...', 'info');
     
-    const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:5001';
+    const aiServiceUrl = process.env.AI_SERVICE_URL || 'https://backend.ai.bakhmaro.co';
     
     // Check if URL format is valid
     try {
@@ -95,10 +95,11 @@ class GroqEnvValidator {
       return false;
     }
 
-    // Check for localhost vs 0.0.0.0 usage in Replit
-    if (aiServiceUrl.includes('localhost') && process.env.REPLIT_CLUSTER) {
-      this.warnings.push('Using localhost in Replit - consider using 0.0.0.0 or proper service discovery');
-      this.log('localhost usage in Replit detected', 'warning');
+    // Ensure production backend is used for AI service
+    const expectedBase = 'https://backend.ai.bakhmaro.co';
+    if (!aiServiceUrl.startsWith(expectedBase)) {
+      this.warnings.push(`AI_SERVICE_URL should point to ${expectedBase}`);
+      this.log(`Non-production AI_SERVICE_URL detected: ${aiServiceUrl}`, 'warning');
     }
 
     return true;
@@ -160,7 +161,7 @@ class GroqEnvValidator {
 GROQ_API_KEY=gsk_your_groq_api_key_here
 
 # AI Service Configuration  
-AI_SERVICE_URL=http://0.0.0.0:5001
+AI_SERVICE_URL=https://backend.ai.bakhmaro.co
 AI_INTERNAL_TOKEN=your-secure-internal-token-32chars-min
 
 # Backend Configuration
