@@ -219,10 +219,9 @@ router.get('/models', async (_req, res) => {
 });
 
 // Proxy vector memory endpoints (stats/search/embeddings/etc.)
-router.all('/vector-memory/*', proxyAiRequest);
-router.all('/vector-memory', proxyAiRequest);
+router.all(/^\/vector-memory(?:\/.*)?$/, proxyAiRequest);
 
 // Fallback proxy for any additional AI service routes not explicitly mapped above
-router.all('/*', proxyAiRequest);
+router.all(/^\/.*$/, proxyAiRequest);
 
 module.exports = router;
