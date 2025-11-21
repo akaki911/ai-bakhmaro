@@ -23,7 +23,7 @@
     "test:integration": "node scripts/run-integration-tests.js",
     "check:secrets-required": "node check-secrets.js",
     "lint-staged": "node scripts/run-lint-staged.js",
-    "setup-hooks": "node setup-git-hooks.js",
+
 
   },
   "devDependencies": {
