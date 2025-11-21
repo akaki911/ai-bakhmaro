@@ -99,7 +99,10 @@ const allowedOrigins = process.env.NODE_ENV === 'production'
       'https://d46c9dc8-434e-4883-accb-5bd2dc9193da-00-4rhersweyrz2.picard.replit.dev',
       'https://2c2cd970-4894-4549-bf8a-0ed98550093e-00-2lgecmi2xhw4g.janeway.replit.dev',
       process.env.FRONTEND_URL || 'https://ai.bakhmaro.co',
-      'https://ai.bakhmaro.co'
+      'https://ai.bakhmaro.co',
+      'https://backend.ai.bakhmaro.co',
+      'https://ai-bakhmaro.web.app',
+      'https://backend-ai-bakhmaro.web.app'
     ];
 
 const corsOptions = {

@@ -20,7 +20,10 @@ const validateOrigin = (req, res, next) => {
   const allowedOrigins = [
     process.env.FRONTEND_URL || 'https://ai.bakhmaro.co',
     process.env.REPLIT_DOMAIN,
-    'https://ai.bakhmaro.co'
+    'https://ai.bakhmaro.co',
+    'https://backend.ai.bakhmaro.co',
+    'https://ai-bakhmaro.web.app',
+    'https://backend-ai-bakhmaro.web.app'
   ].filter(Boolean);
 
   const origin = req.get('origin');

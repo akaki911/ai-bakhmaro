@@ -167,6 +167,9 @@ const buildAllowedOriginsMap = () => {
   const primaryFrontend = normaliseOriginValue(process.env.FRONTEND_URL) || DEFAULT_FRONTEND_ORIGIN;
   addOrigin(primaryFrontend);
   addOrigin(DEFAULT_FRONTEND_ORIGIN);
+  addOrigin('https://backend.ai.bakhmaro.co');
+  addOrigin('https://ai-bakhmaro.web.app');
+  addOrigin('https://backend-ai-bakhmaro.web.app');
 
   if (!isProductionEnv) {
     if (process.env.REPLIT_DEV_DOMAIN) {
@@ -384,6 +387,17 @@ const corsMiddleware = (req, res, next) => {
 };
 
 app.use(corsMiddleware);
+
+// Fail-safe CORS header injector for trusted frontends (helps when upstream middlewares short-circuit)
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '';
+  const trustedPattern = /^https?:\/\/(?:backend\\.)?ai\\.bakhmaro\\.co$|^https?:\/\/ai-bakhmaro\\.web\\.app$|^https?:\/\/backend-ai-bakhmaro\\.web\\.app$/;
+  if (origin && trustedPattern.test(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  next();
+});
 
 app.use(buildModeGuard);
 
