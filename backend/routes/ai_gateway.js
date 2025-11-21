@@ -93,6 +93,65 @@ const buildErrorPayload = (error) => ({
   timestamp: new Date().toISOString(),
 });
 
+// Allow certain subpaths to fall through to other routers mounted on /api/ai
+router.use((req, _res, next) => {
+  const path = req.path || '';
+  if (path.startsWith('/autoimprove') || path.startsWith('/deploy')) {
+    return next('router');
+  }
+  return next();
+});
+
+const proxyAiRequest = async (req, res) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+
+  try {
+    const targetUrl = `${AI_SERVICE_URL}/api/ai${req.url}`;
+    const headers = {
+      ...buildHeaders(),
+      'Content-Type': req.get('content-type') || 'application/json',
+      'x-forwarded-for': req.ip,
+    };
+
+    const init = {
+      method: req.method,
+      headers,
+      signal: controller.signal,
+    };
+
+    if (!['GET', 'HEAD'].includes(req.method.toUpperCase())) {
+      init.body =
+        req.body && Object.keys(req.body).length > 0
+          ? JSON.stringify(req.body)
+          : req['rawBody'] || undefined;
+    }
+
+    const response = await fetch(targetUrl, init);
+    const text = await response.text();
+
+    res.status(response.status);
+
+    try {
+      const json = text ? JSON.parse(text) : null;
+      res.json(json);
+    } catch {
+      res
+        .type(response.headers?.get?.('content-type') || 'application/json')
+        .send(text);
+    }
+  } catch (error) {
+    console.error('❌ [AI Gateway] Proxy request failed:', {
+      path: req.url,
+      method: req.method,
+      message: error?.message,
+    });
+    res.status(502).json(buildErrorPayload(error));
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
 router.get('/health', async (_req, res) => {
   try {
     const data = await fetchFromAiService('/api/ai/health');
@@ -158,5 +217,12 @@ router.get('/models', async (_req, res) => {
     });
   }
 });
+
+// Proxy vector memory endpoints (stats/search/embeddings/etc.)
+router.all('/vector-memory/*', proxyAiRequest);
+router.all('/vector-memory', proxyAiRequest);
+
+// Fallback proxy for any additional AI service routes not explicitly mapped above
+router.all('/*', proxyAiRequest);
 
 module.exports = router;

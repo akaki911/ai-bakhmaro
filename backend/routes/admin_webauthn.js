@@ -408,7 +408,10 @@ router.post('/login-options', async (req, res) => {
     }
 
     const superAdminProfile = superAdminService.getProfileClone();
-    const credentials = await credentialService.getUserCredentials(superAdminProfile.userId);
+    const credentials = (await credentialService.getUserCredentials(superAdminProfile.userId)).filter((cred) => {
+      const id = cred?.credentialId || cred?.credentialID;
+      return typeof id === 'string' && id.trim().length > 0;
+    });
 
     if (!credentials.length) {
       return res.status(404).json({
@@ -418,11 +421,31 @@ router.post('/login-options', async (req, res) => {
       });
     }
 
-    const allowCredentials = credentials.map((cred) => ({
-      id: Buffer.from(cred.credentialId || cred.credentialID, 'base64url'),
-      type: 'public-key',
-      transports: cred.transports || ['internal', 'hybrid']
-    }));
+    const allowCredentials = credentials
+      .map((cred) => {
+        try {
+          return {
+            id: Buffer.from(cred.credentialId || cred.credentialID, 'base64url'),
+            type: 'public-key',
+            transports: cred.transports || ['internal', 'hybrid']
+          };
+        } catch (err) {
+          console.warn('⚠️ [Admin Passkey Login] Skipping invalid credential record', {
+            id: cred?.id,
+            error: err?.message,
+          });
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    if (!allowCredentials.length) {
+      return res.status(404).json({
+        success: false,
+        error: 'მუშაობისთვის ვალიდური Passkey ვერ მოიძებნა',
+        code: 'NO_VALID_CREDENTIALS',
+      });
+    }
 
     const options = await generateAuthenticationOptions({
       rpID: config.rpID,

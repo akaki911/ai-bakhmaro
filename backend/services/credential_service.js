@@ -111,7 +111,8 @@ class CredentialService {
       }));
     } catch (error) {
       console.error('❌ [CREDENTIAL] Get user credentials error:', error);
-      throw error;
+      // Graceful fallback: treat as no credentials rather than crashing auth flow
+      return [];
     }
   }
 
