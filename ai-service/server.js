@@ -114,26 +114,64 @@ logWithTimestamp(`🔧 Port configuration: ${PORT}`);
 
 // Enhanced CORS configuration with production support
 // Build allowed origins array
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'https://ai.bakhmaro.co',
-  process.env.DEPLOYMENT_URL,
-  'https://ai.bakhmaro.co',
-  'https://d2c296ba-6bdd-412e-987c-2af0f275fc6d-00-3mn8zz92vqke4.riker.replit.dev',
-].filter(Boolean);
+const parseOriginList = (value) => {
+  if (!value || typeof value !== 'string') {
+    return [];
+  }
 
-// Add environment-specific origins
-if (process.env.FRONTEND_URL) {
-  allowedOrigins.push(process.env.FRONTEND_URL);
-}
-if (process.env.DEPLOYMENT_URL) {
-  allowedOrigins.push(process.env.DEPLOYMENT_URL);
-}
+  return value
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+};
+
+const ensureOriginScheme = (value) => {
+  if (!value || typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) {
+    return trimmed.replace(/\/+$/, '');
+  }
+
+  if (/^[\w.-]+(?::\d+)?$/.test(trimmed)) {
+    return `https://${trimmed}`;
+  }
+
+  return trimmed.replace(/\/+$/, '');
+};
+
+const allowedOriginStrings = new Set(
+  [
+    process.env.FRONTEND_URL || 'https://ai.bakhmaro.co',
+    process.env.DEPLOYMENT_URL,
+    process.env.PUBLIC_FRONTEND_ORIGIN,
+    process.env.PUBLIC_ORIGIN,
+    process.env.ALT_FRONTEND_URL,
+    'https://ai.bakhmaro.co',
+    'https://app.bakhmaro.co',
+    'https://d2c296ba-6bdd-412e-987c-2af0f275fc6d-00-3mn8zz92vqke4.riker.replit.dev',
+    ...parseOriginList(process.env.CORS_ALLOWED_ORIGIN),
+    ...parseOriginList(process.env.ALLOWED_ORIGINS),
+    ...parseOriginList(process.env.ALLOWED_ORIGINS_EXTRA),
+  ]
+    .map(ensureOriginScheme)
+    .filter(Boolean)
+);
 
 // Add Replit domain patterns for both development and production
-allowedOrigins.push(/^https:\/\/.*\.replit\.dev$/);
-allowedOrigins.push(/^https:\/\/.*\.repl\.co$/);
-allowedOrigins.push(/^https:\/\/.*\.sisko\.replit\.dev$/);
-allowedOrigins.push(/^https:\/\/.*\.riker\.replit\.dev$/);
+const allowedOrigins = [
+  ...Array.from(allowedOriginStrings),
+  /^https:\/\/.*\.replit\.dev$/,
+  /^https:\/\/.*\.repl\.co$/,
+  /^https:\/\/.*\.sisko\.replit\.dev$/,
+  /^https:\/\/.*\.riker\.replit\.dev$/,
+];
 
 // Helper functions for CORS middleware
 const determineAllowedOrigin = (req) => {

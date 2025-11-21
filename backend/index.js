@@ -150,11 +150,44 @@ const normaliseOriginValue = (value) => {
   }
 };
 
+const parseOriginList = (value) => {
+  if (!value || typeof value !== 'string') {
+    return [];
+  }
+
+  return value
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+};
+
+const ensureOriginScheme = (value) => {
+  if (!value || typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  // If a bare domain or domain:port is provided, assume HTTPS to match real browser Origin headers.
+  if (/^[\w.-]+(?::\d+)?$/.test(trimmed)) {
+    return `https://${trimmed}`;
+  }
+
+  return trimmed;
+};
+
 const buildAllowedOriginsMap = () => {
   const origins = new Map();
 
   const addOrigin = (origin) => {
-    const normalised = normaliseOriginValue(origin);
+    const normalised = normaliseOriginValue(ensureOriginScheme(origin));
     if (!normalised) {
       return;
     }
@@ -164,9 +197,22 @@ const buildAllowedOriginsMap = () => {
     }
   };
 
-  const primaryFrontend = normaliseOriginValue(process.env.FRONTEND_URL) || DEFAULT_FRONTEND_ORIGIN;
+  const addOriginList = (value) => {
+    parseOriginList(value).forEach(addOrigin);
+  };
+
+  const primaryFrontend =
+    normaliseOriginValue(ensureOriginScheme(process.env.FRONTEND_URL)) || DEFAULT_FRONTEND_ORIGIN;
   addOrigin(primaryFrontend);
   addOrigin(DEFAULT_FRONTEND_ORIGIN);
+  addOrigin('https://app.bakhmaro.co');
+  addOriginList(process.env.ALT_FRONTEND_URL);
+  addOriginList(process.env.PUBLIC_FRONTEND_ORIGIN);
+  addOriginList(process.env.PUBLIC_ORIGIN);
+  addOriginList(process.env.CORS_ALLOWED_ORIGIN);
+  addOriginList(process.env.ALLOWED_ORIGINS);
+  addOriginList(process.env.ALLOWED_ORIGINS_EXTRA);
+  addOriginList(process.env.AI_DOMAIN);
   addOrigin('https://backend.ai.bakhmaro.co');
   addOrigin('https://ai-bakhmaro.web.app');
   addOrigin('https://backend-ai-bakhmaro.web.app');
@@ -185,20 +231,35 @@ const buildAllowedOriginsMap = () => {
 const allowedOriginsMap = buildAllowedOriginsMap();
 const allowedOriginsSet = new Set(allowedOriginsMap.keys());
 const primaryAllowedOrigin =
-  allowedOriginsMap.get(normaliseOriginValue(process.env.FRONTEND_URL)) ||
+  allowedOriginsMap.get(normaliseOriginValue(ensureOriginScheme(process.env.FRONTEND_URL))) ||
   allowedOriginsMap.get(normaliseOriginValue(DEFAULT_FRONTEND_ORIGIN)) ||
+  allowedOriginsSet.values().next().value ||
   DEFAULT_FRONTEND_ORIGIN;
 
 console.log('🔒 [CORS] Allowed origins:', Array.from(allowedOriginsSet));
 console.log('🔒 [CORS] Primary origin:', primaryAllowedOrigin);
 
-const websocketAllowlist = [
-  FRONTEND_URL,
-  process.env.ALT_FRONTEND_URL,
-  DEFAULT_FRONTEND_ORIGIN,
-  process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null,
-  process.env.REPLIT_DEV_DOMAIN ? `http://${process.env.REPLIT_DEV_DOMAIN}` : null,
-].filter(Boolean);
+const websocketAllowlist = Array.from(
+  new Set(
+    [
+      FRONTEND_URL,
+      process.env.ALT_FRONTEND_URL,
+      process.env.PUBLIC_FRONTEND_ORIGIN,
+      DEFAULT_FRONTEND_ORIGIN,
+      ...parseOriginList(process.env.CORS_ALLOWED_ORIGIN).map((origin) =>
+        normaliseOriginValue(ensureOriginScheme(origin))
+      ),
+      ...parseOriginList(process.env.ALLOWED_ORIGINS).map((origin) =>
+        normaliseOriginValue(ensureOriginScheme(origin))
+      ),
+      ...parseOriginList(process.env.ALLOWED_ORIGINS_EXTRA).map((origin) =>
+        normaliseOriginValue(ensureOriginScheme(origin))
+      ),
+      process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null,
+      process.env.REPLIT_DEV_DOMAIN ? `http://${process.env.REPLIT_DEV_DOMAIN}` : null,
+    ].filter(Boolean)
+  )
+);
 
 const guruloRealtime = setupGuruloWebSocket(httpServer, {
   allowOrigins: websocketAllowlist,
@@ -391,7 +452,7 @@ app.use(corsMiddleware);
 // Fail-safe CORS header injector for trusted frontends (helps when upstream middlewares short-circuit)
 app.use((req, res, next) => {
   const origin = req.headers.origin || '';
-  const trustedPattern = /^https?:\/\/(?:backend\\.)?ai\\.bakhmaro\\.co$|^https?:\/\/ai-bakhmaro\\.web\\.app$|^https?:\/\/backend-ai-bakhmaro\\.web\\.app$/;
+  const trustedPattern = /^https?:\/\/(?:backend\.)?ai\.bakhmaro\.co$|^https?:\/\/ai-bakhmaro\.web\.app$|^https?:\/\/backend-ai-bakhmaro\.web\.app$|^https?:\/\/app\.bakhmaro\.co$/;
   if (origin && trustedPattern.test(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
