@@ -12,11 +12,11 @@ let fetch;
 })();
 const fs = require('fs');
 const path = require('path');
-const {
-  startTraceRun,
-  appendTraceEvent,
-  completeTraceRun
-} = require('../../functions/src/services/ai_trace_hub');
+// const {
+//   startTraceRun,
+//   appendTraceEvent,
+//   completeTraceRun
+// } = require('../../functions/src/services/ai_trace_hub');
 const {
   recordEvent: persistAutoImproveEvent,
   getEventsSince: getPersistedEventsSince,

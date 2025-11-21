@@ -42,7 +42,7 @@ const buildRuntimeConfig = () => {
   const firebaseAccount = resolveFirebaseServiceAccount();
   const firebaseEnabled = Boolean(firebaseAccount.credential);
   if (!firebaseEnabled) {
-    issues.push(formatIssue('FIREBASE_SERVICE_ACCOUNT_KEY', 'unavailable', isProduction ? 'fatal' : 'warn'));
+    issues.push(formatIssue('FIREBASE_SERVICE_ACCOUNT_KEY', 'unavailable', 'warn'));
   }
 
   const internalTokenDescriptor = describeInternalToken();

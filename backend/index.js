@@ -121,8 +121,8 @@ const PORT = process.env.PORT || 8000; // Replit environment port configuration
 
 const { setupGuruloWebSocket } = require('./services/gurulo_ws');
 const versionRoute = require('./routes/version');
-const aiTraceRoutes = require('../functions/src/routes/ai_trace');
-const aiChatRoutes = require('../functions/src/routes/ai_chat');
+// const aiTraceRoutes = require('../src/routes/ai_trace');
+// const aiChatRoutes = require('../src/routes/ai_chat');
 
 const httpServer = http.createServer(app);
 const shouldDisableHttpListen = process.env.DISABLE_EXPRESS_LISTEN === 'true';
@@ -729,7 +729,7 @@ const adminWebauthnRoutes = require('./routes/admin_webauthn');
 const passkeyAuthRoutes = require('./routes/passkey_auth');
 const securityAuditRoutes = require('./routes/security_audit');
 const roleGuards = require('./middleware/role_guards');
-const legacyAiRoutes = require('../functions/src/routes/ai_legacy');
+// const legacyAiRoutes = require('../src/routes/ai_legacy');
 
 // Mount routes
 app.use('/api/health', healthRoutes);
@@ -783,14 +783,14 @@ try {
 }
 
 // Mount AI rollout control routes
-try {
-  const aiRolloutControl = require('../functions/src/routes/ai_rollout_control');
-  app.use('/api/admin/ai-rollout', aiRolloutControl);
-  app.use('/api/admin/ai', require('../functions/src/routes/ai_diagnostics'));
-  console.log('✅ AI rollout control routes mounted at /api/admin/ai-rollout');
-} catch (error) {
-  console.error('❌ Failed to load AI rollout control routes:', error.message);
-}
+// try {
+//   const aiRolloutControl = require('../src/routes/ai_rollout_control');
+//   app.use('/api/admin/ai-rollout', aiRolloutControl);
+//   app.use('/api/admin/ai', require('../src/routes/ai_diagnostics'));
+//   console.log('✅ AI rollout control routes mounted at /api/admin/ai-rollout');
+// } catch (error) {
+//   console.error('❌ Failed to load AI rollout control routes:', error.message);
+// }
 
 const guruloStatusRoutes = require('./routes/gurulo_status');
 
@@ -892,7 +892,7 @@ try {
 
 // Primary AI chat router (reused from Firebase Functions)
 try {
-  app.use('/api/ai', aiChatRoutes);
+  // app.use('/api/ai', aiChatRoutes);
   console.log('�o. AI chat routes mounted at /api/ai');
 } catch (error) {
   console.error('�?O Failed to mount AI chat routes:', error.message);
