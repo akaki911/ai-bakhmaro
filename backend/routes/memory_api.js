@@ -4,13 +4,13 @@ const path = require('path');
 const fs = require('fs').promises;
 const admin = require('../firebase');
 
-const {
-  saveMemory,
-  retrieveMemories,
-  toggleMemoryUsage,
-  DEFAULT_MEMORY_CONTROLS,
-  MemoryServiceError
-} = require('../../ai-service/context/user_preferences');
+// const {
+//   saveMemory,
+//   retrieveMemories,
+//   toggleMemoryUsage,
+//   DEFAULT_MEMORY_CONTROLS,
+//   MemoryServiceError
+// } = require('../../ai-service/context/user_preferences');
 
 // Memory data directory
 const MEMORY_DATA_DIR = path.join(__dirname, '../memory_data');

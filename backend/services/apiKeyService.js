@@ -1,6 +1,7 @@
 
 const crypto = require('crypto');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const admin = require('../firebase'); // Added admin import
 const auditService = require('./audit_service');
 
 class ApiKeyService {
@@ -130,4 +131,15 @@ class ApiKeyService {
   }
 }
 
-module.exports = new ApiKeyService();
+if (admin.disabled) {
+  console.warn('⚠️ [ApiKeyService] Firebase Admin is disabled, API Key Service will be a no-op.');
+  module.exports = {
+    generateKey: async () => ({ key: 'mock_key', keyId: 'mock_key_id' }),
+    validateKey: async () => ({ valid: false }),
+    revokeKey: async () => {},
+    listKeys: async () => [],
+    __disabled: true
+  };
+} else {
+  module.exports = new ApiKeyService();
+}

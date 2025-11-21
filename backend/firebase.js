@@ -5,19 +5,42 @@ const { createDevFirestore } = require('./utils/devFirestoreStub');
 
 const createDisabledAdminStub = () => {
   const message = 'Firebase Admin is disabled (fb_admin=disabled)';
-  const thrower = () => {
-    throw new Error(message);
-  };
+  const noop = () => {};
+  const mockCollection = () => ({
+    doc: () => ({
+      collection: () => mockCollection(),
+      get: async () => ({ exists: false, empty: true, data: () => ({}) }),
+      set: async () => {},
+      delete: async () => {},
+    }),
+    get: async () => ({ empty: true }),
+    where: () => mockCollection(),
+    limit: () => mockCollection(),
+    orderBy: () => mockCollection(),
+  });
+  const mockFirestore = () => ({
+    __isMockFirestore: true,
+    collection: mockCollection,
+    doc: () => ({ collection: mockCollection, get: async () => ({ exists: false, empty: true, data: () => ({}) }), set: async () => {}, delete: async () => {} }),
+    batch: () => ({ update: noop, commit: async () => {} }),
+  });
+  const mockAuth = () => ({
+    getUser: async () => null,
+    verifyIdToken: async () => null,
+    createCustomToken: async () => null,
+  });
+  const mockCredential = () => ({
+    cert: noop,
+    applicationDefault: noop,
+  });
 
   return {
     disabled: true,
     apps: [],
-    initializeApp: thrower,
-    firestore: thrower,
-    auth: thrower,
-    credential: {
-      cert: thrower,
-    },
+    initializeApp: noop,
+    firestore: mockFirestore,
+    auth: mockAuth,
+    credential: mockCredential(),
   };
 };
 

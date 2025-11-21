@@ -12,6 +12,7 @@ const buildApp = () => {
     process.env.SESSION_SECRET = appConfig.session_secret;
     process.env.ADMIN_SETUP_TOKEN = appConfig.admin_setup_token;
     process.env.AI_INTERNAL_TOKEN = appConfig.ai_internal_token;
+    process.env.SECRETS_ENC_KEY = appConfig.secrets_enc_key; // Added SECRETS_ENC_KEY
   }
 
   // Standard Google Cloud env var for project ID

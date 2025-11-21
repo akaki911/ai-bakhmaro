@@ -822,12 +822,12 @@ routeFiles.forEach(routeFile => {
       app.use('/api/files', route);
       console.log(`✅ File tree route mounted at /api/files`);
 
-      // Mount files upload/apply routes
-      const filesUpload = require('./routes/files_upload');
-      const filesApply  = require('./routes/files_apply');
-      app.use('/api/files', filesUpload); // POST /upload, GET /attachment/:id
-      app.use('/api/files', filesApply);  // POST /apply
-      console.log('✅ Files upload/apply routes mounted at /api/files');
+      // Mount files upload/apply routes (commented out due to filesystem write issues in serverless environment)
+      // const filesUpload = require('./routes/files_upload');
+      // const filesApply  = require('./routes/files_apply');
+      // app.use('/api/files', filesUpload); // POST /upload, GET /attachment/:id
+      // app.use('/api/files', filesApply);  // POST /apply
+      // console.log('✅ Files upload/apply routes mounted at /api/files');
     } else if (routeFile === 'ai_proxy') {
       // AI proxy route moved to after autoimprove to prevent shadowing
       console.log(`⏳ AI proxy route deferred until after autoimprove`);
@@ -974,7 +974,7 @@ app.use("/api/memory", require("./routes/memory_api"));
 app.use('/api/performance', require('./routes/performance_routes'));
 app.use('/api/project', require('./routes/project_stats'));
 app.use('/api/config', require('./routes/config'));
-app.use('/api/mail', require('./routes/mail'));
+// app.use('/api/mail', require('./routes/mail')); // Commented out due to Firebase Admin initialization issues in serverless environment
 
 // User and GitHub routes
 app.use('/api/user', require('./routes/user_activity'));

@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const isProduction = process.env.NODE_ENV === 'production';
+
 
 const DEFAULT_MODE = 'plan';
 
@@ -32,6 +34,9 @@ class PlanModeService {
   }
 
   ensureStorage() {
+    if (isProduction) { // Added production check
+      return;
+    }
     try {
       const dir = path.dirname(this.storagePath);
       if (!fs.existsSync(dir)) {
@@ -97,6 +102,9 @@ class PlanModeService {
   }
 
   writeState(state) {
+    if (isProduction) { // Added production check
+      return state; // Return the state without persisting in production
+    }
     const payload = {
       mode: normalizeMode(state.mode) || DEFAULT_MODE,
       updatedAt: resolveTimestamp(state.updatedAt),

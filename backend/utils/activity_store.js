@@ -5,7 +5,7 @@ const readline = require('readline');
 const zlib = require('zlib');
 
 // Temporarily force enable activity persistence for testing
-const ENABLE = true; // process.env.ENABLE_ACTIVITY_PERSIST === '1';
+const ENABLE = process.env.ENABLE_ACTIVITY_PERSIST === '1';
 const dir = path.join(__dirname, '..', 'data');
 const file = path.join(dir, 'activity.log.jsonl');
 const MAX = 10000;
@@ -17,7 +17,8 @@ let partCounter = 0;
 let currentMonthKey = new Date().toISOString().slice(0,7); // YYYY-MM
 
 function ensure() {
-  if (!ENABLE) return;
+  const isProduction = process.env.NODE_ENV === 'production'; // Add this line
+  if (!ENABLE || isProduction) return; // Modified conditional
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   if (!fs.existsSync(file)) fs.writeFileSync(file, '');
 }
