@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { execSync } from 'node:child_process';
-import { chmodSync, copyFileSync, existsSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { platform } from 'node:process';
+const { execSync } = require('node:child_process');
+const { chmodSync, copyFileSync, existsSync, mkdirSync } = require('node:fs');
+const { join } = require('node:path');
+const { platform } = require('node:process');
 
 if (process.env.REPL_ID || process.env.REPLIT_ENV) {
   console.log('⚠️ Skipping Git hooks setup in Replit environment');
