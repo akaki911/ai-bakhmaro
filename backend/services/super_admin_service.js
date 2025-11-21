@@ -2,12 +2,17 @@
 
 const { SUPER_ADMIN_PERSONAL_ID } = require('../../shared/gurulo-auth/gurulo.auth.js');
 
-const defaultEmail = process.env.SUPER_ADMIN_EMAIL || 'super.admin@gurulo.ai';
-const defaultDisplayName = process.env.SUPER_ADMIN_DISPLAY_NAME || 'Super Admin';
+const defaultEmail = process.env.SUPER_ADMIN_EMAIL || 'admin@bakhmaro.co';
+const defaultDisplayName = process.env.SUPER_ADMIN_DISPLAY_NAME || 'Akaki Tsintsadze';
 const defaultUserId = process.env.SUPER_ADMIN_USER_ID || SUPER_ADMIN_PERSONAL_ID;
+const defaultAliasList = (process.env.SUPER_ADMIN_ALIASES || 'super.admin@gurulo.ai')
+  .split(',')
+  .map((entry) => entry.trim().toLowerCase())
+  .filter(Boolean);
 
 class SuperAdminService {
   constructor() {
+    this.aliases = new Set();
     this.profile = this.createProfile({
       userId: defaultUserId,
       personalId: SUPER_ADMIN_PERSONAL_ID,
@@ -15,6 +20,26 @@ class SuperAdminService {
       displayName: defaultDisplayName,
       status: 'active',
     });
+    this.refreshAliases(this.profile);
+  }
+
+  refreshAliases(profile) {
+    const aliasCandidates = [
+      profile?.email,
+      profile?.userId,
+      profile?.personalId,
+      defaultEmail,
+      'admin@bakhmaro.co',
+      'super.admin@gurulo.ai',
+      ...defaultAliasList,
+    ];
+
+    this.aliases = new Set(
+      aliasCandidates
+        .filter(Boolean)
+        .map((value) => String(value).trim().toLowerCase())
+        .filter(Boolean)
+    );
   }
 
   createProfile({ userId, personalId, email, displayName, status }) {
@@ -48,13 +73,16 @@ class SuperAdminService {
   }
 
   matchesKnownId(candidate) {
-    if (!candidate || typeof candidate !== 'string') {
+    if (!candidate && candidate !== 0) {
       return false;
     }
-    const normalized = candidate.trim();
-    return normalized === this.profile.userId ||
-           normalized === this.profile.personalId ||
-           normalized.toLowerCase() === this.profile.email.toLowerCase();
+
+    const normalized = String(candidate).trim().toLowerCase();
+    if (!normalized) {
+      return false;
+    }
+
+    return this.aliases.has(normalized);
   }
 
   async createUser({ userId, personalId, email, role = 'SUPER_ADMIN', status = 'active', displayName }) {
@@ -72,6 +100,8 @@ class SuperAdminService {
       personalId: this.profile.personalId,
       email: this.profile.email,
     });
+
+    this.refreshAliases(this.profile);
 
     return this.getProfileClone();
   }

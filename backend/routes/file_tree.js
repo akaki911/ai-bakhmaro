@@ -17,9 +17,28 @@ console.log('📁 File tree route loaded. PROJECT_ROOT:', PROJECT_ROOT);
 
 // Helper function to set CORS headers
 function setCors(req, res) {
-  res.header('Access-Control-Allow-Origin', '*');
+  const existingOrigin = res.getHeader('Access-Control-Allow-Origin');
+  const requestOrigin = req.headers.origin;
+  const fallbackOrigin = process.env.FRONTEND_URL || 'https://ai.bakhmaro.co';
+  const resolvedOrigin =
+    (typeof existingOrigin === 'string' && existingOrigin !== '*'
+      ? existingOrigin
+      : requestOrigin || fallbackOrigin).trim();
+
+  if (resolvedOrigin) {
+    res.header('Access-Control-Allow-Origin', resolvedOrigin);
+    res.header('Vary', 'Origin');
+  }
+
+  if (resolvedOrigin && resolvedOrigin !== '*') {
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
+
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, X-Admin-Setup-Token, Authorization'
+  );
   // Handle OPTIONS preflight requests
   if (req.method === 'OPTIONS') {
     res.sendStatus(204);

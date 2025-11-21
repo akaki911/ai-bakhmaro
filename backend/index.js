@@ -793,6 +793,7 @@ try {
 // }
 
 const guruloStatusRoutes = require('./routes/gurulo_status');
+const aiGatewayRoutes = require('./routes/ai_gateway');
 
 const routeFiles = [
   'health',
@@ -851,6 +852,13 @@ routeFiles.forEach(routeFile => {
 console.log('📂 Routes loading completed');
 
 try {
+  app.use('/api', guruloStatusRoutes);
+  console.log('✅ Gurulo status routes mounted at /api/gurulo-status and /api/gurulo-brain-status');
+} catch (error) {
+  console.error('❌ Failed to mount Gurulo status routes:', error.message);
+}
+
+try {
   const browserTestingRoutes = require('./routes/browser_testing');
   app.use('/api/dev/browser-testing', browserTestingRoutes);
   console.log('✅ Browser testing routes mounted at /api/dev/browser-testing');
@@ -900,6 +908,12 @@ try {
 
 // Mount Auto-Improve routes
 const autoImproveRoutes = require('./routes/auto_improve');
+try {
+  app.use('/api/ai', aiGatewayRoutes);
+  console.log('✅ AI gateway routes mounted at /api/ai (health/status/models)');
+} catch (error) {
+  console.error('❌ Failed to mount AI gateway routes:', error.message);
+}
 
 // Add intelligent-chat endpoint with rollout support
 app.post('/api/ai/intelligent-chat', async (req, res) => {
