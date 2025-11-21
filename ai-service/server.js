@@ -149,16 +149,12 @@ const ensureOriginScheme = (value) => {
 const allowedOriginStrings = new Set(
   [
     process.env.FRONTEND_URL || 'https://ai.bakhmaro.co',
-    process.env.DEPLOYMENT_URL,
     process.env.PUBLIC_FRONTEND_ORIGIN,
     process.env.PUBLIC_ORIGIN,
-    process.env.ALT_FRONTEND_URL,
     'https://ai.bakhmaro.co',
     'https://app.bakhmaro.co',
-    'https://d2c296ba-6bdd-412e-987c-2af0f275fc6d-00-3mn8zz92vqke4.riker.replit.dev',
-    ...parseOriginList(process.env.CORS_ALLOWED_ORIGIN),
-    ...parseOriginList(process.env.ALLOWED_ORIGINS),
-    ...parseOriginList(process.env.ALLOWED_ORIGINS_EXTRA),
+    'https://backend.ai.bakhmaro.co',
+    'https://backend-ai-bakhmaro.web.app'
   ]
     .map(ensureOriginScheme)
     .filter(Boolean)

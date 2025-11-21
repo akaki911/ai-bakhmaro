@@ -201,21 +201,17 @@ const buildAllowedOriginsMap = () => {
     parseOriginList(value).forEach(addOrigin);
   };
 
-  const primaryFrontend =
-    normaliseOriginValue(ensureOriginScheme(process.env.FRONTEND_URL)) || DEFAULT_FRONTEND_ORIGIN;
-  addOrigin(primaryFrontend);
-  addOrigin(DEFAULT_FRONTEND_ORIGIN);
-  addOrigin('https://app.bakhmaro.co');
-  addOriginList(process.env.ALT_FRONTEND_URL);
+  const strictOrigins = [
+    process.env.FRONTEND_URL,
+    'https://ai.bakhmaro.co',
+    'https://app.bakhmaro.co',
+    'https://backend.ai.bakhmaro.co',
+    'https://backend-ai-bakhmaro.web.app'
+  ];
+
+  strictOrigins.forEach(addOrigin);
   addOriginList(process.env.PUBLIC_FRONTEND_ORIGIN);
   addOriginList(process.env.PUBLIC_ORIGIN);
-  addOriginList(process.env.CORS_ALLOWED_ORIGIN);
-  addOriginList(process.env.ALLOWED_ORIGINS);
-  addOriginList(process.env.ALLOWED_ORIGINS_EXTRA);
-  addOriginList(process.env.AI_DOMAIN);
-  addOrigin('https://backend.ai.bakhmaro.co');
-  addOrigin('https://ai-bakhmaro.web.app');
-  addOrigin('https://backend-ai-bakhmaro.web.app');
 
   if (!isProductionEnv) {
     if (process.env.REPLIT_DEV_DOMAIN) {
@@ -243,18 +239,11 @@ const websocketAllowlist = Array.from(
   new Set(
     [
       FRONTEND_URL,
-      process.env.ALT_FRONTEND_URL,
-      process.env.PUBLIC_FRONTEND_ORIGIN,
       DEFAULT_FRONTEND_ORIGIN,
-      ...parseOriginList(process.env.CORS_ALLOWED_ORIGIN).map((origin) =>
-        normaliseOriginValue(ensureOriginScheme(origin))
-      ),
-      ...parseOriginList(process.env.ALLOWED_ORIGINS).map((origin) =>
-        normaliseOriginValue(ensureOriginScheme(origin))
-      ),
-      ...parseOriginList(process.env.ALLOWED_ORIGINS_EXTRA).map((origin) =>
-        normaliseOriginValue(ensureOriginScheme(origin))
-      ),
+      'https://app.bakhmaro.co',
+      'https://backend.ai.bakhmaro.co',
+      'https://backend-ai-bakhmaro.web.app',
+      process.env.PUBLIC_FRONTEND_ORIGIN,
       process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null,
       process.env.REPLIT_DEV_DOMAIN ? `http://${process.env.REPLIT_DEV_DOMAIN}` : null,
     ].filter(Boolean)
@@ -465,6 +454,84 @@ app.use(buildModeGuard);
 const guardedPrefixes = ['/internal', '/api/internal', '/api/proposals', '/proposals', '/api/ai/proposals'];
 guardedPrefixes.forEach((prefix) => {
   app.use(prefix, serviceAuth);
+});
+
+// Global access control: fully private except authentication flows and health checks
+const ALLOWED_SUPER_ADMINS = new Set(
+  (process.env.SUPER_ADMIN_IDS || '01019062020')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean)
+);
+
+const validServiceTokens = [
+  process.env.INTERNAL_SERVICE_TOKEN,
+  process.env.AI_INTERNAL_TOKEN,
+  process.env.AI_SERVICE_TOKEN,
+  process.env.AI_PANEL_TOKEN
+].filter(Boolean);
+
+const hasServiceToken = (req) => {
+  const headerTokens = [
+    req.headers['x-service-token'],
+    req.headers['x-ai-internal-token'],
+    req.headers['x-frontend-service-token'],
+    (() => {
+      const authHeader = req.headers.authorization;
+      if (typeof authHeader === 'string' && authHeader.toLowerCase().startsWith('bearer ')) {
+        return authHeader.slice(7).trim();
+      }
+      return null;
+    })()
+  ].filter(Boolean);
+
+  return headerTokens.some((token) => validServiceTokens.includes(token));
+};
+
+const isSuperAdminSession = (req) => {
+  const user = req.session?.user || req.user || {};
+  const personalId =
+    user.personalId ||
+    user.id ||
+    req.session?.personalId ||
+    req.session?.userId ||
+    req.headers['x-user-id'] ||
+    req.headers['x-personal-id'];
+
+  return personalId && ALLOWED_SUPER_ADMINS.has(String(personalId));
+};
+
+const isPublicPath = (req) => {
+  const path = req.path || '';
+
+  if (req.method === 'OPTIONS') return true;
+  if (path === '/' || path === '/api/health' || path === '/health' || path === '/api/auth/health') return true;
+
+  // Auth flows (passkey/webauthn/login bootstrap)
+  const publicPrefixes = [
+    '/api/auth/route-advice',
+    '/api/auth/login',
+    '/api/auth/passkey',
+    '/api/admin/webauthn',
+  ];
+
+  return publicPrefixes.some((prefix) => path.startsWith(prefix));
+};
+
+app.use((req, res, next) => {
+  if (isPublicPath(req)) {
+    return next();
+  }
+
+  if (hasServiceToken(req) || isSuperAdminSession(req)) {
+    return next();
+  }
+
+  return res.status(401).json({
+    success: false,
+    error: 'AUTH_REQUIRED',
+    message: 'Authentication required',
+  });
 });
 
 // UPDATE 2024-10-01: Harden AI metadata endpoints by requiring known admin or
