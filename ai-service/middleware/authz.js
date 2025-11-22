@@ -6,7 +6,7 @@
  * Integrates with existing JWT/session authentication system
  */
 
-const { verifyToken, extractTokenFromRequest } = require('../../backend/utils/jwt');
+const { verifyToken, extractTokenFromRequest } = require('../shared/backend/utils/jwt');
 const {
   requireRole: guruloRequireRole,
   allowSuperAdmin: guruloAllowSuperAdmin,
