@@ -172,11 +172,11 @@ function ensureLocalSecrets(options = {}) {
   }
   ensureValue('ADMIN_SETUP_TOKEN', () => generateToken(32));
 
-  const postgresUser = ensureValue('POSTGRES_USER', () => stored.POSTGRES_USER || 'bakhmaro');
-  const postgresPassword = ensureValue('POSTGRES_PASSWORD', () => stored.POSTGRES_PASSWORD || 'devpassword');
-  const postgresDb = ensureValue('POSTGRES_DB', () => stored.POSTGRES_DB || 'bakhmaro_dev');
-  const postgresHost = ensureValue('POSTGRES_HOST', () => stored.POSTGRES_HOST || '127.0.0.1');
-  const postgresPort = ensureValue('POSTGRES_PORT', () => stored.POSTGRES_PORT || '5432');
+  const postgresUser = ensureValue('POSTGRES_USER', () => stored.POSTGRES_USER || 'bakhmaro', { allowInProduction: true });
+  const postgresPassword = ensureValue('POSTGRES_PASSWORD', () => stored.POSTGRES_PASSWORD || 'devpassword', { allowInProduction: true });
+  const postgresDb = ensureValue('POSTGRES_DB', () => stored.POSTGRES_DB || 'bakhmaro_dev', { allowInProduction: true });
+  const postgresHost = ensureValue('POSTGRES_HOST', () => stored.POSTGRES_HOST || '127.0.0.1', { allowInProduction: true });
+  const postgresPort = ensureValue('POSTGRES_PORT', () => stored.POSTGRES_PORT || '5432', { allowInProduction: true });
 
   ensureValue(
     'DATABASE_URL',
