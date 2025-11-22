@@ -1,6 +1,4 @@
 
-paths = ["../shared"]
-
 [phases.setup]
 nixPkgs = ["nodejs-18_x", "pnpm"]
 

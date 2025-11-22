@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const path = require('path');
-const { ensureLocalSecrets } = require('../shared/utils/ensureLocalSecrets');
+const { ensureLocalSecrets } = require('./shared/utils/ensureLocalSecrets');
 const { validateEnv } = require('../shared/config/envValidator');
 
 const DEFAULT_FRONTEND_ORIGIN = 'https://ai.bakhmaro.co';
