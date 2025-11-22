@@ -71,7 +71,7 @@ export const getEnv = (): GatewayEnv => {
   const nodeEnv = normalizeNodeEnv(process.env.NODE_ENV);
   process.env.NODE_ENV = nodeEnv;
 
-  const port = readEnvNumber('PORT', { defaultValue: 8080, integer: true }) ?? 8080;
+  const port = readEnvNumber('PORT', { defaultValue: 3002, integer: true }) ?? 3002;
 
   const jwtSecret = (readEnvString('JWT_SECRET', {
     required: true,

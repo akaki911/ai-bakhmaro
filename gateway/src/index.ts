@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import jwt from 'jsonwebtoken';
@@ -17,6 +18,10 @@ import { buildAllowedOriginsSet, createCorsOriginValidator } from './cors.js';
 
 const env = getEnv();
 const app = express();
+const serviceName = 'gateway';
+const require = createRequire(import.meta.url);
+const pkg = require('../package.json') as { version?: string };
+const packageVersion = typeof pkg.version === 'string' ? pkg.version : 'unknown';
 
 app.disable('x-powered-by');
 app.set('trust proxy', true);
@@ -415,10 +420,6 @@ app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
-app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok' });
-});
-
 app.get('/api/auth/webauthn/policy', (req: Request, res: Response) => {
   const policy = resolveWebAuthnPolicy(req);
   res.setHeader('cache-control', 'no-store, no-cache, must-revalidate');
@@ -457,12 +458,11 @@ app.get(env.LOGIN_PATH, (_req: Request, res: Response, next: NextFunction) => {
 });
 
 app.get('/health', (_req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'ok',
-    service: 'gateway',
-    timestamp: new Date().toISOString(),
-    port: env.PORT
-  });
+  res.status(200).json({ status: 'ok', service: serviceName });
+});
+
+app.get('/version', (_req: Request, res: Response) => {
+  res.status(200).json({ version: packageVersion, service: serviceName });
 });
 
 app.get('/', ensureAuth, (_req: Request, res: Response, next: NextFunction) => {
@@ -502,7 +502,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 if (env.NODE_ENV !== 'test') {
-  const port = env.PORT;
+  const port = Number(process.env.PORT) || env.PORT || 3002;
   app.listen(port, '0.0.0.0', () => {
     console.log(`🌐 Gateway listening on port ${port}`);
   });
