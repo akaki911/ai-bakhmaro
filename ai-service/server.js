@@ -8,7 +8,7 @@ const {
   resolveGroqApiKey,
   resolveFirebaseServiceAccount,
   maskSecret,
-} = require('../shared/secretResolver');
+} = require('./shared/secretResolver');
 
 require('dotenv').config();
 ensureLocalSecrets({ cwd: path.resolve(__dirname, '..') });

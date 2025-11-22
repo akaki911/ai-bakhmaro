@@ -5,7 +5,7 @@ import {
   readEnvNumber,
   readEnvString,
   readEnvUrl,
-} from '../../shared/config/envReader.js';
+} from '../shared/config/envReader.js';
 
 const DEFAULT_SESSION_COOKIES = ['ai-space.sid', 'bk_admin.sid', '__Secure-bk_admin.sid'];
 const DEFAULT_PROXY_BASE = 'http://127.0.0.1:5002';
