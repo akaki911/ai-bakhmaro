@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { rateLimit } = require('express-rate-limit');
 const path = require('path');
-const { ensureLocalSecrets } = require('./utils/ensureLocalSecrets');
+const { ensureLocalSecrets } = require('../shared/utils/ensureLocalSecrets');
 const { envState, runtimeSummary } = require('./config/runtimeConfig');
 const {
   resolveGroqApiKey,

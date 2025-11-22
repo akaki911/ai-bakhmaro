@@ -1,18 +1,24 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
+# Copy and install dependencies for ai-service
+COPY ai-service/package.json ai-service/package-lock.json* ./ai-service/
+WORKDIR /app/ai-service
 RUN npm install
 
-COPY . ./
+# Copy source code
+WORKDIR /app
+COPY ai-service/ ./ai-service/
+COPY shared/ ./shared/
 
 FROM node:20-alpine
-WORKDIR /app
+WORKDIR /app/ai-service
 ENV NODE_ENV=production
 
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app .
+# Copy artifacts from the builder stage
+COPY --from=builder /app/ai-service/node_modules ./node_modules
+COPY --from=builder /app/ai-service/ .
+COPY --from=builder /app/shared/ ../shared/
 
 EXPOSE 8080
 CMD ["node", "server.js"]

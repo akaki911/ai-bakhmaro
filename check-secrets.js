@@ -1,5 +1,5 @@
 const path = require('path');
-const { ensureLocalSecrets } = require('./ai-service/utils/ensureLocalSecrets');
+const { ensureLocalSecrets } = require('./shared/utils/ensureLocalSecrets');
 
 ensureLocalSecrets({ cwd: path.resolve(__dirname), silent: true });
 
