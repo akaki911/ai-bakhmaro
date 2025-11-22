@@ -117,7 +117,8 @@ const { buildModeGuard } = require('./middleware/build_mode_guard');
 const { serviceAuth } = require('./middleware/service_auth');
 
 const app = express();
-const PORT = process.env.PORT || 8000; // Replit environment port configuration
+// Prefer explicit env, fall back to service default (5002) to align with deploy healthchecks.
+const PORT = Number(process.env.PORT || process.env.BACKEND_PORT || 5002);
 
 const { setupGuruloWebSocket } = require('./services/gurulo_ws');
 const versionRoute = require('./routes/version');
