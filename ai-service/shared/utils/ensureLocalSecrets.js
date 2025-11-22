@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { DEFAULT_DEV_TOKEN } = require('../shared/internalToken');
+const { DEFAULT_DEV_TOKEN } = require('../internalToken');
 
 const DEFAULT_ALLOWED_IPS = '127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16';
 
