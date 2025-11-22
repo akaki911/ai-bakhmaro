@@ -1,1 +1,3 @@
-- [x] Edit shared/utils/ensureLocalSecrets.js to allow auto-generation of PostgreSQL environment variables in production by adding { allowInProduction: true } to ensureValue calls for POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, POSTGRES_HOST, and POSTGRES_PORT.
+- [x] Edit backend/shared/utils/ensureLocalSecrets.js to add { allowInProduction: true } to DATABASE_URL ensureValue
+- [x] Edit shared/utils/ensureLocalSecrets.js to add { allowInProduction: true } to DATABASE_URL ensureValue
+- [ ] Edit ai-service/shared/utils/ensureLocalSecrets.js to add { allowInProduction: true } to DATABASE_URL ensureValue

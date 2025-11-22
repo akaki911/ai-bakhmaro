@@ -183,7 +183,7 @@ function ensureLocalSecrets(options = {}) {
     () =>
       stored.DATABASE_URL ||
       `postgresql://${postgresUser}:${postgresPassword}@${postgresHost}:${postgresPort}/${postgresDb}`,
-    { persist: true }
+    { persist: true, allowInProduction: true }
   );
 
   ensureValue('AI_SERVICE_URL', () => stored.AI_SERVICE_URL || 'http://127.0.0.1:5001', { persist: true });
