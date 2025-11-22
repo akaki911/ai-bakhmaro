@@ -784,7 +784,7 @@ try {
 
 // Mount AI rollout control routes
 try {
-  const aiRolloutControl = require('../functions/src/routes/ai_rollout_control');
+  // const aiRolloutControl = require('../functions/src/routes/ai_rollout_control');
   app.use('/api/admin/ai-rollout', aiRolloutControl);
   app.use('/api/admin/ai', require('../functions/src/routes/ai_diagnostics'));
   console.log('✅ AI rollout control routes mounted at /api/admin/ai-rollout');
