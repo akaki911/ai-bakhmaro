@@ -729,7 +729,7 @@ const adminWebauthnRoutes = require('./routes/admin_webauthn');
 const passkeyAuthRoutes = require('./routes/passkey_auth');
 const securityAuditRoutes = require('./routes/security_audit');
 const roleGuards = require('./middleware/role_guards');
-const legacyAiRoutes = require('../functions/src/routes/ai_legacy');
+// const legacyAiRoutes = require('../functions/src/routes/ai_legacy');
 
 // Mount routes
 app.use('/api/health', healthRoutes);
