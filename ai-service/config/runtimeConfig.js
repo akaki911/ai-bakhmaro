@@ -1,16 +1,16 @@
 const fs = require('fs');
 const path = require('path');
 
-const { resolveGroqApiKey } = require('../../shared/secretResolver');
-const { describeInternalToken } = require('../../shared/internalToken');
-const { validateEnv } = require('../../shared/config/envValidator');
+const { resolveGroqApiKey } = require('../shared/secretResolver');
+const { describeInternalToken } = require('../shared/internalToken');
+const { validateEnv } = require('../shared/config/envValidator');
 const {
   normalizeNodeEnv,
   readEnvBoolean,
   readEnvNumber,
   readEnvString,
   readEnvUrl,
-} = require('../../shared/config/envReader');
+} = require('../shared/config/envReader');
 
 const envState = validateEnv({ serviceName: 'ai-service' });
 

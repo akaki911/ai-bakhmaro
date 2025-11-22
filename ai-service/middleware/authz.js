@@ -10,8 +10,8 @@ const { verifyToken, extractTokenFromRequest } = require('../../backend/utils/jw
 const {
   requireRole: guruloRequireRole,
   allowSuperAdmin: guruloAllowSuperAdmin,
-} = require('../../shared/gurulo-auth');
-const { getUserPermissions } = require('../../shared/gurulo-core/gurulo.policy');
+} = require('../shared/gurulo-auth');
+const { getUserPermissions } = require('../shared/gurulo-core/gurulo.policy');
 const { runtimeSummary } = require('../config/runtimeConfig');
 
 const BACKEND_URL_MISSING_ERROR = 'BACKEND_BASE_URL_MISSING';

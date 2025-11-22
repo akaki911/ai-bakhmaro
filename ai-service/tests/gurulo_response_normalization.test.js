@@ -1,4 +1,4 @@
-const guruloCore = require('../../shared/gurulo-core');
+const guruloCore = require('../shared/gurulo-core');
 
 const { normalizeResponse, SECTION_ORDER } = guruloCore.response;
 

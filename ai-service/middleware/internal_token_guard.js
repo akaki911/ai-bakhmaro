@@ -1,4 +1,4 @@
-const { verifyInternalToken } = require('../../shared/internalToken');
+const { verifyInternalToken } = require('../shared/internalToken');
 
 const headerCandidates = ['x-internal-token', 'x-ai-internal-token', 'x-service-token'];
 

@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const apiKeyService = require('../services/apiKeyService');
-const { requireRole } = require('../../shared/gurulo-auth');
+const { requireRole } = require('../shared/gurulo-auth');
 
 // Create new API key
 router.post(

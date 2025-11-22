@@ -1,4 +1,4 @@
-const guruloCore = require('../../shared/gurulo-core');
+const guruloCore = require('../shared/gurulo-core');
 
 const {
   SYSTEM_PROMPT_GURULO,

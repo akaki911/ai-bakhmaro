@@ -2,7 +2,7 @@ import {
   MEMORY_SCOPES,
   ROLE_VISIBILITY,
   createMemoryRecord,
-} from '../../shared/gurulo-memory/index.js';
+} from '../shared/gurulo-memory/index.js';
 import { MemoryService as RuntimeMemoryService, createMemoryService as runtimeCreateMemoryService } from './memory.js';
 
 export interface MemoryReadContext {

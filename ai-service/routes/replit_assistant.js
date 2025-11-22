@@ -7,7 +7,7 @@
 
 const express = require('express');
 const { ToolRegistry } = require('../core/tool_registry');
-const guruloCore = require('../../shared/gurulo-core');
+const guruloCore = require('../shared/gurulo-core');
 const { normalizeResponse, GURULO_CORE_VERSION } = guruloCore.response;
 
 // SOL-211: Import security middleware - disabled temporarily

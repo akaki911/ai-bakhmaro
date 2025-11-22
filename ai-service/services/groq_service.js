@@ -3,7 +3,7 @@ const connectionManager = require('./groq_connection_manager');
 const fallbackService = require('./openai_fallback_service');
 const { getModelStrategy, isBackupModeEnabled } = require('../config/runtimeConfig');
 const logger = require('../utils/logger');
-const { resolveGroqApiKey } = require('../../shared/secretResolver');
+const { resolveGroqApiKey } = require('../shared/secretResolver');
 
 const { key: resolvedGroqKey } = resolveGroqApiKey();
 if (resolvedGroqKey && process.env.GROQ_API_KEY !== resolvedGroqKey) {

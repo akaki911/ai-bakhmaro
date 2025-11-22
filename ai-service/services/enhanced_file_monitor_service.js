@@ -7,8 +7,8 @@ const fs = require('fs').promises;
 const fetch = require('node-fetch');
 // Mock EventEmitter for demonstration purposes if not already available
 const EventEmitter = require('events');
-const { getInternalToken } = require('../../shared/serviceToken');
-const { INTERNAL_HEADER } = require('../../shared/config/envValidator');
+const { getInternalToken } = require('../shared/serviceToken');
+const { INTERNAL_HEADER } = require('../shared/config/envValidator');
 
 // Georgian Chat Formatter - Fallback implementation for Node.js
 // Since main formatter is TypeScript, using simple Georgian-aware formatter

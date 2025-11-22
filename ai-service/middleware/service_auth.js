@@ -1,7 +1,7 @@
 const { randomUUID, timingSafeEqual } = require('crypto');
 
-const { verifyServiceToken, getInternalToken } = require('../../shared/serviceToken');
-const { INTERNAL_HEADER } = require('../../shared/config/envValidator');
+const { verifyServiceToken, getInternalToken } = require('../shared/serviceToken');
+const { INTERNAL_HEADER } = require('../shared/config/envValidator');
 
 const HEADER_NAME = INTERNAL_HEADER.toLowerCase();
 

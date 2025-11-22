@@ -122,7 +122,7 @@ const PORT = Number(process.env.PORT || process.env.BACKEND_PORT || 5002);
 
 const { setupGuruloWebSocket } = require('./services/gurulo_ws');
 const versionRoute = require('./routes/version');
-const aiTraceRoutes = require('../functions/src/routes/ai_trace');
+// const aiTraceRoutes = require('../functions/src/routes/ai_trace');
 
 const httpServer = http.createServer(app);
 const shouldDisableHttpListen = process.env.DISABLE_EXPRESS_LISTEN === 'true';

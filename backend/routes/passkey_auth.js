@@ -12,7 +12,7 @@ const credentialService = require('../services/credential_service');
 const superAdminService = require('../services/super_admin_service');
 const auditService = require('../services/audit_service');
 const deviceService = require('../services/device_service');
-const { isSuperAdmin } = require('../../shared/gurulo-auth/gurulo.auth.js');
+const { isSuperAdmin } = require('../shared/gurulo-auth/gurulo.auth.js');
 
 const normalisePersonalId = (raw, fallback = null) => {
   if (typeof raw === 'string' && raw.trim().length > 0) {

@@ -3,7 +3,7 @@
  * Enforces role-based access control for sensitive endpoints
  */
 
-const { verifyServiceToken, getServiceAuthConfigs } = require('../../shared/serviceToken');
+const { verifyServiceToken, getServiceAuthConfigs } = require('../shared/serviceToken');
 
 /**
  * Check if user has required role for Auto-Improve features

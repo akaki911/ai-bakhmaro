@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const auditService = require('../services/audit_service');
 const superAdminService = require('../services/super_admin_service');
 const { getFirestore } = require('firebase-admin/firestore');
-const { requireRole: guruloRequireRole, allowSuperAdmin: guruloAllowSuperAdmin } = require('../../shared/gurulo-auth');
+const { requireRole: guruloRequireRole, allowSuperAdmin: guruloAllowSuperAdmin } = require('../shared/gurulo-auth');
 
 let bcrypt;
 try {

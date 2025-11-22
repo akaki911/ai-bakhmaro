@@ -11,7 +11,7 @@
 const EventEmitter = require('events');
 const path = require('path');
 const fs = require('fs');
-const { isSuperAdmin } = require('../../shared/gurulo-auth');
+const { isSuperAdmin } = require('../shared/gurulo-auth');
 
 /**
  * TrustedOps Policy Service
