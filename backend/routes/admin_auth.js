@@ -19,7 +19,7 @@ const {
 } = require("../middleware/admin_guards");
 
 const router = express.Router();
-  const { SUPER_ADMIN_PERSONAL_ID } = require('../shared/gurulo-auth/gurulo.auth.js');
+  const { SUPER_ADMIN_PERSONAL_ID } = require('@ouranos/shared/gurulo-auth/gurulo.auth.js');
 
 const log = (...a) => console.log("🟡[admin_auth]", ...a);
 

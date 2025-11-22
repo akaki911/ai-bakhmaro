@@ -9,7 +9,7 @@ const {
   ROLE_VISIBILITY,
   createMemoryRecord,
   isExpired,
-} = require('../shared/gurulo-memory');
+} = require('@ouranos/shared/gurulo-memory');
 
 function createAdapter(options = {}) {
   if (options.adapter) {

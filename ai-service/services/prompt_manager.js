@@ -8,7 +8,7 @@ const {
   isCreatorContext
 } = require('../context/system_prompts');
 
-const guruloCore = require('../shared/gurulo-core');
+const guruloCore = require('@ouranos/shared/gurulo-core');
 const {
   PROMPT_TEMPLATES: GURULO_PROMPT_TEMPLATES,
   getPromptTemplate: getCorePromptTemplate,

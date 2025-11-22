@@ -9,7 +9,7 @@ const performanceMonitor = require('../services/performance_monitoring');
 let replitMonitorService;
 let replitMonitorReady = false;
 try {
-  ({ replitMonitorService } = require('../shared/ai-service/services/replit_monitor_service'));
+  ({ replitMonitorService } = require('@ouranos/shared/ai-service/services/replit_monitor_service'));
   if (replitMonitorService?.initialize) {
     replitMonitorService.initialize().then(() => {
       replitMonitorReady = true;

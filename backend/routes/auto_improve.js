@@ -24,7 +24,7 @@ const {
   recordControlAction: persistControlAction,
   recursivelyRedact: redactAutoImprovePayload
 } = require('../services/auto_improve_run_store');
-const { createServiceToken, verifyServiceToken, getServiceAuthConfigs } = require('../shared/serviceToken');
+const { createServiceToken, verifyServiceToken, getServiceAuthConfigs } = require('@ouranos/shared/serviceToken');
 const { requireInternalToken } = require('../middleware/internal_token');
 
 const proposalsFilePath = path.join(__dirname, '../data/auto_update_proposals.json');

@@ -1,7 +1,7 @@
 const axios = require('axios');
 const modelAnalytics = require('./model_analytics');
 const connectionManager = require('./groq_connection_manager');
-const { resolveGroqApiKey } = require('../shared/secretResolver');
+const { resolveGroqApiKey } = require('@ouranos/shared/secretResolver');
 
 const { key: resolvedGroqKey, source: groqSource } = resolveGroqApiKey();
 if (resolvedGroqKey && process.env.GROQ_API_KEY !== resolvedGroqKey) {

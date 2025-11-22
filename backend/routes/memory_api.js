@@ -10,7 +10,7 @@ const {
   toggleMemoryUsage,
   DEFAULT_MEMORY_CONTROLS,
   MemoryServiceError
-} = require('../shared/ai-service/context/user_preferences');
+} = require('@ouranos/shared/ai-service/context/user_preferences');
 
 // Memory data directory
 const MEMORY_DATA_DIR = path.join(__dirname, '../memory_data');

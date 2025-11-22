@@ -1,6 +1,6 @@
 'use strict';
 
-const { SUPER_ADMIN_PERSONAL_ID } = require('../shared/gurulo-auth/gurulo.auth.js');
+const { SUPER_ADMIN_PERSONAL_ID } = require('@ouranos/shared/gurulo-auth/gurulo.auth.js');
 
 const defaultEmail = process.env.SUPER_ADMIN_EMAIL || 'super.admin@gurulo.ai';
 const defaultDisplayName = process.env.SUPER_ADMIN_DISPLAY_NAME || 'Super Admin';

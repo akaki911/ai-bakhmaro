@@ -17,7 +17,7 @@ const {
   adminSetupGuard,
   rateLimitSimple
 } = require('../middleware/admin_guards');
-const { isSuperAdmin } = require('../shared/gurulo-auth/gurulo.auth.js');
+const { isSuperAdmin } = require('@ouranos/shared/gurulo-auth/gurulo.auth.js');
 
 const normalisePersonalId = (raw, fallback = null) => {
   if (typeof raw === 'string' && raw.trim().length > 0) {

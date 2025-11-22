@@ -1,7 +1,7 @@
 const crypto = require('crypto');
-const { resolveFirebaseServiceAccount } = require('../shared/secretResolver');
-const { describeInternalToken } = require('../shared/internalToken');
-const { normalizeNodeEnv } = require('../shared/config/envReader');
+const { resolveFirebaseServiceAccount } = require('@ouranos/shared/secretResolver');
+const { describeInternalToken } = require('@ouranos/shared/internalToken');
+const { normalizeNodeEnv } = require('@ouranos/shared/config/envReader');
 
 const MIN_SESSION_SECRET_LENGTH = 32;
 

@@ -1,14 +1,14 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { CorrelationId } from '../utils/correlationId';
 import { traceAIServiceCall, aiServiceCallsCounter, logger } from '../middleware/telemetry_middleware';
-import type { ServiceAuthConfig } from '../shared/serviceToken.js';
-import { createServiceToken, getServiceAuthConfigs } from '../shared/serviceToken.js';
+import type { ServiceAuthConfig } from '@ouranos/shared/serviceToken.js';
+import { createServiceToken, getServiceAuthConfigs } from '@ouranos/shared/serviceToken.js';
 import {
   normalizeResponse,
   GURULO_CORE_VERSION,
   type NormalizedResponse,
-} from '../shared/gurulo-core/gurulo.response';
-import { isSuperAdmin as guruloIsSuperAdmin } from '../shared/gurulo-auth';
+} from '@ouranos/shared/gurulo-core/gurulo.response';
+import { isSuperAdmin as guruloIsSuperAdmin } from '@ouranos/shared/gurulo-auth';
 
 /**
  * AI Service Client - Thin layer for Backend to communicate with AI Microservice

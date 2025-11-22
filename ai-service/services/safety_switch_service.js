@@ -11,7 +11,7 @@
 const EventEmitter = require('events');
 const path = require('path');
 const TrustedOpsPolicy = require('./trusted_ops_policy');
-const { isSuperAdmin } = require('../shared/gurulo-auth');
+const { isSuperAdmin } = require('@ouranos/shared/gurulo-auth');
 
 /**
  * SafetySwitchService - Backend component of the Safety Switch system

@@ -3,7 +3,7 @@
  * ზუსტად მიზანმიმართული პრომპტები სხვადასხვა ტიპის კითხვებისთვის
  */
 
-const guruloCore = require('../shared/gurulo-core');
+const guruloCore = require('@ouranos/shared/gurulo-core');
 const {
   PROMPT_TEMPLATES: BACKEND_PROMPT_TEMPLATES,
   getPromptTemplate: getBackendPromptTemplate,

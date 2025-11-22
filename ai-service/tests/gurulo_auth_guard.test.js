@@ -3,7 +3,7 @@ const {
   allowSuperAdmin,
   SUPER_ADMIN_PERSONAL_ID,
   SUPER_ADMIN_CONFIRMATION_HEADER,
-} = require('../shared/gurulo-auth');
+} = require('@ouranos/shared/gurulo-auth');
 
 const createResponse = () => {
   const res = {

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const { sanitizeResponse, flattenStructured } = require('../utils/enhanced_sanitizer');
-const guruloCore = require('../shared/gurulo-core');
+const guruloCore = require('@ouranos/shared/gurulo-core');
 const { normalizeResponse, GURULO_CORE_VERSION } = guruloCore.response;
 const { applyBrandGuard, guruloIdentity } = guruloCore.identity;
 
