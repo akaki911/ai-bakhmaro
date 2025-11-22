@@ -1,5 +1,5 @@
 const path = require('path');
-const { ensureLocalSecrets } = require('./shared/utils/ensureLocalSecrets');
+const { ensureLocalSecrets } = require('@ouranos/shared/utils/ensureLocalSecrets');
 
 ensureLocalSecrets({ cwd: path.resolve(__dirname), silent: true });
 

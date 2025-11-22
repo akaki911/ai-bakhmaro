@@ -1,10 +1,10 @@
 {
-  "name": "ai-bakhmaro-shared",
+  "name": "@ouranos/shared",
   "version": "1.0.0",
-  "private": true,
   "main": "index.js",
-  "dependencies": {
-    "zod": "^3.25.76"
+  "exports": {
+    "./utils/ensureLocalSecrets": "./utils/ensureLocalSecrets.js"
   },
+  "dependencies": {},
   "devDependencies": {}
 }

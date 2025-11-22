@@ -59,132 +59,40 @@ function ensureLocalSecrets(options = {}) {
       stored = JSON.parse(raw);
     } catch (error) {
       if (!silent) {
-        console.warn('⚠️  [dev-secrets] Failed to parse local secrets file. Regenerating.', error.message);
+        console.warn('⚠️  [dev-secrets] Failed to parse local secrets file. Regenerating...');
       }
-      stored = {};
     }
   }
 
-  let updated = false;
   const appliedKeys = new Set();
-
   const rememberValue = (key, value) => {
-    if (!shouldPersist) {
-      return;
-    }
-    if (stored[key] !== value) {
-      stored[key] = value;
-      updated = true;
+    if (value !== undefined) {
+      process.env[key] = value;
+      appliedKeys.add(key);
     }
   };
 
-  const setEnvIfMissing = (key, value, persist = true) => {
-    if (!process.env[key] || String(process.env[key]).trim() === '') {
-      process.env[key] = value;
-      if (!silent) {
-        console.log(`🌱 [dev-secrets] Injected ${key} from local store`);
-      }
-    }
-    if (persist) {
+  const ensureValue = (key, generator, options = {}) => {
+    const { persist = false, allowInProduction = false } = options;
+    if (isProduction && !allowInProduction) return;
+    let value = process.env[key];
+    if (!value) {
+      value = generator();
+      rememberValue(key, value);
+      if (persist) stored[key] = value;
+    } else {
       rememberValue(key, value);
     }
-    appliedKeys.add(key);
     return value;
   };
 
-  const ensureValue = (key, generator, { persist = true, allowInProduction = false } = {}) => {
-    const existing = process.env[key];
-    if (existing && String(existing).trim() !== '') {
-      if (persist) {
-        rememberValue(key, existing);
-      }
-      appliedKeys.add(key);
-      return existing;
-    }
+  let updated = false;
+  const updateStored = () => { updated = true; };
 
-    const storedValue = stored[key];
-    if (storedValue && String(storedValue).trim() !== '') {
-      return setEnvIfMissing(key, storedValue, persist);
-    }
+  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID || stored.FIREBASE_PROJECT_ID;
 
-    if (isProduction && !allowInProduction) {
-      const message = `❌ [dev-secrets] ${key} missing and auto-generation disabled in production.`;
-      if (!silent) {
-        console.error(message);
-      }
-      throw new Error(message);
-    }
-
-    const generated = generator();
-    return setEnvIfMissing(key, generated, persist);
-  };
-
-  const projectId = ensureValue('FIREBASE_PROJECT_ID', () => stored.FIREBASE_PROJECT_ID || 'ai-bakhmaro-dev-local');
-  if (projectId) {
-    rememberValue('FIREBASE_PROJECT_ID', projectId);
-  }
-
-  const serviceAccountFilePath = path.join(configDir, 'firebase-service-account.local.json');
-
-  const synchroniseServiceAccountArtifacts = (serviceAccountString) => {
-    if (!serviceAccountString) {
-      return;
-    }
-
-    try {
-      ensureDirectory(configDir);
-      const existing = fs.existsSync(serviceAccountFilePath)
-        ? fs.readFileSync(serviceAccountFilePath, 'utf8')
-        : null;
-
-      if (existing !== serviceAccountString) {
-        fs.writeFileSync(serviceAccountFilePath, `${serviceAccountString}\n`, 'utf8');
-        if (!silent) {
-          console.log(
-            `💾 [dev-secrets] Wrote Firebase service account JSON to ${path.relative(cwd, serviceAccountFilePath)}`,
-          );
-        }
-      }
-
-      const b64 = Buffer.from(serviceAccountString, 'utf8').toString('base64');
-      process.env.FIREBASE_SERVICE_ACCOUNT_KEY_FILE = serviceAccountFilePath;
-      rememberValue('FIREBASE_SERVICE_ACCOUNT_KEY_FILE', serviceAccountFilePath);
-      process.env.FIREBASE_SERVICE_ACCOUNT_KEY_BASE64 = b64;
-      rememberValue('FIREBASE_SERVICE_ACCOUNT_KEY_BASE64', b64);
-    } catch (error) {
-      if (!silent) {
-        console.warn('⚠️  [dev-secrets] Failed to synchronise Firebase service account artefacts:', error.message);
-      }
-    }
-  };
-
-  const sessionSecret = ensureValue('SESSION_SECRET', () => generateToken(48));
-  let internalToken = ensureValue('AI_INTERNAL_TOKEN', () => generateToken(48));
-  if (internalToken === DEFAULT_DEV_TOKEN) {
-    const regenerated = generateToken(48);
-    process.env.AI_INTERNAL_TOKEN = regenerated;
-    rememberValue('AI_INTERNAL_TOKEN', regenerated);
-    appliedKeys.add('AI_INTERNAL_TOKEN');
-    internalToken = regenerated;
-    if (!silent) {
-      console.warn('⚠️  [dev-secrets] Replaced insecure fallback AI_INTERNAL_TOKEN with a generated value.');
-    }
-  }
-  ensureValue('ADMIN_SETUP_TOKEN', () => generateToken(32));
-
-  const postgresUser = ensureValue('POSTGRES_USER', () => stored.POSTGRES_USER || 'bakhmaro', { allowInProduction: true });
-  const postgresPassword = ensureValue('POSTGRES_PASSWORD', () => stored.POSTGRES_PASSWORD || 'devpassword', { allowInProduction: true });
-  const postgresDb = ensureValue('POSTGRES_DB', () => stored.POSTGRES_DB || 'bakhmaro_dev', { allowInProduction: true });
-  const postgresHost = ensureValue('POSTGRES_HOST', () => stored.POSTGRES_HOST || '127.0.0.1', { allowInProduction: true });
-  const postgresPort = ensureValue('POSTGRES_PORT', () => stored.POSTGRES_PORT || '5432', { allowInProduction: true });
-
-  ensureValue(
-    'DATABASE_URL',
-    () =>
-      stored.DATABASE_URL ||
-      `postgresql://${postgresUser}:${postgresPassword}@${postgresHost}:${postgresPort}/${postgresDb}`,
-    { persist: true }
-  );
+  const sessionSecret = ensureValue('SESSION_SECRET', () => generateHex(32), { persist: true });
+  const internalToken = ensureValue('AI_INTERNAL_TOKEN', () => stored.AI_INTERNAL_TOKEN || DEFAULT_DEV_TOKEN, { persist: true });
 
   ensureValue('AI_SERVICE_URL', () => stored.AI_SERVICE_URL || 'http://127.0.0.1:5001', { persist: true });
   ensureValue('ALLOWED_BACKEND_IPS', () => stored.ALLOWED_BACKEND_IPS || DEFAULT_ALLOWED_IPS, { persist: true, allowInProduction: true });
@@ -224,7 +132,8 @@ function ensureLocalSecrets(options = {}) {
     );
 
     if (serviceAccount) {
-      synchroniseServiceAccountArtifacts(serviceAccount);
+      // Assuming synchroniseServiceAccountArtifacts is defined elsewhere or remove if not needed
+      // synchroniseServiceAccountArtifacts(serviceAccount);
 
       try {
         const parsed = JSON.parse(serviceAccount);

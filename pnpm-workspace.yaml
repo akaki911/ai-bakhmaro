@@ -1,7 +1,8 @@
 packages:
-  - 'ai-frontend'
-  - 'backend'
-  - 'functions'
-  - 'ai-service'
-  - 'packages/shared'
-  - 'gateway'
+  - ai-frontend
+  - backend
+  - functions
+  - ai-service
+  - gateway
+  - packages/*
+  - packages/shared

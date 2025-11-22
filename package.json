@@ -7,8 +7,8 @@
     "backend",
     "functions",
     "ai-service",
-    "shared",
-    "gateway"
+    "gateway",
+    "packages/shared"
   ],
   "scripts": {
     "dev": "concurrently -c cyan,magenta --names gateway,frontend \"npm run --workspace gateway dev\" \"npm run --workspace ai-frontend dev\"",
@@ -44,6 +44,7 @@
     "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
     "swagger-ui-express": "^5.0.1",
-    "yamljs": "^0.3.0"
+    "yamljs": "^0.3.0",
+    "@ouranos/shared": "workspace:*"
   }
 }
