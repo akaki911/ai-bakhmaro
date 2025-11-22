@@ -1,0 +1,1410 @@
+require('dotenv').config();
+
+const path = require('path');
+const { ensureLocalSecrets } = require('../scripts/ensureLocalSecrets');
+const { validateEnv } = require('../shared/config/envValidator');
+
+const DEFAULT_FRONTEND_ORIGIN = 'https://ai.bakhmaro.co';
+
+ensureLocalSecrets({ cwd: path.resolve(__dirname, '..') });
+
+const envValidation = validateEnv({ serviceName: 'backend' });
+process.env.FB_ADMIN_STATE = envValidation.flags.firebaseAdmin;
+
+// Apply sane defaults for optional environment variables to reduce noisy warnings in development setups.
+const envFallbackUsage = {};
+const applyFallback = (key, fallback) => {
+  if (process.env[key] && String(process.env[key]).trim() !== '') {
+    return false;
+  }
+  if (fallback !== undefined) {
+    process.env[key] = fallback;
+    envFallbackUsage[key] = true;
+  }
+  return true;
+};
+
+applyFallback('FRONTEND_URL', DEFAULT_FRONTEND_ORIGIN);
+applyFallback('DEV_TASKS_ENABLED', 'false');
+
+const runtimeConfig = require('./config/runtimeConfig');
+const isProductionEnv = runtimeConfig.env.isProduction;
+
+if (!isProductionEnv && !process.env.METADATA_SERVER_DETECTION) {
+  process.env.METADATA_SERVER_DETECTION = 'none';
+  console.log('🛡️ [Metadata] Disabled cloud metadata probing for local development.');
+}
+
+const formatEnvValue = (key, formatter) => {
+  const rawValue = process.env[key];
+  if (!rawValue || String(rawValue).trim() === '') {
+    return 'NOT_SET';
+  }
+  const formatted = formatter ? formatter(rawValue) : rawValue;
+  return envFallbackUsage[key] ? `${formatted} (default)` : formatted;
+};
+
+// === CRITICAL: Node.js Crypto API Setup for WebAuthn ===
+// ეს საჭიროა @simplewebauthn/server-ისთვის Node.js v18+ environment-ში
+const { webcrypto } = require('crypto');
+global.crypto = webcrypto;
+console.log('🔐 [WebAuthn] Global crypto polyfill initialized for @simplewebauthn/server');
+
+// Environment verification at startup
+console.log('🔧 Environment Variables Check:');
+console.log('🔧 NODE_ENV:', process.env.NODE_ENV || 'NOT_SET');
+console.log('🔧 SESSION_SECRET:', formatEnvValue('SESSION_SECRET', value => 'SET (' + value.length + ' chars)'));
+console.log('🔧 ADMIN_SETUP_TOKEN:', formatEnvValue('ADMIN_SETUP_TOKEN', value => 'SET (' + value.length + ' chars)'));
+console.log('🔧 FRONTEND_URL:', formatEnvValue('FRONTEND_URL'));
+console.log('🔧 DEV_TASKS_ENABLED:', formatEnvValue('DEV_TASKS_ENABLED'));
+console.log('PORT:', process.env.PORT || 'NOT_SET');
+
+// Environment setup
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://ai.bakhmaro.co';
+const DEBUG_LEVEL = process.env.DEBUG_LEVEL || 'info'; // debug, info, warn, error
+
+// Enhanced logging with level control
+const log = {
+  debug: (msg, ...args) => {
+    if (['debug'].includes(DEBUG_LEVEL)) {
+      console.debug(`🐛 [DEBUG] ${msg}`, ...args);
+    }
+  },
+  info: (msg, ...args) => {
+    if (['debug', 'info'].includes(DEBUG_LEVEL)) {
+      console.info(`ℹ️ [INFO] ${msg}`, ...args);
+    }
+  },
+  warn: (msg, ...args) => {
+    if (['debug', 'info', 'warn'].includes(DEBUG_LEVEL)) {
+      console.warn(`⚠️ [WARN] ${msg}`, ...args);
+    }
+  },
+  error: (msg, ...args) => {
+    console.error(`❌ [ERROR] ${msg}`, ...args);
+  }
+};
+
+// Add error handling for uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  console.error('Stack:', error.stack);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+const express = require('express');
+const http = require('http');
+const cors = require('cors');
+const morgan = require('morgan');
+const fs = require('fs');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const { getRpConfig } = require('./utils/rpid');
+const fetch = global.fetch
+  ? (...args) => global.fetch(...args)
+  : (...args) => import('node-fetch').then(({ default: fetchFn }) => fetchFn(...args));
+
+console.log('📦 Starting backend initialization...');
+
+const { securityHeaders, ipLogger, deviceFingerprintMiddleware } = require('./middleware/security');
+const { correlationMiddleware } = require('./middleware/correlation_middleware');
+const { buildModeGuard } = require('./middleware/build_mode_guard');
+const { serviceAuth } = require('./middleware/service_auth');
+
+const app = express();
+const PORT = process.env.PORT || 8000; // Replit environment port configuration
+
+const { setupGuruloWebSocket } = require('./services/gurulo_ws');
+const versionRoute = require('./routes/version');
+// const aiTraceRoutes = require('../src/routes/ai_trace');
+// const aiChatRoutes = require('../src/routes/ai_chat');
+
+const httpServer = http.createServer(app);
+const shouldDisableHttpListen = process.env.DISABLE_EXPRESS_LISTEN === 'true';
+let server = null;
+
+const normaliseOriginValue = (value) => {
+  if (!value || typeof value !== 'string') {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(value.trim());
+    if (!parsed.protocol || !parsed.hostname) {
+      return null;
+    }
+
+    const portPart = parsed.port ? `:${parsed.port}` : '';
+    return `${parsed.protocol}//${parsed.hostname}${portPart}`;
+  } catch (error) {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+    return trimmed.replace(/\/+$/, '');
+  }
+};
+
+const parseOriginList = (value) => {
+  if (!value || typeof value !== 'string') {
+    return [];
+  }
+
+  return value
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+};
+
+const ensureOriginScheme = (value) => {
+  if (!value || typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  // If a bare domain or domain:port is provided, assume HTTPS to match real browser Origin headers.
+  if (/^[\w.-]+(?::\d+)?$/.test(trimmed)) {
+    return `https://${trimmed}`;
+  }
+
+  return trimmed;
+};
+
+const buildAllowedOriginsMap = () => {
+  const origins = new Map();
+
+  const addOrigin = (origin) => {
+    const normalised = normaliseOriginValue(ensureOriginScheme(origin));
+    if (!normalised) {
+      return;
+    }
+
+    if (!origins.has(normalised)) {
+      origins.set(normalised, normalised);
+    }
+  };
+
+  const addOriginList = (value) => {
+    parseOriginList(value).forEach(addOrigin);
+  };
+
+  const strictOrigins = [
+    process.env.FRONTEND_URL,
+    'https://ai.bakhmaro.co',
+    'https://app.bakhmaro.co',
+    'https://backend.ai.bakhmaro.co',
+    'https://backend-ai-bakhmaro.web.app'
+  ];
+
+  strictOrigins.forEach(addOrigin);
+  addOriginList(process.env.PUBLIC_FRONTEND_ORIGIN);
+  addOriginList(process.env.PUBLIC_ORIGIN);
+
+  if (!isProductionEnv) {
+    if (process.env.REPLIT_DEV_DOMAIN) {
+      addOrigin(`https://${process.env.REPLIT_DEV_DOMAIN}`);
+      addOrigin(`http://${process.env.REPLIT_DEV_DOMAIN}`);
+      console.log('🔧 [CORS] Added Replit dev domain:', process.env.REPLIT_DEV_DOMAIN);
+    }
+  }
+
+  return origins;
+};
+
+const allowedOriginsMap = buildAllowedOriginsMap();
+const allowedOriginsSet = new Set(allowedOriginsMap.keys());
+const primaryAllowedOrigin =
+  allowedOriginsMap.get(normaliseOriginValue(ensureOriginScheme(process.env.FRONTEND_URL))) ||
+  allowedOriginsMap.get(normaliseOriginValue(DEFAULT_FRONTEND_ORIGIN)) ||
+  allowedOriginsSet.values().next().value ||
+  DEFAULT_FRONTEND_ORIGIN;
+
+console.log('🔒 [CORS] Allowed origins:', Array.from(allowedOriginsSet));
+console.log('🔒 [CORS] Primary origin:', primaryAllowedOrigin);
+
+const websocketAllowlist = Array.from(
+  new Set(
+    [
+      FRONTEND_URL,
+      DEFAULT_FRONTEND_ORIGIN,
+      'https://app.bakhmaro.co',
+      'https://backend.ai.bakhmaro.co',
+      'https://backend-ai-bakhmaro.web.app',
+      process.env.PUBLIC_FRONTEND_ORIGIN,
+      process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null,
+      process.env.REPLIT_DEV_DOMAIN ? `http://${process.env.REPLIT_DEV_DOMAIN}` : null,
+    ].filter(Boolean)
+  )
+);
+
+const guruloRealtime = setupGuruloWebSocket(httpServer, {
+  allowOrigins: websocketAllowlist,
+  logger: log,
+});
+
+app.locals.guruloRealtime = guruloRealtime;
+
+// CORS Configuration must execute before any routing logic to ensure
+// preflight requests are evaluated without interference from guards or rate
+// limiters. This keeps same-origin proxy calls from ai.bakhmaro.co working
+// without triggering CORS errors when forwarded through the CDN.
+const defaultCorsMethods = ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'];
+const defaultCorsHeaders = [
+  'Content-Type',
+  'Authorization',
+  'X-Admin-Setup-Token',
+  'X-Device-Fingerprint',
+  'X-Client-Id',
+  'X-Device-Id',
+  'X-Device-Platform',
+  'X-Device-Type',
+  'X-Service-Token',
+  'X-AI-Internal-Token',
+  'X-Requested-With',
+  'X-Correlation-ID',
+  'X-Forwarded-Authorization',
+  'Cookie',
+  'Cache-Control',
+  'Accept',
+  'Origin',
+  'Referer'
+];
+
+const buildAllowedHeaders = (req) => {
+  const headerMap = new Map(defaultCorsHeaders.map((header) => [header.toLowerCase(), header]));
+  const requestedHeaders = req.header('Access-Control-Request-Headers');
+
+  if (requestedHeaders) {
+    requestedHeaders
+      .split(',')
+      .map((header) => header.trim())
+      .filter(Boolean)
+      .forEach((header) => {
+        const key = header.toLowerCase();
+        if (!headerMap.has(key)) {
+          headerMap.set(key, header);
+        }
+      });
+  }
+
+  return Array.from(headerMap.values());
+};
+
+const buildAllowedMethods = (req) => {
+  const methods = new Set(defaultCorsMethods);
+  const requestedMethod = req.header('Access-Control-Request-Method');
+
+  if (requestedMethod) {
+    methods.add(requestedMethod.toUpperCase());
+  }
+
+  return Array.from(methods);
+};
+
+const applyCorsHeaders = (res, options) => {
+  const {
+    origin,
+    credentials,
+    methods,
+    allowedHeaders,
+    exposedHeaders,
+    maxAge,
+    varyHeaders = []
+  } = options;
+
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  if (credentials) {
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  if (Array.isArray(methods) && methods.length > 0) {
+    res.setHeader('Access-Control-Allow-Methods', methods.join(', '));
+  }
+  if (Array.isArray(allowedHeaders) && allowedHeaders.length > 0) {
+    res.setHeader('Access-Control-Allow-Headers', allowedHeaders.join(', '));
+  }
+  if (Array.isArray(exposedHeaders) && exposedHeaders.length > 0) {
+    res.setHeader('Access-Control-Expose-Headers', exposedHeaders.join(', '));
+  }
+  if (maxAge) {
+    res.setHeader('Access-Control-Max-Age', String(maxAge));
+  }
+
+  res.append('Vary', 'Origin');
+  varyHeaders.forEach((header) => {
+    res.append('Vary', header);
+  });
+};
+
+const determineAllowedOrigin = (req) => {
+  const requestOrigin = req.header('Origin');
+
+  if (!requestOrigin) {
+    return getRpConfig(req).origin || primaryAllowedOrigin;
+  }
+
+  const normalised = normaliseOriginValue(requestOrigin);
+  if (normalised && allowedOriginsSet.has(normalised)) {
+    return allowedOriginsMap.get(normalised) ?? normalised;
+  }
+
+  return null;
+};
+
+const resolveCorsOptions = (req, resolvedOrigin) => {
+  const rpConfig = getRpConfig(req);
+  const fallbackOrigin = rpConfig?.origin || primaryAllowedOrigin;
+  const origin = resolvedOrigin || determineAllowedOrigin(req) || fallbackOrigin;
+  const allowedHeaders = buildAllowedHeaders(req);
+  const methods = buildAllowedMethods(req);
+  const varyHeaders = [];
+
+  if (req.header('Access-Control-Request-Headers')) {
+    varyHeaders.push('Access-Control-Request-Headers');
+  }
+
+  if (req.header('Access-Control-Request-Method')) {
+    varyHeaders.push('Access-Control-Request-Method');
+  }
+
+  return {
+    origin,
+    credentials: true,
+    methods,
+    allowedHeaders,
+    exposedHeaders: [
+      'Set-Cookie',
+      'X-RateLimit-Limit',
+      'X-RateLimit-Remaining',
+      'X-RateLimit-Reset',
+      'X-Correlation-ID'
+    ],
+    optionsSuccessStatus: 200,
+    maxAge: 86400,
+    varyHeaders
+  };
+};
+
+const corsMiddleware = (req, res, next) => {
+  const requestOrigin = req.headers.origin;
+
+  // Allow healthcheck and monitoring requests, regardless of Origin header
+  const isHealthCheck = req.path === '/health' || 
+                        req.path === '/api/health' ||
+                        req.path === '/' ||
+                        req.path.startsWith('/health');
+
+  if (isHealthCheck) {
+    console.log('🏥 CORS Middleware: Healthcheck request detected - allowing.');
+    return next();
+  }
+
+  const resolvedOrigin = determineAllowedOrigin(req);
+
+  // If there's an Origin header but it's not in our allowlist, reject the request.
+  if (requestOrigin && !resolvedOrigin) {
+    console.warn('🚫 CORS Middleware: Origin not allowed:', requestOrigin);
+    return res.status(403).json({
+        success: false,
+        error: 'CORS_NOT_ALLOWED',
+        message: 'Origin is not permitted'
+    });
+  }
+
+  const corsOptions = resolveCorsOptions(req, resolvedOrigin);
+  applyCorsHeaders(res, corsOptions);
+
+  // End preflight requests here
+  if (req.method === 'OPTIONS') {
+    return res.status(204).send();
+  }
+
+  next();
+};
+
+app.use(corsMiddleware);
+
+// Fail-safe CORS header injector for trusted frontends (helps when upstream middlewares short-circuit)
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '';
+  const trustedPattern = /^https?:\/\/(?:backend\.)?ai\.bakhmaro\.co$|^https?:\/\/ai-bakhmaro\.web\.app$|^https?:\/\/backend-ai-bakhmaro\.web\.app$|^https?:\/\/app\.bakhmaro\.co$/;
+  if (origin && trustedPattern.test(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  next();
+});
+
+app.use(buildModeGuard);
+
+const guardedPrefixes = ['/internal', '/api/internal', '/api/proposals', '/proposals', '/api/ai/proposals'];
+guardedPrefixes.forEach((prefix) => {
+  app.use(prefix, serviceAuth);
+});
+
+// Global access control: fully private except authentication flows and health checks
+const ALLOWED_SUPER_ADMINS = new Set(
+  (process.env.SUPER_ADMIN_IDS || '01019062020')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean)
+);
+
+const validServiceTokens = [
+  process.env.INTERNAL_SERVICE_TOKEN,
+  process.env.AI_INTERNAL_TOKEN,
+  process.env.AI_SERVICE_TOKEN,
+  process.env.AI_PANEL_TOKEN
+].filter(Boolean);
+
+const hasServiceToken = (req) => {
+  const headerTokens = [
+    req.headers['x-service-token'],
+    req.headers['x-ai-internal-token'],
+    req.headers['x-frontend-service-token'],
+    (() => {
+      const authHeader = req.headers.authorization;
+      if (typeof authHeader === 'string' && authHeader.toLowerCase().startsWith('bearer ')) {
+        return authHeader.slice(7).trim();
+      }
+      return null;
+    })()
+  ].filter(Boolean);
+
+  return headerTokens.some((token) => validServiceTokens.includes(token));
+};
+
+const isSuperAdminSession = (req) => {
+  const user = req.session?.user || req.user || {};
+  const personalId =
+    user.personalId ||
+    user.id ||
+    req.session?.personalId ||
+    req.session?.userId ||
+    req.headers['x-user-id'] ||
+    req.headers['x-personal-id'];
+
+  return personalId && ALLOWED_SUPER_ADMINS.has(String(personalId));
+};
+
+const isPublicPath = (req) => {
+  const path = req.path || '';
+
+  if (req.method === 'OPTIONS') return true;
+  if (path === '/' || path === '/api/health' || path === '/health' || path === '/api/auth/health') return true;
+
+  // Auth flows (passkey/webauthn/login bootstrap)
+  const publicPrefixes = [
+    '/api/auth/route-advice',
+    '/api/auth/login',
+    '/api/auth/passkey',
+    '/api/admin/webauthn',
+  ];
+
+  return publicPrefixes.some((prefix) => path.startsWith(prefix));
+};
+
+app.use((req, res, next) => {
+  if (isPublicPath(req)) {
+    return next();
+  }
+
+  if (hasServiceToken(req) || isSuperAdminSession(req)) {
+    return next();
+  }
+
+  return res.status(401).json({
+    success: false,
+    error: 'AUTH_REQUIRED',
+    message: 'Authentication required',
+  });
+});
+
+// UPDATE 2024-10-01: Harden AI metadata endpoints by requiring known admin or
+// service tokens while still allowing privileged session users in dev setups.
+const authorizeAiMetadataRequest = (req, res, next) => {
+  try {
+    const privilegedRoles = new Set(['SUPER_ADMIN', 'ADMIN']);
+    const sessionUser = req.session?.user || req.user || {};
+    const sessionRoleRaw =
+      sessionUser?.role ||
+      req.session?.userRole ||
+      req.headers['x-user-role'] ||
+      req.headers['x-gurulo-role'];
+    const sessionRole =
+      typeof sessionRoleRaw === 'string' ? sessionRoleRaw.toUpperCase() : null;
+
+    if (sessionRole && privilegedRoles.has(sessionRole)) {
+      log.debug('✅ [AI AUTH] Session role authorized for AI metadata', {
+        path: req.path,
+        role: sessionRole,
+      });
+      return next();
+    }
+
+    if (req.session?.isSuperAdmin === true) {
+      log.debug('✅ [AI AUTH] Session flagged as super admin', {
+        path: req.path,
+        via: 'session-flag',
+      });
+      return next();
+    }
+
+    const authorizedIdsEnv = process.env.AI_AUTHORIZED_PERSONAL_IDS || '01019062020';
+    const authorizedIds = authorizedIdsEnv
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
+    const personalId =
+      sessionUser?.personalId ||
+      req.headers['x-user-id'] ||
+      req.headers['x-personal-id'] ||
+      req.headers['x-gurulo-personal-id'];
+
+    if (personalId && authorizedIds.includes(personalId)) {
+      log.debug('✅ [AI AUTH] Session personalId authorized for AI metadata', {
+        path: req.path,
+        personalId,
+      });
+      return next();
+    }
+
+    const adminHeader = req.headers['x-admin-setup-token'];
+    const authHeader = req.headers.authorization;
+    const bearerToken =
+      typeof authHeader === 'string' && authHeader.toLowerCase().startsWith('bearer ')
+        ? authHeader.slice(7).trim()
+        : null;
+
+    const providedTokens = [adminHeader, bearerToken].filter(Boolean);
+    const validTokens = [
+      process.env.ADMIN_SETUP_TOKEN,
+      process.env.AI_SERVICE_TOKEN,
+      process.env.AI_INTERNAL_TOKEN,
+      process.env.AI_PANEL_TOKEN,
+    ].filter(Boolean);
+
+    const hasValidToken = providedTokens.some((token) => validTokens.includes(token));
+
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    const devTokenAllowList = new Set([
+      'DEV_ADMIN_SETUP_TOKEN',
+      'dev-token',
+      'development',
+      'admin_setup_token',
+      'admin-setup-token',
+    ]);
+    const looksLikeDevToken = providedTokens.some(
+      (token) =>
+        typeof token === 'string' &&
+        (token.startsWith('DEV_') ||
+          token.endsWith('_dev') ||
+          token.startsWith('dev-') ||
+          token.startsWith('test-') ||
+          devTokenAllowList.has(token))
+    );
+
+    if (hasValidToken || (isDevelopment && looksLikeDevToken)) {
+      log.debug('✅ [AI AUTH] Token accepted for AI metadata', {
+        path: req.path,
+        via: hasValidToken ? 'env-token' : 'dev-token',
+      });
+      return next();
+    }
+
+    log.warn('🚫 [AI AUTH] Unauthorized AI metadata request blocked', {
+      path: req.path,
+      hasAuthorizationHeader: Boolean(authHeader),
+      hasAdminSetupHeader: Boolean(adminHeader),
+      userId: personalId || null,
+      userRole: sessionUser?.role || null,
+    });
+
+    return res.status(401).json({
+      success: false,
+      error: 'UNAUTHORIZED',
+      message: 'Missing or invalid AI access token',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    log.error('❌ [AI AUTH] Error validating AI metadata token', error);
+    return res.status(500).json({
+      success: false,
+      error: 'AUTH_VALIDATION_FAILED',
+      message: 'Unable to validate AI access token',
+      timestamp: new Date().toISOString(),
+    });
+  }
+};
+
+// SOL-311: Health endpoint before rate limiting
+app.get('/api/health', (req, res) => {
+  res.json({
+    ok: true,
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    service: 'backend',
+    port: process.env.PORT || 5002
+  });
+});
+
+app.get('/api/auth/health', (req, res) => {
+  res.json({
+    ok: true,
+    status: 'OK',
+    service: 'backend-auth',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Gurulo UI test clients and scripted runners need a generous rate limit when
+// exercising the chat proxy. Apply their bypass marker before attaching the
+// shared rate limiter so the skip callback can observe it.
+app.use((req, _res, next) => {
+  if (req.skipRateLimit) {
+    return next();
+  }
+
+  const clientHeader = (req.headers['x-gurulo-client'] || '').toString().toLowerCase();
+  if (clientHeader === 'gurulo-ui-test') {
+    req.skipRateLimit = true;
+    req.rateLimitBypassReason = 'gurulo-ui-test';
+    return next();
+  }
+
+  const personalIdHeader = (
+    req.headers['x-user-id'] ||
+    req.headers['x-personal-id'] ||
+    ''
+  )
+    .toString()
+    .toLowerCase();
+
+  if (personalIdHeader === 'front_chat_tester') {
+    req.skipRateLimit = true;
+    req.rateLimitBypassReason = 'front_chat_tester';
+  }
+
+  next();
+});
+
+// SOL-311: Rate limiting with monitoring endpoints whitelist
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  skip: (req) => {
+    if (req.method === 'OPTIONS') return true;
+    // Whitelist health and monitoring endpoints
+    if (req.path === '/api/health') return true;
+    if (req.path.includes('/api/ai/autoimprove/monitor/')) return true;
+    if (req.path.includes('/api/ai/auto-improve/monitor/')) return true;
+    if (req.path.includes('/api/ai/autoimprove/proposals')) return true; // Bypass proposals endpoint
+    if (req.path.includes('/api/ai/auto-improve/proposals')) return true; // Bypass proposals endpoint
+    if (req.isMonitoringEndpoint) return true;
+    if (req.skipRateLimit) return true;
+    if (req.headers['x-monitoring-endpoint'] === 'true') return true;
+    const clientHeader = (req.headers['x-gurulo-client'] || '').toString().toLowerCase();
+    if (clientHeader === 'gurulo-ui-test') return true;
+    const personalIdHeader = (
+      req.headers['x-user-id'] ||
+      req.headers['x-personal-id'] ||
+      ''
+    )
+      .toString()
+      .toLowerCase();
+    if (personalIdHeader === 'front_chat_tester') return true;
+    return false;
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: 'Rate limit exceeded',
+    retryAfter: '15 minutes'
+  }
+});
+
+// Trust proxy configuration - specific to Replit's reverse proxy
+// Using numbered proxy count instead of true to avoid express-rate-limit warnings
+app.set('trust proxy', 1);
+
+app.use(limiter);
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(cookieParser());
+
+// Session middleware configuration
+app.use(session({
+  name: 'bk_admin.sid',
+  secret: process.env.SESSION_SECRET || 'fallback-dev-secret-change-in-prod',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    sameSite: 'lax',
+    secure: isProductionEnv,
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+console.log('✅ [SESSION] Express session middleware configured');
+
+// Enhanced Rate Limiting Configuration - Increased for WebAuthn testing
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Increased from 500 to 1000 for WebAuthn testing
+  message: {
+    error: 'Too many requests from this IP',
+    code: 'RATE_LIMITED',
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    if (req.method === 'OPTIONS') {
+      return true;
+    }
+    // Skip rate limiting for DevConsole endpoints
+    if (req.path.startsWith('/api/dev/console/') || req.path.includes('/dev/')) {
+      return true;
+    }
+    // Skip rate limiting for AI service internal calls
+    if (req.path.startsWith('/api/ai/') || req.headers['x-ai-internal-token']) {
+      return true;
+    }
+    // Skip WebAuthn testing endpoints in development
+    if (req.path.includes('/webauthn/') && process.env.NODE_ENV === 'development') {
+      return true;
+    }
+    // Skip rate limiting in development if configured
+    return process.env.NODE_ENV === 'development' && process.env.DEV_BYPASS_RATE_LIMIT === 'true';
+  }
+});
+
+// SOL-427: Strict Rate Limiting for Authentication and Verification Routes
+const authLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: process.env.NODE_ENV === 'development' ? 20 : 5, // SOL-427: Reduced limits
+  message: {
+    error: 'Too many authentication attempts',
+    code: 'AUTH_RATE_LIMITED',
+    retryAfter: '5 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    if (req.method === 'OPTIONS') {
+      return true;
+    }
+    // SOL-427: Never skip rate limiting for verification routes
+    return false;
+  }
+});
+
+// SOL-427: Special rate limiter for WebAuthn verification routes
+const webauthnVerifyLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 3, // SOL-427: Very strict limit for biometric verification
+  message: {
+    error: 'Too many WebAuthn verification attempts',
+    code: 'WEBAUTHN_RATE_LIMITED',
+    retryAfter: '10 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS'
+});
+
+// Apply rate limiting conditionally
+if (process.env.DEV_BYPASS_RATE_LIMIT !== 'true') {
+  app.use(globalLimiter);
+  app.use('/api/admin/auth', authLimiter);
+  console.log('🛡️ Rate limiting enabled');
+} else {
+  console.log('⚠️ Rate limiting bypassed for development');
+}
+
+// Root endpoint - JSON only
+app.get("/", (req, res) => {
+  return res.status(200).json({
+    status: "backend-ok",
+    service: "Bakhmaro Backend API",
+    version: "1.0.0"
+  });
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    pid: process.pid
+  });
+});
+
+// Import routes
+const healthRoutes = require('./routes/health');
+const adminRoutes = require('./routes/admin_auth');
+const adminWebauthnRoutes = require('./routes/admin_webauthn');
+const passkeyAuthRoutes = require('./routes/passkey_auth');
+const securityAuditRoutes = require('./routes/security_audit');
+const roleGuards = require('./middleware/role_guards');
+// const legacyAiRoutes = require('../src/routes/ai_legacy');
+
+// Mount routes
+app.use('/api/health', healthRoutes);
+app.use('/api/version', versionRoute);
+
+// Route advice for auto-routing - mount at specific path to avoid shadowing
+const routeAdviceRoutes = require('./routes/route_advice');
+app.use('/api/auth/route-advice', routeAdviceRoutes);
+
+// Metrics endpoint
+app.use('/metrics', require('./routes/metrics'));
+
+// Mount Post-Apply Verification routes
+try {
+  const postApplyVerificationRoutes = require('./routes/post_apply_verification');
+  app.use('/api/ai/autoimprove/post-apply', postApplyVerificationRoutes);
+  app.use('/api/ai/auto-improve/post-apply', postApplyVerificationRoutes);
+  console.log('✅ [POST-APPLY] Verification routes mounted at:');
+  console.log('   - Primary: /api/ai/autoimprove/post-apply/*');
+  console.log('   - Alias: /api/ai/auto-improve/post-apply/*');
+} catch (error) {
+  console.error('❌ Failed to mount post-apply verification routes:', error.message);
+}
+
+console.log('✅ [AUTO-IMPROVE] Routes mounted successfully at:');
+console.log('   - Primary: /api/ai/autoimprove/*');
+console.log('   - Alias: /api/ai/auto-improve/*');
+console.log('   - Debug: /api/ai/autoimprove/_debug/ping');
+console.log('   - Health: /api/ai/autoimprove/health');
+console.log('   - Proposals: /api/ai/autoimprove/proposals');
+console.log('   - Dry-run: /api/ai/autoimprove/dry-run/validate');
+console.log('   - Approve: /api/ai/autoimprove/proposals/:id/approve');
+console.log('   - Alternative: /api/ai/auto-improve/* (alias endpoints)');
+
+// Mount auto-update control routes with error handling
+const autoUpdateControlRoutes = require('./routes/auto_update_control');
+try {
+  app.use('/api/admin/auto-update', autoUpdateControlRoutes);
+  console.log('✅ Auto-update control routes mounted at /api/admin/auto-update');
+} catch (error) {
+  console.error('❌ Failed to mount auto-update control routes:', error.message);
+}
+
+// Mount admin auth routes FIRST (highest priority)
+try {
+  const adminAuthRoute = require('./routes/admin_auth');
+  app.use('/api/admin/auth', adminAuthRoute);
+  console.log('✅ Admin auth route mounted at /api/admin/auth');
+} catch (error) {
+  console.error('❌ Failed to load admin auth route:', error.message);
+}
+
+// Mount AI rollout control routes
+// try {
+//   const aiRolloutControl = require('../src/routes/ai_rollout_control');
+//   app.use('/api/admin/ai-rollout', aiRolloutControl);
+//   app.use('/api/admin/ai', require('../src/routes/ai_diagnostics'));
+//   console.log('✅ AI rollout control routes mounted at /api/admin/ai-rollout');
+// } catch (error) {
+//   console.error('❌ Failed to load AI rollout control routes:', error.message);
+// }
+
+const guruloStatusRoutes = require('./routes/gurulo_status');
+const aiGatewayRoutes = require('./routes/ai_gateway');
+
+const routeFiles = [
+  'health',
+  'file_tree',
+  'memory_api',
+  'dev_console'
+];
+
+routeFiles.forEach(routeFile => {
+  try {
+    const routePath = `./routes/${routeFile}.js`;
+    console.log(`🔍 Attempting to load: ${routePath}`);
+
+    // Check if file exists first
+    if (!fs.existsSync(path.join(__dirname, routePath))) {
+      console.warn(`⚠️ Route file not found: ${routePath}`);
+      return;
+    }
+
+    const route = require(routePath);
+
+    // Mount with different prefixes based on route type
+    if (routeFile === 'health') {
+      app.use('/api', route);
+      console.log(`✅ Health route mounted at /api`);
+    } else if (routeFile === 'file_tree') {
+      app.use('/api/files', route);
+      console.log(`✅ File tree route mounted at /api/files`);
+
+      // Mount files upload/apply routes (commented out due to filesystem write issues in serverless environment)
+      // const filesUpload = require('./routes/files_upload');
+      // const filesApply  = require('./routes/files_apply');
+      // app.use('/api/files', filesUpload); // POST /upload, GET /attachment/:id
+      // app.use('/api/files', filesApply);  // POST /apply
+      // console.log('✅ Files upload/apply routes mounted at /api/files');
+    } else if (routeFile === 'ai_proxy') {
+      // AI proxy route moved to after autoimprove to prevent shadowing
+      console.log(`⏳ AI proxy route deferred until after autoimprove`);
+    } else if (routeFile === 'memory_api') {
+      app.use('/api/memory', route);
+      console.log(`✅ Memory API route mounted at /api/memory`);
+    } else if (routeFile === 'dev_console') {
+      app.use('/api/dev', route);
+      console.log(`✅ Dev console route mounted at /api/dev`);
+    } else {
+      app.use('/api', route);
+      console.log(`✅ Generic route mounted at /api: ${routeFile}`);
+    }
+
+  } catch (error) {
+    console.error(`❌ Failed to load route ${routeFile}:`, error.message);
+    console.error(`❌ Error details:`, error.stack);
+  }
+});
+
+console.log('📂 Routes loading completed');
+
+try {
+  app.use('/api', guruloStatusRoutes);
+  console.log('✅ Gurulo status routes mounted at /api/gurulo-status and /api/gurulo-brain-status');
+} catch (error) {
+  console.error('❌ Failed to mount Gurulo status routes:', error.message);
+}
+
+try {
+  const browserTestingRoutes = require('./routes/browser_testing');
+  app.use('/api/dev/browser-testing', browserTestingRoutes);
+  console.log('✅ Browser testing routes mounted at /api/dev/browser-testing');
+} catch (error) {
+  console.error('❌ Failed to load browser testing routes:', error.message);
+}
+
+try {
+  const devTestsRoutes = require('./routes/dev_tests');
+  app.use('/api/dev/tests', devTestsRoutes);
+  console.log('✅ Dev tests routes mounted at /api/dev/tests');
+} catch (error) {
+  console.error('❌ Failed to load dev tests routes:', error.message);
+}
+
+try {
+  const integrationRoutes = require('./routes/integrations');
+  app.use('/api/platform/integrations', integrationRoutes);
+  console.log('✅ Integration routes mounted at /api/platform/integrations');
+} catch (error) {
+  console.error('❌ Failed to load integration routes:', error.message);
+}
+
+try {
+  const secretsRoutes = require('./routes/secrets');
+  app.use('/api/admin/secrets', secretsRoutes);
+  console.log('✅ Secrets manager routes mounted at /api/admin/secrets');
+} catch (error) {
+  console.error('❌ Failed to load secrets routes:', error.message);
+}try {
+  const deployRoutes = require('./routes/deploy');
+  app.use('/api/ai/deploy', deployRoutes);
+  console.log('?o. Deploy routes mounted at /api/ai/deploy');
+} catch (error) {
+  console.error('??O Failed to load deploy routes:', error.message);
+}
+
+
+
+// Primary AI chat router (reused from Firebase Functions)
+try {
+  // app.use('/api/ai', aiChatRoutes);
+  console.log('�o. AI chat routes mounted at /api/ai');
+} catch (error) {
+  console.error('�?O Failed to mount AI chat routes:', error.message);
+}
+
+// Mount Auto-Improve routes
+const autoImproveRoutes = require('./routes/auto_improve');
+try {
+  app.use('/api/ai', aiGatewayRoutes);
+  console.log('✅ AI gateway routes mounted at /api/ai (health/status/models)');
+} catch (error) {
+  console.error('❌ Failed to mount AI gateway routes:', error.message);
+}
+
+// Add intelligent-chat endpoint with rollout support
+app.post('/api/ai/intelligent-chat', async (req, res) => {
+  try {
+    console.log('🤖 [INTELLIGENT CHAT] Request received from Frontend');
+
+    const { message, personalId } = req.body;
+
+    if (!message) {
+      return res.status(400).json({
+        success: false,
+        error: 'Message is required'
+      });
+    }
+
+    // Use AI Rollout Manager for Blue/Green deployment
+    const aiRolloutManager = require('../functions/src/services/ai_rollout_manager');
+    const userRole = req.session?.user?.role || null;
+
+    const response = await aiRolloutManager.routeRequest('chat', {
+      message,
+      personalId: personalId || 'anonymous',
+      context: {
+        fileContext: [],
+        projectInfo: { source: 'intelligent_chat' }
+      }
+    }, personalId, userRole);
+
+    console.log('✅ [INTELLIGENT CHAT] Response generated via AI Rollout Manager');
+
+    res.json({
+      success: true,
+      response: response.response,
+      timestamp: new Date().toISOString(),
+      personalId: response.personalId,
+      model: response.model || 'ai-microservice',
+      modelLabel: 'AI Microservice',
+      service: 'ai-microservice',
+      usage: response.usage,
+      rollout: response._rollout
+    });
+
+  } catch (error) {
+    console.error('❌ [INTELLIGENT CHAT] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'AI_SERVICE_ERROR',
+      message: 'Failed to generate AI response',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+const AI_SERVICE_URL = (process.env.AI_SERVICE_URL || 'https://backend.ai.bakhmaro.co').replace(/\/$/, '');
+const AI_HEALTH_TIMEOUT_MS = Number(process.env.AI_HEALTH_TIMEOUT_MS || 5000);
+
+// AI Service proxy completely removed - all AI functionality handled locally in Backend
+console.log('ℹ️ AI Service proxy removed - Backend handles all AI operations locally');
+
+// SSE realtime errors MUST be mounted BEFORE memory_api to avoid route conflicts
+try {
+  const memoryRealtimeRouter = require('./routes/memory_realtime');
+  app.use('/api/memory', memoryRealtimeRouter);
+  console.log('[SSE] /api/memory/realtime-errors mounted');
+  console.log('[DEBUG] /api/memory/_debug/emit-error endpoint available');
+} catch (e) {
+  console.error('[SSE] mount failed:', e?.message);
+}
+
+// Memory and Performance routes (must be after SSE to avoid conflicts)
+app.use("/api/memory", require("./routes/memory_api"));
+app.use('/api/performance', require('./routes/performance_routes'));
+app.use('/api/project', require('./routes/project_stats'));
+app.use('/api/config', require('./routes/config'));
+// app.use('/api/mail', require('./routes/mail')); // Commented out due to Firebase Admin initialization issues in serverless environment
+
+// User and GitHub routes
+app.use('/api/user', require('./routes/user_activity'));
+app.use('/api/github', require('./routes/github'));
+
+// Backup fallback routes (disabled in this environment but avoids 404s)
+app.use('/api/backup_system', require('./routes/backup_fallback'));
+
+// Other specific routes
+app.use('/api/jwt', require('./routes/jwt_auth'));
+app.use('/api', require('./routes/health')); // Moved health to root API path
+
+// Developer routes
+app.use('/api/developer', require('./routes/developer_panel'));
+
+// Developer console routes with proper middleware
+try {
+  const devConsoleModule = require('./routes/dev_console');
+  const devConsoleRouter = devConsoleModule.loggerMiddleware ? devConsoleModule : devConsoleModule.router || devConsoleModule;
+  const devConsoleLoggerMiddleware = devConsoleModule.loggerMiddleware;
+
+  if (devConsoleLoggerMiddleware) {
+    app.use(devConsoleLoggerMiddleware); // Apply logger middleware before the routes
+  }
+  app.use('/api/dev/console', devConsoleRouter);
+  console.log('✅ Dev console routes mounted successfully');
+} catch (error) {
+  console.error('❌ Failed to mount dev console routes:', error.message);
+}
+
+// 📢 Activity mounts & diagnostics
+console.log('[BOOT] Mounting Activity routes...');
+// Activity routes with proper error handling
+try {
+  app.use('/api/activity-stream', require('./routes/activity_stream'));
+  console.log('✅ Mounted /api/activity-stream');
+} catch (e) {
+  console.error('❌ Failed to mount activity-stream:', e.message);
+}
+
+try {
+  app.use('/api/activity', require('./routes/activity_ingest'));
+  console.log('✅ Mounted /api/activity');
+} catch (e) {
+  console.error('❌ Failed to mount activity:', e.message);
+}
+
+console.log('[BOOT] Activity routes: SSE=/api/activity-stream, REST=/api/activity');
+console.log('[BOOT] ENV: ENABLE_ACTIVITY_PERSIST=%s HMAC=%s', process.env.ENABLE_ACTIVITY_PERSIST, process.env.ACTIVITY_HMAC_SECRET ? 'SET' : 'MISSING');
+// Expose logActivity for other parts of the application
+module.exports.logActivity = require('./services/activity_bus').logActivity;
+
+// Terminal sessions routes
+const terminalSessionsRoutes = require('./routes/terminal_sessions');
+app.use('/api/terminal', terminalSessionsRoutes);
+
+// Routes - Admin WebAuthn routes BEFORE any other routes to prevent shadowing
+console.log('🔐 [WEBAUTHN] Mounting admin WebAuthn routes at /api/admin/webauthn');
+app.use('/api/admin/webauthn', adminWebauthnRoutes);
+console.log('🔐 [WEBAUTHN] Mounting universal passkey routes at /api/auth/passkey');
+app.use('/api/auth/passkey', passkeyAuthRoutes);
+console.log('✅ [WEBAUTHN] Admin WebAuthn routes mounted successfully');
+
+app.use('/api/admin/auth', require('./routes/admin_auth'));
+
+// Mount general fallback auth routes FIRST (includes /me endpoint) - CRITICAL for route precedence
+console.log('🔐 [AUTH] Mounting fallback auth routes at /api/auth');
+const fallbackAuthRouter = require('./routes/fallback_auth');
+app.use('/api/auth', fallbackAuthRouter);
+console.log('✅ [AUTH] Fallback auth routes mounted successfully (includes /me endpoint)');
+
+// Mount specific auth sub-routes AFTER fallback routes to avoid shadowing
+console.log('🔐 [DEVICE] Mounting device recognition routes at /api/auth/device');
+app.use('/api/auth/device', require('./routes/device_recognition'));
+console.log('✅ [DEVICE] Device recognition routes mounted successfully');
+
+console.log('🔐 [ROUTE] Mounting route advice at /api/auth/route-advice');
+app.use('/api/auth/route-advice', require('./routes/route_advice'));
+console.log('✅ [ROUTE] Route advice mounted successfully');
+
+// Verify /api/auth/me endpoint is accessible with explicit test
+console.log('✅ [AUTH] /api/auth/me endpoint should now be available');
+console.log('🔍 [AUTH] Route verification - checking /me endpoint availability');
+
+app.use('/api/admin/setup', require('./routes/admin_setup'));
+app.use('/api/admin/introspection', require('./routes/admin_introspection'));
+app.use('/api/admin/activity', require('./routes/user_activity'));
+app.use('/api/admin/stats', require('./routes/activity_stats'));
+app.use('/api/admin/stream', require('./routes/activity_stream'));
+app.use('/api/admin/auto-update', require('./routes/auto_update_control'));
+app.use('/api/admin/port', require('./routes/port_management'));
+app.use('/api/admin/port-crisis', require('./routes/port_crisis_management'));
+app.use('/api/admin/verify', require('./routes/post_apply_verification'));
+
+// Mount device recognition routes
+app.use('/api/device', require('./routes/device_recognition'));
+app.use('/api/auth/device', require('./routes/device_auth'));
+
+// Mount canary routes before error handlers
+try {
+  app.use('/api/admin/canary', require('./routes/canary_apply'));
+  console.log('✅ Canary routes mounted at /api/admin/canary');
+} catch (error) {
+  console.error('❌ Failed to mount canary routes:', error.message);
+}
+
+// Mount logs correlation routes
+try {
+  app.use('/api/logs', require('./routes/logs_correlation'));
+  console.log('✅ Logs correlation routes mounted at /api/logs');
+} catch (error) {
+  console.error('❌ Failed to mount logs correlation routes:', error.message);
+}
+app.use('/api/ai/autoimprove', require('./routes/auto_improve'));
+
+console.log('[BOOT] All API routes registered successfully');
+
+// System cleanup endpoint for admins
+app.post('/api/admin/system/cleanup', (req, res) => {
+  const { personalId } = req.body;
+
+  if (personalId !== '01019062020') {
+    return res.status(403).json({ success: false, error: 'Unauthorized' });
+  }
+
+  try {
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+    }
+
+    // Clear any cached data
+    console.log('🧹 System cleanup initiated by SUPER_ADMIN');
+
+    res.json({
+      success: true,
+      message: 'System cleanup completed',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Cleanup error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Global error handler with enhanced logging
+app.use((error, req, res, next) => {
+  if (error?.message === 'Not allowed by CORS') {
+    console.warn('🚫 [CORS] Request blocked by policy', {
+      origin: req.header('Origin'),
+      path: req.originalUrl,
+      method: req.method
+    });
+    if (!res.headersSent) {
+      res.status(403).json({
+        success: false,
+        error: 'CORS_NOT_ALLOWED',
+        message: 'Origin is not permitted',
+        timestamp: new Date().toISOString()
+      });
+    }
+    return;
+  }
+
+  const correlationId = req.correlationId || req.headers['x-correlation-id'] || `err_${Date.now()}`;
+
+  console.error('❌ [Global Error Handler]:', {
+    correlationId,
+    error: error.message,
+    stack: error.stack,
+    url: req.url,
+    method: req.method,
+    userAgent: req.headers['user-agent']?.substring(0, 100),
+    origin: req.headers.origin,
+    sessionId: req.sessionID?.substring(0, 8),
+    timestamp: new Date().toISOString()
+  });
+
+  // Don't send response if headers already sent
+  if (res.headersSent) {
+    return next(error);
+  }
+
+  // Set correlation ID in response headers
+  res.set('X-Correlation-ID', correlationId);
+
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  res.status(error.status || 500).json({
+    success: false,
+    error: error.name || 'Internal Server Error',
+    message: isDevelopment ? error.message : 'Something went wrong',
+    timestamp: new Date().toISOString(),
+    correlationId,
+    ...(isDevelopment && { stack: error.stack })
+  });
+});
+
+// 404 handler - JSON only
+app.use((req, res) => {
+  console.log(`❌ [404] ${req.method} ${req.path} not found`);
+  return res.status(404).json({ 
+    error: "Not found",
+    path: req.path 
+  });
+});
+
+// Start server
+// Enhanced server startup with port conflict handling
+if (shouldDisableHttpListen) {
+  console.log('🌀 [Serverless] Skipping HTTP listen; running in Firebase Functions environment.');
+} else {
+  server = httpServer.listen(PORT, "0.0.0.0", (error) => {
+    if (error) {
+      console.error('❌ Failed to start server:', error);
+      process.exit(1);
+    }
+
+    const publicBackendUrl = process.env.BACKEND_PUBLIC_URL || 'https://backend.ai.bakhmaro.co';
+    console.log(`🚀 Backend server running at ${publicBackendUrl} (port ${PORT})`);
+    console.log(`📊 Backend initialization complete`);
+
+    // Test critical routes - with safe access
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🧪 Testing critical routes...');
+      try {
+        const routes = (app._router?.stack || []).map(r => {
+          if (r && r.route) {
+            return `${Object.keys(r.route.methods).join(', ').toUpperCase()} ${r.route.path}`;
+          } else if (r && r.name === 'router') {
+            return `ROUTER ${r.regexp.source}`;
+          }
+          return 'MIDDLEWARE';
+        }).filter(r => r !== 'MIDDLEWARE');
+
+        console.log('📋 Registered routes:', routes.length);
+      } catch (error) {
+        console.warn('⚠️ Route listing failed:', error.message);
+      }
+    }
+  });
+}
+
+if (server) {
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`❌ Port ${PORT} is already in use`);
+      console.log('🔧 Try running: bash scripts/port-cleanup.sh');
+      process.exit(1);
+    } else {
+      console.error('❌ Backend startup error:', err);
+      process.exit(1);
+    }
+  });
+
+  // Graceful shutdown
+  server.on('close', () => {
+    try {
+      guruloRealtime?.close?.();
+    } catch (error) {
+      console.warn('⚠️ Failed to shut down Gurulo realtime server cleanly:', error.message);
+    }
+  });
+}
+
+process.on('SIGTERM', () => {
+  console.log('📴 Backend shutting down gracefully...');
+  if (server) {
+    server.close(() => {
+      console.log('✅ Backend stopped');
+      process.exit(0);
+    });
+  } else {
+    console.log('✅ Backend stopped (no active HTTP listener)');
+    process.exit(0);
+  }
+});
+
+// AI Service connection testing removed - using Backend-only architecture
+console.log('✅ Backend-only AI architecture - no external AI service dependency');
+
+module.exports = app;
+module.exports.server = server;
