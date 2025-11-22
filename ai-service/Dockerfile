@@ -1,18 +1,19 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-RUN npm install
+RUN apk add --no-cache pnpm
 
-COPY . ./
+COPY ../package.json ../pnpm-workspace.yaml ../pnpm-lock.yaml ./
+COPY ../packages ./packages
+COPY . ./ai-service
+
+RUN pnpm install --frozen-lockfile
 
 FROM node:20-alpine
-WORKDIR /app
+WORKDIR /app/ai-service
 ENV NODE_ENV=production
 
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app .
+COPY --from=builder /app/ai-service ./
 
 EXPOSE 8080
 CMD ["node", "server.js"]

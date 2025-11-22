@@ -1,19 +1,23 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-RUN npm install
+RUN apk add --no-cache pnpm
 
-COPY . ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages ./packages
+COPY gateway ./gateway
+
+WORKDIR /app/gateway
+RUN pnpm install --frozen-lockfile
 RUN npm run build
 
 FROM node:20-alpine
-WORKDIR /app
+WORKDIR /app/gateway
 ENV NODE_ENV=production
 
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/gateway/dist ./dist
+COPY --from=builder /app/gateway/package.json ./
+COPY --from=builder /app/gateway/node_modules ./node_modules
 
 EXPOSE 8080
 CMD ["node", "dist/index.js"]

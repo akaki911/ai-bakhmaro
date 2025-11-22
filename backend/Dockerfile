@@ -1,18 +1,20 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-RUN npm install
+RUN apk add --no-cache pnpm
 
-COPY . ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages ./packages
+COPY backend ./backend
+
+WORKDIR /app/backend
+RUN pnpm install --frozen-lockfile
 
 FROM node:20-alpine
-WORKDIR /app
+WORKDIR /app/backend
 ENV NODE_ENV=production
 
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app .
+COPY --from=builder /app/backend ./
 
-EXPOSE 3000
+EXPOSE 5001
 CMD ["node", "index.js"]
