@@ -85,8 +85,8 @@ export const getEnv = (): GatewayEnv => {
     '../../ai-frontend/dist';
 
   const corsAllowedOrigin =
-    readEnvString('CORS_ALLOWED_ORIGIN', { defaultValue: 'https://ai.bakhmaro.co' }) ??
-    'https://ai.bakhmaro.co';
+    readEnvString('CORS_ALLOWED_ORIGIN', { defaultValue: 'https://ai.bakhmaro.co,https://gateway.ai.bakhmaro.co' }) ??
+    'https://ai.bakhmaro.co,https://gateway.ai.bakhmaro.co';
 
   const serviceIssuer = readEnvString('SERVICE_JWT_ISSUER', { defaultValue: 'ai-gateway' }) ?? 'ai-gateway';
   const serviceSubject = readEnvString('SERVICE_JWT_SUBJECT', { defaultValue: 'gateway-service' }) ??
